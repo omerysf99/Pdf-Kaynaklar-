@@ -3,140 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dollar Reward Bot - Updated SDK</title>
+    <title>Dollar Bot - TG SDK</title>
 
-    <script src='//libtl.com/sdk.js' data-zone='10384475' data-sdk='show_10384475'></script>
+    <script type="module">
+        import createAdHandler from 'https://unpkg.com/monetag-tg-sdk@1.0.1/dist/index.js'
+        // Reklam tetikleyicisini global yapıyoruz ki butondan erişilebilsin
+        window.showAd = createAdHandler(10384475)
+    </script>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --bg: #0F172A;
-            --card: #1E293B;
-            --primary: #2563EB;
-            --success: #22C55E;
-            --text: #F8FAFC;
-            --text-sub: #94A3B8;
+            --bg: #0F172A; --card: #1E293B; --primary: #2563EB;
+            --success: #22C55E; --text: #F8FAFC; --text-sub: #94A3B8;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background-color: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-
         .content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
         .view { display: none; }
         .view.active { display: block; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
         .card { background: var(--card); border-radius: 24px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px; }
         .balance-hero { text-align: center; padding: 30px 0; }
         .balance-hero h1 { font-size: 52px; color: var(--success); font-weight: 800; }
-        
         .btn { border: none; padding: 16px; border-radius: 16px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-main { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
-        .btn:active { transform: scale(0.96); }
-
         input { width: 100%; background: #0F172A; border: 1px solid #334155; padding: 15px; border-radius: 12px; color: white; margin-top: 10px; outline: none; }
-        label { font-size: 13px; color: var(--text-sub); }
-
         .nav { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #334155; }
-        .nav-item { color: var(--text-sub); font-size: 20px; cursor: pointer; text-align: center; flex: 1; transition: 0.3s; }
+        .nav-item { color: var(--text-sub); font-size: 20px; cursor: pointer; text-align: center; flex: 1; }
         .nav-item.active { color: var(--primary); }
         .nav-item span { display: block; font-size: 10px; font-weight: 600; margin-top: 4px; }
-
         .admin-request { background: #000; padding: 15px; border-radius: 12px; margin-bottom: 10px; font-size: 12px; border-left: 4px solid var(--primary); position: relative; }
     </style>
 </head>
 <body>
 
     <div class="content">
-        
         <div id="v-home" class="view active">
             <div class="balance-hero">
-                <p style="color: var(--text-sub);">Mevcut Bakiyen</p>
+                <p style="color: var(--text-sub);">Toplam Bakiyen</p>
                 <h1>$<span id="b-home">0.00</span></h1>
             </div>
-            
             <div class="card" style="border: 2px solid var(--success);">
                 <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
-                    <div>
-                        <b style="display:block;">Hızlı Görev</b>
-                        <small style="color:var(--text-sub)">1 Reklam İzle</small>
-                    </div>
+                    <div><b>TG Görevi</b><br><small style="color:var(--text-sub)">1 Reklam İzle</small></div>
                     <span style="color:var(--success); font-weight:900; font-size:20px;">+$1.00</span>
                 </div>
-                <button class="btn btn-main" onclick="startAd()">
-                    <i class="fa-solid fa-play"></i> Reklamı Başlat
+                <button class="btn btn-main" id="ad-trigger">
+                    <i class="fa-solid fa-paper-plane"></i> Reklamı Başlat
                 </button>
             </div>
         </div>
 
         <div id="v-withdraw" class="view">
-            <h3>Para Çekme</h3>
-            <p style="color:var(--text-sub); font-size:13px; margin-bottom:20px;">Minimum çekim: $0.01</p>
-            
+            <h3>Ödeme Talebi</h3>
+            <p style="color:var(--text-sub); font-size:13px; margin-bottom:20px;">Min çekim: $0.01</p>
             <div class="card">
-                <div style="margin-bottom:15px;">
-                    <label>USDT TRC20 Cüzdan Adresi</label>
-                    <input type="text" id="w-address" placeholder="T..." maxlength="50">
-                </div>
-                <div style="margin-bottom:20px;">
-                    <label>Çekilecek Miktar ($)</label>
-                    <input type="number" id="w-amount" placeholder="0.01" step="0.01" min="0.01">
-                </div>
-                <button class="btn btn-success" onclick="requestWithdraw()">
-                    <i class="fa-solid fa-money-bill-transfer"></i> Ödeme Talebi Oluştur
-                </button>
+                <label>USDT TRC20 Adresi</label>
+                <input type="text" id="w-address" placeholder="T...">
+                <label style="margin-top:10px; display:block;">Tutar ($)</label>
+                <input type="number" id="w-amount" placeholder="1.00" step="0.01">
+                <button class="btn btn-success" style="margin-top:20px;" onclick="requestWithdraw()">Çekim Talebi Oluştur</button>
             </div>
         </div>
 
         <div id="v-profile" class="view">
-            <h3>Hesap Özeti</h3>
+            <h3>Hesap</h3>
             <div class="card" style="margin-top:20px;">
-                <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #334155;">
-                    <span>Bakiye:</span>
-                    <b style="color:var(--success)">$<span id="b-prof">0.00</span></b>
+                <div style="display:flex; justify-content:space-between; padding:12px 0;">
+                    <span>Bakiye:</span><b style="color:var(--success)">$<span id="b-prof">0.00</span></b>
                 </div>
-                <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #334155;">
-                    <span>Toplam Reklam:</span>
-                    <b id="ads-count">0</b>
+                <div style="display:flex; justify-content:space-between; padding:12px 0;">
+                    <span>İzlenen:</span><b id="ads-count">0</b>
                 </div>
             </div>
-            <button class="btn" style="background:#334155; margin-top:10px;" onclick="checkAdmin()">
-                <i class="fa-solid fa-shield-halved"></i> Admin Panel
-            </button>
+            <button class="btn" style="background:#334155;" onclick="checkAdmin()">Admin Panel</button>
         </div>
 
         <div id="v-admin" class="view">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3>Talepler (Admin)</h3>
-                <button onclick="go('home', document.querySelector('.nav-item'))" style="background:none; border:none; color:var(--primary); font-weight:bold;">Geri</button>
-            </div>
+            <h3>Talepler</h3>
             <div id="admin-requests-list"></div>
         </div>
-
     </div>
 
     <div class="nav">
-        <div class="nav-item active" onclick="go('home', this)">
-            <i class="fa-solid fa-dollar-sign"></i><span>Kazan</span>
-        </div>
-        <div class="nav-item" onclick="go('withdraw', this)">
-            <i class="fa-solid fa-wallet"></i><span>Çekim</span>
-        </div>
-        <div class="nav-item" onclick="go('profile', this)">
-            <i class="fa-solid fa-user-gear"></i><span>Profil</span>
-        </div>
+        <div class="nav-item active" onclick="go('home', this)"><i class="fa-solid fa-house"></i><span>Kazan</span></div>
+        <div class="nav-item" onclick="go('withdraw', this)"><i class="fa-solid fa-wallet"></i><span>Çekim</span></div>
+        <div class="nav-item" onclick="go('profile', this)"><i class="fa-solid fa-user"></i><span>Profil</span></div>
     </div>
 
     <script>
-        let balance = parseFloat(localStorage.getItem('user_balance')) || 0.0;
-        let totalAds = parseInt(localStorage.getItem('user_ads')) || 0;
-        let adminID = "8392479231"; 
-        let currentUserID = "8392479231"; 
+        let balance = parseFloat(localStorage.getItem('tg_bal')) || 0.0;
+        let totalAds = parseInt(localStorage.getItem('tg_ads')) || 0;
+        let adminID = "8392479231";
+        let currentUserID = "8392479231";
 
         updateUI();
+
+        // REKLAM TETİKLEME (TG SDK MANTIĞI)
+        document.getElementById('ad-trigger').addEventListener('click', async () => {
+            if (typeof window.showAd === 'function') {
+                try {
+                    await window.showAd(); // Monetag TG SDK Çalıştırılır
+                    // Reklam başarıyla izlendiğinde:
+                    balance += 1.0;
+                    totalAds++;
+                    save();
+                    updateUI();
+                    alert("Tebrikler! 1.00$ kazandınız.");
+                } catch (e) {
+                    alert("Reklam tamamlanmadı veya bir hata oluştu.");
+                }
+            } else {
+                alert("SDK yükleniyor, lütfen bekleyin...");
+            }
+        });
 
         function go(view, el) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -145,93 +129,49 @@
             if(el) el.classList.add('active');
         }
 
-        // YENİ REKLAM KODU ENTEGRASYONU (Seçenek 1 - Rewarded Interstitial)
-        async function startAd() {
-            try {
-                // Senin verdiğin yeni show fonksiyonu
-                show_10384475().then(() => {
-                    // Reklam başarıyla izlendiğinde:
-                    balance = balance + 1.0; 
-                    totalAds++;
-                    save();
-                    updateUI();
-                    alert('Tebrikler! Reklamı izlediniz ve $1.00 kazandınız!');
-                }).catch(e => {
-                    console.log("Reklam hatası:", e);
-                    alert("Reklam şu an hazır değil.");
-                });
-            } catch (err) {
-                alert("Bir hata oluştu.");
-            }
-        }
-
         function requestWithdraw() {
-            let address = document.getElementById('w-address').value;
-            let amount = parseFloat(document.getElementById('w-amount').value);
-
-            if(isNaN(amount) || amount < 0.01) {
-                alert("Minimum çekim $0.01'dır.");
+            let addr = document.getElementById('w-address').value;
+            let amt = parseFloat(document.getElementById('w-amount').value);
+            if(amt < 0.01 || amt > balance || addr.length < 10) {
+                alert("Geçersiz bakiye, tutar veya adres!");
                 return;
             }
-            if(amount > balance) {
-                alert("Yetersiz bakiye!");
-                return;
-            }
-            if(address.length < 10) {
-                alert("Lütfen geçerli bir USDT adresi girin.");
-                return;
-            }
-
-            let requests = JSON.parse(localStorage.getItem('withdraw_requests') || "[]");
-            requests.push({
-                id: Math.floor(Math.random() * 9999),
-                address: address,
-                amount: amount,
-                time: new Date().toLocaleString()
-            });
-            localStorage.setItem('withdraw_requests', JSON.stringify(requests));
-
-            balance -= amount;
-            save();
-            updateUI();
-            alert("Ödeme talebiniz admin paneline düştü.");
+            let reqs = JSON.parse(localStorage.getItem('tg_reqs') || "[]");
+            reqs.push({ addr, amt, time: new Date().toLocaleString() });
+            localStorage.setItem('tg_reqs', JSON.stringify(reqs));
+            balance -= amt;
+            save(); updateUI();
+            alert("Talebiniz iletildi!");
         }
 
         function checkAdmin() {
             if(currentUserID === adminID) {
                 go('admin');
-                renderAdminRequests();
-            } else {
-                alert("Sadece Admin 8392479231 erişebilir.");
-            }
+                renderAdmin();
+            } else { alert("Yetki yok."); }
         }
 
-        function renderAdminRequests() {
-            const listDiv = document.getElementById('admin-requests-list');
-            const data = JSON.parse(localStorage.getItem('withdraw_requests') || "[]");
-            if(data.length === 0) {
-                listDiv.innerHTML = "<p style='text-align:center; color:gray;'>Bekleyen ödeme yok.</p>";
-                return;
-            }
-            listDiv.innerHTML = data.map((req, idx) => `
+        function renderAdmin() {
+            const list = document.getElementById('admin-requests-list');
+            const data = JSON.parse(localStorage.getItem('tg_reqs') || "[]");
+            list.innerHTML = data.map((r, i) => `
                 <div class="admin-request">
-                    <b>Tutar: $${req.amount.toFixed(2)}</b><br>
-                    <small>Cüzdan: ${req.address}</small>
-                    <button onclick="approveRequest(${idx})" style="position:absolute; right:10px; top:15px; background:var(--primary); color:white; border:none; padding:8px 12px; border-radius:8px;">Ödendi</button>
+                    <b>$${r.amt.toFixed(2)}</b><br><small>${r.addr}</small>
+                    <button onclick="approve(${i})" style="position:absolute; right:10px; top:15px; background:var(--primary); color:white; border:none; padding:5px 10px; border-radius:5px;">Öde</button>
                 </div>
             `).join('');
         }
 
-        function approveRequest(index) {
-            let data = JSON.parse(localStorage.getItem('withdraw_requests') || "[]");
-            data.splice(index, 1);
-            localStorage.setItem('withdraw_requests', JSON.stringify(data));
-            renderAdminRequests();
-        }
+        window.approve = (i) => {
+            let data = JSON.parse(localStorage.getItem('tg_reqs') || "[]");
+            data.splice(i, 1);
+            localStorage.setItem('tg_reqs', JSON.stringify(data));
+            renderAdmin();
+        };
 
         function save() {
-            localStorage.setItem('user_balance', balance);
-            localStorage.setItem('user_ads', totalAds);
+            localStorage.setItem('tg_bal', balance);
+            localStorage.setItem('tg_ads', totalAds);
         }
 
         function updateUI() {
