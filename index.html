@@ -1,166 +1,435 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PDF DOSYAM - ÜCRETSİZ ERİŞİM</title>
-    
-    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>PDF DOSYAM - PRO CHAT</title>
+    
+    <!-- 1. Telegram SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
 
-    <style>
-        :root {
-            --bg: #F8FAFC;
-            --white: #FFFFFF;
-            --primary: #6366F1;
-            --primary-dark: #4F46E5;
-            --text-main: #0F172A;
-            --text-sub: #64748B;
-            --border: #E2E8F0;
-        }
+    <!-- 2. TADDY SDK -->
+    <script src="https://sdk.taddy.pro/web/taddy.min.js" data-pub-id="eb86a0cbc605b452a8b5601883cefc19"></script>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <!-- ASSETS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        ::-webkit-scrollbar { display: none; }
+    <style>
+        :root {
+            --bg: #F8FAFC;
+            --white: #FFFFFF;
+            --primary: #6366F1;
+            --primary-dark: #4F46E5;
+            --text-main: #0F172A;
+            --text-sub: #64748B;
+            --border: #E2E8F0;
+            --coin: #F59E0B;
+        }
 
-        /* VIEW CONTAINER */
-        .view { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; display: none; opacity: 0; transition: opacity 0.2s ease; }
-        .view.active { display: block; opacity: 1; }
+        /* GÜVENLİK VE SEÇİM ENGELLEME */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+        input, textarea { -webkit-user-select: text !important; user-select: text !important; }
+        button, .btn, .nav-item, .side-item, .list-item, .pdf-box, .task-box { cursor: pointer; pointer-events: auto; }
 
-        /* HEADER */
-        .header { padding: 20px; padding-top: 50px; background: var(--bg); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
-        .header-icon-btn { width: 40px; height: 40px; background: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; }
+        ::-webkit-scrollbar { display: none; }
+        body { background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* PDF GRID */
-        .pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .pdf-box { background: var(--white); padding: 15px; border-radius: 20px; text-align: center; border: 1px solid var(--border); transition: 0.2s; display: flex; flex-direction: column; align-items: center; }
-        .pdf-thumb { width: 45px; height: 45px; background: #EEF2FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 20px; margin-bottom: 8px; }
-        .pdf-title { font-weight: 700; font-size: 13px; margin-bottom: 10px; height: 34px; overflow: hidden; }
+        /* PAGE LOADER */
+        #page-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .spinner { width: 45px; height: 45px; border: 4px solid var(--border); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* BUTTONS */
-        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; font-size: 13px; }
-        .btn-sec { background: #EEF2FF; color: var(--primary); }
+        /* VIEW CONTAINER */
+        .view { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 120px; display: none; opacity: 0; transition: opacity 0.2s ease; -webkit-overflow-scrolling: touch; }
+        .view.active { display: block; opacity: 1; }
 
-        /* NAV */
-        .nav-container { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; z-index: 1000; }
-        .nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; display: flex; justify-content: space-around; padding: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid var(--border); }
-        .nav-item { font-size: 20px; color: #CBD5E1; padding: 12px; transition: 0.3s; }
-        .nav-item.active { color: var(--primary); }
+        /* SOHBET ÖZEL VIEW AYARI */
+        #v-chat { display: none; flex-direction: column; height: 100vh; padding: 0; overflow: hidden; }
+        #v-chat.active { display: flex; opacity: 1; }
 
-        /* CHAT */
-        #v-chat { flex-direction: column; height: 100vh; padding: 0; }
-        .chat-feed { flex: 1; padding: 15px; padding-top: 70px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
-        .chat-input-box { padding: 15px; background: white; border-top: 1px solid var(--border); display: flex; gap: 10px; }
-        .chat-inp { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 12px; outline: none; }
-    </style>
+        .chat-feed {
+            flex: 1;
+            overflow-y: scroll !important;
+            padding: 15px;
+            padding-top: 70px;
+            padding-bottom: 180px; /* Mesajların input altında kalmaması için yeterli boşluk */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            height: 100%;
+        }
+
+        /* SPECIAL CODE PAGE VIEW */
+        #v-code-page { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; padding:20px; text-align:center; flex-direction:column; justify-content:center; align-items:center; }
+        #generated-code {
+            background:#F1F5F9; padding:20px; 
+            border-radius:12px; font-size:20px; font-weight:800; letter-spacing:1px; 
+            margin-bottom:20px; border:2px dashed var(--primary);
+            word-break: break-all; max-width: 90%;
+        }
+
+        /* TOAST */
+        #toast-container { position: fixed; top: 60px; left: 0; width: 100%; z-index: 9999; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+        .toast { background: rgba(30, 41, 59, 0.95); color: white; padding: 12px 24px; border-radius: 50px; margin-bottom: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-size: 14px; font-weight: 600; animation: slideDown 0.4s; pointer-events: auto; }
+        .toast.error { background: rgba(220, 38, 38, 0.95); }
+        .toast.hiding { animation: slideUp 0.4s forwards; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { to { opacity: 0; transform: translateY(-20px); } }
+
+        /* UI ELEMENTS */
+        .btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.1s; }
+        .btn:active { transform: scale(0.97); }
+        .btn-sec { background: #EEF2FF; color: var(--primary); }
+        .btn-dang { background: #FEF2F2; color: #EF4444; }
+        .btn-edit { background: #FFF7ED; color: #EA580C; }
+        .btn-coin { background: var(--coin); color: white; }
+        .inp, .txtarea { width: 100%; padding: 14px; border-radius: 16px; border: 2px solid var(--border); background: #fff; margin-bottom: 10px; outline: none; font-size: 14px; }
+        .inp:focus { border-color: var(--primary); }
+        
+        .header { padding: 20px; padding-top: 50px; background: var(--bg); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+        .header-actions { display: none; flex-direction: column; gap: 15px; align-items: center; }
+        .header-icon-btn { width: 40px; height: 40px; background: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; }
+
+        /* TASK BOX */
+        .task-box { background: white; padding: 15px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 10px; }
+        .task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .task-reward { background: #FFFBEB; color: var(--coin); padding: 5px 10px; border-radius: 20px; font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 5px; }
+        .code-input-area { display: flex; gap: 5px; margin-top: 10px; }
+
+        /* NAV - AŞAĞI ALINDI */
+        .nav-container { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; z-index: 1000; }
+        .nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; display: flex; justify-content: space-around; padding: 14px; box-shadow: 0 20px 50px -10px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.6); }
+        .nav-item { font-size: 24px; color: #CBD5E1; transition: 0.3s; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 14px; position: relative; }
+        .nav-item.active { color: var(--primary); background: #EEF2FF; }
+        .nav-badge { position: absolute; top: 5px; right: 5px; background: #EF4444; color: white; font-size: 10px; font-weight: 800; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4); border: 2px solid #fff; }
+
+        /* PDF GRID */
+        .pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .pdf-box { background: var(--white); padding: 15px; border-radius: 20px; text-align: center; border: 1px solid var(--border); height: 195px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: 0.2s; }
+        .pdf-thumb { width: 45px; height: 45px; background: #EEF2FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 20px; margin-bottom: 8px; }
+        .pdf-title { font-weight: 700; font-size: 13px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; margin-bottom: 5px; }
+        .pdf-price { color: var(--coin); font-weight: 800; font-size: 12px; margin-top: 5px; display: flex; align-items: center; gap: 4px; justify-content: center; }
+        .pdf-badge { font-size: 10px; background: #F1F5F9; padding: 3px 8px; border-radius: 12px; margin-bottom: 8px; color: var(--text-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%; }
+        .pdf-info { width: 100%; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #94A3B8; border-top: 1px solid #F1F5F9; padding-top: 8px; margin-top: auto; }
+        .list-item { background: var(--white); padding: 15px; border-radius: 16px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .notif-item { background: #FEF9C3; color:#854D0E; padding:15px; border-radius:12px; margin-bottom:10px; text-align:left; font-size:14px; border:1px solid #FEF08A; }
+
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; display: none; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--white); z-index: 1600; transition: 0.3s; padding: 20px; padding-top: 60px; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .side-item { padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--text-sub); margin-bottom: 5px; cursor: pointer; }
+        
+        /* MODAL ANIMATION */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); opacity: 0; transition: opacity 0.3s ease; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-overlay.closing { opacity: 0; }
+        .modal-box { background: var(--white); width: 85%; max-width: 350px; border-radius: 24px; padding: 24px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); margin-bottom: 50px; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        .modal-overlay.closing .modal-box { transform: scale(0.8); }
+
+        /* CHAT BUBBLES & INPUT (AŞAĞI ALINDI) */
+        .chat-input-box { 
+            position: fixed; 
+            bottom: 90px; /* Navigasyonun üstüne, daha aşağıya */
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 90%; 
+            max-width: 400px; 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid var(--border); 
+            padding: 10px; 
+            border-radius: 20px; 
+            display: none; 
+            align-items: center; 
+            gap: 10px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); 
+            z-index: 2000; 
+        }
+        .chat-inp { flex: 1; border: none; background: transparent; padding: 8px; font-size: 14px; outline: none; }
+        .chat-send-btn { width: 36px; height: 36px; background: var(--primary); color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+        .msg-wrapper { display: flex; align-items: flex-end; gap: 8px; max-width: 85%; transition: all 0.3s ease; }
+        .msg-left { align-self: flex-start; } .msg-right { align-self: flex-end; flex-direction: row-reverse; }
+        .msg-avatar { width: 32px; height: 32px; border-radius: 50%; background: #E2E8F0; overflow: hidden; border: 2px solid white; flex-shrink: 0; }
+        .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .msg-bubble { padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.4; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.03); min-width: 80px; }
+        .msg-left .msg-bubble { background: var(--white); color: var(--text-main); border-bottom-left-radius: 4px; }
+        .msg-right .msg-bubble { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+        .msg-info { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; margin-top: 4px; font-size: 10px; opacity: 0.8; }
+        .msg-name { font-weight: 700; font-size: 11px; margin-bottom: 2px; color: var(--primary); }
+        .msg-right .msg-name { display: none; } 
+        .msg-tick { font-size: 10px; margin-left: 3px; }
+        .msg-tick.read { color: #60A5FA; } .msg-tick.unread { color: rgba(255,255,255,0.6); } .msg-left .msg-tick { display: none; }
+        .msg-actions { display:flex; gap:5px; margin-left:auto; } .msg-btn { font-size:10px; cursor:pointer; padding:2px 5px; border-radius:4px; transition:0.2s; }
+
+        .pinned-container { position: absolute; top: 0; left: 0; width: 100%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 10px 15px; z-index: 500; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .pinned-line { width: 3px; height: 30px; background: var(--primary); border-radius: 2px; }
+
+        .profile-container { display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 20px; }
+        
+        /* ADMIN STATS GRID */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stats-box { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 10px; text-align: center; }
+        .stats-val { font-size: 18px; font-weight: 800; color: var(--primary); }
+        .stats-label { font-size: 10px; color: var(--text-sub); }
+    </style>
 </head>
 <body>
 
-    <div class="header">
-        <div>
-            <div style="font-size:12px; color:var(--text-sub);">Hoş Geldin,</div>
-            <div style="font-weight:700; font-size:18px;" id="u-name">Kullanıcı</div>
-        </div>
-        <div class="header-icon-btn" id="adm-btn" style="display:none;" onclick="go('admin')">
-            <i class="fa-solid fa-gear"></i>
-        </div>
-    </div>
+    <div id="toast-container"></div>
 
-    <div id="v-home" class="view active">
-        <div style="background: linear-gradient(135deg, #6366F1, #A855F7); color: white; border-radius: 24px; padding: 24px; margin-bottom: 24px;">
-            <h3 style="font-size:22px;">Ücretsiz Kütüphane</h3>
-            <p style="font-size:13px; opacity:0.9; margin-top:5px;">Tüm PDF kaynaklarına sınırsız erişebilirsiniz.</p>
-        </div>
-        <button class="btn" onclick="go('pdfs')">Kitapları İncele</button>
-    </div>
+    <!-- PAGE LOADER -->
+    <div id="page-loader">
+        <div class="spinner"></div>
+        <div style="margin-top:15px; color:var(--text-main); font-weight:600; font-size:12px;">Yükleniyor...</div>
+    </div>
 
-    <div id="v-pdfs" class="view">
-        <h2 style="margin-bottom:15px;">Tüm Kitaplar</h2>
-        <div id="pdf-list" class="pdf-grid">
-            </div>
-    </div>
+    <!-- CODE GENERATION PAGE -->
+    <div id="v-code-page" style="display:none;">
+        <h2 style="color:var(--primary); margin-bottom:20px;">Görev Tamamlandı!</h2>
+        <p style="margin-bottom:20px; color:var(--text-sub);">Aşağıdaki kodu kopyalayıp uygulamaya geri dönün.</p>
+        <div id="generated-code">YÜKLENİYOR...</div>
+        <button class="btn" onclick="copyGeneratedCode()">Kodu Kopyala</button>
+        <div style="margin-top:20px; font-size:12px; color:#aaa;">Bu pencereyi kapatabilirsiniz.</div>
+    </div>
 
-    <div id="v-chat" class="view">
-        <div id="chat-feed" class="chat-feed"></div>
-        <div class="chat-input-box">
-            <input type="text" id="chat-msg-in" class="chat-inp" placeholder="Mesaj yaz...">
-            <button class="btn" style="width:auto;" onclick="sendChat()">Gönder</button>
-        </div>
-    </div>
+    <!-- MAIN APP CONTENT -->
+    <div id="app-container">
+        <!-- SIDEBAR -->
+        <div class="sidebar-overlay" id="sb-overlay" onclick="toggleSidebar(false)"></div>
+        <div class="sidebar" id="sidebar">
+            <h3 style="margin-bottom:20px; color:var(--primary);">Kategoriler</h3>
+            <div style="flex:1; overflow-y:auto;" id="sb-list"></div>
+            <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v15.0 Coin System</div>
+        </div>
 
-    <div id="v-profile" class="view">
-        <div style="text-align:center; padding:20px;">
-            <div style="width:80px; height:80px; background:#EEF2FF; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:30px; color:var(--primary);">
-                <i class="fa-solid fa-user"></i>
-            </div>
-            <h3 style="margin-top:10px;">Hesabım</h3>
-            <p style="color:var(--text-sub); font-size:14px;">Sınırsız Erişim Aktif</p>
-        </div>
-    </div>
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <div style="font-size:12px; color:var(--text-sub);">Hoş Geldin,</div>
+                <div style="font-weight:700; font-size:18px;" id="u-name">Kullanıcı</div>
+            </div>
+            <div class="header-actions" id="header-actions">
+                <div class="header-icon-btn" onclick="toggleSidebar(true)"><i class="fa-solid fa-bars-staggered"></i></div>
+                <div class="header-icon-btn" onclick="openModal('m-history'); renderHistory();"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            </div>
+        </div>
 
-    <div id="v-admin" class="view">
-        <h2>Yönetici</h2>
-        <button class="btn btn-sec" style="margin-top:10px;">Yeni PDF Ekle</button>
-        <button class="btn btn-sec" style="margin-top:10px;" onclick="go('home')">Geri Dön</button>
-    </div>
+        <!-- 1. HOME VIEW -->
+        <div id="v-home" class="view active">
+            <div style="background: linear-gradient(135deg, #6366F1, #A855F7); color: white; border-radius: 24px; padding: 24px; margin-bottom: 24px; box-shadow: 0 15px 30px -10px rgba(99, 102, 241, 0.4);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="font-size:22px;">Sınavlara Hazır Mısın?</h3>
+                    <div style="text-align:right;">
+                        <div style="font-size:10px; opacity:0.8;">BAKİYEN</div>
+                        <div style="font-size:20px; font-weight:800;"><i class="fa-solid fa-coins" style="color:#FCD34D;"></i> <span id="home-balance">0</span></div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button class="btn" style="background:var(--white); color:var(--primary); width:auto; padding:10px 20px; font-size:13px; flex:1;" onclick="go('pdfs', document.querySelectorAll('.nav-item')[1])">Kütüphaneye Git</button>
+                    <button class="btn" style="background:rgba(255,255,255,0.2); color:white; width:auto; padding:10px 20px; font-size:13px; flex:1;" onclick="openModal('m-req-user')">PDF İste</button>
+                </div>
+            </div>
+            <h4 style="margin-bottom:15px;">Hızlı Erişim</h4>
+            <div class="cat-grid" id="home-cat-grid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;"></div>
+        </div>
 
-    <div class="nav-container">
-        <div class="nav">
-            <div class="nav-item active" onclick="go('home', this)"><i class="fa-solid fa-house"></i></div>
-            <div class="nav-item" onclick="go('pdfs', this)"><i class="fa-solid fa-book"></i></div>
-            <div class="nav-item" onclick="go('chat', this)"><i class="fa-solid fa-comments"></i></div>
-            <div class="nav-item" onclick="go('profile', this)"><i class="fa-solid fa-user"></i></div>
-        </div>
-    </div>
+        <!-- 2. PDFS VIEW -->
+        <div id="v-pdfs" class="view">
+            <h2 style="margin-bottom:15px;" id="lib-title">Tüm Kitaplar</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <input class="inp" style="margin-bottom:0; flex:1; margin-right:10px;" placeholder="🔍 Ara..." id="search" oninput="render()">
+                <div style="font-weight:800; color:var(--coin); white-space:nowrap;"><i class="fa-solid fa-coins"></i> <span id="lib-balance">0</span></div>
+            </div>
+            <div id="pdf-list" class="pdf-grid"><div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-sub);">Yükleniyor...</div></div>
+        </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        const ADMIN_IDS = [7904032877, 8392479231];
+        <!-- 3. EARN (JETON AL) VIEW -->
+        <div id="v-earn" class="view">
+            <h2 style="margin-bottom:15px; color:var(--coin);"><i class="fa-solid fa-coins"></i> Jeton Kazan</h2>
+            <div style="background:white; padding:15px; border-radius:16px; text-align:center; margin-bottom:20px; border:1px solid var(--border);">
+                <div style="font-size:12px; color:var(--text-sub);">Mevcut Bakiyen</div>
+                <div style="font-size:32px; font-weight:800; color:var(--coin);" id="earn-balance">0</div>
+            </div>
+            
+            <h4 style="margin-bottom:10px;">Görevler</h4>
+            <div id="task-list">
+                <div style="text-align:center; color:#999; padding:20px;">Görevler yükleniyor...</div>
+            </div>
+            
+            <h4 style="margin:20px 0 10px 0;">Ekstra</h4>
+            <div class="task-box">
+                <div class="task-header">
+                    <div style="font-weight:700;">Reklam İzle</div>
+                    <div class="task-reward">+1 <i class="fa-solid fa-coins"></i></div>
+                </div>
+                <button class="btn btn-sec" onclick="watchTaddyAd()">Reklamı Başlat</button>
+            </div>
+        </div>
 
-        function init() {
-            tg.expand();
-            const user = tg.initDataUnsafe.user;
-            if(user) {
-                document.getElementById('u-name').innerText = user.first_name;
-                if(ADMIN_IDS.includes(user.id)) {
-                    document.getElementById('adm-btn').style.display = 'flex';
-                }
-            }
-            renderPdfs();
-        }
+        <!-- 4. CHAT VIEW -->
+        <div id="v-chat" class="view">
+            <div id="pinned-bar" class="pinned-container" style="display:none;" onclick="jumpToPin()">
+                <div class="pinned-line"></div>
+                <div style="flex:1; overflow:hidden;">
+                    <div style="font-size:11px; font-weight:700; color:var(--primary);">📌 Sabitlenen Mesaj</div>
+                    <div style="font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="pinned-text-content">...</div>
+                </div>
+                <i class="fa-solid fa-times" id="btn-unpin" onclick="unpinMsg(event)" style="color:#aaa; display:none; padding:5px;"></i>
+            </div>
+            <div id="chat-feed" class="chat-feed"><div style="text-align:center; color:#94A3B8;">Sohbet yükleniyor...</div></div>
+        </div>
+        <div id="chat-box-container" class="chat-input-box">
+            <input type="text" id="chat-msg-in" class="chat-inp" placeholder="Mesaj yaz..." onkeypress="if(event.key==='Enter') sendChat()">
+            <button class="chat-send-btn" onclick="sendChat()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
 
-        function go(viewId, el) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('v-' + viewId).classList.add('active');
-            
-            if(el) {
-                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-                el.classList.add('active');
-            }
-        }
+        <!-- 5. PROFILE VIEW -->
+        <div id="v-profile" class="view">
+            <div class="profile-container">
+                <div id="u-avatar-box" style="width:100px; height:100px; border-radius:50%; background:var(--white); display:flex; align-items:center; justify-content:center; font-size:40px; color:var(--primary); overflow:hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-top:20px;">
+                    <i class="fa-solid fa-user-astronaut"></i>
+                </div>
+                <h3 style="margin-top:15px; font-size:22px;">Profilim</h3>
+            </div>
+            
+            <div style="background:var(--white); padding:15px; border-radius:12px; text-align:center; border:1px solid var(--border); margin-bottom:20px;">
+                <div style="font-size:24px; font-weight:800; color:var(--coin);" id="profile-balance">0</div>
+                <div style="font-size:12px; color:var(--text-sub);">Jeton Bakiyesi</div>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div class="side-item" onclick="openModal('m-req-user')" style="background:var(--white); border:1px solid var(--border);">
+                    <i class="fa-solid fa-bullhorn" style="color:var(--primary);"></i> <div>PDF İste</div>
+                </div>
+                <div class="side-item" onclick="openModal('m-user-notifs')" style="background:var(--white); border:1px solid var(--border);">
+                    <i class="fa-solid fa-bell" style="color:#F59E0B;"></i> <div>Duyurular</div>
+                </div>
+            </div>
+        </div>
 
-        // Örnek PDF Listesi (Firebase entegrasyonu buraya bağlanacak)
-        function renderPdfs() {
-            const list = document.getElementById('pdf-list');
-            const sampleData = [
-                {name: "Matematik Notları", link: "#"},
-                {name: "Fizik Formülleri", link: "#"}
-            ];
-            
-            list.innerHTML = sampleData.map(pdf => `
-                <div class="pdf-box">
-                    <div class="pdf-thumb"><i class="fa-solid fa-file-pdf"></i></div>
-                    <div class="pdf-title">${pdf.name}</div>
-                    <button class="btn" onclick="window.open('${pdf.link}')">Görüntüle</button>
-                </div>
-            `).join('');
-        }
+        <!-- 6. ADMIN VIEW -->
+        <div id="v-admin" class="view">
+            <h2 style="margin-bottom:20px; color:var(--primary);">Yönetici Paneli</h2>
+            <div class="stats-grid">
+                <div class="stats-box"><div class="stats-val" id="st-users">0</div><div class="stats-label">Toplam Kullanıcı</div></div>
+                <div class="stats-box"><div class="stats-val" id="st-tasks-total">0</div><div class="stats-label">Tamamlanan Görev</div></div>
+                <div class="stats-box"><div class="stats-val" id="st-active-users">0</div><div class="stats-label">Anlık Aktif</div></div>
+            </div>
+            <div style="display:grid; gap:10px;">
+                <button class="btn btn-sec" onclick="openModal('m-pdf')">PDF Yönet</button>
+                <button class="btn btn-sec" onclick="openModal('m-tasks')">Görev Yönet</button>
+                <button class="btn btn-sec" onclick="openModal('m-users')">Kullanıcılar</button>
+                <button class="btn btn-sec" onclick="openModal('m-reqs')">İstekler</button>
+                <button class="btn btn-sec" onclick="openModal('m-add-notif')">Duyurular</button>
+            </div>
+        </div>
 
-        window.onload = init;
-    </script>
-</body>
-</html>
+        <!-- MODALS -->
+        <div id="m-unlock" class="modal-overlay">
+            <div class="modal-box">
+                <h3>PDF Kilidi</h3>
+                <div style="font-size:40px; color:var(--coin); margin:15px 0;"><i class="fa-solid fa-lock"></i></div>
+                <p id="unlock-msg">Bu kitabı açmak için X jeton gerekiyor.</p>
+                <button class="btn btn-coin" id="btn-unlock-pdf" style="margin-top:15px;">Kilidi Aç</button>
+                <button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Vazgeç</button>
+            </div>
+        </div>
+
+        <div id="m-history" class="modal-overlay"><div class="modal-box"><h3>Geçmiş</h3><div id="history-list" style="max-height:300px; overflow-y:auto; text-align:left; margin:15px 0;"></div><button class="btn btn-dang" style="font-size:12px; padding:10px;" onclick="clearHistory()">Temizle</button><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
+        <div id="m-user-notifs" class="modal-overlay"><div class="modal-box" style="max-height:80vh;"><h3 style="margin-bottom:15px;">Duyurular</h3><div id="user-notif-list" style="overflow-y:auto; flex:1; text-align:left;"></div><button class="btn btn-sec" style="margin-top:15px;" onclick="closeM()">Kapat</button></div></div>
+        
+        <!-- ADMIN PDF MODAL -->
+        <div id="m-pdf" class="modal-overlay">
+            <div class="modal-box">
+                <h3 id="pdf-modal-title">PDF Ekle</h3>
+                <input id="ap-l" class="inp" placeholder="Link (URL)" oninput="autoDetect(this.value, 'link')">
+                <input id="ap-n" class="inp" placeholder="Ad" oninput="autoDetect(this.value, 'name')">
+                <input id="ap-c" class="inp" placeholder="Kategori (Oto Algılanır)">
+                <input id="ap-cost" class="inp" type="number" placeholder="Jeton Fiyatı (Örn: 5)">
+                <button class="btn" id="btn-save-pdf" onclick="savePdf()">Ekle</button>
+                <div id="edit-cancel-box" style="display:none; margin-top:5px;"><button class="btn btn-sec" onclick="resetPdfForm()">Vazgeç</button></div>
+                <div onclick="toggleAdmList()" id="btn-toggle-list" style="margin-top:15px; cursor:pointer; font-size:13px; color:var(--primary); font-weight:600; background:#EEF2FF; padding:8px; border-radius:8px;"><i class="fa-solid fa-list"></i> Listeyi Göster</div>
+                <div id="adm-pdf-c" style="display:none; margin-top:10px;"><input class="inp" placeholder="Ara..." oninput="renderAdmPdfs(this.value)"><div id="adm-pdf-list" style="max-height:150px; overflow-y:auto; text-align:left;"></div></div>
+                <button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button>
+            </div>
+        </div>
+
+        <!-- ADMIN TASKS MODAL -->
+        <div id="m-tasks" class="modal-overlay">
+            <div class="modal-box">
+                <h3 id="task-modal-title">Görev Oluştur</h3>
+                <input id="t-name" class="inp" placeholder="Görev Adı (Örn: Shortlink 1)">
+                <input id="t-reward" class="inp" type="number" placeholder="Ödül Miktarı (Örn: 10)">
+                <div style="background:#F1F5F9; padding:10px; border-radius:8px; margin-bottom:10px; text-align:left; font-size:12px;">
+                    <b>Adım 1:</b> Bu linki oluştur:<br>
+                    <button class="btn btn-sec" style="padding:5px; font-size:11px; margin-top:5px;" onclick="generateTaskLink()">Link Üret</button>
+                    <div id="t-generated-link" style="margin-top:5px; word-break:break-all; font-family:monospace; color:blue; cursor:pointer;" onclick="copyText(this.innerText)"></div>
+                </div>
+                <input id="t-short-url" class="inp" placeholder="Kısaltılmış Linki Yapıştır">
+                <button class="btn" id="btn-save-task" onclick="saveTask()">Görevi Kaydet</button>
+                <div id="task-edit-cancel-box" style="display:none; margin-top:5px;">
+                    <button class="btn btn-sec" onclick="resetTaskForm()">Vazgeç / Yeni Ekle</button>
+                </div>
+                
+                <div onclick="toggleAdmTasks()" id="btn-toggle-tasks" style="margin-top:15px; cursor:pointer; font-size:13px; color:var(--primary); font-weight:600; background:#EEF2FF; padding:8px; border-radius:8px;"><i class="fa-solid fa-list"></i> Listeyi Göster</div>
+                <div id="adm-task-c" style="display:none; margin-top:10px;">
+                    <div id="adm-task-list" style="max-height:150px; overflow-y:auto; text-align:left;"></div>
+                </div>
+
+                <button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button>
+            </div>
+        </div>
+
+        <div id="m-users" class="modal-overlay"><div class="modal-box"><h3>Kullanıcılar</h3><input class="inp" placeholder="Ara..." oninput="renderUsers(this.value)"><div id="adm-user-list" style="max-height:300px; overflow-y:auto; text-align:left; margin-top:10px;"></div><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
+        <div id="m-reqs" class="modal-overlay"><div class="modal-box"><h3>İstekler</h3><div id="adm-req-list" style="max-height:300px; overflow-y:auto; text-align:left; margin-top:10px;"></div><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
+        <div id="m-add-notif" class="modal-overlay"><div class="modal-box"><h3>Duyuru Yönet</h3><textarea id="notif-txt" class="txtarea" placeholder="Duyuru..."></textarea><button class="btn" onclick="sendNotification()">Yayınla</button><div id="adm-notif-list" style="max-height:150px; overflow-y:auto; margin-top:10px;"></div><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
+        <div id="m-req-user" class="modal-overlay"><div class="modal-box"><h3>PDF İste</h3><input id="req-txt" class="inp" placeholder="PDF Adı"><button class="btn" onclick="sendReq()">Gönder</button><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">İptal</button></div></div>
+
+        <!-- BOTTOM NAV -->
+        <div class="nav-container">
+            <div class="nav">
+                <div class="nav-item active" onclick="go('home',this)"><i class="fa-solid fa-house"></i></div>
+                <div class="nav-item" onclick="go('pdfs',this)"><i class="fa-solid fa-book-open"></i></div>
+                <div class="nav-item" onclick="go('earn',this)"><i class="fa-solid fa-gift"></i></div>
+                <div class="nav-item" onclick="go('chat',this)">
+                    <i class="fa-solid fa-comments"></i>
+                    <div class="nav-badge" id="chat-badge" style="display:none">0</div>
+                </div>
+                <div class="nav-item" onclick="go('profile',this)"><i class="fa-solid fa-user"></i></div>
+                <div class="nav-item" id="nav-admin" style="display:none;" onclick="go('admin',this); loadStats();"><i class="fa-solid fa-shield-halved"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- GÜVENLİK ---
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.keyCode == 'S'.charCodeAt(0)) return false;
+        }
+
+        const CFG = {
+            apiKey: "AIzaSyDCR9nLVp57rZjR5cZSin1Mc311xiJNMvc",
+            authDomain: "pdfdosyam-2def4.firebaseapp.com",
+            databaseURL: "https://proje-default-rtdb.firebaseio.com",
+            projectId: "pdfdosyam-2def4",
+            storageBucket: "pdfdosyam-2def4.firebasestorage.app",
+            messagingSenderId: "155894000586",
+            appId: "1:155894000586:web:a9011fbb6cdadc5a793d33",
+            measurementId: "G-ZHW0QCG469"
+        };
+        const ADMIN_IDS = [7904032877, 8392479231];
+        const BASE_URL = "https://pdf-dosyam.onrender.com";
+     
