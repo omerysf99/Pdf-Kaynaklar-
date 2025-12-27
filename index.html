@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dollar Reward Bot - High Earn</title>
+    <title>Dollar Reward Bot - Quick Payout</title>
 
     <script src='//libtl.com/sdk.js' data-zone='9428290' data-sdk='show_9428290'></script>
 
@@ -82,7 +82,7 @@
 
         <div id="v-withdraw" class="view">
             <h3>Para Çekme</h3>
-            <p style="color:var(--text-sub); font-size:13px; margin-bottom:20px;">Minimum çekim: $1.00</p>
+            <p style="color:var(--text-sub); font-size:13px; margin-bottom:20px;">Minimum çekim: $0.01</p>
             
             <div class="card">
                 <div style="margin-bottom:15px;">
@@ -91,7 +91,7 @@
                 </div>
                 <div style="margin-bottom:20px;">
                     <label>Çekilecek Miktar ($)</label>
-                    <input type="number" id="w-amount" placeholder="1.00" min="1">
+                    <input type="number" id="w-amount" placeholder="0.01" step="0.01" min="0.01">
                 </div>
                 <button class="btn btn-success" onclick="requestWithdraw()">
                     <i class="fa-solid fa-money-bill-transfer"></i> Ödeme Talebi Oluştur
@@ -126,8 +126,7 @@
                 <h3>Ödeme Talepleri</h3>
                 <button onclick="go('home', document.querySelector('.nav-item'))" style="background:none; border:none; color:var(--primary); font-weight:bold;">Kapat</button>
             </div>
-            <div id="admin-requests-list">
-                </div>
+            <div id="admin-requests-list"></div>
         </div>
 
     </div>
@@ -148,12 +147,11 @@
         // SİSTEM AYARLARI
         let balance = parseFloat(localStorage.getItem('user_balance')) || 0.0;
         let totalAds = parseInt(localStorage.getItem('user_ads')) || 0;
-        let adminID = "8392479231"; // Senin Telegram ID'n
-        let currentUserID = "8392479231"; // Simülasyon için senin ID'n tanımlı
+        let adminID = "8392479231"; 
+        let currentUserID = "8392479231"; 
 
         updateUI();
 
-        // SAYFA GEÇİŞLERİ
         function go(view, el) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -161,43 +159,37 @@
             if(el) el.classList.add('active');
         }
 
-        // 1$ KAZANDIRAN REKLAM FONKSİYONU
         async function startAd() {
             try {
-                // SDK'yı bekletiyoruz
                 await show_9428290();
-                
-                // REKLAM BAŞARIYLA İZLENDİĞİNDE:
-                balance = balance + 1.0; // Reklam başına tam 1 Dolar
+                balance = balance + 1.0; 
                 totalAds++;
-                
                 save();
                 updateUI();
                 alert("Tebrikler! Hesabınıza $1.00 eklendi.");
             } catch (err) {
-                alert("Reklam şu an yüklenemedi. Lütfen tekrar deneyin.");
+                alert("Reklam şu an yüklenemedi.");
             }
         }
 
-        // ÖDEME TALEBİ OLUŞTURMA
         function requestWithdraw() {
             let address = document.getElementById('w-address').value;
             let amount = parseFloat(document.getElementById('w-amount').value);
 
-            if(isNaN(amount) || amount < 1.0) {
-                alert("Minimum çekim tutarı $1.00'dır.");
+            // GÜNCELLENEN MİNİMUM LİMİT: 0.01$
+            if(isNaN(amount) || amount < 0.01) {
+                alert("Minimum çekim tutarı $0.01'dır.");
                 return;
             }
             if(amount > balance) {
-                alert("Yetersiz bakiye! Daha fazla reklam izlemelisin.");
+                alert("Yetersiz bakiye!");
                 return;
             }
             if(address.length < 15) {
-                alert("Lütfen geçerli bir USDT TRC20 adresi girin.");
+                alert("Geçerli bir USDT TRC20 adresi girin.");
                 return;
             }
 
-            // Talebi Yerel Depolamaya At (Admin Panelinde Görünmesi İçin)
             let requests = JSON.parse(localStorage.getItem('withdraw_requests') || "[]");
             requests.push({
                 id: Math.floor(Math.random() * 9999),
@@ -207,39 +199,33 @@
             });
             localStorage.setItem('withdraw_requests', JSON.stringify(requests));
 
-            // Bakiyeyi düşür
             balance -= amount;
             save();
             updateUI();
-            alert("Talebiniz alındı! Admin onayından sonra ödemeniz gönderilecektir.");
+            alert("Talebiniz iletildi!");
         }
 
-        // ADMIN PANELİ GİRİŞ KONTROLÜ
         function checkAdmin() {
             if(currentUserID === adminID) {
                 go('admin');
                 renderAdminRequests();
             } else {
-                alert("Hata: Bu bölüme sadece admin 8392479231 erişebilir.");
+                alert("Yetkisiz erişim!");
             }
         }
 
-        // ADMIN PANELİNDEKİ TALEPLERİ LİSTELE
         function renderAdminRequests() {
             const listDiv = document.getElementById('admin-requests-list');
             const data = JSON.parse(localStorage.getItem('withdraw_requests') || "[]");
-
             if(data.length === 0) {
-                listDiv.innerHTML = "<p style='text-align:center; color:gray; margin-top:20px;'>Bekleyen ödeme talebi yok.</p>";
+                listDiv.innerHTML = "<p style='text-align:center; color:gray; margin-top:20px;'>Bekleyen talep yok.</p>";
                 return;
             }
-
             listDiv.innerHTML = data.map((req, idx) => `
                 <div class="admin-request">
                     <div style="margin-bottom:5px;"><b style="color:var(--success)">Tutar: $${req.amount.toFixed(2)}</b></div>
                     <div style="font-size:11px; color:var(--text-sub); word-break:break-all;">Cüzdan: ${req.address}</div>
-                    <div style="font-size:10px; color:gray; margin-top:5px;">Tarih: ${req.time}</div>
-                    <button onclick="approveRequest(${idx})" style="position:absolute; right:10px; top:25px; background:var(--primary); color:white; border:none; padding:8px 12px; border-radius:8px; font-size:11px;">Ödendi</button>
+                    <button onclick="approveRequest(${idx})" style="position:absolute; right:10px; top:15px; background:var(--primary); color:white; border:none; padding:8px 12px; border-radius:8px;">Öde</button>
                 </div>
             `).join('');
         }
@@ -249,18 +235,15 @@
             data.splice(index, 1);
             localStorage.setItem('withdraw_requests', JSON.stringify(data));
             renderAdminRequests();
-            alert("Talep ödendi olarak işaretlendi ve listeden kaldırıldı.");
         }
 
-        // KAYIT VE ARAYÜZ GÜNCELLEME
         function save() {
             localStorage.setItem('user_balance', balance);
             localStorage.setItem('user_ads', totalAds);
         }
 
         function updateUI() {
-            const bValues = document.querySelectorAll('#b-home, #b-prof, #b-total');
-            bValues.forEach(el => el.innerText = balance.toFixed(2));
+            document.querySelectorAll('#b-home, #b-prof, #b-total').forEach(el => el.innerText = balance.toFixed(2));
             document.getElementById('ads-count').innerText = totalAds;
         }
     </script>
