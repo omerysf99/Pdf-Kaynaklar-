@@ -3,180 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PDF DOSYAM - PRO CHAT</title>
-    
+    <title>PDF DOSYAM - PRO</title>
+
     <script src='//libtl.com/sdk.js' data-zone='9428290' data-sdk='show_9428290'></script>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --bg: #F8FAFC;
             --white: #FFFFFF;
             --primary: #6366F1;
-            --primary-dark: #4F46E5;
             --text-main: #0F172A;
             --text-sub: #64748B;
             --border: #E2E8F0;
             --coin: #F59E0B;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
-        input, textarea { -webkit-user-select: text !important; user-select: text !important; }
-        
+        /* TEMEL AYARLAR */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        ::-webkit-scrollbar { display: none; }
+        
+        /* ÜST PANEL (HEADER) */
+        .header { padding: 40px 20px 20px; background: var(--white); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .user-info h3 { font-size: 16px; font-weight: 800; }
+        .balance-badge { background: #FFFBEB; padding: 6px 12px; border-radius: 20px; color: var(--coin); font-weight: 800; display: flex; align-items: center; gap: 6px; border: 1px solid #FEF3C7; }
 
-        /* VIEW CONTAINER */
-        .view { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 120px; display: none; opacity: 0; transition: opacity 0.2s ease; }
-        .view.active { display: block; opacity: 1; }
+        /* İÇERİK ALANI */
+        .content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
+        .view { display: none; }
+        .view.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* UI ELEMENTS */
-        .header { padding: 20px; padding-top: 50px; background: var(--bg); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
-        .btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.1s; }
-        .btn:active { transform: scale(0.97); }
-        .btn-sec { background: #EEF2FF; color: var(--primary); }
-
-        /* CARDS */
-        .task-box { background: white; padding: 15px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 10px; }
-        .task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .task-reward { background: #FFFBEB; color: var(--coin); padding: 5px 10px; border-radius: 20px; font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 5px; }
-
+        /* KART TASARIMLARI */
+        .card { background: var(--white); border-radius: 20px; padding: 20px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .promo-card { background: linear-gradient(135deg, #6366F1, #8B5CF6); color: white; border: none; }
+        
         /* PDF GRID */
-        .pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .pdf-box { background: var(--white); padding: 15px; border-radius: 20px; text-align: center; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; }
-        .pdf-thumb { width: 45px; height: 45px; background: #EEF2FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 20px; margin-bottom: 8px; }
+        .pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .pdf-box { background: var(--white); border-radius: 16px; padding: 15px; text-align: center; border: 1px solid var(--border); position: relative; }
+        .pdf-icon { font-size: 32px; color: var(--primary); margin-bottom: 10px; }
+        .pdf-name { font-size: 13px; font-weight: 600; margin-bottom: 8px; display: block; }
+        
+        /* BUTONLAR */
+        .btn { border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-coin { background: var(--coin); color: white; }
+        .btn:active { transform: scale(0.96); }
 
-        /* NAV */
-        .nav-container { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; z-index: 1000; }
-        .nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; display: flex; justify-content: space-around; padding: 14px; box-shadow: 0 20px 50px -10px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.6); }
-        .nav-item { font-size: 24px; color: #CBD5E1; transition: 0.3s; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 14px; cursor: pointer; }
-        .nav-item.active { color: var(--primary); background: #EEF2FF; }
+        /* ALT NAVİGASYON */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--white); display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid var(--border); }
+        .nav-item { color: #CBD5E1; font-size: 24px; cursor: pointer; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); }
 
-        /* CHAT INPUT */
-        .chat-input-box { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: white; padding: 10px; border-radius: 20px; display: none; align-items: center; gap: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); border: 1px solid var(--border); }
-        .chat-inp { flex: 1; border: none; outline: none; padding: 8px; }
+        /* SOHBET TASARIMI */
+        .chat-placeholder { text-align: center; color: var(--text-sub); margin-top: 50px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div>
-            <div style="font-size:12px; color:var(--text-sub);">Hoş Geldin,</div>
-            <div style="font-weight:700; font-size:18px;">Öğrenci Paneli</div>
+        <div class="user-info">
+            <p style="font-size: 11px; color: var(--text-sub);">Hoş Geldin,</p>
+            <h3>Öğrenci Paneli</h3>
         </div>
-        <div style="text-align:right;">
-            <div style="font-size:10px; color:var(--text-sub);">BAKİYEN</div>
-            <div style="font-size:18px; font-weight:800; color:var(--coin);"><i class="fa-solid fa-coins"></i> <span class="u-balance">0</span></div>
+        <div class="balance-badge">
+            <i class="fa-solid fa-coins"></i>
+            <span id="global-balance">0</span>
         </div>
     </div>
 
-    <div id="v-home" class="view active">
-        <div style="background: linear-gradient(135deg, #6366F1, #A855F7); color: white; border-radius: 24px; padding: 24px; margin-bottom: 24px;">
-            <h3>Hızlı Jeton Kazan!</h3>
-            <p style="font-size: 13px; opacity: 0.9; margin-top: 5px;">Reklam izleyerek yeni kitapların kilidini açabilirsin.</p>
-        </div>
+    <div class="content">
         
-        <h4 style="margin-bottom:15px;">Günlük Görevler</h4>
-        <div class="task-box">
-            <div class="task-header">
-                <div style="font-weight:700;">Ödüllü Reklam</div>
-                <div class="task-reward">+1 <i class="fa-solid fa-coins"></i></div>
+        <div id="home" class="view active">
+            <div class="card promo-card">
+                <h2>Ücretsiz PDF İndir!</h2>
+                <p style="font-size: 13px; margin-top: 5px; opacity: 0.9;">Reklam izleyerek jeton kazan ve kitapların kilidini aç.</p>
             </div>
-            <button class="btn btn-sec" onclick="handleAdClick()">
-                <i class="fa-solid fa-play-circle"></i> Reklamı İzle
-            </button>
-        </div>
-    </div>
-
-    <div id="v-pdfs" class="view">
-        <h2 style="margin-bottom:15px;">Kütüphane</h2>
-        <div class="pdf-grid">
-            <div class="pdf-box">
-                <div class="pdf-thumb"><i class="fa-solid fa-file-pdf"></i></div>
-                <div style="font-size:13px; font-weight:700;">Matematik Soru Bankası</div>
-                <div style="color:var(--coin); font-size:12px; font-weight:800; margin-top:5px;">5 Jeton</div>
-            </div>
-            <div class="pdf-box">
-                <div class="pdf-thumb"><i class="fa-solid fa-file-pdf"></i></div>
-                <div style="font-size:13px; font-weight:700;">Fizik Konu Anlatımı</div>
-                <div style="color:var(--coin); font-size:12px; font-weight:800; margin-top:5px;">3 Jeton</div>
+            
+            <h4 style="margin: 20px 0 10px;">Jeton Görevleri</h4>
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div>
+                        <b style="display: block;">Video Reklam</b>
+                        <small style="color: var(--text-sub);">İzle ve +1 Jeton kazan</small>
+                    </div>
+                    <span style="color: var(--coin); font-weight: 800;">+1 <i class="fa-solid fa-coins"></i></span>
+                </div>
+                <button class="btn btn-coin" onclick="watchAd()">
+                    <i class="fa-solid fa-play-circle"></i> Reklamı Başlat
+                </button>
             </div>
         </div>
-    </div>
 
-    <div id="v-chat" class="view">
-        <div style="text-align:center; margin-top:50px; color:var(--text-sub);">
-            <i class="fa-solid fa-comments" style="font-size:40px; margin-bottom:10px;"></i>
-            <p>Sohbet Odasına Hoş Geldin</p>
-        </div>
-    </div>
-
-    <div id="v-profile" class="view">
-        <div style="text-align:center;">
-            <div style="width:80px; height:80px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:auto; font-size:30px; color:var(--primary); box-shadow:0 5px 15px rgba(0,0,0,0.05);">
-                <i class="fa-solid fa-user-graduate"></i>
-            </div>
-            <h3 style="margin-top:15px;">Hesabım</h3>
-            <div style="background:white; padding:15px; border-radius:15px; margin-top:20px; border:1px solid var(--border);">
-                <div style="font-size:12px; color:var(--text-sub);">Mevcut Jetonun</div>
-                <div style="font-size:28px; font-weight:800; color:var(--coin);"><i class="fa-solid fa-coins"></i> <span class="u-balance">0</span></div>
+        <div id="library" class="view">
+            <h4 style="margin-bottom: 15px;">Tüm Kitaplar</h4>
+            <div class="pdf-grid">
+                <div class="pdf-box">
+                    <div class="pdf-icon"><i class="fa-solid fa-file-pdf"></i></div>
+                    <span class="pdf-name">TYT Matematik</span>
+                    <button class="btn btn-primary" onclick="buyPdf(5)">5 Jeton</button>
+                </div>
+                <div class="pdf-box">
+                    <div class="pdf-icon"><i class="fa-solid fa-file-pdf"></i></div>
+                    <span class="pdf-name">AYT Fizik</span>
+                    <button class="btn btn-primary" onclick="buyPdf(3)">3 Jeton</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="chat-input-container" class="chat-input-box">
-        <input type="text" class="chat-inp" placeholder="Mesajınızı yazın...">
-        <button style="background:var(--primary); color:white; border:none; width:35px; height:35px; border-radius:50%;"><i class="fa-solid fa-paper-plane"></i></button>
-    </div>
-
-    <div class="nav-container">
-        <div class="nav">
-            <div class="nav-item active" onclick="go('home', this)"><i class="fa-solid fa-house"></i></div>
-            <div class="nav-item" onclick="go('pdfs', this)"><i class="fa-solid fa-book-open"></i></div>
-            <div class="nav-item" onclick="go('chat', this)"><i class="fa-solid fa-comments"></i></div>
-            <div class="nav-item" onclick="go('profile', this)"><i class="fa-solid fa-user"></i></div>
+        <div id="chat" class="view">
+            <div class="chat-placeholder">
+                <i class="fa-solid fa-comments" style="font-size: 50px; opacity: 0.2;"></i>
+                <p style="margin-top: 10px;">Sohbet odası çok yakında aktif!</p>
+            </div>
         </div>
+
+        <div id="profile" class="view">
+            <div class="card" style="text-align: center;">
+                <div style="width: 70px; height: 70px; background: #EEF2FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; color: var(--primary); font-size: 30px;">
+                    <i class="fa-solid fa-user-graduate"></i>
+                </div>
+                <h3>Profil Bilgilerim</h3>
+                <p style="color: var(--text-sub); font-size: 13px;">ID: #192837</p>
+                <hr style="margin: 15px 0; border: none; border-top: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-around;">
+                    <div>
+                        <b id="profile-balance">0</b>
+                        <p style="font-size: 11px; color: var(--text-sub);">Jeton</p>
+                    </div>
+                    <div>
+                        <b>0</b>
+                        <p style="font-size: 11px; color: var(--text-sub);">İndirilen</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="nav-bar">
+        <i class="fa-solid fa-house nav-item active" onclick="nav(this, 'home')"></i>
+        <i class="fa-solid fa-book nav-item" onclick="nav(this, 'library')"></i>
+        <i class="fa-solid fa-comments nav-item" onclick="nav(this, 'chat')"></i>
+        <i class="fa-solid fa-user nav-item" onclick="nav(this, 'profile')"></i>
     </div>
 
     <script>
-        let balance = 0;
+        // 1. JETON SİSTEMİ
+        let coins = parseInt(localStorage.getItem('userCoins')) || 0;
+        updateUI();
 
-        // SAYFA GEÇİŞLERİ
-        function go(pageId, el) {
+        // 2. SAYFA NAVİGASYONU
+        function nav(el, viewId) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             
-            document.getElementById('v-' + pageId).classList.add('active');
             el.classList.add('active');
-
-            // Chat input görünürlüğü
-            document.getElementById('chat-input-container').style.display = (pageId === 'chat') ? 'flex' : 'none';
+            document.getElementById(viewId).classList.add('active');
         }
 
-        // REKLAM VE ÖDÜL YÖNETİMİ
-        async function handleAdClick() {
-            try {
-                // Reklamı başlat ve bitmesini bekle (Promise)
-                await show_9428290();
-                
-                // Reklam başarıyla izlendiğinde çalışacak kısım:
-                balance += 1;
-                updateBalanceUI();
-                alert('Harika! Reklamı izledin ve 1 Jeton kazandın.');
-                
-            } catch (error) {
-                console.error("Reklam yüklenirken bir sorun oluştu.");
-                alert("Reklam şu an hazır değil, lütfen biraz sonra tekrar dene.");
+        // 3. REKLAM İZLEME FONKSİYONU
+        function watchAd() {
+            // SDK Fonksiyonun (show_9428290)
+            show_9428290().then(() => {
+                coins += 1;
+                saveData();
+                updateUI();
+                alert('Tebrikler! 1 Jeton kazandınız.');
+            }).catch(() => {
+                alert('Reklam yüklenemedi, lütfen tekrar deneyin.');
+            });
+        }
+
+        // 4. PDF SATIN ALMA (ÖRNEK)
+        function buyPdf(price) {
+            if (coins >= price) {
+                coins -= price;
+                saveData();
+                updateUI();
+                alert('Kitap başarıyla açıldı! İndirme başlıyor...');
+            } else {
+                alert('Yetersiz jeton! Reklam izleyerek kazanabilirsin.');
             }
         }
 
-        // ARAYÜZ GÜNCELLEME
-        function updateBalanceUI() {
-            document.querySelectorAll('.u-balance').forEach(el => {
-                el.innerText = balance;
-            });
+        // 5. VERİLERİ KAYDET VE GÜNCELLE
+        function saveData() {
+            localStorage.setItem('userCoins', coins);
+        }
+
+        function updateUI() {
+            document.getElementById('global-balance').innerText = coins;
+            document.getElementById('profile-balance').innerText = coins;
         }
     </script>
 
