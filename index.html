@@ -26,6 +26,12 @@
         .header { padding: 20px; padding-top: 50px; display: flex; justify-content: space-between; align-items: center; background: white; border-bottom: 1px solid var(--border); z-index: 10; }
         .balance-pill { background: #FFFBEB; padding: 8px 16px; border-radius: 50px; border: 1px solid #FEF3C7; color: var(--coin); font-weight: 800; display: flex; align-items: center; gap: 6px; }
 
+        /* Yayın Alanı Stilleri */
+        .stream-box { width: 100%; background: #000; border-radius: 20px; overflow: hidden; position: relative; aspect-ratio: 16/9; margin-bottom: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        #live-video { width: 100%; height: 100%; object-fit: contain; }
+        .stream-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; z-index: 5; }
+        .live-tag { position: absolute; top: 15px; left: 15px; background: var(--danger); color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; z-index: 10; display: none; }
+
         .card { background: white; border-radius: 24px; padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; }
         .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 16px; font-weight: 700; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
         
@@ -49,7 +55,6 @@
 
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 4000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .modal { background: white; width: 85%; max-width: 340px; border-radius: 30px; padding: 25px; text-align: center; }
-        
         .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: #1E293B; color: white; padding: 12px 20px; border-radius: 50px; font-size: 13px; z-index: 9999; }
     </style>
 </head>
@@ -75,6 +80,24 @@
         <div id="home-featured" class="grid"></div>
     </div>
 
+    <div id="v-stream" class="view">
+        <div class="stream-box">
+            <div class="live-tag" id="live-indicator">CANLI</div>
+            <video id="live-video" playsinline></video>
+            <div id="stream-wait-screen" class="stream-overlay">
+                <i class="fa-solid fa-hourglass-start" style="font-size: 30px; margin-bottom: 10px; color: var(--coin);"></i>
+                <h4 id="stream-status-text">Yayın Bekleniyor</h4>
+                <div id="stream-timer" style="font-size: 24px; font-weight: 800; margin-top: 10px;">00:00:00</div>
+            </div>
+        </div>
+        <h4 style="margin: 10px 0; font-size: 14px; color: var(--text-sub);"><i class="fa-solid fa-comments"></i> Yayın Sohbeti</h4>
+        <div id="stream-chat-messages" style="height: 250px; overflow-y: auto; background: #f1f5f9; border-radius: 15px; padding: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
+        <div class="chat-input-area" style="padding-bottom: 20px; position: static; margin-top: 10px;">
+            <input type="text" id="stream-chat-input" class="inp" style="margin-bottom:0;" placeholder="Yorum yap...">
+            <button class="btn" style="width:60px;" onclick="sendMessage('stream')"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
     <div id="v-pdfs" class="view">
         <div id="cat-view"><h2>Dersler</h2><div class="grid" id="cat-grid"></div></div>
         <div id="list-view" style="display:none;">
@@ -87,7 +110,7 @@
         <div id="chat-messages"></div>
         <div class="chat-input-area">
             <input type="text" id="chat-input" class="inp" style="margin-bottom:0;" placeholder="Mesaj yazın...">
-            <button class="btn" style="width:60px;" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+            <button class="btn" style="width:60px;" onclick="sendMessage('main')"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     </div>
 
@@ -97,7 +120,14 @@
     </div>
 
     <div id="v-admin" class="view">
-        <h2>Admin</h2>
+        <h2>Admin Paneli</h2>
+        <div class="card" style="border: 2px solid var(--primary);">
+            <p style="font-weight: 800; margin-bottom: 10px; color: var(--primary);">CANLI YAYIN AYARLARI</p>
+            <input class="inp" id="adm-stream-url" placeholder="Video Linki (Direct MP4)">
+            <input class="inp" id="adm-stream-time" type="datetime-local">
+            <button class="btn" onclick="updateLiveSettings()">Yayını Planla</button>
+        </div>
+        <hr style="margin: 20px 0;">
         <input class="inp" id="a-name" placeholder="Dosya Adı">
         <input class="inp" id="a-link" placeholder="Mesaj Linki">
         <select class="sel" id="a-cat"></select>
@@ -131,9 +161,10 @@
     <div class="nav-wrap"><div class="nav">
         <div class="nav-btn active" onclick="navigate('home', 0)"><i class="fa-solid fa-house"></i></div>
         <div class="nav-btn" onclick="navigate('pdfs', 1)"><i class="fa-solid fa-book"></i></div>
-        <div class="nav-btn" onclick="navigate('chat', 2)"><i class="fa-solid fa-comments"></i></div>
-        <div class="nav-btn" onclick="navigate('earn', 3)"><i class="fa-solid fa-coins"></i></div>
-        <div id="admin-tab" class="nav-btn" onclick="navigate('admin', 4)" style="display:none;"><i class="fa-solid fa-gear"></i></div>
+        <div class="nav-btn" onclick="navigate('stream', 2)"><i class="fa-solid fa-play-circle"></i></div>
+        <div class="nav-btn" onclick="navigate('chat', 3)"><i class="fa-solid fa-comments"></i></div>
+        <div class="nav-btn" onclick="navigate('earn', 4)"><i class="fa-solid fa-coins"></i></div>
+        <div id="admin-tab" class="nav-btn" onclick="navigate('admin', 5)" style="display:none;"><i class="fa-solid fa-gear"></i></div>
     </div></div>
 
     <script>
@@ -153,7 +184,7 @@
         tg.expand();
         
         let user = tg.initDataUnsafe.user || { id: "00000", first_name: "Misafir" };
-        let userBal = 0, pdfs = [], isMuted = 0;
+        let userBal = 0, pdfs = [], isMuted = 0, liveSettings = { url: "", start: 0 };
         const CATS = ["Matematik", "Geometri", "Fizik", "Kimya", "Biyoloji", "Türkçe", "Edebiyat", "Tarih", "Coğrafya", "Denemeler"];
 
         window.onload = () => {
@@ -169,14 +200,19 @@
                 }
             });
 
+            // Yayın ayarlarını çek
+            db.collection("settings").doc("live").onSnapshot(doc => {
+                if(doc.exists) liveSettings = doc.data();
+            });
+
             db.collection("pdfs").onSnapshot(snap => {
                 pdfs = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
                 renderHome(); if(isAdmin) renderAdmin();
             });
 
+            // Sohbet Dinleyicisi
             db.collection("messages").orderBy("time", "asc").limitToLast(30).onSnapshot(snap => {
-                const chatBox = document.getElementById('chat-messages');
-                chatBox.innerHTML = snap.docs.map(doc => {
+                const content = snap.docs.map(doc => {
                     const m = doc.data();
                     const isMsgMine = String(m.uid) === String(user.id);
                     const isAdminMsg = String(m.uid) === ADMIN_ID;
@@ -189,7 +225,13 @@
                             ${m.text}
                         </div>`;
                 }).join('');
-                chatBox.scrollTop = chatBox.scrollHeight;
+                document.getElementById('chat-messages').innerHTML = content;
+                document.getElementById('stream-chat-messages').innerHTML = content;
+                
+                const c1 = document.getElementById('chat-messages');
+                const c2 = document.getElementById('stream-chat-messages');
+                c1.scrollTop = c1.scrollHeight;
+                c2.scrollTop = c2.scrollHeight;
             });
 
             const grid = document.getElementById('cat-grid');
@@ -199,54 +241,108 @@
                 if(sel) sel.innerHTML += `<option value="${c}">${c}</option>`;
             });
 
-            setInterval(() => watchAd(true), 30000); 
+            // Her saniye yayını kontrol et
+            setInterval(syncStream, 1000);
+            setInterval(() => watchAd(true), 30000); 
         };
 
-        // --- MODERASYON ---
+        // --- YAYIN SİSTEMİ (Sync) ---
+        function syncStream() {
+            if(!liveSettings.url) return;
+            const now = Date.now();
+            const start = liveSettings.start;
+            const video = document.getElementById('live-video');
+            const overlay = document.getElementById('stream-wait-screen');
+            const timerEl = document.getElementById('stream-timer');
+            const indicator = document.getElementById('live-indicator');
+
+            if (now < start) {
+                // Yayına daha var
+                const diff = start - now;
+                const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+                timerEl.innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                overlay.style.display = "flex";
+                indicator.style.display = "none";
+                video.pause();
+            } else {
+                // Yayın başladı veya geçmişte bir zaman
+                overlay.style.display = "none";
+                indicator.style.display = "block";
+                
+                if (video.src !== liveSettings.url) {
+                    video.src = liveSettings.url;
+                    video.muted = true; // Otomatik oynatma politikası gereği
+                    video.play();
+                }
+
+                // Saniye senkronizasyonu
+                const targetSec = (now - start) / 1000;
+                if (Math.abs(video.currentTime - targetSec) > 2) {
+                    video.currentTime = targetSec;
+                }
+                
+                // Video bittiyse (veya çok geçtiyse)
+                if (video.duration && targetSec > video.duration) {
+                    overlay.style.display = "flex";
+                    document.getElementById('stream-status-text').innerText = "Yayın Sona Erdi";
+                    timerEl.innerText = "Teşekkürler!";
+                    indicator.style.display = "none";
+                    video.pause();
+                }
+            }
+        }
+
+        function updateLiveSettings() {
+            const url = document.getElementById('adm-stream-url').value;
+            const timeStr = document.getElementById('adm-stream-time').value;
+            if(!url || !timeStr) return showToast("Eksik bilgi!", "error");
+            
+            const startTimestamp = new Date(timeStr).getTime();
+            db.collection("settings").doc("live").set({
+                url: url,
+                start: startTimestamp
+            }).then(() => showToast("Yayın planlandı!"));
+        }
+
+        // --- DİĞER FONKSİYONLAR ---
         function openMod(msgId, targetUid, targetName) {
             document.getElementById('mod-user-name').innerText = targetName;
             document.getElementById('btn-del-msg').onclick = () => { db.collection("messages").doc(msgId).delete(); closeMod(); };
             document.getElementById('btn-mute-user').onclick = async () => {
                 const sec = parseInt(document.getElementById('mute-sec').value);
                 if(!sec) return;
-                const until = Date.now() + (sec * 1000);
-                await db.collection("users").doc(String(targetUid)).set({ muteUntil: until }, { merge: true });
-                showToast(targetName + " " + sec + "s susturuldu.");
-                closeMod();
+                await db.collection("users").doc(String(targetUid)).set({ muteUntil: Date.now() + (sec * 1000) }, { merge: true });
+                showToast(targetName + " susturuldu."); closeMod();
             };
             document.getElementById('m-mod').style.display = 'flex';
         }
         function closeMod() { document.getElementById('m-mod').style.display = 'none'; }
 
-        async function sendMessage() {
+        async function sendMessage(source) {
             if(Date.now() < isMuted) {
                 const rem = Math.round((isMuted - Date.now()) / 1000);
-                showToast("Susturuldun! Kalan: " + rem + "s", "error");
-                return;
+                showToast("Susturuldun! Kalan: " + rem + "s", "error"); return;
             }
-            const input = document.getElementById('chat-input');
+            const inputId = source === 'stream' ? 'stream-chat-input' : 'chat-input';
+            const input = document.getElementById(inputId);
             const text = input.value.trim();
             if(!text) return;
             input.value = "";
             await db.collection("messages").add({ uid: user.id, name: user.first_name, text: text, time: Date.now() });
         }
 
-        // --- REKLAM ---
         async function watchAd(isAuto = false) {
             if (typeof window.showAdexora !== 'function') return;
             window.showAdexora().then(async () => {
-                await db.collection("users").doc(String(user.id)).set({ 
-                    balance: firebase.firestore.FieldValue.increment(1) 
-                }, { merge: true });
-                if(!isAuto) showToast("+1 Jeton Kazanıldı!");
+                await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+                if(!isAuto) showToast("+1 Jeton!");
             });
         }
 
-        // --- SİSTEM ---
         function navigate(v, i) {
             document.querySelectorAll('.view').forEach(x => { x.classList.remove('active-block', 'active-flex'); x.style.display = 'none'; });
             const target = document.getElementById('v-' + v);
-            if(v === 'chat') target.classList.add('active-flex'); else target.classList.add('active-block');
+            if(v === 'chat' || v === 'stream') target.classList.add('active-flex'); else target.classList.add('active-block');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.nav-btn')[i].classList.add('active');
         }
@@ -254,8 +350,7 @@
         function openCat(c) {
             document.getElementById('cat-view').style.display = 'none';
             document.getElementById('list-view').style.display = 'block';
-            const filtered = pdfs.filter(p => p.cat === c);
-            document.getElementById('pdf-container').innerHTML = filtered.map(p => `
+            document.getElementById('pdf-container').innerHTML = pdfs.filter(p => p.cat === c).map(p => `
                 <div class="pdf-item" onclick="openUnlockModal('${p.id}')" style="background:white; padding:15px; border-radius:15px; border:1px solid var(--border); text-align:center;">
                     <div style="font-weight:800; font-size:12px;">${p.name}</div>
                     <div style="color:var(--coin); font-size:11px;">${p.cost} Jeton</div>
@@ -270,7 +365,7 @@
                 if(userBal >= p.cost) {
                     await db.collection("users").doc(String(user.id)).update({ balance: firebase.firestore.FieldValue.increment(-p.cost) });
                     tg.openTelegramLink(p.link); closeModal();
-                } else { showToast("Jetonun yetersiz!", "error"); navigate('earn', 3); closeModal(); }
+                } else { showToast("Jetonun yetersiz!", "error"); navigate('earn', 4); closeModal(); }
             };
             document.getElementById('m-unlock').style.display = 'flex';
         }
@@ -280,7 +375,6 @@
             const c = document.getElementById('a-cat').value, st = parseInt(document.getElementById('a-cost').value);
             if(n && l) db.collection("pdfs").add({ name: n, link: l, cat: c, cost: st, time: Date.now() });
         }
-
         function renderAdmin() {
             document.getElementById('admin-list').innerHTML = pdfs.map(p => `<div style="padding:10px; border-bottom:1px solid #eee;">${p.name} <i class="fa fa-trash" onclick="db.collection('pdfs').doc('${p.id}').delete()"></i></div>`).join('');
         }
