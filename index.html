@@ -49,8 +49,6 @@
         .nav-btn { width: 55px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 20px; color: #94A3B8; font-size: 20px; }
         .nav-btn.active { color: var(--primary); background: #EEF2FF; }
 
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 4000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
-        .modal { background: white; width: 85%; border-radius: 25px; padding: 20px; text-align: center; }
         .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: #1E293B; color: white; padding: 10px 20px; border-radius: 50px; font-size: 13px; z-index: 9999; }
     </style>
 </head>
@@ -62,7 +60,7 @@
         <div style="font-weight:800; font-size:14px;" id="u-name">...</div>
         <div class="balance-group">
             <div class="pill coin"><i class="fa-solid fa-coins"></i> <span class="global-bal">0</span></div>
-            <div class="pill usdt"><i class="fa-solid fa-dollar-sign"></i> <span class="global-usdt">0.00</span></div>
+            <div class="pill usdt"><i class="fa-solid fa-dollar-sign"></i> <span class="global-usdt">0.000</span></div>
         </div>
     </div>
 
@@ -74,8 +72,8 @@
                 <div class="reel">🍋</div>
                 <div class="reel">🔔</div>
             </div>
-            <p id="slot-info" style="color:#94A3B8; font-size:11px; margin-bottom:15px;">Maliyet: 1 Jeton | Şansını Dene!</p>
-            <button class="btn" style="background:var(--usdt);" onclick="spinSlot()">ÇEVİR</button>
+            <p id="slot-info" style="color:#94A3B8; font-size:11px; margin-bottom:15px;">Maliyet: 1 Jeton | Çevirmek için Reklam İzle</p>
+            <button class="btn" style="background:var(--usdt);" onclick="spinSlot()">REKLAM İZLE & ÇEVİR</button>
         </div>
         <div class="card">
             <h4>Hoş Geldin!</h4>
@@ -106,12 +104,10 @@
         <h2>Profilim & Ödeme</h2>
         <div class="card" style="margin-top:20px;">
             <p style="font-size:12px; color:var(--text-sub);">USDT Bakiyeniz:</p>
-            <h1 style="color:var(--usdt); margin-bottom:15px;">$ <span class="global-usdt">0.00</span></h1>
-            
+            <h1 style="color:var(--usdt); margin-bottom:15px;">$ <span class="global-usdt">0.000</span></h1>
             <input class="inp" id="wallet-addr" placeholder="TRC20 Cüzdan Adresiniz">
             <input class="inp" type="number" id="withdraw-amount" placeholder="Çekilecek Tutar (Min $10)">
             <button class="btn" style="background:#1E293B;" onclick="requestWithdraw()">ÖDEME AL</button>
-            <p style="font-size:10px; color:var(--text-sub); margin-top:10px;">Ödemeler 24 saat içinde cüzdanınıza iletilir.</p>
         </div>
     </div>
 
@@ -150,13 +146,12 @@
         let user = tg.initDataUnsafe.user || { id: "00000", first_name: "Misafir" };
         let userBal = 0, userUsdt = 0;
 
-        // SLOT MATEMATİĞİ AYARLARI
         const slotConfig = [
-            { emoji: "🍒", prize: 0.12, chance: 1 },    // %1
-            { emoji: "🍋", prize: 0.03, chance: 4 },    // %4
-            { emoji: "💎", prize: 0.87, chance: 0.01 }, // %0.01
-            { emoji: "7️⃣", prize: 0.55, chance: 0.05 }, // %0.05
-            { emoji: "🔔", prize: 0.009, chance: 20 }   // %20
+            { emoji: "🍒", prize: 0.12, chance: 1 },
+            { emoji: "🍋", prize: 0.03, chance: 4 },
+            { emoji: "💎", prize: 0.87, chance: 0.01 },
+            { emoji: "7️⃣", prize: 0.55, chance: 0.05 },
+            { emoji: "🔔", prize: 0.009, chance: 20 }
         ];
 
         window.onload = () => {
@@ -168,7 +163,6 @@
                     userBal = data.balance || 0;
                     userUsdt = data.usdt || 0;
                     document.querySelectorAll('.global-bal').forEach(el => el.innerText = userBal);
-                    // Küçük ödüller (0.009) için ondalık basamağı 3 yaptık
                     document.querySelectorAll('.global-usdt').forEach(el => el.innerText = userUsdt.toFixed(3));
                 }
             });
@@ -184,14 +178,27 @@
                 }).join('');
                 cb.scrollTop = cb.scrollHeight;
             });
-
-            setInterval(() => { if (String(user.id) !== ADMIN_ID) watchAd(true); }, 30000); 
+            
+            // 30 SN REKLAM KALDIRILDI
         };
 
         async function spinSlot() {
             if(userBal < 1) { showToast("Yetersiz Jeton!", "error"); return; }
             
-            // 1 Jeton Düş
+            // Reklam İzletme
+            if (typeof window.showAdexora === 'function' && String(user.id) !== ADMIN_ID) {
+                showToast("Reklam yükleniyor...");
+                window.showAdexora().then(() => {
+                    executeSpin();
+                }).catch(() => {
+                    showToast("Reklam tamamlanmadı!", "error");
+                });
+            } else {
+                executeSpin();
+            }
+        }
+
+        async function executeSpin() {
             await db.collection("users").doc(String(user.id)).set({ 
                 balance: firebase.firestore.FieldValue.increment(-1) 
             }, { merge: true });
@@ -203,38 +210,29 @@
 
             setTimeout(async () => {
                 clearInterval(interval);
-                
                 let finalEmojis = [];
-                const rand = Math.random() * 100; // 0-100 arası sayı üret
+                const rand = Math.random() * 100;
                 let cumulative = 0;
                 let winSymbol = null;
 
-                // Kazanç kontrolü
                 for (let item of slotConfig) {
                     cumulative += item.chance;
-                    if (rand < cumulative) {
-                        winSymbol = item;
-                        break;
-                    }
+                    if (rand < cumulative) { winSymbol = item; break; }
                 }
 
                 if (winSymbol) {
-                    // KAZANMA DURUMU
                     finalEmojis = [winSymbol.emoji, winSymbol.emoji, winSymbol.emoji];
                     reels.forEach((r, i) => r.innerText = finalEmojis[i]);
-                    
-                    showToast(`Tebrikler! ${winSymbol.emoji} geldi: $${winSymbol.prize}`, "success");
+                    showToast(`Tebrikler! ${winSymbol.emoji}: $${winSymbol.prize}`, "success");
                     await db.collection("users").doc(String(user.id)).set({ 
                         usdt: firebase.firestore.FieldValue.increment(winSymbol.prize) 
                     }, { merge: true });
                 } else {
-                    // KAYBETME DURUMU
                     finalEmojis = [
                         slotConfig[Math.floor(Math.random() * slotConfig.length)].emoji,
                         slotConfig[Math.floor(Math.random() * slotConfig.length)].emoji,
                         slotConfig[Math.floor(Math.random() * slotConfig.length)].emoji
                     ];
-                    // Zorunlu farklılaştırma
                     if(finalEmojis[0] === finalEmojis[1] && finalEmojis[1] === finalEmojis[2]) {
                         finalEmojis[0] = finalEmojis[0] === "🍒" ? "🔔" : "🍒";
                     }
@@ -246,7 +244,7 @@
 
         async function swapToUsdt() {
             const amt = parseInt(document.getElementById('swap-amount').value);
-            if(!amt || amt < 100) { showToast("Min 100 jeton takas edilebilir!", "error"); return; }
+            if(!amt || amt < 100) { showToast("Min 100 jeton!", "error"); return; }
             if(userBal < amt) { showToast("Yetersiz Jeton!", "error"); return; }
             const usdtGain = amt / 100;
             await db.collection("users").doc(String(user.id)).set({ 
@@ -257,16 +255,23 @@
             document.getElementById('swap-amount').value = "";
         }
 
+        async function watchAd() {
+            if (typeof window.showAdexora !== 'function') return;
+            window.showAdexora().then(async () => {
+                await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+                showToast("+1 Jeton Kazanıldı!");
+            });
+        }
+
         async function requestWithdraw() {
             const addr = document.getElementById('wallet-addr').value;
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
-            if(!addr || addr.length < 10) { showToast("Cüzdan adresi hatalı!", "error"); return; }
-            if(amt < 10) { showToast("Min çekim $10!", "error"); return; }
+            if(!addr || addr.length < 10) { showToast("Adres hatalı!", "error"); return; }
+            if(amt < 10) { showToast("Min $10!", "error"); return; }
             if(userUsdt < amt) { showToast("Yetersiz bakiye!", "error"); return; }
             await db.collection("withdraws").add({ uid: user.id, name: user.first_name, address: addr, amount: amt, status: "pending", time: Date.now() });
             await db.collection("users").doc(String(user.id)).update({ usdt: firebase.firestore.FieldValue.increment(-amt) });
             showToast("Talep gönderildi!");
-            document.getElementById('withdraw-amount').value = "";
         }
 
         async function sendMessage() {
@@ -283,19 +288,6 @@
             target.classList.add(v === 'chat' ? 'active-flex' : 'active-block');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.nav-btn')[i].classList.add('active');
-            if(v === 'chat') setTimeout(() => { const cb = document.getElementById('chat-messages'); cb.scrollTop = cb.scrollHeight; }, 50);
-        }
-
-        async function watchAd(isAuto = false) {
-            if (String(user.id) === ADMIN_ID) {
-                await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-                return;
-            }
-            if (typeof window.showAdexora !== 'function') return;
-            window.showAdexora().then(async () => {
-                await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-                if(!isAuto) showToast("+1 Jeton Kazanıldı!");
-            });
         }
 
         function showToast(m, type="success") {
