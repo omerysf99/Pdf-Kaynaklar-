@@ -72,12 +72,12 @@
                 <div class="reel">🍋</div>
                 <div class="reel">🔔</div>
             </div>
-            <p id="slot-info" style="color:#94A3B8; font-size:11px; margin-bottom:15px;">Maliyet: 1 Jeton | Çevirmek için Reklam İzle</p>
+            <p id="slot-info" style="color:#94A3B8; font-size:11px; margin-bottom:15px;">Maliyet: 1 Jeton | Önce Reklam İzletilir</p>
             <button class="btn" style="background:var(--usdt);" onclick="spinSlot()">REKLAM İZLE & ÇEVİR</button>
         </div>
         <div class="card">
             <h4>Hoş Geldin!</h4>
-            <p style="font-size:13px; color:var(--text-sub); margin-top:5px;">Reklam izleyerek jeton kazan, slotta şansını dene!</p>
+            <p style="font-size:13px; color:var(--text-sub); margin-top:5px;">Sohbet et, reklam izle ve jetonlarını USDT'ye çevir!</p>
         </div>
     </div>
 
@@ -94,8 +94,8 @@
         <div class="card" style="margin-top:20px;">
             <p style="font-size:13px; color:var(--text-sub);">100 Jeton = 1.00 USDT</p>
             <div style="margin:15px 0;">
-                <input type="number" id="swap-amount" class="inp" placeholder="Takas edilecek jeton miktarı">
-                <button class="btn" onclick="swapToUsdt()">USDT'ye Dönüştür</button>
+                <input type="number" id="swap-amount" class="inp" placeholder="Miktar">
+                <button class="btn" onclick="swapToUsdt()">Dönüştür</button>
             </div>
         </div>
     </div>
@@ -103,18 +103,19 @@
     <div id="v-profile" class="view">
         <h2>Profilim & Ödeme</h2>
         <div class="card" style="margin-top:20px;">
-            <p style="font-size:12px; color:var(--text-sub);">USDT Bakiyeniz:</p>
+            <p style="font-size:12px; color:var(--text-sub);">Toplam Kazancınız:</p>
             <h1 style="color:var(--usdt); margin-bottom:15px;">$ <span class="global-usdt">0.000</span></h1>
             <input class="inp" id="wallet-addr" placeholder="TRC20 Cüzdan Adresiniz">
-            <input class="inp" type="number" id="withdraw-amount" placeholder="Çekilecek Tutar (Min $10)">
+            <input class="inp" type="number" step="0.001" id="withdraw-amount" placeholder="Çekilecek Tutar (Min $0.01)">
             <button class="btn" style="background:#1E293B;" onclick="requestWithdraw()">ÖDEME AL</button>
+            <p style="font-size:10px; color:var(--text-sub); margin-top:10px;">Minimum çekim limiti: $0.01</p>
         </div>
     </div>
 
     <div id="v-earn" class="view">
         <h2 style="margin-bottom:20px;">Jeton Kazan</h2>
         <div class="card">
-            <p style="margin-bottom:15px; color:var(--text-sub);">Reklam izle, jetonlarını biriktir!</p>
+            <p style="margin-bottom:15px; color:var(--text-sub);">Reklam izleyerek slot jetonu biriktir!</p>
             <button class="btn" onclick="watchAd()">Reklam İzle (+1 Jeton)</button>
         </div>
     </div>
@@ -129,6 +130,8 @@
 
     <script>
         const ADMIN_ID = "8392479231";
+        const MIN_WITHDRAW = 0.01; // Limit 0.01$ olarak güncellendi
+
         const firebaseConfig = {
             apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY",
             authDomain: "pdfkaynak-51615.firebaseapp.com",
@@ -151,13 +154,12 @@
             { emoji: "🍋", prize: 0.03, chance: 4 },
             { emoji: "💎", prize: 0.87, chance: 0.01 },
             { emoji: "7️⃣", prize: 0.55, chance: 0.05 },
-            { emoji: "🔔", prize: 0.009, chance: 20 }
+            { emoji: "Bell", emoji: "🔔", prize: 0.009, chance: 20 }
         ];
 
         window.onload = () => {
             document.getElementById('u-name').innerText = user.first_name;
 
-            // Kullanıcı Verisi Dinleyici
             db.collection("users").doc(String(user.id)).onSnapshot(doc => {
                 if(doc.exists) {
                     const data = doc.data();
@@ -168,7 +170,6 @@
                 }
             });
 
-            // Chat Dinleyici (Son 30 Mesaj ve Alta Kaydırma)
             db.collection("messages").orderBy("time", "asc").limitToLast(30).onSnapshot(snap => {
                 const cb = document.getElementById('chat-messages');
                 cb.innerHTML = snap.docs.map(doc => {
@@ -178,32 +179,21 @@
                         <div>${m.text}</div>
                     </div>`;
                 }).join('');
-                
                 setTimeout(() => { cb.scrollTop = cb.scrollHeight; }, 100);
             });
         };
 
-        // --- SLOT SİSTEMİ (REKLAM ENTEGRELİ) ---
         async function spinSlot() {
             if(userBal < 1) { showToast("Yetersiz Jeton!", "error"); return; }
             
             if (typeof window.showAdexora === 'function' && String(user.id) !== ADMIN_ID) {
                 showToast("Reklam yükleniyor...");
-                window.showAdexora().then(() => {
-                    executeSpin();
-                }).catch(() => {
-                    showToast("Reklam izlenmedi!", "error");
-                });
-            } else {
-                executeSpin();
-            }
+                window.showAdexora().then(() => { executeSpin(); }).catch(() => { showToast("Reklam hatası!", "error"); });
+            } else { executeSpin(); }
         }
 
         async function executeSpin() {
-            await db.collection("users").doc(String(user.id)).set({ 
-                balance: firebase.firestore.FieldValue.increment(-1) 
-            }, { merge: true });
-
+            await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(-1) }, { merge: true });
             const reels = document.querySelectorAll('.reel');
             const interval = setInterval(() => {
                 reels.forEach(r => r.innerText = slotConfig[Math.floor(Math.random() * slotConfig.length)].emoji);
@@ -213,8 +203,7 @@
                 clearInterval(interval);
                 let finalEmojis = [];
                 const rand = Math.random() * 100;
-                let cumulative = 0;
-                let winSymbol = null;
+                let cumulative = 0, winSymbol = null;
 
                 for (let item of slotConfig) {
                     cumulative += item.chance;
@@ -224,56 +213,34 @@
                 if (winSymbol) {
                     finalEmojis = [winSymbol.emoji, winSymbol.emoji, winSymbol.emoji];
                     reels.forEach((r, i) => r.innerText = finalEmojis[i]);
-                    showToast(`KAZANDIN! ${winSymbol.emoji}: $${winSymbol.prize}`, "success");
-                    await db.collection("users").doc(String(user.id)).set({ 
-                        usdt: firebase.firestore.FieldValue.increment(winSymbol.prize) 
-                    }, { merge: true });
+                    showToast(`KAZANDIN: $${winSymbol.prize}`, "success");
+                    await db.collection("users").doc(String(user.id)).set({ usdt: firebase.firestore.FieldValue.increment(winSymbol.prize) }, { merge: true });
                 } else {
-                    finalEmojis = [
-                        slotConfig[Math.floor(Math.random() * slotConfig.length)].emoji,
-                        slotConfig[Math.floor(Math.random() * slotConfig.length)].emoji,
-                        slotConfig[Math.floor(Math.random() * slotConfig.length)].emoji
-                    ];
-                    if(finalEmojis[0] === finalEmojis[1] && finalEmojis[1] === finalEmojis[2]) {
-                        finalEmojis[0] = finalEmojis[0] === "🍒" ? "🔔" : "🍒";
-                    }
+                    finalEmojis = [slotConfig[0].emoji, slotConfig[1].emoji, slotConfig[4].emoji];
                     reels.forEach((r, i) => r.innerText = finalEmojis[i]);
                     showToast("Şansını tekrar dene!", "error");
                 }
             }, 1000);
         }
 
-        // --- DİĞER FONKSİYONLAR ---
-        async function swapToUsdt() {
-            const amt = parseInt(document.getElementById('swap-amount').value);
-            if(!amt || amt < 100) { showToast("Min 100 jeton!", "error"); return; }
-            if(userBal < amt) { showToast("Yetersiz Jeton!", "error"); return; }
-            const usdtGain = amt / 100;
-            await db.collection("users").doc(String(user.id)).set({ 
-                balance: firebase.firestore.FieldValue.increment(-amt),
-                usdt: firebase.firestore.FieldValue.increment(usdtGain)
-            }, { merge: true });
-            showToast(usdtGain + " USDT eklendi!");
-            document.getElementById('swap-amount').value = "";
+        async function requestWithdraw() {
+            const addr = document.getElementById('wallet-addr').value;
+            const amt = parseFloat(document.getElementById('withdraw-amount').value);
+            if(!addr || addr.length < 5) { showToast("Cüzdan adresi eksik!", "error"); return; }
+            if(amt < MIN_WITHDRAW) { showToast(`Minimum çekim $${MIN_WITHDRAW}!`, "error"); return; }
+            if(userUsdt < amt) { showToast("Yetersiz bakiye!", "error"); return; }
+
+            await db.collection("withdraws").add({ uid: user.id, name: user.first_name, address: addr, amount: amt, status: "pending", time: Date.now() });
+            await db.collection("users").doc(String(user.id)).update({ usdt: firebase.firestore.FieldValue.increment(-amt) });
+            showToast("Talep alındı! (24 Saat)");
         }
 
         async function watchAd() {
             if (typeof window.showAdexora !== 'function') return;
             window.showAdexora().then(async () => {
                 await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-                showToast("+1 Jeton Kazanıldı!");
+                showToast("+1 Jeton!");
             });
-        }
-
-        async function requestWithdraw() {
-            const addr = document.getElementById('wallet-addr').value;
-            const amt = parseFloat(document.getElementById('withdraw-amount').value);
-            if(!addr || addr.length < 10) { showToast("Cüzdan adresi hatalı!", "error"); return; }
-            if(amt < 10) { showToast("Min çekim $10!", "error"); return; }
-            if(userUsdt < amt) { showToast("Yetersiz bakiye!", "error"); return; }
-            await db.collection("withdraws").add({ uid: user.id, name: user.first_name, address: addr, amount: amt, status: "pending", time: Date.now() });
-            await db.collection("users").doc(String(user.id)).update({ usdt: firebase.firestore.FieldValue.increment(-amt) });
-            showToast("Talep gönderildi!");
         }
 
         async function sendMessage() {
@@ -282,8 +249,15 @@
             if(!text) return;
             input.value = "";
             await db.collection("messages").add({ uid: user.id, name: user.first_name, text: text, time: Date.now() });
-            const cb = document.getElementById('chat-messages');
-            cb.scrollTop = cb.scrollHeight;
+        }
+
+        async function swapToUsdt() {
+            const amt = parseInt(document.getElementById('swap-amount').value);
+            if(!amt || amt < 100) { showToast("Min 100 Jeton!", "error"); return; }
+            if(userBal < amt) { showToast("Yetersiz Jeton!", "error"); return; }
+            await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(-amt), usdt: firebase.firestore.FieldValue.increment(amt/100) }, { merge: true });
+            showToast("Başarılı!");
+            document.getElementById('swap-amount').value = "";
         }
 
         function navigate(v, i) {
@@ -292,10 +266,7 @@
             target.classList.add(v === 'chat' ? 'active-flex' : 'active-block');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.nav-btn')[i].classList.add('active');
-            if(v === 'chat') {
-                const cb = document.getElementById('chat-messages');
-                setTimeout(() => { cb.scrollTop = cb.scrollHeight; }, 150);
-            }
+            if(v === 'chat') { const cb = document.getElementById('chat-messages'); setTimeout(() => { cb.scrollTop = cb.scrollHeight; }, 100); }
         }
 
         function showToast(m, type="success") {
