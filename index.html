@@ -27,9 +27,9 @@
         .header { padding: 20px; padding-top: 50px; display: flex; justify-content: space-between; align-items: center; background: white; border-bottom: 1px solid var(--border); z-index: 10; }
         .balance-pill { background: #FFFBEB; padding: 8px 16px; border-radius: 50px; border: 1px solid #FEF3C7; color: var(--coin); font-weight: 800; display: flex; align-items: center; gap: 6px; }
 
-        /* Sohbet Alanı */
-        #chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: #f1f5f9; }
-        .msg { max-width: 85%; padding: 10px 15px; border-radius: 18px; font-size: 14px; position: relative; line-height: 1.4; }
+        /* Sohbet Alanı (Kaydırma Odaklı) */
+        #chat-messages { flex: 1; overflow-y: scroll; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: #f1f5f9; scroll-behavior: smooth; }
+        .msg { max-width: 85%; padding: 10px 15px; border-radius: 18px; font-size: 14px; position: relative; line-height: 1.4; word-wrap: break-word; }
         .msg.mine { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
         .msg.theirs { align-self: flex-start; background: white; color: var(--text-main); border-bottom-left-radius: 4px; border: 1px solid var(--border); }
         .msg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 15px; }
@@ -169,7 +169,6 @@
             const isAdmin = String(user.id) === ADMIN_ID;
             if (isAdmin) document.getElementById('admin-tab').style.display = 'flex';
 
-            // Kullanıcı Bilgileri
             db.collection("users").doc(String(user.id)).onSnapshot(doc => {
                 if(doc.exists) {
                     userBal = doc.data().balance || 0;
@@ -178,13 +177,12 @@
                 }
             });
 
-            // PDF Verileri
             db.collection("pdfs").onSnapshot(snap => {
                 pdfs = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
                 renderHome(); if(isAdmin) renderAdmin();
             });
 
-            // Sohbet Dinleyicisi
+            // Sohbet Dinleyicisi (Aşağı Kaydırma Eklendi)
             db.collection("messages").orderBy("time", "asc").limitToLast(50).onSnapshot(snap => {
                 const chatBox = document.getElementById('chat-messages');
                 chatBox.innerHTML = snap.docs.map(doc => {
@@ -200,10 +198,13 @@
                             <div class="msg-text">${m.text}</div>
                         </div>`;
                 }).join('');
-                chatBox.scrollTop = chatBox.scrollHeight;
+                
+                // Mesajlar yüklendikten sonra en aşağıya kaydır
+                setTimeout(() => {
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }, 100);
             });
 
-            // Kategorileri Yükle
             const grid = document.getElementById('cat-grid');
             const sel = document.getElementById('a-cat');
             CATS.forEach(c => {
@@ -211,7 +212,6 @@
                 if(sel) sel.innerHTML += `<option value="${c}">${c}</option>`;
             });
 
-            // Otomatik Jeton (Admin değilse çalışır)
             setInterval(() => {
                 if (String(user.id) !== ADMIN_ID) {
                     watchAd(true);
@@ -219,7 +219,12 @@
             }, 30000); 
         };
 
-        // --- SOHBET FONKSİYONLARI ---
+        // Sohbet Kutusu için Manuel Kaydırma Yardımcısı
+        function scrollToBottom() {
+            const chatBox = document.getElementById('chat-messages');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
         async function sendMessage() {
             if(Date.now() < isMuted) {
                 const rem = Math.round((isMuted - Date.now()) / 1000);
@@ -233,6 +238,20 @@
             await db.collection("messages").add({ uid: user.id, name: user.first_name, text: text, time: Date.now() });
         }
 
+        function navigate(v, i) {
+            document.querySelectorAll('.view').forEach(x => { x.classList.remove('active-block', 'active-flex'); x.style.display = 'none'; });
+            const target = document.getElementById('v-' + v);
+            if(v === 'chat') {
+                target.classList.add('active-flex');
+                setTimeout(scrollToBottom, 50); // Sekme açıldığında en aşağı git
+            } else {
+                target.classList.add('active-block');
+            }
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.nav-btn')[i].classList.add('active');
+        }
+
+        // DİĞER FONKSİYONLAR (DEĞİŞMEDİ)
         function openMod(msgId, targetUid, targetName) {
             document.getElementById('mod-user-name').innerText = targetName;
             document.getElementById('btn-del-msg').onclick = () => { db.collection("messages").doc(msgId).delete(); closeMod(); };
@@ -245,16 +264,6 @@
             document.getElementById('m-mod').style.display = 'flex';
         }
         function closeMod() { document.getElementById('m-mod').style.display = 'none'; }
-
-        // --- PDF SİSTEMİ ---
-        function navigate(v, i) {
-            document.querySelectorAll('.view').forEach(x => { x.classList.remove('active-block', 'active-flex'); x.style.display = 'none'; });
-            const target = document.getElementById('v-' + v);
-            if(v === 'chat') target.classList.add('active-flex'); else target.classList.add('active-block');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.nav-btn')[i].classList.add('active');
-        }
-
         function openCat(c) {
             document.getElementById('cat-view').style.display = 'none';
             document.getElementById('list-view').style.display = 'block';
@@ -265,7 +274,6 @@
                     <div style="color:var(--coin); font-size:11px; margin-top:5px;">${p.cost} Jeton</div>
                 </div>`).join('') : '<p style="grid-column: 1/3; text-align:center; padding:20px;">Bu kategoride henüz dosya yok.</p>';
         }
-
         function openUnlockModal(id) {
             const p = pdfs.find(x => x.id === id);
             document.getElementById('modal-title').innerText = p.name;
@@ -278,37 +286,23 @@
             };
             document.getElementById('m-unlock').style.display = 'flex';
         }
-
-        // --- REKLAM VE ADMİN (ADMINLERE ÖZEL REKLAMSIZ SİSTEM) ---
         async function watchAd(isAuto = false) {
-            // Admin kontrolü
             if (String(user.id) === ADMIN_ID) {
-                await db.collection("users").doc(String(user.id)).set({ 
-                    balance: firebase.firestore.FieldValue.increment(1) 
-                }, { merge: true });
+                await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(1) }, { merge: true });
                 if(!isAuto) showToast("Admin ayrıcalığı: +1 Jeton eklendi!");
                 return;
             }
-
-            // Normal kullanıcılar için reklam sistemi
             if (typeof window.showAdexora !== 'function') return;
             window.showAdexora().then(async () => {
-                await db.collection("users").doc(String(user.id)).set({ 
-                    balance: firebase.firestore.FieldValue.increment(1) 
-                }, { merge: true });
+                await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(1) }, { merge: true });
                 if(!isAuto) showToast("+1 Jeton Kazanıldı!");
             });
         }
-
         function addPdf() {
             const n = document.getElementById('a-name').value, l = document.getElementById('a-link').value;
             const c = document.getElementById('a-cat').value, st = parseInt(document.getElementById('a-cost').value);
-            if(n && l) {
-                db.collection("pdfs").add({ name: n, link: l, cat: c, cost: st, time: Date.now() });
-                showToast("Dosya eklendi!");
-            }
+            if(n && l) { db.collection("pdfs").add({ name: n, link: l, cat: c, cost: st, time: Date.now() }); showToast("Dosya eklendi!"); }
         }
-
         function renderAdmin() {
             document.getElementById('admin-list').innerHTML = pdfs.map(p => `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">${p.name} <i class="fa fa-trash" style="color:red" onclick="db.collection('pdfs').doc('${p.id}').delete()"></i></div>`).join('');
         }
