@@ -32,8 +32,6 @@
         .stat-val { display: block; font-size: 16px; font-weight: 700; color: var(--accent); }
 
         .btn-main { background: var(--accent); color: #000; border: none; padding: 14px; border-radius: 12px; width: 100%; font-weight: 800; cursor: pointer; }
-        
-        /* Ödeme Ekranı Özel */
         .input-box { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: white; margin-bottom: 12px; font-size: 14px; }
         .input-label { font-size: 11px; color: var(--accent); margin-bottom: 5px; display: block; font-weight: 600; text-align: left; }
 
@@ -41,7 +39,8 @@
         .nav-item { color: #64748B; font-size: 18px; }
         .nav-item.active { color: var(--accent); }
 
-        .admin-request { background: #2D3748; padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--success); font-size: 12px; }
+        .admin-request { background: #2D3748; padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--success); font-size: 11px; }
+        .toast { position: fixed; top: 110px; left: 50%; transform: translateX(-50%); background: var(--accent); color: black; padding: 10px 20px; border-radius: 50px; font-size: 12px; font-weight: 700; z-index: 1000; }
     </style>
 </head>
 <body>
@@ -71,9 +70,9 @@
 
     <div id="v-earn" class="view">
         <div class="raffle-card" style="border-color: var(--primary);">
-            <i class="fa-solid fa-video" style="font-size:40px; color:var(--primary); margin-bottom:10px;"></i>
-            <p style="font-size:14px;">Bilet almak için jeton kazan!</p>
-            <button class="btn-main" style="background:var(--primary); color:white; margin-top:15px;" onclick="watchAd()">REKLAM İZLE (+1 JETON)</button>
+            <i class="fa-solid fa-bolt" style="font-size:40px; color:var(--primary); margin-bottom:10px;"></i>
+            <p id="earn-text" style="font-size:14px;">Bilet almak için jeton kazan!</p>
+            <button id="earn-btn" class="btn-main" style="background:var(--primary); color:white; margin-top:15px;" onclick="watchAd()">REKLAM İZLE (+1 JETON)</button>
         </div>
     </div>
 
@@ -83,13 +82,12 @@
             <h2 style="color:var(--success); margin-bottom:20px;">$ <span id="wallet-usdt">0.0000</span></h2>
             
             <label class="input-label">USDT MİKTARI (USDT)</label>
-            <input type="number" id="withdraw-amount" class="input-box" placeholder="Örn: 0.10" step="0.01">
+            <input type="number" id="withdraw-amount" class="input-box" placeholder="Örn: 0.10">
             
             <label class="input-label">USDT TRC20 ADRESİ</label>
-            <input type="text" id="wallet-address" class="input-box" placeholder="T... ile başlayan TRC20 adresi">
+            <input type="text" id="wallet-address" class="input-box" placeholder="T... ile başlayan adres">
             
             <button class="btn-main" style="background:var(--success); color:white;" onclick="requestWithdraw()">ÖDEME TALEBİ GÖNDER</button>
-            <p style="font-size:10px; opacity:0.5; margin-top:10px; text-align:center;">* Minimum çekim tutarı $0.05</p>
         </div>
     </div>
 
@@ -127,13 +125,17 @@
         let user = tg.initDataUnsafe.user || { id: "0", first_name: "Kullanıcı", username: "guest" };
         let userData = { balance: 0, usdt: 0, raffleEntries: 0, totalAds: 0 };
         let globalTotalTickets = 0;
+        const isAdmin = String(user.id) === ADMIN_ID;
 
         window.onload = () => {
-            document.getElementById('user-name').innerText = user.first_name;
-            db.collection("users").doc(String(user.id)).set({ name: user.first_name, username: user.username || "yok" }, { merge: true });
-
-            if(String(user.id) === ADMIN_ID) {
+            document.getElementById('user-name').innerText = user.first_name + (isAdmin ? " (ADMİN)" : "");
+            
+            if(isAdmin) {
                 document.getElementById('nav-admin').style.display = "block";
+                document.getElementById('earn-btn').innerText = "ADMİN: ANLIK JETON EKLE";
+                document.getElementById('earn-btn').style.background = "var(--accent)";
+                document.getElementById('earn-btn').style.color = "black";
+                document.getElementById('earn-text').innerText = "Admin ayrıcalığı: Reklamsız jeton alabilirsiniz.";
                 loadAdminData();
             }
 
@@ -156,6 +158,26 @@
             });
         };
 
+        function watchAd() {
+            if (isAdmin) {
+                // Admin reklam izlemez, direkt verir
+                db.collection("users").doc(String(user.id)).set({ 
+                    balance: firebase.firestore.FieldValue.increment(1) 
+                }, { merge: true });
+                showToast("Admin: +1 Jeton eklendi!");
+            } else {
+                if (typeof window.showAdexora === 'function') {
+                    window.showAdexora().then(async () => {
+                        await db.collection("users").doc(String(user.id)).set({ 
+                            balance: firebase.firestore.FieldValue.increment(1), 
+                            totalAds: firebase.firestore.FieldValue.increment(1) 
+                        }, { merge: true });
+                        showToast("+1 Jeton!");
+                    });
+                } else { showToast("Reklam yok", "error"); }
+            }
+        }
+
         function calculateChance() {
             if(globalTotalTickets === 0 || userData.raffleEntries === 0) {
                 document.getElementById('win-chance').innerText = "0%";
@@ -164,69 +186,44 @@
             }
         }
 
-        async function requestWithdraw() {
-            const amount = parseFloat(document.getElementById('withdraw-amount').value);
-            const addr = document.getElementById('wallet-address').value;
-
-            if(!amount || amount < 0.05) return showToast("Minimum çekim $0.05", "error");
-            if(amount > userData.usdt) return showToast("Yetersiz bakiye!", "error");
-            if(!addr || addr.length < 10) return showToast("Geçerli TRC20 adresi gir!", "error");
-
-            await db.collection("withdraws").add({
-                uid: user.id,
-                name: user.first_name,
-                username: user.username || "yok",
-                amount: amount,
-                address: addr,
-                network: "TRC20",
-                time: Date.now(),
-                status: "Bekliyor"
-            });
-
-            await db.collection("users").doc(String(user.id)).update({
-                usdt: firebase.firestore.FieldValue.increment(-amount)
-            });
-
-            showToast("Talebiniz iletildi!");
-            document.getElementById('withdraw-amount').value = "";
-            document.getElementById('wallet-address').value = "";
-        }
-
         async function joinRaffle() {
-            if(userData.balance < 1) return showToast("Jetonun yok!", "error");
-            await db.collection("users").doc(String(user.id)).update({ balance: firebase.firestore.FieldValue.increment(-1), raffleEntries: firebase.firestore.FieldValue.increment(1) });
+            if(userData.balance < 1 && !isAdmin) return showToast("Jetonun yok!", "error");
+            
+            // Admin bakiye 0 olsa bile katılabilir (test amaçlı) veya bakiye harcar
+            await db.collection("users").doc(String(user.id)).update({ 
+                balance: firebase.firestore.FieldValue.increment(-1), 
+                raffleEntries: firebase.firestore.FieldValue.increment(1) 
+            });
             await db.collection("stats").doc("raffle").set({ participants: firebase.firestore.FieldValue.increment(1) }, { merge: true });
             showToast("Bilet alındı!");
         }
 
-        function watchAd() {
-            if (typeof window.showAdexora === 'function') {
-                window.showAdexora().then(async () => {
-                    await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(1), totalAds: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-                    showToast("+1 Jeton!");
-                });
-            } else { showToast("Reklam yüklenemedi", "error"); }
+        async function requestWithdraw() {
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            const addr = document.getElementById('wallet-address').value;
+            if(!amount || amount < 0.05) return showToast("Min $0.05", "error");
+            if(amount > userData.usdt) return showToast("Bakiye yetersiz!", "error");
+            if(!addr) return showToast("Adres gir!", "error");
+
+            await db.collection("withdraws").add({
+                uid: user.id, name: user.first_name, username: user.username || "yok",
+                amount: amount, address: addr, time: Date.now()
+            });
+            await db.collection("users").doc(String(user.id)).update({ usdt: firebase.firestore.FieldValue.increment(-amount) });
+            showToast("Talep iletildi!");
         }
 
         function loadAdminData() {
-            // Ödeme Talepleri
             db.collection("withdraws").orderBy("time", "desc").onSnapshot(snap => {
                 document.getElementById('admin-withdraw-list').innerHTML = snap.docs.map(doc => {
                     const w = doc.data();
-                    return `<div class="admin-request">
-                        <b>${w.name} (@${w.username})</b><br>
-                        Miktar: <span style="color:var(--success)">$${w.amount.toFixed(4)}</span><br>
-                        Adres (TRC20): <span style="color:var(--accent)">${w.address}</span>
-                    </div>`;
+                    return `<div class="admin-request">@${w.username} | $${w.amount} | ${w.address}</div>`;
                 }).join('');
             });
-            // Kullanıcı Listesi
             db.collection("users").orderBy("raffleEntries", "desc").onSnapshot(snap => {
                 document.getElementById('admin-user-list').innerHTML = snap.docs.map(doc => {
                     const u = doc.data();
-                    return `<div style="border-bottom:1px solid #334155; padding:5px 0;">
-                        @${u.username} | Reklam: ${u.totalAds || 0} | Bilet: ${u.raffleEntries || 0} | $: ${(u.usdt || 0).toFixed(3)}
-                    </div>`;
+                    return `<div style="border-bottom:1px solid #334155; padding:4px 0;">@${u.username} | Bilet: ${u.raffleEntries || 0} | $: ${(u.usdt || 0).toFixed(2)}</div>`;
                 }).join('');
             });
         }
