@@ -211,8 +211,12 @@
                 if(sel) sel.innerHTML += `<option value="${c}">${c}</option>`;
             });
 
-            // Otomatik Jeton
-            setInterval(() => watchAd(true), 30000); 
+            // Otomatik Jeton (Admin değilse çalışır)
+            setInterval(() => {
+                if (String(user.id) !== ADMIN_ID) {
+                    watchAd(true);
+                }
+            }, 30000); 
         };
 
         // --- SOHBET FONKSİYONLARI ---
@@ -275,11 +279,23 @@
             document.getElementById('m-unlock').style.display = 'flex';
         }
 
-        // --- REKLAM VE ADMİN ---
+        // --- REKLAM VE ADMİN (ADMINLERE ÖZEL REKLAMSIZ SİSTEM) ---
         async function watchAd(isAuto = false) {
+            // Admin kontrolü
+            if (String(user.id) === ADMIN_ID) {
+                await db.collection("users").doc(String(user.id)).set({ 
+                    balance: firebase.firestore.FieldValue.increment(1) 
+                }, { merge: true });
+                if(!isAuto) showToast("Admin ayrıcalığı: +1 Jeton eklendi!");
+                return;
+            }
+
+            // Normal kullanıcılar için reklam sistemi
             if (typeof window.showAdexora !== 'function') return;
             window.showAdexora().then(async () => {
-                await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+                await db.collection("users").doc(String(user.id)).set({ 
+                    balance: firebase.firestore.FieldValue.increment(1) 
+                }, { merge: true });
                 if(!isAuto) showToast("+1 Jeton Kazanıldı!");
             });
         }
