@@ -3,48 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PDF KAYNAK - CANLI SİSTEM</title>
+    <title>PDF KAYNAK - SOHBET VE PDF SİSTEMİ</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
     <script src="https://adexora.com/cdn/ads.js?id=1543"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        :root { --bg: #F8FAFC; --primary: #6366F1; --text-main: #0F172A; --text-sub: #64748B; --border: #E2E8F0; --coin: #F59E0B; --danger: #EF4444; --success: #22C55E; }
+        :root { --bg: #F8FAFC; --primary: #6366F1; --text-main: #0F172A; --text-sub: #64748B; --border: #E2E8F0; --coin: #F59E0B; --danger: #EF4444; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        .view { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 120px; display: none; width: 100%; }
-        .view.active-flex { display: flex !important; flex-direction: column; animation: fadeIn 0.3s ease; }
-        .view.active-block { display: block !important; animation: fadeIn 0.3s ease; }
+        /* Görünüm Yapısı */
+        .view { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 110px; display: none; width: 100%; }
+        .view.active-flex { display: flex !important; flex-direction: column; animation: fadeIn 0.2s ease; }
+        .view.active-block { display: block !important; animation: fadeIn 0.2s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         .header { padding: 20px; padding-top: 50px; display: flex; justify-content: space-between; align-items: center; background: white; border-bottom: 1px solid var(--border); z-index: 10; }
         .balance-pill { background: #FFFBEB; padding: 8px 16px; border-radius: 50px; border: 1px solid #FEF3C7; color: var(--coin); font-weight: 800; display: flex; align-items: center; gap: 6px; }
 
-        /* Canlı Yayın Kutusu */
-        .stream-box { width: 100%; background: #000; border-radius: 20px; overflow: hidden; position: relative; aspect-ratio: 16/9; margin-bottom: 15px; }
-        #live-video { width: 100%; height: 100%; object-fit: contain; background: black; }
-        .stream-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; z-index: 10; }
-        .live-tag { position: absolute; top: 10px; left: 10px; background: var(--danger); color: white; padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; z-index: 20; display: none; }
+        /* Sohbet Alanı */
+        #chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: #f1f5f9; }
+        .msg { max-width: 85%; padding: 10px 15px; border-radius: 18px; font-size: 14px; position: relative; line-height: 1.4; }
+        .msg.mine { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+        .msg.theirs { align-self: flex-start; background: white; color: var(--text-main); border-bottom-left-radius: 4px; border: 1px solid var(--border); }
+        .msg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 15px; }
+        .msg-info { font-size: 10px; font-weight: 800; opacity: 0.8; }
+        .admin-dots { font-size: 14px; cursor: pointer; padding: 0 5px; color: var(--text-sub); }
+        .chat-input-area { padding: 15px; background: white; border-top: 1px solid var(--border); display: flex; gap: 8px; padding-bottom: 100px; }
 
-        .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 16px; font-weight: 700; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .inp, .sel { width: 100%; padding: 14px; border-radius: 16px; border: 2px solid var(--border); background: #fff; margin-bottom: 15px; outline: none; }
-        
-        #progress-container { display: none; background: #eee; border-radius: 10px; height: 10px; overflow: hidden; margin-bottom: 10px; }
-        #progress-bar { height: 100%; background: var(--success); width: 0%; transition: 0.2s; }
+        /* Kartlar ve Butonlar */
+        .card { background: white; border-radius: 20px; padding: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .inp, .sel { width: 100%; padding: 14px; border-radius: 16px; border: 2px solid var(--border); background: #fff; margin-bottom: 12px; outline: none; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
+        /* Navigasyon */
         .nav-wrap { position: fixed; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 2000; }
-        .nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px); border-radius: 30px; display: flex; padding: 6px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .nav-btn { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 20px; color: #94A3B8; font-size: 20px; }
+        .nav { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border-radius: 30px; display: flex; padding: 6px; border: 1px solid var(--border); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .nav-btn { width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; border-radius: 20px; color: #94A3B8; font-size: 22px; }
         .nav-btn.active { color: var(--primary); background: #EEF2FF; }
-        
-        .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: #1E293B; color: white; padding: 12px 20px; border-radius: 50px; font-size: 13px; z-index: 9999; }
+
+        /* Modallar */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 4000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+        .modal { background: white; width: 85%; max-width: 340px; border-radius: 25px; padding: 20px; text-align: center; }
+        .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: #1E293B; color: white; padding: 12px 22px; border-radius: 50px; font-size: 13px; z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
@@ -62,52 +70,78 @@
     </div>
 
     <div id="v-home" class="view active-block">
-        <div id="home-featured" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
+        <div class="card" style="background: linear-gradient(135deg, #6366F1, #A855F7); color: white; border: none;">
+            <h3 style="margin-bottom:5px;">Ders Notları</h3>
+            <p style="font-size:12px; opacity:0.9;">Hoş geldin! Otomatik jeton sistemi aktiftir.</p>
+        </div>
+        <div id="home-featured" class="grid"></div>
     </div>
 
-    <div id="v-stream" class="view">
-        <div class="stream-box">
-            <div class="live-tag" id="live-indicator">CANLI</div>
-            <video id="live-video" playsinline preload="auto"></video>
-            <div id="stream-wait-screen" class="stream-overlay">
-                <i class="fa-solid fa-clock-rotate-left" style="font-size: 35px; margin-bottom: 15px; color: var(--coin);"></i>
-                <div style="font-size: 14px; opacity: 0.8;">Yayın Başlamasına Kalan</div>
-                <div id="stream-timer" style="font-size: 32px; font-weight: 800; margin-top: 5px; font-variant-numeric: tabular-nums;">00:00:00</div>
-            </div>
+    <div id="v-pdfs" class="view">
+        <div id="cat-view"><h2>Ders Kategorileri</h2><div class="grid" id="cat-grid" style="margin-top:15px;"></div></div>
+        <div id="list-view" style="display:none;">
+            <button class="btn" style="width:45px; background:white; color:black; border:1px solid var(--border); margin-bottom:15px;" onclick="backToCats()"><i class="fa-solid fa-arrow-left"></i></button>
+            <div id="pdf-container" class="grid"></div>
         </div>
-        <h4 style="margin: 15px 0 10px; font-size: 14px; color: var(--text-sub);">Yayın Sohbeti</h4>
-        <div id="stream-chat-messages" style="flex:1; background: white; border-radius: 15px; border: 1px solid var(--border); overflow-y: auto; padding: 10px; margin-bottom: 20px;"></div>
-        <div class="chat-input-area" style="display: flex; gap: 8px; margin-bottom: 80px;">
-            <input type="text" id="stream-chat-input" class="inp" style="margin-bottom:0; flex:1;" placeholder="Sohbete yaz...">
-            <button class="btn" style="width:55px;" onclick="sendMessage('stream')"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+
+    <div id="v-chat" class="view">
+        <div id="chat-messages"></div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" class="inp" style="margin-bottom:0;" placeholder="Mesajınızı yazın...">
+            <button class="btn" style="width:60px;" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <div id="v-earn" class="view">
+        <h2 style="margin-bottom:20px;">Ücretsiz Jeton Kazan</h2>
+        <div class="card">
+            <p style="margin-bottom:15px; color:var(--text-sub);">Reklam izleyerek anında 1 jeton kazanabilirsiniz.</p>
+            <button class="btn" onclick="watchAd()">Reklam İzle (+1 Jeton)</button>
         </div>
     </div>
 
     <div id="v-admin" class="view">
-        <h2>Yayın Yönetimi</h2>
-        <div style="background: white; padding: 20px; border-radius: 20px; border: 2px solid var(--primary); margin-top: 20px;">
-            <label style="font-size: 11px; font-weight: 800; color: var(--text-sub);">VİDEO SEÇ (.MP4)</label>
-            <input type="file" id="adm-file" class="inp" accept="video/mp4" style="margin-top: 5px;">
-            
-            <label style="font-size: 11px; font-weight: 800; color: var(--text-sub);">BAŞLANGIÇ SAATİ</label>
-            <input class="inp" id="adm-stream-time" type="datetime-local" style="margin-top: 5px;">
-            
-            <div id="progress-container"><div id="progress-bar"></div></div>
-            <button class="btn" id="upload-btn" onclick="uploadVideo()">Yükle ve Yayına Al</button>
+        <h2>Admin Paneli</h2>
+        <div class="card">
+            <p style="font-weight:700; margin-bottom:10px;">Yeni PDF Ekle</p>
+            <input class="inp" id="a-name" placeholder="Dosya Adı">
+            <input class="inp" id="a-link" placeholder="Dosya Linki (TG Mesaj Link)">
+            <select class="sel" id="a-cat"></select>
+            <input class="inp" type="number" id="a-cost" value="5" placeholder="Fiyat">
+            <button class="btn" onclick="addPdf()">Dosyayı Sisteme Ekle</button>
+        </div>
+        <div id="admin-list" style="margin-top:20px;"></div>
+    </div>
+
+    <div id="m-mod" class="overlay">
+        <div class="modal">
+            <h3 id="mod-user-name">Kullanıcı Yönetimi</h3>
+            <p style="font-size:12px; color:var(--text-sub); margin-bottom:15px;">Eylem seçiniz:</p>
+            <button class="btn" id="btn-del-msg" style="background:var(--danger);">Mesajı Sil</button>
+            <div style="margin:15px 0;">
+                <input type="number" id="mute-sec" class="inp" placeholder="Saniye (Örn: 60)" style="margin-bottom:5px;">
+                <button class="btn" id="btn-mute-user" style="background:#1E293B;">Kullanıcıyı Sustur</button>
+            </div>
+            <button class="btn" style="background:transparent; color:black;" onclick="closeMod()">Kapat</button>
         </div>
     </div>
 
-    <div id="v-pdfs" class="view"><h2>Dersler</h2><div id="cat-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div></div>
-    <div id="v-chat" class="view"><div id="chat-messages" style="height: 70vh; overflow-y: auto;"></div></div>
-    <div id="v-earn" class="view"><h2>Market</h2><button class="btn" onclick="watchAd()">Reklam İzle</button></div>
+    <div id="m-unlock" class="overlay">
+        <div class="modal">
+            <h3 id="modal-title">...</h3>
+            <p id="unlock-msg" style="margin:15px 0; color:var(--text-sub);"></p>
+            <button class="btn" id="confirm-unlock">Satın Al</button>
+            <button class="btn" style="margin-top:10px; background:transparent; color:black;" onclick="closeModal()">İptal</button>
+        </div>
+    </div>
 
     <div class="nav-wrap"><div class="nav">
         <div class="nav-btn active" onclick="navigate('home', 0)"><i class="fa-solid fa-house"></i></div>
         <div class="nav-btn" onclick="navigate('pdfs', 1)"><i class="fa-solid fa-book"></i></div>
-        <div class="nav-btn" onclick="navigate('stream', 2)"><i class="fa-solid fa-play-circle"></i></div>
-        <div class="nav-btn" onclick="navigate('chat', 3)"><i class="fa-solid fa-comments"></i></div>
-        <div class="nav-btn" onclick="navigate('earn', 4)"><i class="fa-solid fa-coins"></i></div>
-        <div id="admin-tab" class="nav-btn" onclick="navigate('admin', 5)" style="display:none;"><i class="fa-solid fa-gear"></i></div>
+        <div class="nav-btn" onclick="navigate('chat', 2)"><i class="fa-solid fa-comments"></i></div>
+        <div class="nav-btn" onclick="navigate('earn', 3)"><i class="fa-solid fa-coins"></i></div>
+        <div id="admin-tab" class="nav-btn" onclick="navigate('admin', 4)" style="display:none;"><i class="fa-solid fa-gear"></i></div>
     </div></div>
 
     <script>
@@ -123,141 +157,156 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const storage = firebase.storage();
         const tg = window.Telegram.WebApp;
         tg.expand();
         
-        let user = tg.initDataUnsafe.user || { id: "00000", first_name: "Test" };
-        let liveSettings = { url: "", start: 0 };
+        let user = tg.initDataUnsafe.user || { id: "00000", first_name: "Misafir" };
+        let userBal = 0, pdfs = [], isMuted = 0;
+        const CATS = ["Matematik", "Geometri", "Fizik", "Kimya", "Biyoloji", "Türkçe", "Edebiyat", "Tarih", "Coğrafya", "Denemeler"];
 
         window.onload = () => {
             document.getElementById('u-name').innerText = user.first_name;
-            if (String(user.id) === ADMIN_ID) document.getElementById('admin-tab').style.display = 'flex';
+            const isAdmin = String(user.id) === ADMIN_ID;
+            if (isAdmin) document.getElementById('admin-tab').style.display = 'flex';
 
-            // Yayın bilgilerini takip et
-            db.collection("settings").doc("live").onSnapshot(doc => {
+            // Kullanıcı Bilgileri
+            db.collection("users").doc(String(user.id)).onSnapshot(doc => {
                 if(doc.exists) {
-                    liveSettings = doc.data();
-                    const video = document.getElementById('live-video');
-                    if(video.src !== liveSettings.url) video.src = liveSettings.url;
+                    userBal = doc.data().balance || 0;
+                    isMuted = doc.data().muteUntil || 0;
+                    document.querySelectorAll('.global-bal').forEach(el => el.innerText = userBal);
                 }
             });
 
-            db.collection("users").doc(String(user.id)).onSnapshot(doc => {
-                if(doc.exists) document.querySelectorAll('.global-bal').forEach(el => el.innerText = doc.data().balance || 0);
+            // PDF Verileri
+            db.collection("pdfs").onSnapshot(snap => {
+                pdfs = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                renderHome(); if(isAdmin) renderAdmin();
             });
 
-            const CATS = ["Matematik", "Geometri", "Fizik", "Kimya", "Biyoloji", "Türkçe", "Edebiyat", "Tarih", "Coğrafya", "Denemeler"];
+            // Sohbet Dinleyicisi
+            db.collection("messages").orderBy("time", "asc").limitToLast(50).onSnapshot(snap => {
+                const chatBox = document.getElementById('chat-messages');
+                chatBox.innerHTML = snap.docs.map(doc => {
+                    const m = doc.data();
+                    const isMsgMine = String(m.uid) === String(user.id);
+                    const isAdminMsg = String(m.uid) === ADMIN_ID;
+                    return `
+                        <div class="msg ${isMsgMine ? 'mine' : 'theirs'}">
+                            <div class="msg-header">
+                                <span class="msg-info" style="${isAdminMsg ? 'color:#FF4B2B; font-weight:900;' : ''}">${m.name} ${isAdminMsg ? '⭐' : ''}</span>
+                                ${isAdmin ? `<i class="fa-solid fa-ellipsis-v admin-dots" onclick="openMod('${doc.id}', '${m.uid}', '${m.name}')"></i>` : ''}
+                            </div>
+                            <div class="msg-text">${m.text}</div>
+                        </div>`;
+                }).join('');
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+
+            // Kategorileri Yükle
+            const grid = document.getElementById('cat-grid');
+            const sel = document.getElementById('a-cat');
             CATS.forEach(c => {
-                document.getElementById('cat-grid').innerHTML += `<div class="btn" style="background:white; color:black; border:1px solid var(--border);" onclick="showToast('${c} yakında!')">${c}</div>`;
+                grid.innerHTML += `<div class="card" style="text-align:center; font-weight:700; margin-bottom:0;" onclick="openCat('${c}')">${c}</div>`;
+                if(sel) sel.innerHTML += `<option value="${c}">${c}</option>`;
             });
 
-            setInterval(syncClock, 1000); // Saniyelik senkronizasyon
+            // Otomatik Jeton
+            setInterval(() => watchAd(true), 30000); 
         };
 
-        // --- YAYIN MANTIĞI ---
-        function uploadVideo() {
-            const file = document.getElementById('adm-file').files[0];
-            const timeStr = document.getElementById('adm-stream-time').value;
-            if(!file || !timeStr) return showToast("Dosya ve saat seçin!", "error");
-
-            const uploadBtn = document.getElementById('upload-btn');
-            const progCont = document.getElementById('progress-container');
-            const progBar = document.getElementById('progress-bar');
-            
-            uploadBtn.disabled = true;
-            progCont.style.display = 'block';
-
-            // Firebase Storage'a yükle
-            const ref = storage.ref().child('live/stream.mp4');
-            const task = ref.put(file);
-
-            task.on('state_changed', 
-                (snap) => {
-                    progBar.style.width = (snap.bytesTransferred / snap.totalBytes) * 100 + '%';
-                }, 
-                (err) => { showToast("Hata!"); uploadBtn.disabled = false; }, 
-                () => {
-                    task.snapshot.ref.getDownloadURL().then(url => {
-                        db.collection("settings").doc("live").set({
-                            url: url,
-                            start: new Date(timeStr).getTime()
-                        }).then(() => {
-                            showToast("Yayın planlandı!");
-                            progCont.style.display = 'none';
-                            uploadBtn.disabled = false;
-                        });
-                    });
-                }
-            );
-        }
-
-        function syncClock() {
-            if(!liveSettings.url || !liveSettings.start) return;
-            
-            const now = Date.now();
-            const start = liveSettings.start;
-            const video = document.getElementById('live-video');
-            const overlay = document.getElementById('stream-wait-screen');
-            const timerEl = document.getElementById('stream-timer');
-            const indicator = document.getElementById('live-indicator');
-
-            if (now < start) {
-                // Bekleme Modu
-                const diff = start - now;
-                const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
-                timerEl.innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-                overlay.style.display = "flex";
-                indicator.style.display = "none";
-                video.pause();
-            } else {
-                // Yayın Zamanı Geldi
-                overlay.style.display = "none";
-                indicator.style.display = "block";
-                
-                // Senkronizasyon (Hangi saniyede olmalı?)
-                const targetSec = (now - start) / 1000;
-                
-                if (video.paused && targetSec < (video.duration || 9999)) {
-                    video.muted = true; // Otomatik oynatma için sessiz başlar
-                    video.play().catch(e => console.log("Etkileşim bekleniyor..."));
-                }
-
-                if (Math.abs(video.currentTime - targetSec) > 2) {
-                    video.currentTime = targetSec;
-                }
-
-                // Video bittiyse kapat
-                if (video.duration && targetSec > video.duration) {
-                    overlay.style.display = "flex";
-                    document.getElementById('stream-status-text').innerText = "Yayın Bitti";
-                    timerEl.innerText = "00:00:00";
-                    indicator.style.display = "none";
-                    video.pause();
-                }
+        // --- SOHBET FONKSİYONLARI ---
+        async function sendMessage() {
+            if(Date.now() < isMuted) {
+                const rem = Math.round((isMuted - Date.now()) / 1000);
+                showToast("Susturuldunuz! Kalan: " + rem + "s", "error");
+                return;
             }
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if(!text) return;
+            input.value = "";
+            await db.collection("messages").add({ uid: user.id, name: user.first_name, text: text, time: Date.now() });
         }
 
-        // --- SİSTEM ---
+        function openMod(msgId, targetUid, targetName) {
+            document.getElementById('mod-user-name').innerText = targetName;
+            document.getElementById('btn-del-msg').onclick = () => { db.collection("messages").doc(msgId).delete(); closeMod(); };
+            document.getElementById('btn-mute-user').onclick = async () => {
+                const sec = parseInt(document.getElementById('mute-sec').value);
+                if(!sec) return;
+                await db.collection("users").doc(String(targetUid)).set({ muteUntil: Date.now() + (sec * 1000) }, { merge: true });
+                showToast(targetName + " susturuldu."); closeMod();
+            };
+            document.getElementById('m-mod').style.display = 'flex';
+        }
+        function closeMod() { document.getElementById('m-mod').style.display = 'none'; }
+
+        // --- PDF SİSTEMİ ---
         function navigate(v, i) {
             document.querySelectorAll('.view').forEach(x => { x.classList.remove('active-block', 'active-flex'); x.style.display = 'none'; });
-            const t = document.getElementById('v-' + v);
-            if(v === 'stream') t.classList.add('active-flex'); else t.classList.add('active-block');
+            const target = document.getElementById('v-' + v);
+            if(v === 'chat') target.classList.add('active-flex'); else target.classList.add('active-block');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.nav-btn')[i].classList.add('active');
         }
 
-        function showToast(m, type="success") {
-            const t = document.createElement('div'); t.className = 'toast';
-            if(type === "error") t.style.background = "#EF4444";
-            t.innerText = m; document.getElementById('toast-box').appendChild(t);
-            setTimeout(() => t.remove(), 2500);
+        function openCat(c) {
+            document.getElementById('cat-view').style.display = 'none';
+            document.getElementById('list-view').style.display = 'block';
+            const filtered = pdfs.filter(p => p.cat === c);
+            document.getElementById('pdf-container').innerHTML = filtered.length ? filtered.map(p => `
+                <div class="card" onclick="openUnlockModal('${p.id}')" style="text-align:center; margin-bottom:0;">
+                    <div style="font-weight:800; font-size:12px;">${p.name}</div>
+                    <div style="color:var(--coin); font-size:11px; margin-top:5px;">${p.cost} Jeton</div>
+                </div>`).join('') : '<p style="grid-column: 1/3; text-align:center; padding:20px;">Bu kategoride henüz dosya yok.</p>';
         }
 
-        async function sendMessage(source) {
-            const input = document.getElementById(source === 'stream' ? 'stream-chat-input' : 'chat-input');
-            if(!input.value.trim()) return;
-            showToast("Mesaj gönderildi!"); input.value = "";
+        function openUnlockModal(id) {
+            const p = pdfs.find(x => x.id === id);
+            document.getElementById('modal-title').innerText = p.name;
+            document.getElementById('unlock-msg').innerText = `${p.cost} jeton karşılığında açmak istiyor musunuz?`;
+            document.getElementById('confirm-unlock').onclick = async () => {
+                if(userBal >= p.cost) {
+                    await db.collection("users").doc(String(user.id)).update({ balance: firebase.firestore.FieldValue.increment(-p.cost) });
+                    tg.openTelegramLink(p.link); closeModal();
+                } else { showToast("Yetersiz jeton!", "error"); navigate('earn', 3); closeModal(); }
+            };
+            document.getElementById('m-unlock').style.display = 'flex';
+        }
+
+        // --- REKLAM VE ADMİN ---
+        async function watchAd(isAuto = false) {
+            if (typeof window.showAdexora !== 'function') return;
+            window.showAdexora().then(async () => {
+                await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+                if(!isAuto) showToast("+1 Jeton Kazanıldı!");
+            });
+        }
+
+        function addPdf() {
+            const n = document.getElementById('a-name').value, l = document.getElementById('a-link').value;
+            const c = document.getElementById('a-cat').value, st = parseInt(document.getElementById('a-cost').value);
+            if(n && l) {
+                db.collection("pdfs").add({ name: n, link: l, cat: c, cost: st, time: Date.now() });
+                showToast("Dosya eklendi!");
+            }
+        }
+
+        function renderAdmin() {
+            document.getElementById('admin-list').innerHTML = pdfs.map(p => `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">${p.name} <i class="fa fa-trash" style="color:red" onclick="db.collection('pdfs').doc('${p.id}').delete()"></i></div>`).join('');
+        }
+        function renderHome() {
+            document.getElementById('home-featured').innerHTML = pdfs.slice(-4).reverse().map(p => `<div class="card" onclick="openUnlockModal('${p.id}')" style="text-align:center; margin-bottom:0;"><b>${p.name}</b><br><small>${p.cost} Jeton</small></div>`).join('');
+        }
+        function backToCats() { document.getElementById('cat-view').style.display = 'block'; document.getElementById('list-view').style.display = 'none'; }
+        function closeModal() { document.getElementById('m-unlock').style.display = 'none'; }
+        function showToast(m, type="success") {
+            const box = document.getElementById('toast-box');
+            const t = document.createElement('div'); t.className = 'toast';
+            if(type === "error") t.style.background = "#EF4444";
+            t.innerText = m; box.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
         }
     </script>
 </body>
