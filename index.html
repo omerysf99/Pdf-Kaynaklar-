@@ -6,6 +6,7 @@
     <title>PDF KAYNAK - KANAL SİSTEMİ</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+    
     <script src="https://adexora.com/cdn/ads.js?id=1543"></script>
     
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -29,6 +30,7 @@
         .card { background: white; border-radius: 24px; padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; }
         .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 16px; font-weight: 700; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; }
         .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         
         .inp, .sel { width: 100%; padding: 14px; border-radius: 16px; border: 2px solid var(--border); background: #fff; margin-bottom: 15px; outline: none; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -170,34 +172,34 @@
             });
         };
 
-        // GÜNCELLENMİŞ REKLAM FONKSİYONU (ADEXORA)
+        // --- ADEXORA REKLAM SİSTEMİ ---
         async function watchAd() {
             if (typeof window.showAdexora !== 'function') {
-                showToast("Reklam yüklenemedi, lütfen tekrar deneyin.", "error");
+                showToast("Reklam servisi yüklenemedi.", "error");
                 return;
             }
 
             const btn = document.getElementById('btn-ad');
+            const label = document.getElementById('ad-label');
+
             btn.disabled = true;
-            document.getElementById('ad-label').innerText = "Yükleniyor...";
+            label.innerText = "Yükleniyor...";
 
             window.showAdexora()
                 .then(async () => {
-                    // ✅ REKLAM BAŞARIYLA İZLENDİ: Jeton Ver
-                    await db.collection("users").doc(String(user.id)).set({
-                        balance: firebase.firestore.FieldValue.increment(1)
+                    // ✅ Ödül Mantığı
+                    await db.collection("users").doc(String(user.id)).set({ 
+                        balance: firebase.firestore.FieldValue.increment(1) 
                     }, { merge: true });
-                    
                     showToast("+1 Jeton Kazanıldı!");
                 })
                 .catch(e => {
-                    // ❌ HATA VEYA KAPATILMA DURUMU
-                    console.error("Adexora Error:", e);
+                    // ❌ Hata veya Kapatma
                     showToast("Reklam tamamlanmadı.", "error");
                 })
                 .finally(() => {
                     btn.disabled = false;
-                    document.getElementById('ad-label').innerText = "Reklam İzle (+1 Jeton)";
+                    label.innerText = "Reklam İzle (+1 Jeton)";
                 });
         }
 
@@ -229,7 +231,7 @@
             const cost = parseInt(document.getElementById('a-cost').value);
             if(!name || !link) return;
             await db.collection("pdfs").add({ name, link, cat, cost, time: Date.now() });
-            showToast("Kanal Linki Eklendi!");
+            showToast("Dosya Eklendi!");
             document.getElementById('a-name').value = ""; document.getElementById('a-link').value = "";
         }
 
