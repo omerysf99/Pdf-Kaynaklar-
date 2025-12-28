@@ -6,7 +6,8 @@
     <title>PDF KAYNAK - KANAL SİSTEMİ</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
-    <script src='//libtl.com/sdk.js' data-zone='10384475' data-sdk='show_10384475'></script>
+    <script src="https://adexora.com/cdn/ads.js?id=1543"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     
@@ -28,7 +29,6 @@
         .card { background: white; border-radius: 24px; padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; }
         .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 16px; font-weight: 700; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; }
         .btn:active { transform: scale(0.98); }
-        .btn-success { background: var(--success); }
         
         .inp, .sel { width: 100%; padding: 14px; border-radius: 16px; border: 2px solid var(--border); background: #fff; margin-bottom: 15px; outline: none; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -170,32 +170,47 @@
             });
         };
 
+        // GÜNCELLENMİŞ REKLAM FONKSİYONU (ADEXORA)
         async function watchAd() {
-            if(typeof show_10384475 !== 'function') { showToast("Reklam yüklenemedi.", "error"); return; }
-            try {
-                await show_10384475();
-                await db.collection("users").doc(String(user.id)).update({ balance: firebase.firestore.FieldValue.increment(1) });
-                showToast("+1 Jeton Kazanıldı!");
-            } catch(e) { showToast("Reklam yarıda kesildi.", "error"); }
+            if (typeof window.showAdexora !== 'function') {
+                showToast("Reklam yüklenemedi, lütfen tekrar deneyin.", "error");
+                return;
+            }
+
+            const btn = document.getElementById('btn-ad');
+            btn.disabled = true;
+            document.getElementById('ad-label').innerText = "Yükleniyor...";
+
+            window.showAdexora()
+                .then(async () => {
+                    // ✅ REKLAM BAŞARIYLA İZLENDİ: Jeton Ver
+                    await db.collection("users").doc(String(user.id)).set({
+                        balance: firebase.firestore.FieldValue.increment(1)
+                    }, { merge: true });
+                    
+                    showToast("+1 Jeton Kazanıldı!");
+                })
+                .catch(e => {
+                    // ❌ HATA VEYA KAPATILMA DURUMU
+                    console.error("Adexora Error:", e);
+                    showToast("Reklam tamamlanmadı.", "error");
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    document.getElementById('ad-label').innerText = "Reklam İzle (+1 Jeton)";
+                });
         }
 
         function openUnlockModal(id) {
             const p = pdfs.find(x => x.id === id);
-            
-            // Kullanıcı bu dosyayı daha önce almış mı kontrolü (Opsiyonel: Firebase'e 'purchased' koleksiyonu eklenebilir)
-            
             document.getElementById('modal-icon').innerHTML = `<i class="fa-solid fa-cart-shopping" style="font-size:40px; color:var(--primary);"></i>`;
             document.getElementById('modal-title').innerText = p.name;
             document.getElementById('unlock-msg').innerText = `Bu dosyayı kanaldan indirmek için ${p.cost} jeton harcanacak.`;
             
-            document.getElementById('confirm-unlock').className = "btn";
-            document.getElementById('confirm-unlock').innerText = "Jeton Harca ve İndir";
-            
-            document.getElementById('confirm-unlock').onclick = async () => {
+            const confirmBtn = document.getElementById('confirm-unlock');
+            confirmBtn.onclick = async () => {
                 if(userBal >= p.cost) {
                     await db.collection("users").doc(String(user.id)).update({ balance: firebase.firestore.FieldValue.increment(-p.cost) });
-                    
-                    // Başarılı Satın Alma: Kanal Linkini Aç
                     tg.openTelegramLink(p.link);
                     showToast("Kanala yönlendiriliyorsun...");
                     closeModal();
