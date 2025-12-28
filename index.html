@@ -7,7 +7,6 @@
     
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
     <script src='//libtl.com/sdk.js' data-zone='10384475' data-sdk='show_10384475'></script>
-    
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     
@@ -18,27 +17,42 @@
         :root { --bg: #F8FAFC; --white: #FFFFFF; --primary: #6366F1; --text-main: #0F172A; --text-sub: #64748B; --border: #E2E8F0; --coin: #F59E0B; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        /* Views */
         .view { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 120px; display: none; -webkit-overflow-scrolling: touch; }
         .view.active { display: block; }
+        
+        /* Cards & Grids */
         .scroll-container { display: flex; gap: 15px; overflow-x: auto; padding: 10px 5px; scroll-snap-type: x mandatory; }
         .scroll-container::-webkit-scrollbar { display: none; }
-        .pdf-card { flex: 0 0 160px; background: var(--white); padding: 20px 15px; border-radius: 24px; border: 1px solid var(--border); text-align: center; scroll-snap-align: start; }
+        .pdf-card { flex: 0 0 160px; background: var(--white); padding: 20px 15px; border-radius: 24px; border: 1px solid var(--border); text-align: center; scroll-snap-align: start; transition: transform 0.2s; }
+        .pdf-card:active { transform: scale(0.95); }
+        
         .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .cat-card { background: white; padding: 18px 10px; border-radius: 20px; border: 1px solid var(--border); text-align: center; }
         .cat-card i { font-size: 24px; color: var(--primary); margin-bottom: 8px; }
         .cat-card span { display: block; font-weight: 700; font-size: 12px; }
+
+        /* UI Elements */
         .header { padding: 20px; padding-top: 50px; background: var(--bg); display: flex; justify-content: space-between; align-items: center; }
         .btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn:disabled { opacity: 0.6; filter: grayscale(1); }
         .inp { width: 100%; padding: 14px; border-radius: 16px; border: 2px solid var(--border); background: #fff; margin-bottom: 15px; outline: none; }
+
+        /* Navigation */
         .nav-container { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; z-index: 1000; }
-        .nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; display: flex; justify-content: space-around; padding: 12px; border: 1px solid rgba(255,255,255,0.5); }
-        .nav-item { font-size: 22px; color: #CBD5E1; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 14px; }
+        .nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; display: flex; justify-content: space-around; padding: 12px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .nav-item { font-size: 22px; color: #CBD5E1; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 14px; transition: 0.3s; }
         .nav-item.active { color: var(--primary); background: #EEF2FF; }
+
+        /* Modals */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
         .modal-box { background: var(--white); width: 85%; max-width: 350px; border-radius: 24px; padding: 25px; text-align: center; }
+
+        /* Toasts */
         #toast-container { position: fixed; top: 60px; left: 0; width: 100%; z-index: 9999; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
-        .toast { background: #1E293B; color: white; padding: 12px 24px; border-radius: 50px; margin-bottom: 10px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .toast { background: #1E293B; color: white; padding: 12px 24px; border-radius: 50px; margin-bottom: 10px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2); animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -58,7 +72,7 @@
     <div id="v-home" class="view active">
         <div style="background: linear-gradient(135deg, #6366F1, #A855F7); color: white; border-radius: 24px; padding: 24px; margin-bottom: 25px;">
             <h3 style="font-size:20px;">Günün Kaynakları</h3>
-            <button class="btn" style="background:white; color:var(--primary); margin-top:15px; width:fit-content; height:35px; font-size:12px;" onclick="go('pdfs', 1)">Branşlara Git</button>
+            <button class="btn" style="background:white; color:var(--primary); margin-top:15px; width:fit-content; height:35px; font-size:12px; padding: 0 20px;" onclick="go('pdfs', 1)">Tüm Branşlar</button>
         </div>
         <h4 style="margin-bottom:10px;">Popüler Kaynaklar</h4>
         <div id="home-featured" class="scroll-container"></div>
@@ -82,7 +96,7 @@
     <div id="v-earn" class="view">
         <h2 style="margin-bottom:15px; color:var(--coin);">Jeton Kazan</h2>
         <div style="background:white; padding:30px; border-radius:24px; text-align:center; border:1px solid var(--border); margin-bottom:20px;">
-            <div style="font-size:14px; color:var(--text-sub);">Hesabındaki Jeton</div>
+            <div style="font-size:14px; color:var(--text-sub);">Mevcut Bakiyen</div>
             <div style="font-size:48px; font-weight:800; color:var(--coin);" class="global-bal">0</div>
         </div>
         <button class="btn" id="btn-watch-ad" style="background:#EEF2FF; color:var(--primary); height:150px; flex-direction:column; border:2px dashed var(--primary);" onclick="watchAdAndEarn()">
@@ -107,16 +121,16 @@
             <h3>Kitabı Aç</h3>
             <p id="unlock-msg" style="margin:10px 0; color:var(--text-sub);"></p>
             <button class="btn" id="btn-unlock-pdf" style="background:var(--coin);">Jeton Kullan</button>
-            <button class="btn" style="margin-top:10px; background:#eee; color:#333;" onclick="closeM()">Kapat</button>
+            <button class="btn" style="margin-top:10px; background:#f1f5f9; color:#475569;" onclick="closeM()">İptal</button>
         </div>
     </div>
 
     <div id="m-request" class="modal-overlay">
         <div class="modal-box">
             <h3>Kitap İste</h3>
-            <textarea class="inp" id="req-txt" style="height:100px; margin-top:15px;"></textarea>
+            <textarea class="inp" id="req-txt" placeholder="Kitap adı ve yayın evi yazınız..." style="height:100px; margin-top:15px;"></textarea>
             <button class="btn" onclick="sendRequest()">Gönder</button>
-            <button class="btn" style="margin-top:10px; background:#eee; color:#333;" onclick="closeM()">Kapat</button>
+            <button class="btn" style="margin-top:10px; background:#f1f5f9; color:#475569;" onclick="closeM()">Kapat</button>
         </div>
     </div>
 
@@ -130,7 +144,7 @@
     </div>
 
     <script>
-        // --- FIREBASE CONFIG ---
+        // --- CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY",
             authDomain: "pdfkaynak-51615.firebaseapp.com",
@@ -146,7 +160,7 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         
-        let user = tg.initDataUnsafe.user || { id: 12345, first_name: "Misafir" };
+        let user = tg.initDataUnsafe.user || { id: "12345", first_name: "Misafir" };
         let balance = 0, pdfs = [], history = [], currentCat = '';
 
         const CATS = [
@@ -160,35 +174,48 @@
         ];
 
         window.onload = () => {
+            const uid = String(user.id);
             document.getElementById('u-name').innerText = user.first_name;
             document.getElementById('p-name').innerText = user.first_name;
             
-            db.collection("users").doc(String(user.id)).onSnapshot(doc => {
+            // Dinamik Kullanıcı Takibi
+            db.collection("users").doc(uid).onSnapshot(doc => {
                 if(doc.exists) {
-                    balance = doc.data().balance || 0;
-                    history = doc.data().history || [];
+                    const data = doc.data();
+                    balance = data.balance || 0;
+                    history = data.history || [];
                     updateUI();
                     renderHistory();
                 } else {
-                    db.collection("users").doc(String(user.id)).set({name:user.first_name, balance:0, history:[]});
+                    db.collection("users").doc(uid).set({
+                        name: user.first_name, 
+                        balance: 0, 
+                        history: [],
+                        createdAt: Date.now()
+                    });
                 }
-            });
+            }, err => console.error("Firestore Hatası:", err));
 
+            // PDF Verilerini Çekme
             db.collection("pdfs").onSnapshot(snap => {
                 pdfs = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
                 renderFeatured();
                 if(currentCat) renderPdfs();
             });
 
+            // Kategorileri Oluştur
             const grid = document.getElementById('main-cat-grid');
-            grid.innerHTML = '';
-            CATS.forEach(c => {
-                // Template literal düzeltmesi: `` kullanıldı
-                grid.innerHTML += `<div class="cat-card" onclick="openCat('${c.n}')"><i class="fa-solid ${c.i}"></i><span>${c.n}</span></div>`;
-            });
+            grid.innerHTML = CATS.map(c => `
+                <div class="cat-card" onclick="openCat('${c.n}')">
+                    <i class="fa-solid ${c.i}"></i>
+                    <span>${c.n}</span>
+                </div>
+            `).join('');
         };
 
-        function updateUI() { document.querySelectorAll('.global-bal').forEach(el => el.innerText = balance); }
+        function updateUI() { 
+            document.querySelectorAll('.global-bal').forEach(el => el.innerText = balance); 
+        }
         
         function go(v, i) {
             document.querySelectorAll('.view').forEach(x => x.classList.remove('active')); 
@@ -211,99 +238,146 @@
         }
 
         function renderFeatured() {
-            const f = document.getElementById('home-featured'); f.innerHTML = '';
-            pdfs.slice(0, 5).forEach(p => {
-                // Template literal düzeltmesi: `` kullanıldı
-                f.innerHTML += `<div class="pdf-card" onclick="tryUnlock('${p.id}')"><i class="fa-solid fa-file-pdf" style="font-size:30px; color:var(--primary);"></i><div style="font-size:12px; font-weight:700; margin-top:10px;">${p.name}</div></div>`;
-            });
+            const f = document.getElementById('home-featured');
+            f.innerHTML = pdfs.slice(0, 5).map(p => `
+                <div class="pdf-card" onclick="tryUnlock('${p.id}')">
+                    <i class="fa-solid fa-file-pdf" style="font-size:30px; color:var(--primary);"></i>
+                    <div style="font-size:12px; font-weight:700; margin-top:10px;">${p.name}</div>
+                </div>
+            `).join('');
         }
 
         function renderPdfs() {
-            const list = document.getElementById('pdf-list'); list.innerHTML = '';
+            const list = document.getElementById('pdf-list');
             const q = document.getElementById('search').value.toLowerCase();
-            pdfs.filter(p => p.cat === currentCat && p.name.toLowerCase().includes(q)).forEach(p => {
-                // Template literal düzeltmesi: `` kullanıldı
-                list.innerHTML += `<div class="pdf-card" style="flex:auto;" onclick="tryUnlock('${p.id}')"><i class="fa-solid fa-file-pdf" style="font-size:30px; color:var(--primary);"></i><div style="font-size:12px; font-weight:700;">${p.name}</div><div style="color:var(--coin); font-size:11px; font-weight:800;">${p.cost||5} Jeton</div></div>`;
-            });
+            const filtered = pdfs.filter(p => p.cat === currentCat && p.name.toLowerCase().includes(q));
+            
+            list.innerHTML = filtered.map(p => `
+                <div class="pdf-card" style="flex:auto;" onclick="tryUnlock('${p.id}')">
+                    <i class="fa-solid fa-file-pdf" style="font-size:30px; color:var(--primary);"></i>
+                    <div style="font-size:12px; font-weight:700; margin: 5px 0;">${p.name}</div>
+                    <div style="color:var(--coin); font-size:11px; font-weight:800;">${p.cost||5} Jeton</div>
+                </div>
+            `).join('');
         }
 
         function renderHistory() {
-            const hList = document.getElementById('history-list'); hList.innerHTML = '';
-            if(history.length===0) { hList.innerHTML='<p style="text-align:center; font-size:12px; color:var(--text-sub);">Henüz indirme yok.</p>'; return; }
-            [...history].reverse().slice(0, 10).forEach(item => {
-                // Template literal düzeltmesi: `` kullanıldı
-                hList.innerHTML += `<div style="background:white; padding:12px; border-radius:15px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border);" onclick="copyLink('${item.link}')"><span>${item.name}</span><i class="fa-solid fa-copy" style="color:var(--primary);"></i></div>`;
-            });
+            const hList = document.getElementById('history-list');
+            if(history.length === 0) { 
+                hList.innerHTML = '<p style="text-align:center; font-size:12px; color:var(--text-sub); padding:20px;">Henüz kitap açmadınız.</p>'; 
+                return; 
+            }
+            hList.innerHTML = [...history].reverse().slice(0, 15).map(item => `
+                <div style="background:white; padding:12px; border-radius:15px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border);" onclick="copyLink('${item.link}')">
+                    <span style="font-size:13px; font-weight:600;">${item.name}</span>
+                    <i class="fa-solid fa-copy" style="color:var(--primary);"></i>
+                </div>
+            `).join('');
         }
 
-        function watchAdAndEarn() {
+        // --- ASYNC İŞLEMLER (DÜZELTİLMİŞ) ---
+
+        async function watchAdAndEarn() {
             const adBtn = document.getElementById('btn-watch-ad');
             const adText = document.getElementById('ad-text');
             
             if (typeof show_10384475 !== 'function') {
-                showToast("Reklam yüklenemedi, lütfen sayfayı yenileyin.");
+                showToast("Reklam servisi hazır değil.", "error");
                 return;
             }
 
-            adBtn.disabled = true;
-            adText.innerText = "Reklam Başlıyor...";
-
-            show_10384475().then(() => {
-                db.collection("users").doc(String(user.id)).update({
+            try {
+                adBtn.disabled = true;
+                adText.innerText = "Reklam Başlatılıyor...";
+                
+                await show_10384475(); // Reklamın izlenmesini bekle
+                
+                // Firestore atomik artırma
+                await db.collection("users").doc(String(user.id)).update({
                     balance: firebase.firestore.FieldValue.increment(1)
-                }).then(() => {
-                    showToast("+1 Jeton eklendi!");
-                }).catch(() => {
-                    balance += 1;
-                    updateUI();
                 });
-            }).catch(e => {
-                showToast("Reklam kapatıldı veya yüklenemedi.");
-            }).finally(() => {
+
+                showToast("+1 Jeton Kazanıldı!");
+            } catch (e) {
+                console.error(e);
+                showToast("Reklam tamamlanmadı.");
+            } finally {
                 adBtn.disabled = false;
                 adText.innerText = "Reklam İzle +1 Jeton";
-            });
+            }
         }
 
         function tryUnlock(id) {
             const p = pdfs.find(x => x.id === id);
-            // Template literal düzeltmesi: `` kullanıldı
-            document.getElementById('unlock-msg').innerText = `${p.name} için ${p.cost||5} jeton gereklidir.`;
-            document.getElementById('btn-unlock-pdf').onclick = () => {
-                const cost = (p.cost||5);
+            const cost = p.cost || 5;
+            
+            document.getElementById('unlock-msg').innerText = `${p.name} açmak için ${cost} jeton kullanılacak.`;
+            
+            document.getElementById('btn-unlock-pdf').onclick = async () => {
                 if(balance >= cost) {
-                    db.collection("users").doc(String(user.id)).update({
-                        balance: firebase.firestore.FieldValue.increment(-cost),
-                        history: firebase.firestore.FieldValue.arrayUnion({name:p.name, link:p.link, date:Date.now()})
-                    });
-                    copyLink(p.link); showToast("Link kopyalandı!"); closeM();
-                } else { showToast("Yetersiz bakiye!", "error"); closeM(); go('earn', 2); }
+                    try {
+                        const userRef = db.collection("users").doc(String(user.id));
+                        await userRef.update({
+                            balance: firebase.firestore.FieldValue.increment(-cost),
+                            history: firebase.firestore.FieldValue.arrayUnion({
+                                name: p.name, 
+                                link: p.link, 
+                                date: Date.now()
+                            })
+                        });
+                        
+                        copyLink(p.link);
+                        showToast("Başarılı! Link kopyalandı.");
+                        closeM();
+                    } catch (err) {
+                        showToast("Bir hata oluştu.", "error");
+                    }
+                } else {
+                    showToast("Yetersiz jeton!", "error");
+                    closeM();
+                    go('earn', 2);
+                }
             };
             openModal('m-unlock');
         }
 
-        function sendRequest() {
-            const t = document.getElementById('req-txt').value; if(!t.trim()) return;
-            db.collection("requests").add({user:user.id, name:user.first_name, text:t, date:Date.now()});
-            showToast("İsteğiniz alındı."); document.getElementById('req-txt').value = ''; closeM();
+        async function sendRequest() {
+            const txt = document.getElementById('req-txt').value;
+            if(!txt.trim()) return;
+            
+            try {
+                await db.collection("requests").add({
+                    userId: user.id,
+                    userName: user.first_name,
+                    content: txt,
+                    timestamp: Date.now()
+                });
+                showToast("İsteğiniz iletildi.");
+                document.getElementById('req-txt').value = '';
+                closeM();
+            } catch (e) {
+                showToast("Gönderilemedi.", "error");
+            }
         }
 
         function copyLink(l) { 
-            const i=document.createElement('input'); 
-            i.value=l; 
-            document.body.appendChild(i); 
-            i.select(); 
-            document.execCommand('copy'); 
-            i.remove(); 
-            showToast("Kopyalandı!"); 
+            const i = document.createElement('input'); 
+            i.value = l; document.body.appendChild(i); 
+            i.select(); document.execCommand('copy'); i.remove(); 
+            showToast("Link kopyalandı!"); 
         }
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeM() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display='none'); }
+        
         function showToast(m, type='success') { 
-            const b=document.createElement('div'); b.className='toast'; 
-            if(type==='error') b.style.background="#E11D48";
-            b.innerText=m; document.getElementById('toast-container').appendChild(b); setTimeout(()=>b.remove(), 2500); 
+            const container = document.getElementById('toast-container');
+            const b = document.createElement('div'); 
+            b.className = 'toast'; 
+            if(type === 'error') b.style.background = "#E11D48";
+            b.innerText = m; 
+            container.appendChild(b); 
+            setTimeout(() => b.remove(), 2500); 
         }
     </script>
 </body>
