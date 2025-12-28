@@ -1,293 +1,67 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SOHBET & KAZANÇ SİSTEMİ</title>
+// --- SLOT MATEMATİĞİ GÜNCELLEMESİ ---
+const slotConfig = [
+    { emoji: "🍒", prize: 0.12, chance: 1 },    // %1
+    { emoji: "🍋", prize: 0.03, chance: 4 },    // %4
+    { emoji: "💎", prize: 0.87, chance: 0.01 }, // %0.01
+    { emoji: "7️⃣", prize: 0.55, chance: 0.05 }, // %0.05
+    { emoji: "🔔", prize: 0.009, chance: 20 }   // %20
+];
+
+// Toplam olasılık dışındaki kalan %74.94 "Kaybetme/Karışık" durumu için otomatik yönetilir.
+
+async function spinSlot() {
+    if(userBal < 1) { showToast("Yetersiz Jeton!", "error"); return; }
     
-    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
-    <script src="https://adexora.com/cdn/ads.js?id=1543"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    // 1 Jeton Düş
+    await db.collection("users").doc(String(user.id)).set({ 
+        balance: firebase.firestore.FieldValue.increment(-1) 
+    }, { merge: true });
 
-    <style>
-        :root { --bg: #F8FAFC; --primary: #6366F1; --text-main: #0F172A; --text-sub: #64748B; --border: #E2E8F0; --coin: #F59E0B; --usdt: #26A17B; --danger: #EF4444; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    const reels = document.querySelectorAll('.reel');
+    const interval = setInterval(() => {
+        reels.forEach(r => r.innerText = slotConfig[Math.floor(Math.random() * slotConfig.length)].emoji);
+    }, 100);
+
+    setTimeout(async () => {
+        clearInterval(interval);
         
-        .view { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 120px; display: none; width: 100%; }
-        .view.active-flex { display: flex !important; flex-direction: column; animation: fadeIn 0.2s ease; }
-        .view.active-block { display: block !important; animation: fadeIn 0.2s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        let finalEmojis = [];
+        const rand = Math.random() * 100; // 0-100 arası sayı üret
+        let cumulative = 0;
+        let winSymbol = null;
 
-        .header { padding: 15px; padding-top: 50px; display: flex; justify-content: space-between; align-items: center; background: white; border-bottom: 1px solid var(--border); z-index: 10; gap: 5px; }
-        .balance-group { display: flex; gap: 5px; }
-        .pill { padding: 6px 12px; border-radius: 50px; font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 4px; border: 1px solid var(--border); }
-        .pill.coin { background: #FFFBEB; color: var(--coin); border-color: #FEF3C7; }
-        .pill.usdt { background: #E6FFFA; color: var(--usdt); border-color: #B2F5EA; }
-
-        /* Slot Makinesi */
-        .slot-machine { background: #1E293B; padding: 20px; border-radius: 25px; text-align: center; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .slot-reels { display: flex; justify-content: center; gap: 10px; margin: 15px 0; font-size: 40px; }
-        .reel { background: white; width: 60px; height: 70px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border-bottom: 4px solid #CBD5E1; }
-
-        /* Sohbet */
-        #chat-messages { flex: 1; overflow-y: scroll; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: #f1f5f9; }
-        .msg { max-width: 80%; padding: 10px 15px; border-radius: 18px; font-size: 14px; position: relative; }
-        .msg.mine { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
-        .msg.theirs { align-self: flex-start; background: white; border: 1px solid var(--border); border-bottom-left-radius: 4px; }
-        .chat-input-area { padding: 10px; background: white; border-top: 1px solid var(--border); display: flex; gap: 8px; padding-bottom: 110px; }
-
-        /* Genel */
-        .card { background: white; border-radius: 20px; padding: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
-        .btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.2s; }
-        .btn:active { transform: scale(0.98); opacity: 0.9; }
-        .inp { width: 100%; padding: 14px; border-radius: 16px; border: 2px solid var(--border); background: #fff; margin-bottom: 12px; outline: none; }
-
-        .nav-wrap { position: fixed; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 2000; }
-        .nav { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border-radius: 30px; display: flex; padding: 6px; border: 1px solid var(--border); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-        .nav-btn { width: 55px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 20px; color: #94A3B8; font-size: 20px; }
-        .nav-btn.active { color: var(--primary); background: #EEF2FF; }
-
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 4000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
-        .modal { background: white; width: 85%; border-radius: 25px; padding: 20px; text-align: center; }
-        .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: #1E293B; color: white; padding: 10px 20px; border-radius: 50px; font-size: 13px; z-index: 9999; }
-    </style>
-</head>
-<body>
-
-    <div id="toast-box"></div>
-
-    <div class="header">
-        <div style="font-weight:800; font-size:14px;" id="u-name">...</div>
-        <div class="balance-group">
-            <div class="pill coin"><i class="fa-solid fa-coins"></i> <span class="global-bal">0</span></div>
-            <div class="pill usdt"><i class="fa-solid fa-dollar-sign"></i> <span class="global-usdt">0.00</span></div>
-        </div>
-    </div>
-
-    <div id="v-home" class="view active-block">
-        <div class="slot-machine">
-            <h4 style="color:white; margin-bottom:10px;">Şanslı Slot</h4>
-            <div class="slot-reels" id="reels">
-                <div class="reel">🍒</div>
-                <div class="reel">🍒</div>
-                <div class="reel">🍒</div>
-            </div>
-            <p style="color:#94A3B8; font-size:11px; margin-bottom:15px;">Maliyet: 1 Jeton | Ödül: 10 USDT (3 Aynı)</p>
-            <button class="btn" style="background:var(--usdt);" onclick="spinSlot()">ÇEVİR</button>
-        </div>
-        <div class="card">
-            <h4>Hoş Geldin!</h4>
-            <p style="font-size:13px; color:var(--text-sub); margin-top:5px;">Reklam izleyerek jeton kazan, slotta şansını dene veya USDT'ye çevir!</p>
-        </div>
-    </div>
-
-    <div id="v-chat" class="view">
-        <div id="chat-messages"></div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-input" class="inp" style="margin-bottom:0;" placeholder="Mesaj...">
-            <button class="btn" style="width:60px;" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-        </div>
-    </div>
-
-    <div id="v-swap" class="view">
-        <h2>Jeton Takası</h2>
-        <div class="card" style="margin-top:20px;">
-            <p style="font-size:13px; color:var(--text-sub);">100 Jeton = 1.00 USDT</p>
-            <div style="margin:15px 0;">
-                <input type="number" id="swap-amount" class="inp" placeholder="Takas edilecek jeton miktarı">
-                <button class="btn" onclick="swapToUsdt()">USDT'ye Dönüştür</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="v-profile" class="view">
-        <h2>Profilim & Ödeme</h2>
-        <div class="card" style="margin-top:20px;">
-            <p style="font-size:12px; color:var(--text-sub);">USDT Bakiyeniz:</p>
-            <h1 style="color:var(--usdt); margin-bottom:15px;">$ <span class="global-usdt">0.00</span></h1>
-            
-            <input class="inp" id="wallet-addr" placeholder="TRC20 Cüzdan Adresiniz">
-            <input class="inp" type="number" id="withdraw-amount" placeholder="Çekilecek Tutar (Min $10)">
-            <button class="btn" style="background:#1E293B;" onclick="requestWithdraw()">ÖDEME AL</button>
-            <p style="font-size:10px; color:var(--text-sub); margin-top:10px;">Ödemeler 24 saat içinde cüzdanınıza iletilir.</p>
-        </div>
-    </div>
-
-    <div id="v-earn" class="view">
-        <h2 style="margin-bottom:20px;">Jeton Kazan</h2>
-        <div class="card">
-            <p style="margin-bottom:15px; color:var(--text-sub);">Reklam izle, jetonlarını biriktir!</p>
-            <button class="btn" onclick="watchAd()">Reklam İzle (+1 Jeton)</button>
-        </div>
-    </div>
-
-    <div id="m-mod" class="overlay"><div class="modal">
-        <h3 id="mod-user-name">...</h3>
-        <button class="btn" id="btn-del-msg" style="background:var(--danger); margin-top:15px;">Mesajı Sil</button>
-        <button class="btn" style="background:transparent; color:black;" onclick="closeMod()">Kapat</button>
-    </div></div>
-
-    <div class="nav-wrap"><div class="nav">
-        <div class="nav-btn active" onclick="navigate('home', 0)"><i class="fa-solid fa-house"></i></div>
-        <div class="nav-btn" onclick="navigate('chat', 1)"><i class="fa-solid fa-comments"></i></div>
-        <div class="nav-btn" onclick="navigate('swap', 2)"><i class="fa-solid fa-rotate"></i></div>
-        <div class="nav-btn" onclick="navigate('earn', 3)"><i class="fa-solid fa-coins"></i></div>
-        <div class="nav-btn" onclick="navigate('profile', 4)"><i class="fa-solid fa-user"></i></div>
-    </div></div>
-
-    <script>
-        const ADMIN_ID = "8392479231";
-        const firebaseConfig = {
-            apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY",
-            authDomain: "pdfkaynak-51615.firebaseapp.com",
-            projectId: "pdfkaynak-51615",
-            storageBucket: "pdfkaynak-51615.firebasestorage.app",
-            messagingSenderId: "228512804576",
-            appId: "1:228512804576:web:a0bba02ca83b4fa7adea85"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        
-        let user = tg.initDataUnsafe.user || { id: "00000", first_name: "Misafir" };
-        let userBal = 0, userUsdt = 0;
-
-        window.onload = () => {
-            document.getElementById('u-name').innerText = user.first_name;
-
-            db.collection("users").doc(String(user.id)).onSnapshot(doc => {
-                if(doc.exists) {
-                    const data = doc.data();
-                    userBal = data.balance || 0;
-                    userUsdt = data.usdt || 0;
-                    document.querySelectorAll('.global-bal').forEach(el => el.innerText = userBal);
-                    document.querySelectorAll('.global-usdt').forEach(el => el.innerText = userUsdt.toFixed(2));
-                }
-            });
-
-            db.collection("messages").orderBy("time", "asc").limitToLast(50).onSnapshot(snap => {
-                const cb = document.getElementById('chat-messages');
-                cb.innerHTML = snap.docs.map(doc => {
-                    const m = doc.data();
-                    return `<div class="msg ${String(m.uid) === String(user.id) ? 'mine' : 'theirs'}">
-                        <div style="font-size:9px; opacity:0.7; margin-bottom:3px;">${m.name}</div>
-                        <div>${m.text}</div>
-                    </div>`;
-                }).join('');
-                cb.scrollTop = cb.scrollHeight;
-            });
-
-            setInterval(() => { if (String(user.id) !== ADMIN_ID) watchAd(true); }, 30000); 
-        };
-
-        // SLOT MAKİNESİ
-        const emojiList = ["🍒", "🍋", "💎", "7️⃣", "🔔"];
-        async function spinSlot() {
-            if(userBal < 1) { showToast("Yetersiz Jeton!", "error"); return; }
-            
-            // 1 Jeton Düş
-            await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(-1) }, { merge: true });
-
-            const reels = document.querySelectorAll('.reel');
-            const results = [];
-            
-            // Basit Animasyon Efekti
-            const interval = setInterval(() => {
-                reels.forEach(r => r.innerText = emojiList[Math.floor(Math.random() * emojiList.length)]);
-            }, 100);
-
-            setTimeout(async () => {
-                clearInterval(interval);
-                reels.forEach(r => {
-                    const res = emojiList[Math.floor(Math.random() * emojiList.length)];
-                    r.innerText = res;
-                    results.push(res);
-                });
-
-                if(results[0] === results[1] && results[1] === results[2]) {
-                    showToast("TEBRİKLER! +10 USDT KAZANDIN!", "success");
-                    await db.collection("users").doc(String(user.id)).set({ usdt: firebase.firestore.FieldValue.increment(10) }, { merge: true });
-                }
-            }, 1000);
-        }
-
-        // TAKAS
-        async function swapToUsdt() {
-            const amt = parseInt(document.getElementById('swap-amount').value);
-            if(!amt || amt < 100) { showToast("Min 100 jeton takas edilebilir!", "error"); return; }
-            if(userBal < amt) { showToast("Yetersiz Jeton!", "error"); return; }
-
-            const usdtGain = amt / 100;
-            await db.collection("users").doc(String(user.id)).set({ 
-                balance: firebase.firestore.FieldValue.increment(-amt),
-                usdt: firebase.firestore.FieldValue.increment(usdtGain)
-            }, { merge: true });
-            showToast(usdtGain + " USDT hesabınıza eklendi!");
-            document.getElementById('swap-amount').value = "";
-        }
-
-        // ÖDEME TALEBİ
-        async function requestWithdraw() {
-            const addr = document.getElementById('wallet-addr').value;
-            const amt = parseFloat(document.getElementById('withdraw-amount').value);
-            
-            if(!addr || addr.length < 10) { showToast("Geçerli bir cüzdan girin!", "error"); return; }
-            if(amt < 10) { showToast("Minimum çekim $10!", "error"); return; }
-            if(userUsdt < amt) { showToast("Yetersiz bakiye!", "error"); return; }
-
-            await db.collection("withdraws").add({
-                uid: user.id, name: user.first_name, address: addr, amount: amt, status: "pending", time: Date.now()
-            });
-            await db.collection("users").doc(String(user.id)).update({ usdt: firebase.firestore.FieldValue.increment(-amt) });
-            
-            showToast("Ödeme talebiniz alındı!");
-            document.getElementById('withdraw-amount').value = "";
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if(!text) return;
-            input.value = "";
-            await db.collection("messages").add({ uid: user.id, name: user.first_name, text: text, time: Date.now() });
-        }
-
-        function navigate(v, i) {
-            document.querySelectorAll('.view').forEach(x => { x.classList.remove('active-block', 'active-flex'); x.style.display = 'none'; });
-            const target = document.getElementById('v-' + v);
-            target.classList.add(v === 'chat' ? 'active-flex' : 'active-block');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.nav-btn')[i].classList.add('active');
-            if(v === 'chat') setTimeout(() => { const cb = document.getElementById('chat-messages'); cb.scrollTop = cb.scrollHeight; }, 50);
-        }
-
-        async function watchAd(isAuto = false) {
-            if (String(user.id) === ADMIN_ID) {
-                await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-                return;
+        // Kazanç kontrolü (Senin olasılıklarına göre)
+        for (let item of slotConfig) {
+            cumulative += item.chance;
+            if (rand < cumulative) {
+                winSymbol = item;
+                break;
             }
-            if (typeof window.showAdexora !== 'function') return;
-            window.showAdexora().then(async () => {
-                await db.collection("users").doc(String(user.id)).set({ balance: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-                if(!isAuto) showToast("+1 Jeton Kazanıldı!");
-            });
         }
 
-        function showToast(m, type="success") {
-            const box = document.getElementById('toast-box');
-            const t = document.createElement('div'); t.className = 'toast';
-            if(type === "error") t.style.background = "#EF4444";
-            t.innerText = m; box.appendChild(t);
-            setTimeout(() => t.remove(), 3000);
+        if (winSymbol) {
+            // KAZANMA DURUMU: 3 top aynı gelir
+            finalEmojis = [winSymbol.emoji, winSymbol.emoji, winSymbol.emoji];
+            reels.forEach((r, i) => r.innerText = finalEmojis[i]);
+            
+            showToast(`Tebrikler! ${winSymbol.emoji} geldi: $${winSymbol.prize}`, "success");
+            await db.collection("users").doc(String(user.id)).set({ 
+                usdt: firebase.firestore.FieldValue.increment(winSymbol.prize) 
+            }, { merge: true });
+        } else {
+            // KAYBETME DURUMU (%74.94 ve diğerleri): Karışık emojiler
+            // En az biri farklı olacak şekilde rastgele dağıt
+            finalEmojis = [
+                slotConfig[Math.floor(Math.random() * slotConfig.length)].emoji,
+                slotConfig[Math.floor(Math.random() * slotConfig.length)].emoji,
+                slotConfig[Math.floor(Math.random() * slotConfig.length)].emoji
+            ];
+            // Eğer şans eseri hepsi aynı gelirse (kaybetme modundayken), birini zorla değiştir
+            if(finalEmojis[0] === finalEmojis[1] && finalEmojis[1] === finalEmojis[2]) {
+                finalEmojis[0] = finalEmojis[0] === "🍒" ? "🔔" : "🍒";
+            }
+            reels.forEach((r, i) => r.innerText = finalEmojis[i]);
+            showToast("Şansını tekrar dene!", "error");
         }
-        function closeMod() { document.getElementById('m-mod').style.display = 'none'; }
-    </script>
-</body>
-</html>
+    }, 1000);
+}
