@@ -3,182 +3,624 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Web Edition</title>
+    <title>SpyderCoin - Official Bot</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <style>
-        :root { --bg: #0a0a0b; --purple: #a855f7; --card: #1c1c1e; --text: #ffffff; --inactive: #8e8e93; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; padding: 0; height: 100vh; overflow: hidden; }
-
-        .page { display: none; height: 100vh; width: 100vw; flex-direction: column; align-items: center; padding: 20px; padding-bottom: 120px; }
-        .page.active { display: flex; }
-
-        /* 🕷️ ANA EKRAN (OYNA) */
-        .bal-container { text-align: center; margin-top: 40px; }
-        .bal-label { color: var(--inactive); font-size: 14px; margin-bottom: 5px; }
-        .bal-text { font-size: 72px; font-weight: 800; }
-
-        .tap-area { position: relative; margin-top: 50px; width: 280px; height: 280px; display: flex; justify-content: center; align-items: center; }
-        
-        /* Örümcek ve Daire Tasarımı */
-        .spider-circle {
-            width: 250px; height: 250px;
-            border: 4px solid var(--purple);
-            border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 120px;
-            background: rgba(168, 85, 247, 0.05);
-            box-shadow: 0 0 40px rgba(168, 85, 247, 0.3);
-            cursor: pointer;
-            transition: transform 0.05s;
-            z-index: 10;
+        /* 🎨 GLOBAL THEME */
+        :root {
+            --bg: #0a0a0b;
+            --purple: #a855f7;
+            --purple-glow: rgba(168, 85, 247, 0.4);
+            --card: #1c1c1e;
+            --text: #ffffff;
+            --inactive: #8e8e93;
+            --red: #ff3b30;
+            --green: #00d084;
         }
-        .spider-circle:active { transform: scale(0.92); }
 
-        /* 🕸️ AĞ ANİMASYONU */
-        .web-effect {
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            outline: none;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 📱 PAGE SYSTEM */
+        .page {
+            display: none;
+            height: 100%;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+            padding-bottom: 120px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .page.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 🕷️ HOME PAGE (OYNA) */
+        .header-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .bal-display {
+            font-size: 72px;
+            font-weight: 900;
+            margin: 10px 0;
+            text-shadow: 0 0 20px var(--purple-glow);
+        }
+
+        .tap-zone-container {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .spider-main {
+            width: 260px;
+            height: 260px;
+            background: var(--purple);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 130px;
+            box-shadow: 0 0 60px var(--purple-glow);
+            cursor: pointer;
+            transition: transform 0.05s cubic-bezier(0.1, 0.7, 1.0, 0.1);
+            z-index: 5;
+            position: relative;
+        }
+
+        .spider-main:active {
+            transform: scale(0.92);
+        }
+
+        /* 🕸️ WEB ANIMATION EFFECT */
+        .web-ring {
             position: absolute;
-            border: 1px solid rgba(255, 255, 255, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.7);
             border-radius: 50%;
             pointer-events: none;
-            z-index: 5;
-            animation: webOut 0.6s ease-out forwards;
-        }
-        @keyframes webOut {
-            0% { width: 10px; height: 10px; opacity: 1; border-width: 1px; }
-            100% { width: 350px; height: 350px; opacity: 0; border-width: 3px; }
+            animation: webExpand 0.6s ease-out forwards;
         }
 
-        /* +1 YAZISI */
+        @keyframes webExpand {
+            0% { width: 0; height: 0; opacity: 1; }
+            100% { width: 450px; height: 450px; opacity: 0; }
+        }
+
         .plus-one {
             position: absolute;
-            color: var(--purple);
-            font-size: 32px;
+            color: #fff;
             font-weight: bold;
+            font-size: 28px;
             pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
-            z-index: 20;
-        }
-        @keyframes floatUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-100px); opacity: 0; }
+            animation: floatText 0.8s ease-out forwards;
+            z-index: 10;
         }
 
-        /* 🔋 ENERJİ */
-        .energy-wrapper { width: 90%; margin-top: auto; }
-        .energy-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 16px; }
-        .energy-bar { width: 100%; height: 14px; background: #2c2c2e; border-radius: 10px; overflow: hidden; }
-        #energy-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #a855f7, #6366f1); transition: width 0.2s; }
+        @keyframes floatText {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-120px); }
+        }
 
-        /* 📱 ALT MENÜ */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #121214; display: grid; grid-template-columns: repeat(4, 1fr); padding: 15px 0 30px; border-top: 1px solid #2c2c2e; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--inactive); font-size: 12px; cursor: pointer; }
-        .nav-item.active { color: var(--purple); }
-        .nav-icon { font-size: 24px; margin-bottom: 5px; }
+        /* 🔋 ENERGY SECTION */
+        .energy-box {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+
+        .energy-text {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: var(--inactive);
+        }
+
+        .energy-bar-bg {
+            width: 100%;
+            height: 12px;
+            background: #2c2c2e;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #energy-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #a855f7, #7c3aed);
+            transition: width 0.3s ease;
+        }
+
+        /* 📋 TASKS & CARDS */
+        .card {
+            background: var(--card);
+            width: 100%;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #2c2c2e;
+        }
+
+        .task-info b {
+            display: block;
+            font-size: 17px;
+            margin-bottom: 4px;
+        }
+
+        .task-info span {
+            color: var(--purple);
+            font-weight: 600;
+        }
+
+        .action-btn {
+            background: var(--purple);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .action-btn:disabled {
+            background: #444;
+            color: #888;
+        }
+
+        /* 🏆 LEAGUE (SIRALAMA) */
+        .league-title {
+            color: var(--purple);
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .rank-list {
+            width: 100%;
+        }
+
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #1c1c1e;
+        }
+
+        .rank-item.me {
+            background: rgba(168, 85, 247, 0.1);
+            border-radius: 10px;
+            border: 1px solid var(--purple);
+        }
+
+        /* 💰 WALLET SECTION */
+        .wallet-stat {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .usd-val {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--green);
+        }
+
+        /* 🔐 ADMIN PANEL */
+        #admin-panel {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .admin-header {
+            color: var(--purple);
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        .admin-card {
+            background: var(--card);
+            width: 100%;
+            padding: 30px;
+            border-radius: 20px;
+            line-height: 2;
+        }
+
+        .admin-card b {
+            color: var(--purple);
+        }
+
+        .close-admin {
+            background: var(--red);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 18px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: auto;
+            cursor: pointer;
+        }
+
+        /* 📱 NAVIGATION */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #111112;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            padding: 12px 0 35px;
+            border-top: 1px solid #2c2c2e;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: var(--inactive);
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--purple);
+        }
+
+        .nav-icon {
+            font-size: 22px;
+        }
     </style>
 </head>
 <body>
 
     <div id="p-play" class="page active">
-        <div class="bal-container">
-            <div class="bal-label">SPYDER BALANCE</div>
-            <div class="bal-text" id="ui-bal">0</div>
+        <div class="header-section">
+            <div style="color: var(--inactive); font-size: 14px; letter-spacing: 1px;">SPYDER BALANCE</div>
+            <div class="bal-display" id="ui-bal">0</div>
         </div>
 
-        <div class="tap-area" id="tap-zone">
-            <div class="spider-circle">🕷️</div>
+        <div class="tap-zone-container" id="tap-area">
+            <div class="spider-main" id="spider-btn">🕷️</div>
+            <button id="admin-trigger" style="display:none; position:absolute; top:0; right:0; background:none; border:1px solid var(--purple); color:var(--purple); padding:5px 10px; border-radius:8px; font-size:10px;" onclick="toggleAdmin(true)">ADMIN</button>
         </div>
 
-        <div class="energy-wrapper">
-            <div class="energy-info">
-                <span>⚡ Enerji</span>
-                <span><span id="ui-nrg">100</span> / 100</span>
+        <div class="energy-box">
+            <div class="energy-text">
+                <span>⚡ Enerji:</span>
+                <span id="ui-nrg">1000</span> / <span id="ui-nrg-max">1000</span>
             </div>
-            <div class="energy-bar"><div id="energy-fill"></div></div>
+            <div class="energy-bar-bg">
+                <div id="energy-fill"></div>
+            </div>
         </div>
     </div>
 
-    <div id="p-tasks" class="page"><h2>Görevler</h2></div>
-    <div id="p-friends" class="page"><h2>Arkadaşlar</h2></div>
-    <div id="p-wallet" class="page"><h2>Cüzdan</h2></div>
+    <div id="p-tasks" class="page">
+        <h2 class="league-title">Görevler</h2>
+        <div class="card">
+            <div class="task-info">
+                <b>Telegram Kanalı</b>
+                <span>+50,000 SPYDER</span>
+            </div>
+            <button class="action-btn" onclick="doTask('tg_channel', 50000, 'https://t.me/SpyderCommunity')">Katıl</button>
+        </div>
+        <div class="card">
+            <div class="task-info">
+                <b>X (Twitter) Takip</b>
+                <span>+25,000 SPYDER</span>
+            </div>
+            <button class="action-btn" onclick="doTask('x_follow', 25000, 'https://x.com')">Takip Et</button>
+        </div>
+    </div>
+
+    <div id="p-friends" class="page">
+        <h2 class="league-title">Dostlar</h2>
+        <div class="card" style="flex-direction: column; text-align: center; gap: 15px;">
+            <p style="margin:0; color:var(--inactive);">Her davet için 5,000 SPYDER kazan!</p>
+            <button class="action-btn" style="width:100%" onclick="inviteFriend()">Arkadaşını Çağır</button>
+        </div>
+        <div id="friend-list" style="width:100%; margin-top:20px;">
+            <p style="text-align:center; color:#444;">Henüz kimseyi davet etmedin.</p>
+        </div>
+    </div>
+
+    <div id="p-league" class="page">
+        <h2 class="league-title">Sıralama</h2>
+        <div class="rank-list" id="ui-rankings">
+            <p style="text-align:center;">Yükleniyor...</p>
+        </div>
+    </div>
+
+    <div id="p-wallet" class="page">
+        <h2 class="league-title">Cüzdan</h2>
+        <div class="wallet-stat">
+            <div class="usd-val" id="ui-usd">$0.00</div>
+            <p style="color:var(--inactive); margin-top:10px;">Tahmini Değer (SPYDER)</p>
+        </div>
+        <div class="card">
+            <div class="task-info">
+                <b>TON Wallet</b>
+                <span id="wallet-addr">Bağlı Değil</span>
+            </div>
+            <button class="action-btn">Bağla</button>
+        </div>
+    </div>
+
+    <div id="admin-panel">
+        <div class="admin-header">KONTROL MERKEZİ</div>
+        <div class="admin-card">
+            Admin: <b id="adm-name">Yükleniyor...</b><br>
+            Kullanıcı Adı: <b id="adm-user">@...</b><br>
+            Bakiye: <b id="adm-bal">0</b><br>
+            <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
+            <p style="font-size:12px; color:#666; line-height:1.4;">
+                * Firebase Firestore kuralları gereği veriler şifreli saklanır.
+                Tüm kullanıcı hareketleri bot üzerinden loglanmaktadır.
+            </p>
+        </div>
+        <button class="close-admin" onclick="toggleAdmin(false)">KAPAT</button>
+        <div style="margin-top:20px; color:#444; font-size:12px;">@SpyderCoin_Bot</div>
+    </div>
 
     <nav class="nav-bar">
-        <div class="nav-item active" onclick="nav('p-play', this)"><span class="nav-icon">🎮</span>Oyna</div>
-        <div class="nav-item" onclick="nav('p-tasks', this)"><span class="nav-icon">📋</span>Görev</div>
-        <div class="nav-item" onclick="nav('p-friends', this)"><span class="nav-icon">👥</span>Dost</div>
-        <div class="nav-item" onclick="nav('p-wallet', this)"><span class="nav-icon">💰</span>Cüzdan</div>
+        <div class="nav-item active" onclick="nav('p-play', this)">
+            <span class="nav-icon">🎮</span><span>Oyna</span>
+        </div>
+        <div class="nav-item" onclick="nav('p-tasks', this)">
+            <span class="nav-icon">📋</span><span>Görev</span>
+        </div>
+        <div class="nav-item" onclick="nav('p-friends', this)">
+            <span class="nav-icon">👥</span><span>Dost</span>
+        </div>
+        <div class="nav-item" onclick="nav('p-league', this)">
+            <span class="nav-icon">🏆</span><span>Lig</span>
+        </div>
+        <div class="nav-item" onclick="nav('p-wallet', this)">
+            <span class="nav-icon">💰</span><span>Cüzdan</span>
+        </div>
     </nav>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        let bal = parseInt(localStorage.getItem('spyder_bal')) || 0;
-        let nrg = 100;
+        // --- ⚙️ FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSy...", // Buraya kendi keyini koy
+            authDomain: "spyder-coin.firebaseapp.com",
+            projectId: "spyder-coin",
+            storageBucket: "spyder-coin.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
+        };
 
-        function init() {
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // --- 📊 APP STATE ---
+        const tg = window.Telegram.WebApp;
+        const MY_ADMIN_ID = "8392479231";
+        const user = tg.initDataUnsafe?.user || { id: "test_8392479231", first_name: "Admin", username: "spyder_dev" };
+        
+        let bakiye = 0;
+        let enerji = 1000;
+        let maxEnerji = 1000;
+        let lastSync = Date.now();
+
+        // --- 🚀 INITIALIZATION ---
+        async function init() {
             tg.ready();
             tg.expand();
+            tg.enableClosingConfirmation();
+
+            const userRef = db.collection('users').doc(String(user.id));
+            const doc = await userRef.get();
+
+            if (!doc.exists) {
+                const newUser = {
+                    name: user.first_name,
+                    username: user.username || "yok",
+                    balance: 0,
+                    energy: 1000,
+                    lastSeen: Date.now(),
+                    tasks: []
+                };
+                await userRef.set(newUser);
+                bakiye = 0;
+            } else {
+                const data = doc.data();
+                bakiye = data.balance;
+                
+                // Enerji kurtarma (Zaman bazlı)
+                const now = Date.now();
+                const diff = Math.floor((now - data.lastSeen) / 1000); // saniye
+                enerji = Math.min(maxEnerji, data.energy + diff);
+            }
+
+            // Admin kontrolü
+            if (String(user.id) === MY_ADMIN_ID) {
+                document.getElementById('admin-trigger').style.display = 'block';
+                document.getElementById('adm-name').innerText = user.first_name;
+                document.getElementById('adm-user').innerText = "@" + (user.username || "dev");
+            }
+
             updateUI();
-            
-            // Enerji Yenileme (Her 3 saniyede +1)
-            setInterval(() => {
-                if(nrg < 100) { nrg++; updateUI(); }
-            }, 3000);
+            startEnergyRegen();
+            autoSync();
         }
 
+        // --- 🕷️ TAP ENGINE ---
         function handleTap(e) {
-            if (nrg <= 0) {
+            if (enerji <= 0) {
                 tg.HapticFeedback.notificationOccurred('error');
                 return;
             }
 
-            // Değerleri Artır
-            bal += 1;
-            nrg -= 1;
+            bakiye += 1;
+            enerji -= 1;
             updateUI();
-            localStorage.setItem('spyder_bal', bal);
 
-            // Titreşim (Telegram)
-            tg.HapticFeedback.impactOccurred('medium');
+            // Web Animasyonu
+            const ring = document.createElement('div');
+            ring.className = 'web-ring';
+            document.getElementById('tap-area').appendChild(ring);
+            setTimeout(() => ring.remove(), 600);
 
-            // 🕸️ Ağ Animasyonu Oluştur
-            const zone = document.getElementById('tap-zone');
-            const web = document.createElement('div');
-            web.className = 'web-effect';
-            zone.appendChild(web);
-            setTimeout(() => web.remove(), 600);
-
-            // ➕ +1 Yazısı Oluştur
+            // +1 Animasyonu
             const touch = e.touches ? e.touches[0] : e;
             const plus = document.createElement('div');
             plus.className = 'plus-one';
             plus.innerText = '+1';
-            plus.style.left = (touch.clientX - 20) + 'px';
-            plus.style.top = (touch.clientY - 40) + 'px';
-            plus.style.position = 'fixed';
+            plus.style.left = touch.pageX + 'px';
+            plus.style.top = touch.pageY + 'px';
             document.body.appendChild(plus);
             setTimeout(() => plus.remove(), 800);
+
+            tg.HapticFeedback.impactOccurred('light');
         }
 
+        // --- 🛰️ FIREBASE SYNC ---
+        async function syncData() {
+            const userRef = db.collection('users').doc(String(user.id));
+            await userRef.update({
+                balance: bakiye,
+                energy: enerji,
+                lastSeen: Date.now()
+            });
+            console.log("Synced with Firebase");
+        }
+
+        function autoSync() {
+            setInterval(() => {
+                syncData();
+            }, 10000); // 10 saniyede bir buluta yaz
+        }
+
+        // --- 🏆 RANKING ENGINE ---
+        async function getRankings() {
+            const container = document.getElementById('ui-rankings');
+            container.innerHTML = "Sıralama güncelleniyor...";
+
+            const snapshot = await db.collection('users')
+                .orderBy('balance', 'desc')
+                .limit(20)
+                .get();
+
+            container.innerHTML = "";
+            let rank = 1;
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const isMe = doc.id === String(user.id);
+                container.innerHTML += `
+                    <div class="rank-item ${isMe ? 'me' : ''}">
+                        <span>${rank}. ${data.name}</span>
+                        <b>${data.balance.toLocaleString()}</b>
+                    </div>
+                `;
+                rank++;
+            });
+        }
+
+        // --- 📋 TASKS ---
+        function doTask(taskId, reward, link) {
+            tg.openLink(link);
+            setTimeout(async () => {
+                bakiye += reward;
+                updateUI();
+                await syncData();
+                tg.showAlert(`Tebrikler! ${reward.toLocaleString()} SPYDER kazandın.`);
+            }, 3000);
+        }
+
+        // --- 🛠️ UTILS ---
         function updateUI() {
-            document.getElementById('ui-bal').innerText = bal.toLocaleString();
-            document.getElementById('ui-nrg').innerText = nrg;
-            document.getElementById('energy-fill').style.width = nrg + "%";
+            document.getElementById('ui-bal').innerText = bakiye.toLocaleString();
+            document.getElementById('ui-nrg').innerText = enerji;
+            document.getElementById('energy-fill').style.width = (enerji / maxEnerji * 100) + "%";
+            document.getElementById('ui-usd').innerText = "$" + (bakiye * 0.000014).toFixed(2);
+            document.getElementById('adm-bal').innerText = bakiye.toLocaleString();
         }
 
-        function nav(pageId, el) {
+        function startEnergyRegen() {
+            setInterval(() => {
+                if (enerji < maxEnerji) {
+                    enerji++;
+                    updateUI();
+                }
+            }, 1000);
+        }
+
+        function nav(id, el) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
+            document.getElementById(id).classList.add('active');
             el.classList.add('active');
+            
+            if (id === 'p-league') getRankings();
         }
 
-        const tapZone = document.querySelector('.spider-circle');
-        tapZone.addEventListener('touchstart', (e) => {
+        function toggleAdmin(show) {
+            document.getElementById('admin-panel').style.display = show ? 'flex' : 'none';
+        }
+
+        // EVENT LISTENERS
+        document.getElementById('spider-btn').addEventListener('touchstart', (e) => {
             e.preventDefault();
             handleTap(e);
         });
 
+        // Start everything
         init();
+
     </script>
 </body>
 </html>
