@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SpyderCoin - Finance Update</title>
+    <title>SpyderCoin - Multi-Platform</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -20,37 +20,38 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: sans-serif; }
         body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* LOADER (Görsel 1 & 2'deki gibi) */
-        #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .spin { width: 50px; height: 50px; border: 5px solid #111; border-top-color: var(--p-purple); border-radius: 50%; animation: s 1s linear infinite; margin-bottom: 20px; }
+        #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .spin { width: 50px; height: 50px; border: 5px solid #111; border-top-color: var(--p-purple); border-radius: 50%; animation: s 1s linear infinite; }
         @keyframes s { to { transform: rotate(360deg); } }
 
         .view { display: none; flex-direction: column; align-items: center; padding: 20px; flex: 1; overflow-y: auto; }
         .view.active { display: flex; }
 
-        /* ANA EKRAN (Görsel 3) */
-        .bal-txt { font-size: 60px; font-weight: 900; margin-bottom: 20px; }
+        .bal-txt { font-size: 60px; font-weight: 900; margin-bottom: 20px; color: var(--p-purple); }
+        
+        /* Tıklama Alanı */
         .spyder-btn { 
-            width: 250px; height: 250px; background: #a855f7; border-radius: 50%; 
+            width: 220px; height: 220px; background: #a855f7; border-radius: 50%; 
             display: flex; justify-content: center; align-items: center; 
             box-shadow: 0 0 40px rgba(168, 85, 247, 0.4); cursor: pointer;
+            user-select: none; transition: transform 0.1s;
+            position: relative;
         }
-        /* Örümcek görselindeki mavi kutuyu kaldırmak için arka planı temizliyoruz */
-        .spyder-btn img { width: 150px; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
+        .spyder-btn:active { transform: scale(0.95); }
+        .spyder-btn span { font-size: 100px; pointer-events: none; }
 
-        /* FİNANS EKRANI (Görsel 4) */
         .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 15px; padding: 20px; width: 100%; margin-top: 15px; }
         .usdt-bal { border: 1px solid var(--green); color: var(--green); font-size: 45px; font-weight: 900; text-align: center; padding: 15px; border-radius: 15px; }
         
         input { width: 100%; background: #000; border: 1px solid #222; color: #fff; padding: 12px; border-radius: 10px; margin: 8px 0; outline: none; text-align: center; }
-        .btn-draw { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-draw { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; }
         .btn-draw:disabled { opacity: 0.3; cursor: not-allowed; }
 
         nav { width: 100%; height: 80px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1a1a1f; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); font-size: 10px; cursor: pointer; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); font-size: 11px; cursor: pointer; }
         .nav-item.active { color: var(--p-purple); }
 
-        .pop { position: absolute; color: #fff; font-size: 30px; font-weight: bold; pointer-events: none; animation: up 0.6s forwards; }
+        .pop { position: absolute; color: #fff; font-size: 30px; font-weight: bold; pointer-events: none; animation: up 0.6s forwards; z-index: 100; }
         @keyframes up { to { transform: translateY(-100px); opacity: 0; } }
     </style>
 </head>
@@ -58,13 +59,13 @@
 
     <div id="loader">
         <div class="spin"></div>
-        <p id="loader-status" style="color:var(--p-purple); font-weight:bold;">SECURE CLOUD SYNCING...</p>
+        <p style="color:var(--p-purple); margin-top:15px;">SYNCING WITH CLOUD...</p>
     </div>
 
     <section id="p-home" class="view active">
         <h1 class="bal-txt" id="ui-bal">0</h1>
         <div class="spyder-btn" id="tap-node">
-            <span style="font-size: 100px;">🕷️</span>
+            <span>🕷️</span>
         </div>
         <div class="card" style="margin-top:auto;">
             <p>⚡ Energy: <span id="ui-nrg">1000/1000</span></p>
@@ -81,18 +82,18 @@
         <div class="card">
             <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:10px;">
                 <span>Ads Verification:</span>
-                <span id="ui-req-ads" style="font-weight:bold; color:red;">0 / 20</span>
+                <span id="ui-req-ads" style="font-weight:bold; color:red;">0 / 10</span>
             </div>
             
             <label style="font-size:11px; color:var(--dim);">AMOUNT TO WITHDRAW ($)</label>
-            <input type="number" id="draw-amount" value="0.01" step="0.01" oninput="Finance.calc()">
+            <input type="number" id="draw-amount" value="0.005" step="0.005" oninput="Finance.calc()">
             
             <label style="font-size:11px; color:var(--dim);">USDT BEP20 ADDRESS</label>
             <input type="text" id="draw-addr" placeholder="Enter Address">
             
             <button id="btn-withdraw" class="btn-draw" onclick="Finance.submit()">WITHDRAW</button>
             <p id="ui-hint" style="font-size:10px; color:var(--dim); text-align:center; margin-top:10px;">
-                Min: $0.01 | Required Ads: 20
+                Min: $0.005 | Req. Ads: 10
             </p>
         </div>
     </section>
@@ -121,9 +122,7 @@
 
         const Game = {
             init: async () => {
-                // Görsel 1'deki "Cloud Connection Failed" hatasını bypass etmek için timer
                 setTimeout(() => { if(!ready) Game.start(); }, 3000);
-                
                 const uid = tg.initDataUnsafe?.user?.id?.toString() || "test_user";
                 const doc = await db.collection("users").doc(uid).get();
                 if(doc.exists) user = { ...user, ...doc.data() };
@@ -136,10 +135,13 @@
             },
             tap: (e) => {
                 if(user.nrg <= 0) return;
-                user.bal += 1; // +1 Coin
+                
+                user.bal += 1; 
                 user.nrg -= 1;
+                
                 UI.pop(e);
                 UI.refresh();
+                
                 if(user.bal % 50 === 0) Game.showAd();
             },
             showAd: () => {
@@ -152,20 +154,19 @@
         const Finance = {
             calc: () => {
                 const amount = parseFloat(document.getElementById('draw-amount').value) || 0;
-                // Her 0.01$ için 20 reklam (Örn: 0.05$ -> 100 reklam)
-                const reqAds = Math.max(20, Math.ceil(amount / 0.01) * 20);
+                const reqAds = Math.max(10, Math.ceil(amount / 0.005) * 10);
                 
-                document.getElementById('ui-req-ads').innerText = `${user.ads} / ${reqAds}`;
-                document.getElementById('ui-req-ads').style.color = user.ads >= reqAds ? "#10b981" : "red";
-                document.getElementById('ui-hint').innerText = `Min: $0.01 | Required Ads: ${reqAds}`;
+                const adsSpan = document.getElementById('ui-req-ads');
+                adsSpan.innerText = `${user.ads} / ${reqAds}`;
+                adsSpan.style.color = user.ads >= reqAds ? "#10b981" : "red";
+                document.getElementById('ui-hint').innerText = `Min: $0.005 | Req. Ads: ${reqAds}`;
                 
-                // Buton kontrolü
-                const canDraw = (amount >= 0.01 && user.usdt >= amount && user.ads >= reqAds);
+                const canDraw = (amount >= 0.005 && user.usdt >= amount && user.ads >= reqAds);
                 document.getElementById('btn-withdraw').disabled = !canDraw;
             },
             submit: () => {
                 const amount = document.getElementById('draw-amount').value;
-                tg.showAlert(`Çekim talebi alındı: $${amount}\nAdres: ${document.getElementById('draw-addr').value}`);
+                tg.showAlert(`Çekim talebi: $${amount}`);
                 user.usdt -= parseFloat(amount);
                 UI.refresh();
             }
@@ -179,8 +180,10 @@
                 Finance.calc();
             },
             pop: (e) => {
-                const x = e.touches ? e.touches[0].clientX : e.clientX;
-                const y = e.touches ? e.touches[0].clientY : e.clientY;
+                // Hem fare hem dokunma koordinatlarını al
+                const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+                const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+                
                 const p = document.createElement('div');
                 p.className = 'pop'; p.innerText = '+1';
                 p.style.left = x + 'px'; p.style.top = y + 'px';
@@ -196,8 +199,18 @@
             el.classList.add('active');
         }
 
-        document.getElementById('tap-node').addEventListener('touchstart', (e) => {
-            e.preventDefault(); Game.tap(e);
+        // HEM TELEFON HEM BİLGİSAYAR İÇİN OLAY DİNLEYİCİLERİ
+        const node = document.getElementById('tap-node');
+        
+        // Mobilde dokunma
+        node.addEventListener('touchstart', (e) => {
+            e.preventDefault(); 
+            Game.tap(e);
+        });
+
+        // Bilgisayarda tıklama
+        node.addEventListener('mousedown', (e) => {
+            Game.tap(e);
         });
 
         window.onload = Game.init;
