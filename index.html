@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SpyderCoin - Admin Master Fix</title>
+    <title>SpyderCoin - Ultra Fix & Admin</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -14,43 +14,52 @@
     <style>
         :root {
             --p-purple: #a855f7; --bg: #000; --card: #0f0f12;
-            --text: #fff; --dim: #71717a; --green: #10b981; --red: #ef4444; --admin-gold: #fbbf24;
+            --text: #fff; --dim: #71717a; --green: #10b981; --red: #ef4444; --gold: #fbbf24;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: sans-serif; }
         body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* LOADER TASARIMI */
-        #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
-        .spin { width: 50px; height: 50px; border: 5px solid #1a1a1a; border-top-color: var(--p-purple); border-radius: 50%; animation: s 1s linear infinite; }
+        /* Loader */
+        #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .spin { width: 40px; height: 40px; border: 4px solid #111; border-top-color: var(--p-purple); border-radius: 50%; animation: s 1s linear infinite; }
         @keyframes s { to { transform: rotate(360deg); } }
 
+        /* Views */
         .view { display: none; flex-direction: column; padding: 20px; flex: 1; overflow-y: auto; }
         .view.active { display: flex; }
 
-        .bal-txt { font-size: 55px; font-weight: 900; background: linear-gradient(#fff, var(--p-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 15px 0; }
-        .spyder-btn { width: 220px; height: 220px; background: radial-gradient(circle, #c084fc, var(--p-purple)); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 40px rgba(168, 85, 247, 0.4); cursor: pointer; transition: transform 0.05s; }
-        .spyder-btn:active { transform: scale(0.92); }
-        .spyder-btn span { font-size: 100px; pointer-events: none; user-select: none; }
+        /* Game UI */
+        .bal-txt { font-size: 50px; font-weight: 900; color: var(--p-purple); text-align: center; margin: 20px 0; }
+        .tap-area { flex: 1; display: flex; justify-content: center; align-items: center; }
+        .spyder-btn { 
+            width: 220px; height: 220px; background: radial-gradient(circle, #c084fc, #a855f7); 
+            border-radius: 50%; display: flex; justify-content: center; align-items: center; 
+            box-shadow: 0 0 40px var(--p-purple); cursor: pointer; transition: transform 0.05s;
+            user-select: none;
+        }
+        .spyder-btn:active { transform: scale(0.95); }
+        .spyder-btn span { font-size: 100px; pointer-events: none; }
 
-        .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 15px; padding: 15px; width: 100%; margin-bottom: 12px; }
-        input { width: 100%; background: #000; border: 1px solid #27272a; color: #fff; padding: 12px; border-radius: 10px; text-align: center; margin: 8px 0; }
-        .btn-main { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; }
-        
-        /* Admin Tablosu */
-        .admin-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; color: #eee; }
-        .admin-table th { text-align: left; color: var(--dim); padding: 8px; border-bottom: 1px solid #222; }
-        .admin-table td { padding: 8px; border-bottom: 1px solid #111; }
-        .badge { padding: 2px 4px; border-radius: 3px; font-size: 9px; background: #333; margin-right: 2px; }
+        /* Cards & UI Elements */
+        .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 15px; padding: 15px; margin-bottom: 10px; width: 100%; }
+        input { width: 100%; background: #000; border: 1px solid #222; color: #fff; padding: 12px; border-radius: 10px; margin: 8px 0; text-align: center; outline: none; }
+        .btn-main { width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; }
+        .btn-main:disabled { opacity: 0.3; }
 
-        nav { height: 85px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1a1a1f; position: relative; z-index: 100; }
+        /* Admin Table */
+        .admin-table { width: 100%; font-size: 11px; border-collapse: collapse; margin-top: 10px; }
+        .admin-table th { text-align: left; color: var(--dim); padding: 5px; border-bottom: 1px solid #222; }
+        .admin-table td { padding: 8px 5px; border-bottom: 1px solid #111; }
+
+        /* Nav */
+        nav { height: 80px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1a1a1f; }
         .nav-admin { grid-template-columns: repeat(5, 1fr) !important; }
         .n-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); font-size: 10px; cursor: pointer; }
         .n-item.active { color: var(--p-purple); }
-        .n-item i { font-style: normal; font-size: 22px; margin-bottom: 4px; }
-        .admin-item { color: var(--admin-gold) !important; font-weight: bold; }
+        .n-item i { font-style: normal; font-size: 22px; margin-bottom: 3px; }
 
-        .pop { position: absolute; color: #fff; font-size: 30px; font-weight: bold; pointer-events: none; animation: up 0.6s forwards; z-index: 1000; }
+        .pop { position: absolute; color: #fff; font-size: 28px; font-weight: bold; pointer-events: none; animation: up 0.6s forwards; z-index: 1000; }
         @keyframes up { to { transform: translateY(-100px); opacity: 0; } }
     </style>
 </head>
@@ -58,44 +67,51 @@
 
     <div id="loader">
         <div class="spin"></div>
-        <p style="color:var(--p-purple); margin-top:15px; font-weight:bold;">BYPASSING CLOUD LAG...</p>
+        <p id="loader-msg" style="color:var(--p-purple); margin-top:15px; font-size:12px;">Syncing Data...</p>
     </div>
 
-    <main style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
+    <main style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
         <section id="p-home" class="view active">
             <h1 class="bal-txt" id="ui-bal">0</h1>
-            <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+            <div class="tap-area">
                 <div class="spyder-btn" id="tap-node"><span>🕷️</span></div>
             </div>
             <div class="card">
-                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;"><span>⚡ ENERGY</span><span id="ui-nrg">1000/1000</span></div>
-                <div style="height:6px; background:#111; border-radius:3px; overflow:hidden;"><div id="ui-nrg-bar" style="height:100%; background:var(--p-purple); width:100%;"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
+                    <span>⚡ ENERGY</span><span id="ui-nrg">1000/1000</span>
+                </div>
+                <div style="height:6px; background:#111; border-radius:3px; overflow:hidden;">
+                    <div id="ui-nrg-bar" style="height:100%; background:var(--p-purple); width:100%;"></div>
+                </div>
             </div>
         </section>
 
         <section id="p-tasks" class="view">
             <h2>Missions</h2>
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
-                <div><b>Official Channel</b><br><span style="color:var(--p-purple);">+1000 SPYDER</span></div>
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
+                <div><b>Official Channel</b><br><span style="color:var(--p-purple);">+1,000 SPYDER</span></div>
                 <button class="btn-main" style="width:auto; padding:8px 15px;" id="t-btn-1" onclick="Tasks.do(1, 1000, 'https://t.me/SpyderCommunity')">JOIN</button>
             </div>
         </section>
 
         <section id="p-vault" class="view">
             <h2>Vault Swap</h2>
-            <div class="card" style="margin-top:15px;">
-                <label style="font-size:10px; color:var(--dim)">SPYDER AMOUNT</label>
+            <div class="card" style="margin-top:20px;">
+                <label style="font-size:10px; color:var(--dim)">INPUT SPYDER</label>
                 <input type="number" id="s-in" value="1000" oninput="Finance.syncS()">
-                <div style="text-align:center; color:var(--green); font-size:24px; font-weight:bold; padding:10px;">$ <span id="s-out">0.010</span></div>
-                <button class="btn-main" onclick="Finance.swap()">SWAP TO USDT</button>
+                <div style="text-align:center; color:var(--green); font-size:24px; font-weight:bold; margin:10px;">$ <span id="s-out">0.010</span></div>
+                <button class="btn-main" onclick="Finance.swap()">SWAP NOW</button>
             </div>
         </section>
 
         <section id="p-wallet" class="view">
-            <h2>Finance</h2>
-            <div class="card" style="text-align:center; border-color:var(--green);"><h1 style="color:var(--green); font-size:40px;">$<span id="ui-usdt">0.000</span></h1></div>
+            <h2>Cüzdan</h2>
+            <div class="card" style="text-align:center; border:1px solid var(--green); margin-top:20px;">
+                <p style="font-size:11px; color:var(--dim)">USDT BALANCE</p>
+                <h1 style="color:var(--green); font-size:40px;">$<span id="ui-usdt">0.000</span></h1>
+            </div>
             <div class="card">
-                <div style="display:flex; justify-content:space-between; font-size:12px;"><span>Ads Verification:</span><b id="ui-ads" style="color:var(--red);">0/10</b></div>
+                <div style="display:flex; justify-content:space-between; font-size:12px;"><span>Ads Req:</span><b id="ui-ads" style="color:var(--red);">0/10</b></div>
                 <input type="number" id="w-amt" value="0.005" step="0.005" oninput="Finance.syncW()">
                 <input type="text" id="w-adr" placeholder="BEP20 Wallet Address">
                 <button id="w-btn" class="btn-main" onclick="Finance.withdraw()">WITHDRAW</button>
@@ -103,17 +119,14 @@
         </section>
 
         <section id="p-admin" class="view">
-            <h2 style="color:var(--admin-gold)">👑 Admin Control</h2>
+            <h2 style="color:var(--gold)">👑 Admin Panel</h2>
             <div class="card" style="flex:1; overflow:auto;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <b>Database</b>
-                    <button onclick="Admin.load()" class="btn-main" style="width:auto; padding:5px 10px; font-size:10px; background:var(--admin-gold); color:#000;">REFRESH</button>
-                </div>
                 <table class="admin-table">
-                    <thead><tr><th>ID</th><th>Coins</th><th>USDT</th><th>Tasks</th></tr></thead>
+                    <thead><tr><th>User</th><th>Coins</th><th>USDT</th><th>Tasks</th></tr></thead>
                     <tbody id="admin-list"></tbody>
                 </table>
             </div>
+            <button class="btn-main" style="background:var(--gold); color:#000;" onclick="Admin.load()">REFRESH DATA</button>
         </section>
     </main>
 
@@ -125,52 +138,55 @@
     </nav>
 
     <script>
-        const MY_ID = "8392479231";
+        const ADMIN_ID = "8392479231";
         const firebaseConfig = { apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY", authDomain: "pdfkaynak-51615.firebaseapp.com", projectId: "pdfkaynak-51615", appId: "1:228512804576:web:a0bba02ca83b4fa7adea85" };
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const tg = window.Telegram.WebApp;
 
         let user = { bal: 0, nrg: 1000, usdt: 0, ads: 0, tasks: [] };
-        let ready = false;
+        let isStarted = false;
 
         const App = {
             init: async () => {
-                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_test_user";
+                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_test";
                 
-                // FAILSAFE: 3 Saniye içinde açılmazsa zorla başlat
-                const forceStart = setTimeout(() => { if(!ready) App.boot(uid); }, 3000);
-
-                // Admin kontrolü (Navigasyona ekle)
-                if(uid === MY_ID) {
-                    const navBar = document.getElementById('main-nav');
-                    navBar.classList.add('nav-admin');
-                    navBar.innerHTML += `<div class="n-item admin-item" onclick="nav('p-admin', this)"><i>👑</i>Admin</div>`;
+                // ADMIN KONTROLÜ
+                if(uid === ADMIN_ID) {
+                    const navbar = document.getElementById('main-nav');
+                    navbar.classList.add('nav-admin');
+                    navbar.innerHTML += `<div class="n-item" style="color:var(--gold)" onclick="nav('p-admin', this)"><i>👑</i>Admin</div>`;
                 }
+
+                // FAILSAFE: 3 Saniyede DB gelmezse oyunu aç
+                const timer = setTimeout(() => App.boot(), 3000);
 
                 try {
                     const doc = await db.collection("users").doc(uid).get();
                     if(doc.exists) user = { ...user, ...doc.data() };
-                    clearTimeout(forceStart);
-                    App.boot(uid);
-                } catch(e) { console.log("DB Error:", e); }
+                    clearTimeout(timer);
+                    App.boot();
+                } catch(e) { console.error(e); App.boot(); }
             },
-            boot: (uid) => {
-                ready = true;
+            boot: () => {
+                if(isStarted) return;
+                isStarted = true;
                 document.getElementById('loader').style.display = 'none';
                 UI.refresh();
-                setInterval(() => { if(user.nrg < 1000) { user.nrg++; UI.refresh(); }}, 2000);
+                setInterval(() => { if(user.nrg < 1000) { user.nrg++; UI.refresh(); }}, 2500);
             },
             tap: (e) => {
-                if(!ready || user.nrg <= 0) return;
+                if(user.nrg <= 0) return;
                 user.bal++; user.nrg--;
                 UI.pop(e); UI.refresh();
+                tg.HapticFeedback.impactOccurred('light');
                 if(user.bal % 50 === 0) App.ad();
                 if(user.bal % 20 === 0) App.save();
             },
             ad: () => { if(window.showAdexora) window.showAdexora().then(() => { user.ads++; UI.refresh(); App.save(); }); },
             save: () => {
-                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_test_user";
+                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_test";
                 db.collection("users").doc(uid).set(user, { merge: true });
             }
         };
@@ -179,7 +195,7 @@
             do: (id, rew, link) => {
                 if(user.tasks.includes(id)) return;
                 tg.openLink(link);
-                setTimeout(() => { user.bal += rew; user.tasks.push(id); UI.refresh(); App.save(); tg.showAlert("Reward Claimed!"); }, 5000);
+                setTimeout(() => { user.bal += rew; user.tasks.push(id); UI.refresh(); App.save(); tg.showAlert("Reward Claimed!"); }, 6000);
             }
         };
 
@@ -187,32 +203,32 @@
             syncS: () => document.getElementById('s-out').innerText = (document.getElementById('s-in').value * 0.00001).toFixed(3),
             swap: () => {
                 const v = parseInt(document.getElementById('s-in').value);
-                if(user.bal < v) return tg.showAlert("Low Balance!");
+                if(user.bal < v) return tg.showAlert("Insufficient balance!");
                 user.bal -= v; user.usdt += (v * 0.00001); UI.refresh(); App.save();
+                tg.showAlert("Success!");
             },
             syncW: () => {
-                const a = parseFloat(document.getElementById('w-amt').value) || 0;
-                const r = Math.max(10, Math.ceil(a / 0.005) * 10);
-                document.getElementById('ui-ads').innerText = `${user.ads}/${r}`;
-                document.getElementById('w-btn').disabled = !(a >= 0.005 && user.usdt >= a && user.ads >= r);
+                const amt = parseFloat(document.getElementById('w-amt').value) || 0;
+                const req = Math.max(10, Math.ceil(amt / 0.005) * 10);
+                document.getElementById('ui-ads').innerText = `${user.ads}/${req}`;
+                document.getElementById('w-btn').disabled = !(amt >= 0.005 && user.usdt >= amt && user.ads >= req);
             },
             withdraw: () => { tg.showAlert("Request Sent!"); user.usdt = 0; user.ads = 0; UI.refresh(); App.save(); }
         };
 
         const Admin = {
             load: async () => {
-                const list = document.getElementById('admin-list');
-                list.innerHTML = "<tr><td colspan='4'>Loading...</td></tr>";
+                const body = document.getElementById('admin-list');
+                body.innerHTML = "Loading...";
                 const snap = await db.collection("users").get();
-                list.innerHTML = "";
+                body.innerHTML = "";
                 snap.forEach(doc => {
                     const d = doc.data();
-                    const tasks = (d.tasks || []).map(t => `<span class="badge">T${t}</span>`).join('');
-                    list.innerHTML += `<tr>
-                        <td>${doc.id.slice(0,5)}</td>
+                    body.innerHTML += `<tr>
+                        <td>${doc.id.slice(0,6)}</td>
                         <td>${(d.bal || 0).toLocaleString()}</td>
                         <td style="color:var(--green)">$${(d.usdt || 0).toFixed(3)}</td>
-                        <td>${tasks || '-'}</td>
+                        <td>${(d.tasks || []).length} done</td>
                     </tr>`;
                 });
             }
@@ -224,7 +240,7 @@
                 document.getElementById('ui-nrg').innerText = `${user.nrg}/1000`;
                 document.getElementById('ui-nrg-bar').style.width = (user.nrg / 10) + "%";
                 document.getElementById('ui-usdt').innerText = user.usdt.toFixed(3);
-                user.tasks.forEach(id => { const b = document.getElementById(`t-btn-${id}`); if(b){ b.innerText="DONE"; b.disabled=true; }});
+                user.tasks.forEach(id => { const b = document.getElementById(`t-btn-${id}`); if(b) { b.innerText="DONE"; b.disabled=true; }});
                 Finance.syncS(); Finance.syncW();
             },
             pop: (e) => {
@@ -236,17 +252,16 @@
         };
 
         function nav(id, el) {
-            document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-            document.querySelectorAll('.n-item').forEach(n=>n.classList.remove('active'));
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.n-item').forEach(n => n.classList.remove('active'));
             document.getElementById(id).classList.add('active'); el.classList.add('active');
             if(id === 'p-admin') Admin.load();
         }
 
         const node = document.getElementById('tap-node');
-        node.addEventListener('touchstart', (e)=>{ e.preventDefault(); App.tap(e); });
-        node.addEventListener('mousedown', (e)=>App.tap(e));
-        
-        // Başlat
+        node.addEventListener('touchstart', (e) => { e.preventDefault(); App.tap(e); });
+        node.addEventListener('mousedown', (e) => App.tap(e));
+
         App.init();
     </script>
 </body>
