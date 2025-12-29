@@ -40,7 +40,7 @@
             font-size: 110px; box-shadow: 0 0 60px var(--glow); 
             cursor: pointer; transition: transform 0.05s; 
             position: relative;
-            touch-action: none;
+            touch-action: none; /* Mobilde çift tıklama yakınlaştırmasını önler */
         }
         .spyder-node:active { transform: scale(0.92); }
 
@@ -170,25 +170,24 @@
                 // Tıklama kontrolü
                 if(!ready || user.nrg <= 0) return;
                 
-                // +1 Coin artışı ve Enerji düşüşü
+                // +1 COIN sistemi burada çalışıyor
                 user.bal += 1; 
                 user.nrg -= 1;
                 tapCount++;
 
-                // Her 50 tıklamada bir reklam tetikle
+                // Her 50 tıklamada bir reklam gösterimi
                 if(tapCount >= 50) {
                     tapCount = 0;
                     Game.ad(true);
                 }
 
-                // Görsel efektleri ve UI'yı güncelle
                 UI.pop(e); 
                 UI.refresh();
                 
-                // Telegram titreşim geri bildirimi
+                // Telegram haptic titreşim
                 tg.HapticFeedback.impactOccurred('medium');
                 
-                // Her 15 tıklamada bir veritabanına kaydet
+                // Veritabanına kaydetme sıklığı (15 tıklamada bir)
                 if(user.bal % 15 === 0) Game.save();
             },
             ad: (auto = false) => {
@@ -205,10 +204,7 @@
                 setTimeout(() => {
                     user.bal += 500; user.task = true;
                     const btn = document.getElementById('task-btn');
-                    if(btn) {
-                        btn.innerText = "CLAIMED";
-                        btn.disabled = true;
-                    }
+                    if(btn) { btn.innerText = "CLAIMED"; btn.disabled = true; }
                     UI.refresh(); Game.save();
                 }, 8000);
             },
@@ -245,16 +241,14 @@
                 document.getElementById('ui-usdt').innerText = user.usdt.toFixed(3);
                 
                 const req = 20;
-                const adsCheck = document.getElementById('ui-ads-check');
-                if(adsCheck) {
-                    adsCheck.innerText = `${user.ads} / ${req}`;
-                    adsCheck.style.color = user.ads >= req ? "var(--green)" : "red";
+                const adsLabel = document.getElementById('ui-ads-check');
+                if(adsLabel) {
+                    adsLabel.innerText = `${user.ads} / ${req}`;
+                    adsLabel.style.color = user.ads >= req ? "var(--green)" : "red";
                 }
                 
                 const drawBtn = document.getElementById('draw-btn');
-                if(drawBtn) {
-                    drawBtn.disabled = !(user.usdt >= 0.01 && user.ads >= req);
-                }
+                if(drawBtn) drawBtn.disabled = !(user.usdt >= 0.01 && user.ads >= req);
                 Finance.update();
             },
             pop: (e) => {
@@ -275,13 +269,13 @@
             el.classList.add('active');
         }
 
-        // Tıklama olay dinleyicisi: 'node-target' (mor çember) üzerine dokunulduğunda Game.tap çalışır
+        // Tıklama Olayı: Mor çember (node-target) üzerine dokunulduğunda çalışır
         document.getElementById('node-target').addEventListener('touchstart', (e) => { 
             e.preventDefault(); 
             Game.tap(e); 
         });
 
-        // Enerji yenileme: 2 saniyede bir +1 enerji
+        // Enerji Yenileme (2 saniyede bir +1)
         setInterval(() => { if(ready && user.nrg < 1000) { user.nrg++; UI.refresh(); } }, 2000);
         
         window.onload = Game.init;
