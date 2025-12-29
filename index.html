@@ -3,230 +3,464 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SpyderCoin - Stable Pro</title>
+    <title>SpyderCoin - Ultimate Edition</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
-        :root { --p-purple: #a855f7; --bg: #000; --card: #0f0f12; --text: #fff; --dim: #71717a; --green: #10b981; --red: #ef4444; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        
-        #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .spin { width: 40px; height: 40px; border: 4px solid #111; border-top-color: var(--p-purple); border-radius: 50%; animation: s 1s linear infinite; }
-        @keyframes s { to { transform: rotate(360deg); } }
+        /* Modern CSS Variables */
+        :root {
+            --p-purple: #a855f7;
+            --p-dark: #7c3aed;
+            --bg: #000;
+            --card: #0f0f12;
+            --card-brd: #1a1a1f;
+            --text: #ffffff;
+            --dim: #71717a;
+            --green: #10b981;
+            --red: #ef4444;
+            --gold: #fbbf24;
+            --glass: rgba(255, 255, 255, 0.03);
+        }
 
-        .view { display: none; flex-direction: column; padding: 20px; flex: 1; overflow-y: auto; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Inter', -apple-system, sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+
+        /* Loading Screen */
+        #loader { 
+            position: fixed; inset: 0; 
+            background: var(--bg); 
+            z-index: 10000; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
+        .spin { 
+            width: 48px; height: 48px; 
+            border: 4px solid #111; 
+            border-top-color: var(--p-purple); 
+            border-radius: 50%; 
+            animation: rotate 1s linear infinite; 
+        }
+        @keyframes rotate { to { transform: rotate(360deg); } }
+
+        /* Main Containers */
+        main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .view { 
+            display: none; 
+            flex-direction: column; 
+            padding: 20px; 
+            flex: 1; 
+            overflow-y: auto; 
+            animation: fadeIn 0.3s ease;
+        }
         .view.active { display: flex; }
-        .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 18px; padding: 15px; margin-bottom: 12px; }
-        
-        .bal-txt { font-size: 50px; font-weight: 900; color: var(--p-purple); text-align: center; margin: 20px 0; }
-        .spyder-btn { width: 200px; height: 200px; background: radial-gradient(circle, #c084fc, #a855f7); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 40px var(--p-purple); margin: 0 auto; cursor: pointer; transition: transform 0.05s; }
-        .spyder-btn:active { transform: scale(0.92); }
-        .spyder-btn span { font-size: 90px; pointer-events: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; }
-        .btn-main:disabled { background: #1a1a1f !important; color: #444 !important; cursor: not-allowed; border: 1px solid #333; }
+        /* Component Styles */
+        .card { 
+            background: var(--card); 
+            border: 1px solid var(--card-brd); 
+            border-radius: 20px; 
+            padding: 18px; 
+            margin-bottom: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
 
-        input { width: 100%; padding: 12px; background: #000; border: 1px solid #222; color: #fff; border-radius: 10px; margin: 8px 0; text-align: center; }
-        
-        .status-red { color: var(--red); font-weight: bold; }
-        .status-green { color: var(--green); font-weight: bold; }
+        .bal-txt { 
+            font-size: 54px; 
+            font-weight: 900; 
+            color: var(--p-purple); 
+            text-align: center; 
+            margin: 25px 0;
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+        }
 
-        nav { height: 80px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1a1a1f; }
-        .n-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); font-size: 11px; }
+        /* Interactive Elements */
+        .spyder-btn { 
+            width: 240px; height: 240px; 
+            background: radial-gradient(circle, var(--p-purple), var(--p-dark)); 
+            border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; 
+            box-shadow: 0 0 50px rgba(168, 85, 247, 0.4); 
+            margin: 0 auto; 
+            cursor: pointer; 
+            transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        .spyder-btn:active { transform: scale(0.9); box-shadow: 0 0 20px var(--p-purple); }
+        .spyder-btn span { font-size: 110px; pointer-events: none; }
+
+        .btn-main { 
+            width: 100%; 
+            padding: 16px; 
+            border-radius: 14px; 
+            border: none; 
+            background: var(--p-purple); 
+            color: #fff; 
+            font-weight: 800; 
+            font-size: 15px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn-main:disabled { background: #1a1a1f; color: #444; cursor: not-allowed; }
+
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            background: rgba(0,0,0,0.5); 
+            border: 1px solid var(--card-brd); 
+            color: #fff; 
+            border-radius: 12px; 
+            margin: 10px 0; 
+            text-align: center;
+            font-size: 16px;
+            outline: none;
+        }
+        input:focus { border-color: var(--p-purple); }
+
+        /* Navigation */
+        nav { 
+            height: 85px; 
+            background: #050505; 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            border-top: 1px solid var(--card-brd);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .n-item { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            color: var(--dim); font-size: 11px; font-weight: 500;
+        }
         .n-item.active { color: var(--p-purple); }
+        .n-item i { font-size: 24px; margin-bottom: 4px; font-style: normal; }
+
+        /* Floating +1 Effect */
+        .pop { 
+            position: absolute; 
+            color: #fff; 
+            font-size: 32px; 
+            font-weight: 900; 
+            pointer-events: none; 
+            animation: floatUp 0.7s forwards;
+            z-index: 999;
+        }
+        @keyframes floatUp { 
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-150px) scale(1.2); opacity: 0; }
+        }
+
+        .status-badge { font-size: 14px; padding: 4px 10px; border-radius: 8px; }
     </style>
 </head>
 <body>
 
     <div id="loader">
         <div class="spin"></div>
-        <p style="color:var(--p-purple); margin-top:15px; font-size:12px;">GÜVENLİ BAĞLANTI...</p>
+        <p style="color:var(--p-purple); margin-top:15px; font-size:13px; font-weight:bold; letter-spacing:1px;">SYNCHRONIZING...</p>
     </div>
 
-    <main id="app-content" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
-        <section id="p-home" class="view active">
+    <main>
+        <section id="v-home" class="view active">
             <h1 class="bal-txt" id="ui-bal">0</h1>
-            <div style="flex:1; display:flex; align-items:center;">
+            <div style="flex:1; display:flex; align-items:center; position:relative;">
                 <div class="spyder-btn" id="tap-node"><span>🕷️</span></div>
             </div>
-            <div class="card" style="text-align:center; font-size:12px;">
-                <p>Enerji: <span id="ui-nrg">1000/1000</span></p>
-                <div style="height:6px; background:#111; border-radius:3px; overflow:hidden; margin-top:5px;">
-                    <div id="ui-nrg-bar" style="height:100%; background:var(--p-purple); width:100%;"></div>
-                </div>
-            </div>
-        </section>
-
-        <section id="p-tasks" class="view">
-            <h2>Missions</h2>
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
-                <div><b>Official Channel</b><br><small style="color:var(--p-purple)">+5,000 SPYDER</small></div>
-                <button class="btn-main" style="width:auto; padding:8px 15px;" id="t-btn-1" onclick="Tasks.do(1, 5000, 'https://t.me/SpyderCommunity')">KATIL</button>
-            </div>
-        </section>
-
-        <section id="p-vault" class="view">
-            <h2>Vault Swap</h2>
-            <div class="card" style="margin-top:15px;">
-                <input type="number" id="s-in" value="1000" oninput="Finance.syncS()">
-                <p style="text-align:center; margin:10px; font-size:20px;">= <span style="color:var(--green)">$<span id="s-out">0.01</span></span></p>
-                <button class="btn-main" onclick="Finance.swap()">USDT'YE ÇEVİR</button>
-            </div>
-        </section>
-
-        <section id="p-wallet" class="view">
-            <h2>Wallet</h2>
-            <div class="card" style="text-align:center; margin-top:10px;">
-                <p style="color:var(--dim); font-size:12px;">Cüzdan Bakiyesi</p>
-                <h1 style="color:var(--green); font-size:45px;">$<span id="ui-usdt">0.000</span></h1>
-            </div>
             <div class="card">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <span style="font-size:13px;">Gerekli Reklam (0.01$ için):</span>
-                    <span id="ui-ad-status" class="status-red">0/15</span>
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:8px;">
+                    <span style="color:var(--dim)">ENERGY LEVEL</span>
+                    <span id="ui-nrg" style="font-weight:bold">1000/1000</span>
                 </div>
-                <input type="text" id="w-adr" placeholder="BEP20 Cüzdan Adresi">
-                <button id="w-btn" class="btn-main" onclick="Finance.withdraw()">PARA ÇEK</button>
-                <p id="wd-pending-txt" style="display:none; color:var(--gold); text-align:center; margin-top:10px; font-size:12px;">Talep Onay Bekliyor...</p>
+                <div style="height:8px; background:#111; border-radius:4px; overflow:hidden;">
+                    <div id="ui-nrg-bar" style="height:100%; background:var(--p-purple); width:100%; transition: width 0.3s ease;"></div>
+                </div>
             </div>
         </section>
+
+        <section id="v-vault" class="view">
+            <h2 style="margin-bottom:20px">Vault Swap</h2>
+            <div class="card">
+                <p style="font-size:12px; color:var(--dim); margin-bottom:10px;">Enter amount to convert to USDT</p>
+                <input type="number" id="s-in" value="10000" oninput="Finance.syncSwap()">
+                <div style="text-align:center; padding:15px;">
+                    <span style="color:var(--p-purple); font-size:24px;">⬇</span>
+                </div>
+                <div style="background:rgba(0,0,0,0.3); padding:20px; border-radius:15px; text-align:center;">
+                    <span style="font-size:13px; color:var(--dim); display:block;">ESTIMATED VALUE</span>
+                    <span style="font-size:32px; color:var(--green); font-weight:900;">$<span id="s-out">0.10</span></span>
+                </div>
+                <button class="btn-main" style="margin-top:20px;" onclick="Finance.doSwap()">SWAP NOW</button>
+            </div>
+        </section>
+
+        <section id="v-wallet" class="view">
+            <h2 style="margin-bottom:20px">Withdraw</h2>
+            <div class="card" style="text-align:center; background: linear-gradient(145deg, #0f0f12, #15151a);">
+                <span style="color:var(--dim); font-size:13px;">WALLET BALANCE</span>
+                <h1 style="color:var(--green); font-size:48px; margin:5px 0;">$<span id="ui-usdt">0.000</span></h1>
+            </div>
+
+            <div class="card">
+                <label style="font-size:12px; color:var(--dim)">Withdraw Amount ($)</label>
+                <input type="number" id="w-amt" value="0.01" step="0.01" oninput="UI.updateAdStatus()">
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin:15px 0; background:var(--glass); padding:12px; border-radius:10px;">
+                    <span style="font-size:14px;">Required Ads:</span>
+                    <span id="ui-ad-status" class="status-badge">0/15</span>
+                </div>
+
+                <label style="font-size:12px; color:var(--dim)">BEP20 Address</label>
+                <input type="text" id="w-adr" placeholder="0x...">
+                
+                <button id="w-btn" class="btn-main" style="margin-top:10px;" onclick="Finance.doWithdraw()">WITHDRAW</button>
+                <div id="ui-pending" style="display:none; text-align:center; padding:10px; color:var(--gold); font-weight:bold;">
+                    ⏳ Transaction Pending...
+                </div>
+            </div>
+        </section>
+
+        <section id="v-tasks" class="view"><h2>Missions</h2></section>
     </main>
 
     <nav>
-        <div class="n-item active" onclick="nav('p-home', this)">🎮 Oyna</div>
-        <div class="n-item" onclick="nav('p-tasks', this)">📢 Görev</div>
-        <div class="n-item" onclick="nav('p-vault', this)">🏛️ Vault</div>
-        <div class="n-item" onclick="nav('p-wallet', this)">💰 Cüzdan</div>
+        <div class="n-item active" onclick="Router.go('v-home', this)"><i>🎮</i>Play</div>
+        <div class="n-item" onclick="Router.go('v-tasks', this)"><i>📢</i>Tasks</div>
+        <div class="n-item" onclick="Router.go('v-vault', this)"><i>🏛️</i>Vault</div>
+        <div class="n-item" onclick="Router.go('v-wallet', this)"><i>💰</i>Wallet</div>
     </nav>
 
     <script>
-        const firebaseConfig = {
+        // --- CONFIG & INIT ---
+        const FB_CONFIG = {
             apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY",
             authDomain: "pdfkaynak-51615.firebaseapp.com",
             projectId: "pdfkaynak-51615",
             appId: "1:228512804576:web:a0bba02ca83b4fa7adea85"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(FB_CONFIG);
         const db = firebase.firestore();
         const tg = window.Telegram.WebApp;
+        tg.expand();
 
-        let user = { bal: 0, nrg: 1000, usdt: 0, ads: 0, tasks: [], wd_pending: false };
-        let isLoaded = false;
+        let user = {
+            bal: 0,
+            nrg: 1000,
+            usdt: 0,
+            ads: 0,
+            wd_pending: false,
+            last_save: 0
+        };
 
+        // --- CORE ENGINE ---
         const App = {
             init: async () => {
-                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
+                const uid = tg.initDataUnsafe?.user?.id?.toString() || "local_dev";
+                
                 try {
                     const doc = await db.collection("users").doc(uid).get();
                     if(doc.exists) {
-                        const data = doc.data();
-                        // Sıfırlanma koruması: Sadece geçerli veriyi al
-                        user = Object.assign(user, data);
+                        user = { ...user, ...doc.data() };
                     }
-                    App.start();
-                } catch(e) { App.start(); }
+                    App.boot();
+                } catch(e) {
+                    console.error("Firebase fail, using defaults");
+                    App.boot();
+                }
             },
-            start: () => {
-                isLoaded = true;
+
+            boot: () => {
                 document.getElementById('loader').style.display = 'none';
-                UI.refresh();
-                setInterval(() => { if(user.nrg < 1000) { user.nrg += 2; UI.refresh(); }}, 3000);
+                UI.refreshAll();
+                
+                // Passive Energy Regen
+                setInterval(() => {
+                    if(user.nrg < 1000) {
+                        user.nrg = Math.min(1000, user.nrg + 1);
+                        UI.updateEnergy();
+                    }
+                }, 1500);
             },
-            tap: () => {
-                if(!isLoaded || user.nrg <= 0) return;
-                user.bal++; user.nrg--;
-                UI.refresh();
-                if(user.bal % 50 === 0) App.ad();
-                if(user.bal % 25 === 0) App.save();
+
+            handleTap: (e) => {
+                if(user.nrg <= 0) {
+                    tg.HapticFeedback.notificationOccurred('error');
+                    return;
+                }
+
+                user.bal++;
+                user.nrg--;
+                
+                UI.createPop(e);
+                UI.updateHome();
+                tg.HapticFeedback.impactOccurred('light');
+
+                // Ad Trigger (Every 60 taps)
+                if(user.bal % 60 === 0) App.triggerAd();
+                
+                // Auto-save logic
+                if(Date.now() - user.last_save > 10000) App.save();
             },
-            ad: () => {
+
+            triggerAd: () => {
                 if(window.showAdexora) {
-                    window.showAdexora().then(() => { user.ads++; UI.refresh(); App.save(); });
-                } else { user.ads++; UI.refresh(); } // Test
-            },
-            save: () => {
-                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
-                db.collection("users").doc(uid).set(user, { merge: true });
-            }
-        };
-
-        const Finance = {
-            syncS: () => document.getElementById('s-out').innerText = (document.getElementById('s-in').value * 0.00001).toFixed(2),
-            swap: () => {
-                const amt = parseInt(document.getElementById('s-in').value);
-                if(user.bal < amt) return tg.showAlert("Yetersiz Spyder!");
-                user.bal -= amt;
-                user.usdt += (amt * 0.00001);
-                UI.refresh(); App.save();
-                tg.showAlert("Swap başarılı!");
-            },
-            withdraw: () => {
-                const addr = document.getElementById('w-adr').value;
-                if(addr.length < 15) return tg.showAlert("Geçerli bir adres girin!");
-                user.wd_pending = true;
-                UI.refresh(); App.save();
-                tg.showAlert("Çekim talebi alındı!");
-            }
-        };
-
-        const Tasks = {
-            do: (id, rew, link) => {
-                if(user.tasks.includes(id)) return;
-                tg.openLink(link);
-                setTimeout(() => {
-                    user.bal += rew; user.tasks.push(id);
-                    UI.refresh(); App.save();
-                }, 4000);
-            }
-        };
-
-        const UI = {
-            refresh: () => {
-                document.getElementById('ui-bal').innerText = user.bal.toLocaleString();
-                document.getElementById('ui-nrg').innerText = `${user.nrg}/1000`;
-                document.getElementById('ui-nrg-bar').style.width = (user.nrg / 10) + "%";
-                document.getElementById('ui-usdt').innerText = user.usdt.toFixed(3);
-                
-                // REKLAM KONTROLÜ (0.01$ için 15 reklam)
-                const adStatus = document.getElementById('ui-ad-status');
-                const wBtn = document.getElementById('w-btn');
-                const reqAds = Math.max(15, Math.ceil(user.usdt / 0.01) * 15);
-                
-                adStatus.innerText = `${user.ads}/${reqAds}`;
-
-                if(user.usdt >= 0.01 && user.ads >= reqAds) {
-                    adStatus.className = "status-green";
-                    wBtn.disabled = user.wd_pending;
+                    window.showAdexora().then(() => {
+                        user.ads++;
+                        UI.refreshAll();
+                        App.save();
+                    });
                 } else {
-                    adStatus.className = "status-red";
-                    wBtn.disabled = true;
+                    user.ads++; // Simulated for dev
+                    UI.refreshAll();
                 }
+            },
 
-                if(user.wd_pending) {
-                    wBtn.style.display = 'none';
-                    document.getElementById('wd-pending-txt').style.display = 'block';
-                }
+            save: async () => {
+                const uid = tg.initDataUnsafe?.user?.id?.toString() || "local_dev";
+                user.last_save = Date.now();
+                await db.collection("users").doc(uid).set(user, { merge: true });
+            }
+        };
+
+        // --- FINANCE LOGIC ---
+        const Finance = {
+            syncSwap: () => {
+                const input = document.getElementById('s-in').value;
+                document.getElementById('s-out').innerText = (input * 0.00001).toFixed(3);
+            },
+
+            doSwap: () => {
+                const amount = parseInt(document.getElementById('s-in').value);
+                if(user.bal < amount) return tg.showAlert("Insufficient Spyder Balance!");
                 
-                user.tasks.forEach(id => {
-                    const b = document.getElementById(`t-btn-${id}`);
-                    if(b) { b.innerText = "OK"; b.disabled = true; }
+                user.bal -= amount;
+                user.usdt += (amount * 0.00001);
+                
+                tg.HapticFeedback.notificationOccurred('success');
+                App.save();
+                UI.refreshAll();
+                tg.showAlert("Success! Your USDT is ready in the wallet.");
+            },
+
+            doWithdraw: () => {
+                const amt = parseFloat(document.getElementById('w-amt').value);
+                const adr = document.getElementById('w-adr').value;
+                const reqAds = Math.max(15, Math.ceil(amt / 0.01) * 15);
+
+                if(user.usdt < amt) return tg.showAlert("Insufficient USDT Balance!");
+                if(user.ads < reqAds) return tg.showAlert("Not enough ads watched for this amount!");
+                if(adr.length < 15) return tg.showAlert("Invalid Wallet Address!");
+
+                user.wd_pending = true;
+                App.save();
+                UI.refreshAll();
+                tg.showPopup({
+                    title: "Request Sent",
+                    message: "Your withdrawal will be processed within 24 hours.",
+                    buttons: [{type: "ok"}]
                 });
             }
         };
 
-        function nav(id, el) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.n-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active'); el.classList.add('active');
-        }
+        // --- UI RENDERER ---
+        const UI = {
+            refreshAll: () => {
+                UI.updateHome();
+                UI.updateWallet();
+                Finance.syncSwap();
+            },
 
-        document.getElementById('tap-node').onclick = () => App.tap();
+            updateHome: () => {
+                document.getElementById('ui-bal').innerText = user.bal.toLocaleString();
+                UI.updateEnergy();
+            },
+
+            updateEnergy: () => {
+                document.getElementById('ui-nrg').innerText = `${user.nrg}/1000`;
+                document.getElementById('ui-nrg-bar').style.width = (user.nrg / 10) + "%";
+            },
+
+            updateWallet: () => {
+                document.getElementById('ui-usdt').innerText = user.usdt.toFixed(3);
+                UI.updateAdStatus();
+                
+                if(user.wd_pending) {
+                    document.getElementById('w-btn').style.display = 'none';
+                    document.getElementById('ui-pending').style.display = 'block';
+                }
+            },
+
+            updateAdStatus: () => {
+                const amt = parseFloat(document.getElementById('w-amt').value) || 0;
+                const reqAds = Math.max(15, Math.ceil(amt / 0.01) * 15);
+                const el = document.getElementById('ui-ad-status');
+                const btn = document.getElementById('w-btn');
+
+                el.innerText = `${user.ads}/${reqAds}`;
+                
+                if(user.ads >= reqAds && user.usdt >= amt && amt >= 0.01) {
+                    el.style.color = "var(--green)";
+                    btn.disabled = false;
+                } else {
+                    el.style.color = "var(--red)";
+                    btn.disabled = true;
+                }
+            },
+
+            createPop: (e) => {
+                const body = document.body;
+                const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+                const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+                
+                const p = document.createElement('div');
+                p.className = 'pop';
+                p.innerText = '+1';
+                p.style.left = `${x - 20}px`;
+                p.style.top = `${y - 40}px`;
+                
+                body.appendChild(p);
+                setTimeout(() => p.remove(), 700);
+            }
+        };
+
+        // --- ROUTER ---
+        const Router = {
+            go: (id, el) => {
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                document.querySelectorAll('.n-item').forEach(n => n.classList.remove('active'));
+                
+                document.getElementById(id).classList.add('active');
+                el.classList.add('active');
+                
+                tg.HapticFeedback.impactOccurred('medium');
+                UI.refreshAll();
+            }
+        };
+
+        // --- EVENT LISTENERS ---
+        document.getElementById('tap-node').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            App.handleTap(e);
+        });
+
+        // Start App
         App.init();
     </script>
 </body>
