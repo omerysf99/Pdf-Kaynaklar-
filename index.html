@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Boost Edition</title>
+    <title>SpyderCoin - Pro Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -11,234 +11,253 @@
             --card-bg: #1c1c1e;
             --gold: #f3ba2f;
             --blue-glow: #3a47ff;
+            --modal-bg: #111111;
         }
 
         body {
-            background-color: var(--bg-dark);
-            color: white;
+            background-color: var(--bg-dark); color: white;
             font-family: -apple-system, system-ui, sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            margin: 0; display: flex; flex-direction: column; align-items: center;
+            height: 100vh; overflow: hidden; user-select: none; -webkit-tap-highlight-color: transparent;
         }
 
-        /* Üst Bilgi Kartları */
-        .header-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 10px; width: 92%; margin-top: 15px;
-        }
-
-        .header-card {
-            background: var(--card-bg); border-radius: 12px;
-            padding: 12px 2px; text-align: center; border: 1px solid #2c2c2e;
-        }
-
-        .card-label { font-size: 10px; color: #ff9f0a; margin-bottom: 4px; font-weight: 600; }
-        .card-value { font-size: 14px; font-weight: bold; color: white; }
+        /* Üst Panel */
+        .header-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 92%; margin-top: 15px; }
+        .header-card { background: var(--card-bg); border-radius: 12px; padding: 12px 2px; text-align: center; border: 1px solid #2c2c2e; }
+        .card-label { font-size: 10px; color: #8e8e93; margin-bottom: 4px; }
+        .card-value { font-size: 14px; font-weight: bold; }
 
         /* Bakiye */
-        .balance-container { margin-top: 30px; display: flex; align-items: center; gap: 15px; }
-        .gold-icon-large {
-            width: 48px; height: 48px;
-            background: linear-gradient(180deg, #ffe000, #ff9000);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 26px; font-weight: bold; color: rgba(0,0,0,0.6);
-            border: 3px solid #fff; box-shadow: 0 0 15px rgba(255, 224, 0, 0.4);
+        .balance-container { margin-top: 30px; display: flex; align-items: center; gap: 12px; }
+        .gold-icon { width: 40px; height: 40px; background: linear-gradient(180deg, #ffe000, #ff9000); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: rgba(0,0,0,0.6); border: 2px solid #fff; }
+        .balance-text { font-size: 48px; font-weight: 850; }
+
+        /* Oyun Alanı */
+        .game-area { position: relative; margin-top: 40px; width: 250px; height: 250px; display: flex; justify-content: center; align-items: center; }
+        .ring { position: absolute; width: 100%; height: 100%; border: 8px solid var(--blue-glow); border-radius: 50%; box-shadow: 0 0 30px rgba(58, 71, 255, 0.4); }
+        #spyder { font-size: 110px; z-index: 2; cursor: pointer; transition: transform 0.05s; }
+        #spyder:active { transform: scale(0.9); }
+
+        /* Enerji */
+        .energy-box { margin-top: auto; margin-bottom: 100px; width: 90%; }
+        .energy-bar-bg { width: 100%; height: 12px; background: #2c2c2e; border-radius: 10px; margin-top: 8px; }
+        .energy-bar-fill { height: 100%; background: linear-gradient(90deg, #ffd60a, #ff9f0a); border-radius: 10px; transition: width 0.2s; }
+
+        /* Boost Penceresi (Modal) */
+        #boost-modal {
+            position: fixed; bottom: -100%; left: 0; width: 100%; height: 75%;
+            background: var(--modal-bg); border-top: 2px solid #333;
+            border-radius: 30px 30px 0 0; z-index: 100; transition: bottom 0.4s ease;
+            padding: 20px; box-sizing: border-box;
         }
-        .balance-text { font-size: 50px; font-weight: 850; letter-spacing: -1px; }
+        #boost-modal.active { bottom: 0; }
+        .modal-header { text-align: center; font-weight: bold; font-size: 20px; margin-bottom: 20px; position: relative; }
+        .close-btn { position: absolute; right: 0; top: 0; font-size: 24px; color: #666; }
 
-        /* Seviye */
-        .level-section { width: 90%; margin-top: 20px; }
-        .level-labels { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
-        .progress-bg { width: 100%; height: 10px; background: #2c2c2e; border-radius: 20px; overflow: hidden; }
-        .progress-fill { width: 45%; height: 100%; background: linear-gradient(90deg, #5e5ce6, #bf5af2); }
-
-        /* MERKEZ ALAN (Örümcek ve Boost) */
-        .game-main-area {
-            position: relative;
-            margin-top: 30px;
-            width: 320px;
-            height: 320px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .boost-item {
+            background: #1c1c1e; border-radius: 15px; padding: 15px;
+            display: flex; align-items: center; gap: 15px; margin-bottom: 12px;
+            border: 1px solid #2c2c2e; cursor: pointer;
         }
-
-        .spyder-container {
-            position: relative;
-            width: 230px;
-            height: 230px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .blue-glow-ring {
-            position: absolute; width: 100%; height: 100%;
-            border: 10px solid var(--blue-glow); border-radius: 50%;
-            box-shadow: 0 0 35px rgba(58, 71, 255, 0.5); z-index: 1;
-        }
-
-        #spyder-emoji {
-            font-size: 100px; z-index: 2; cursor: pointer;
-            transition: transform 0.05s ease-out; touch-action: manipulation;
-        }
-        #spyder-emoji:active { transform: scale(0.88); }
-
-        /* BOOST BUTONU (Görseldeki gibi sağ altta) */
-        .boost-btn-container {
-            position: absolute;
-            right: 15px;
-            bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(28, 28, 30, 0.8);
-            padding: 8px 15px;
-            border-radius: 20px;
-            border: 1px solid #3a3a3c;
-            cursor: pointer;
-            z-index: 5;
-            transition: 0.2s;
-        }
-        .boost-btn-container:active { transform: scale(0.95); background: #2c2c2e; }
-        .boost-icon { font-size: 20px; }
-        .boost-text { font-size: 14px; font-weight: bold; color: white; }
-
-        /* Enerji Alt Bar */
-        .energy-section { margin-top: auto; margin-bottom: 110px; width: 90%; }
-        .energy-info { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: bold; margin-bottom: 8px; }
-        .energy-bar-container { width: 100%; height: 12px; background: #2c2c2e; border-radius: 20px; }
-        .energy-bar-val { width: 100%; height: 100%; background: linear-gradient(90deg, #ffd60a, #ff9f0a); border-radius: 20px; transition: 0.1s; }
+        .boost-icon-small { font-size: 30px; }
+        .boost-info { flex: 1; }
+        .boost-title { font-weight: bold; font-size: 16px; }
+        .boost-price { color: var(--gold); font-size: 14px; margin-top: 2px; }
+        .boost-lvl { color: #8e8e93; font-size: 12px; }
 
         /* Alt Nav */
-        .bottom-nav {
-            position: fixed; bottom: 20px; width: 92%; background: #1c1c1e;
-            display: grid; grid-template-columns: repeat(4, 1fr);
-            padding: 14px 0; border-radius: 22px; border: 1px solid #2c2c2e;
-        }
-        .nav-item { text-align: center; font-size: 11px; color: #8e8e93; }
-        .nav-item i { display: block; font-size: 22px; margin-bottom: 5px; font-style: normal; }
+        .nav { position: fixed; bottom: 15px; width: 92%; background: #1c1c1e; display: grid; grid-template-columns: repeat(4, 1fr); padding: 12px 0; border-radius: 20px; }
+        .nav-btn { text-align: center; font-size: 11px; color: #8e8e93; cursor: pointer; }
+        .nav-btn i { display: block; font-size: 20px; margin-bottom: 4px; font-style: normal; }
 
-        /* Animasyon */
-        .plus-one {
-            position: absolute; color: white; font-size: 32px; font-weight: 900;
-            pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 10;
-        }
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-120px); }
-        }
+        .plus-one { position: absolute; color: white; font-size: 30px; font-weight: 900; pointer-events: none; animation: up 0.7s forwards; }
+        @keyframes up { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
 <body>
 
     <div class="header-grid">
-        <div class="header-card"><div class="card-label">Tık Başı</div><div class="card-value">💰 +1</div></div>
-        <div class="header-card"><div class="card-label" style="color:#5e5ce6">Hedef</div><div class="card-value">5K</div></div>
-        <div class="header-card"><div class="card-label" style="color:#32d74b">Pasif Gelir</div><div class="card-value">💰 0</div></div>
+        <div class="header-card"><div class="card-label">Tık Başı</div><div id="tap-val" class="card-value">+1</div></div>
+        <div class="header-card"><div class="card-label">Limit</div><div id="limit-val" class="card-value">1000</div></div>
+        <div class="header-card"><div class="card-label">Saatlik</div><div class="card-value">0</div></div>
     </div>
 
     <div class="balance-container">
-        <div class="gold-icon-large">$</div>
+        <div class="gold-icon">$</div>
         <div class="balance-text" id="balance">100</div>
     </div>
 
-    <div class="level-section">
-        <div class="level-labels"><span>Bronze ></span><span style="color:#8e8e93">1/10</span></div>
-        <div class="progress-bg"><div class="progress-fill" id="level-bar"></div></div>
+    <div class="game-area">
+        <div class="ring"></div>
+        <div id="spyder">🕷️</div>
     </div>
 
-    <div class="game-main-area">
-        <div class="spyder-container">
-            <div class="blue-glow-ring"></div>
-            <div id="spyder-emoji">🕷️</div>
+    <div class="energy-box">
+        <div style="font-weight: bold;">⚡ <span id="energy-num">1000</span> / <span id="max-energy-num">1000</span></div>
+        <div class="energy-bar-bg"><div class="energy-bar-fill" id="energy-bar" style="width: 100%;"></div></div>
+    </div>
+
+    <div id="boost-modal">
+        <div class="modal-header">
+            Mağaza <span class="close-btn" onclick="toggleBoost()">✕</span>
+        </div>
+        
+        <p style="color:#8e8e93; font-size: 14px;">Günlük Ücretsiz</p>
+        <div class="boost-item" onclick="useFullEnergy()">
+            <div class="boost-icon-small">⚡</div>
+            <div class="boost-info">
+                <div class="boost-title">Tam Enerji</div>
+                <div class="boost-price" id="full-energy-count">2/2 Kullanılabilir</div>
+            </div>
         </div>
 
-        <div class="boost-btn-container" onclick="applyBoost()">
-            <span class="boost-icon">🚀</span>
-            <span class="boost-text">Boost</span>
+        <div class="boost-item" style="opacity: 0.5; cursor: default;">
+            <div class="boost-icon-small">🚀</div>
+            <div class="boost-info">
+                <div class="boost-title">Turbo</div>
+                <div class="boost-price">Yakında Gelecek...</div>
+            </div>
+        </div>
+
+        <p style="color:#8e8e93; font-size: 14px; margin-top: 20px;">Geliştirmeler</p>
+        <div class="boost-item" onclick="buyMultitap()">
+            <div class="boost-icon-small">👆</div>
+            <div class="boost-info">
+                <div class="boost-title">Multitap</div>
+                <div class="boost-price" id="mt-price">💰 121</div>
+            </div>
+        </div>
+
+        <div class="boost-item" onclick="buyEnergyLimit()">
+            <div class="boost-icon-small">🔋</div>
+            <div class="boost-info">
+                <div class="boost-title">Enerji Limiti</div>
+                <div class="boost-price" id="el-price">💰 9999</div>
+            </div>
         </div>
     </div>
 
-    <div class="energy-section">
-        <div class="energy-info">⚡ <span id="energy-num">1000</span> / 1000</div>
-        <div class="energy-bar-container"><div class="energy-bar-val" id="energy-bar"></div></div>
-    </div>
-
-    <div class="bottom-nav">
-        <div class="nav-item"><i>🏠</i>Home</div>
-        <div class="nav-item"><i>⛏️</i>Mine</div>
-        <div class="nav-item"><i>👥</i>Friends</div>
-        <div class="nav-item"><i>🚀</i>Earn</div>
+    <div class="nav">
+        <div class="nav-btn"><i>🏠</i>Ana Sayfa</div>
+        <div class="nav-btn"><i>⛏️</i>Kazan</div>
+        <div class="nav-btn"><i>👥</i>Arkadaşlar</div>
+        <div class="nav-btn" onclick="toggleBoost()"><i>🚀</i>Boost</div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Oyun Değişkenleri
         let coins = 100;
         let energy = 1000;
-        const maxEnergy = 1000;
+        let maxEnergy = 1000;
+        let tapPower = 1;
+        
+        // Boost Değişkenleri
+        let fullEnergyDaily = 2;
+        let multitapPrice = 121;
+        let energyLimitPrice = 9999;
 
-        const balanceDisplay = document.getElementById('balance');
-        const energyNumDisplay = document.getElementById('energy-num');
-        const energyBarDisplay = document.getElementById('energy-bar');
-        const spyderEmoji = document.getElementById('spyder-emoji');
-        const levelBar = document.getElementById('level-bar');
+        // UI Elemanları
+        const coinEl = document.getElementById('balance');
+        const energyEl = document.getElementById('energy-num');
+        const maxEnergyEl = document.getElementById('max-energy-num');
+        const energyBar = document.getElementById('energy-bar');
+        const mtPriceEl = document.getElementById('mt-price');
+        const elPriceEl = document.getElementById('el-price');
+        const feCountEl = document.getElementById('full-energy-count');
+        const tapValEl = document.getElementById('tap-val');
+        const limitValEl = document.getElementById('limit-val');
 
-        function handleTap(e) {
-            if (e.type === 'touchstart') e.preventDefault();
-            if (energy > 0) {
-                coins += 1;
-                energy -= 1;
+        function toggleBoost() {
+            document.getElementById('boost-modal').classList.toggle('active');
+        }
+
+        // Tıklama
+        document.getElementById('spyder').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (energy >= tapPower) {
+                coins += tapPower;
+                energy -= tapPower;
                 updateUI();
+                createPlus(e.touches[0].clientX, e.touches[0].clientY);
                 tg.HapticFeedback.impactOccurred('light');
-                const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-                const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-                createPlusOne(clientX, clientY);
+            }
+        });
+
+        // MULTITAP SATIN ALMA
+        function buyMultitap() {
+            if (coins >= multitapPrice) {
+                coins -= multitapPrice;
+                tapPower += 1;
+                multitapPrice *= 2; // Fiyat 2 katına çıkar
+                updateUI();
+                tg.HapticFeedback.notificationOccurred('success');
+            } else {
+                alert("Yetersiz bakiye!");
             }
         }
 
-        // BOOST FONKSİYONU
-        function applyBoost() {
-            energy = maxEnergy; // Enerjiyi fulle
-            updateUI();
-            tg.HapticFeedback.notificationOccurred('success');
-            alert("Enerji Fullendi! 🚀");
+        // ENERJİ LİMİTİ SATIN ALMA
+        function buyEnergyLimit() {
+            if (coins >= energyLimitPrice) {
+                coins -= energyLimitPrice;
+                maxEnergy += 500;
+                energy = maxEnergy; // Artınca fulle
+                energyLimitPrice *= 2; // Fiyat 2 katına çıkar
+                updateUI();
+                tg.HapticFeedback.notificationOccurred('success');
+            } else {
+                alert("Yetersiz bakiye!");
+            }
+        }
+
+        // TAM ENERJİ KULLANMA
+        function useFullEnergy() {
+            if (fullEnergyDaily > 0) {
+                energy = maxEnergy;
+                fullEnergyDaily -= 1;
+                updateUI();
+                tg.HapticFeedback.notificationOccurred('success');
+                if(fullEnergyDaily == 0) toggleBoost();
+            } else {
+                alert("Günlük hakkın bitti!");
+            }
         }
 
         function updateUI() {
-            balanceDisplay.innerText = coins.toLocaleString();
-            energyNumDisplay.innerText = energy;
-            energyBarDisplay.style.width = (energy / maxEnergy * 100) + "%";
-            levelBar.style.width = Math.min(100, (coins / 50)) + "%";
+            coinEl.innerText = coins.toLocaleString();
+            energyEl.innerText = energy;
+            maxEnergyEl.innerText = maxEnergy;
+            energyBar.style.width = (energy / maxEnergy * 100) + "%";
+            
+            mtPriceEl.innerText = "💰 " + multitapPrice.toLocaleString();
+            elPriceEl.innerText = "💰 " + energyLimitPrice.toLocaleString();
+            feCountEl.innerText = fullEnergyDaily + "/2 Kullanılabilir";
+            
+            tapValEl.innerText = "+" + tapPower;
+            limitValEl.innerText = maxEnergy;
         }
 
-        spyderEmoji.addEventListener('touchstart', handleTap);
-        spyderEmoji.addEventListener('mousedown', handleTap);
-
-        function createPlusOne(x, y) {
-            const plusOne = document.createElement('div');
-            plusOne.className = 'plus-one';
-            plusOne.innerText = '+1';
-            plusOne.style.left = (x - 20) + 'px';
-            plusOne.style.top = (y - 40) + 'px';
-            document.body.appendChild(plusOne);
-            setTimeout(() => plusOne.remove(), 800);
+        function createPlus(x, y) {
+            const p = document.createElement('div');
+            p.className = 'plus-one';
+            p.innerText = "+" + tapPower;
+            p.style.left = (x - 20) + 'px'; p.style.top = (y - 50) + 'px';
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 700);
         }
 
+        // Otomatik Enerji Dolumu
         setInterval(() => {
             if (energy < maxEnergy) {
-                energy += 1;
+                energy = Math.min(maxEnergy, energy + 1);
                 updateUI();
             }
         }, 1500);
+
+        updateUI();
     </script>
 </body>
 </html>
