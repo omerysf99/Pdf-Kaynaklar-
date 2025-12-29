@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SpyderCoin - All-in-One Edition</title>
+    <title>SpyderCoin Pro - v2.0</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -13,117 +13,152 @@
 
     <style>
         :root {
-            --p-purple: #a855f7; --bg: #000; --card: #0f0f12;
-            --text: #fff; --dim: #71717a; --green: #10b981; --red: #ef4444;
+            --p-purple: #a855f7; --p-glow: rgba(168, 85, 247, 0.4);
+            --bg: #000; --card: #0f0f12; --text: #fff;
+            --dim: #71717a; --green: #10b981; --red: #ef4444;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
         #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .spin { width: 50px; height: 50px; border: 5px solid #111; border-top-color: var(--p-purple); border-radius: 50%; animation: s 1s linear infinite; }
+        .spin { width: 50px; height: 50px; border: 5px solid #1a1a1a; border-top-color: var(--p-purple); border-radius: 50%; animation: s 1s linear infinite; }
         @keyframes s { to { transform: rotate(360deg); } }
 
-        .view { display: none; flex-direction: column; align-items: center; padding: 20px; flex: 1; overflow-y: auto; }
+        .stage { flex: 1; overflow-y: auto; position: relative; }
+        .view { display: none; flex-direction: column; padding: 20px; min-height: 100%; animation: slideIn 0.3s ease-out; }
         .view.active { display: flex; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Oyna Sekmesi */
-        .bal-txt { font-size: 55px; font-weight: 900; margin: 20px 0; color: var(--p-purple); }
+        /* OYNA EKRANI */
+        .bal-txt { font-size: 60px; font-weight: 900; background: linear-gradient(#fff, var(--p-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 15px 0; }
         .spyder-btn { 
-            width: 220px; height: 220px; background: radial-gradient(circle, #c084fc, #a855f7); 
+            width: 240px; height: 240px; background: radial-gradient(circle, #c084fc, var(--p-purple)); 
             border-radius: 50%; display: flex; justify-content: center; align-items: center; 
-            box-shadow: 0 0 40px rgba(168, 85, 247, 0.4); cursor: pointer; transition: transform 0.05s;
+            box-shadow: 0 0 50px var(--p-glow); cursor: pointer; transition: transform 0.05s;
         }
         .spyder-btn:active { transform: scale(0.92); }
-        .spyder-btn span { font-size: 100px; pointer-events: none; }
+        .spyder-btn span { font-size: 110px; pointer-events: none; }
 
-        /* Kartlar & Formlar */
-        .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 15px; padding: 18px; width: 100%; margin-top: 15px; }
-        input { width: 100%; background: #000; border: 1px solid #222; color: #fff; padding: 12px; border-radius: 10px; margin: 8px 0; text-align: center; font-size: 16px; outline: none; }
-        .btn-main { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; }
-        .btn-main:disabled { opacity: 0.3; }
+        /* KARTLAR */
+        .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 20px; padding: 18px; width: 100%; margin-bottom: 15px; }
+        .card-header { font-size: 12px; color: var(--dim); font-weight: bold; margin-bottom: 12px; letter-spacing: 1px; }
 
-        /* Navigasyon */
-        nav { width: 100%; height: 85px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1a1a1f; padding-bottom: 5px; }
-        .n-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); font-size: 11px; cursor: pointer; }
-        .n-item.active { color: var(--p-purple); }
-        .n-item i { font-style: normal; font-size: 24px; margin-bottom: 4px; }
+        /* GÖREVLER & BUTONLAR */
+        .task-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #1a1a1f; }
+        .task-info b { font-size: 14px; display: block; }
+        .task-info span { font-size: 12px; color: var(--p-purple); font-weight: bold; }
+        
+        .btn-action { background: var(--p-purple); color: #fff; border: none; padding: 10px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-action:disabled { background: #27272a; color: var(--dim); cursor: not-allowed; }
+        .btn-full { width: 100%; padding: 16px; font-size: 16px; margin-top: 10px; }
 
-        .pop { position: absolute; color: #fff; font-size: 30px; font-weight: bold; pointer-events: none; animation: up 0.6s forwards; z-index: 100; }
-        @keyframes up { to { transform: translateY(-100px); opacity: 0; } }
+        /* INPUTLAR */
+        input { width: 100%; background: #000; border: 1px solid #27272a; color: #fff; padding: 14px; border-radius: 12px; text-align: center; font-size: 18px; outline: none; margin: 10px 0; }
+        input:focus { border-color: var(--p-purple); }
+
+        /* NAV */
+        nav { height: 85px; background: rgba(0,0,0,0.9); display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1a1a1f; position: sticky; bottom: 0; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); font-size: 10px; cursor: pointer; }
+        .nav-item.active { color: var(--p-purple); }
+        .nav-item i { font-style: normal; font-size: 24px; margin-bottom: 4px; }
+
+        .pop { position: absolute; color: #fff; font-size: 35px; font-weight: 900; pointer-events: none; animation: popUp 0.7s forwards; z-index: 1000; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        @keyframes popUp { to { transform: translateY(-120px); opacity: 0; } }
     </style>
 </head>
 <body>
 
     <div id="loader">
         <div class="spin"></div>
-        <p style="color:var(--p-purple); margin-top:15px;">SPYDER ENGINE LOADING...</p>
+        <p style="color:var(--p-purple); margin-top:15px; font-weight:bold;">SPYDER NETWORK CONNECTING...</p>
     </div>
 
-    <section id="p-home" class="view active">
-        <h1 class="bal-txt" id="ui-bal">0</h1>
-        <div class="spyder-btn" id="tap-node"><span>🕷️</span></div>
-        <div class="card" style="margin-top:auto;">
-            <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px;">
-                <span>⚡ Energy</span>
-                <span id="ui-nrg">1000/1000</span>
+    <main class="stage">
+        <section id="p-home" class="view active">
+            <div style="text-align:center;">
+                <p style="font-size:12px; color:var(--dim); font-weight:bold;">TOTAL SPYDER</p>
+                <h1 class="bal-txt" id="ui-bal">0</h1>
             </div>
-            <div style="height:6px; background:#111; border-radius:3px; overflow:hidden;">
-                <div id="ui-nrg-bar" style="height:100%; background:var(--p-purple); width:100%;"></div>
+            
+            <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+                <div class="spyder-btn" id="tap-engine"><span>🕷️</span></div>
             </div>
-        </div>
-    </section>
 
-    <section id="p-tasks" class="view">
-        <h2 style="align-self:flex-start; margin-bottom:15px;">Missions</h2>
-        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-                <b style="font-size:14px;">Join Official Channel</b><br>
-                <span style="color:var(--p-purple); font-size:13px; font-weight:bold;">+500 SPYDER</span>
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; margin-bottom:8px;">
+                    <span style="color:var(--p-purple)">⚡ ENERGY</span>
+                    <span id="ui-nrg">1000/1000</span>
+                </div>
+                <div style="height:8px; background:#1a1a1a; border-radius:4px; overflow:hidden;">
+                    <div id="ui-nrg-bar" style="height:100%; background:var(--p-purple); width:100%; transition:0.3s;"></div>
+                </div>
             </div>
-            <button class="btn-main" style="width:auto; padding:8px 20px;" id="task-btn" onclick="Game.doTask()">JOIN</button>
-        </div>
-    </section>
+        </section>
 
-    <section id="p-vault" class="view">
-        <h2 style="align-self:flex-start; margin-bottom:15px;">Vault Swap</h2>
-        <div class="card">
-            <p style="font-size:11px; color:var(--dim); text-align:center;">CONVERT COINS TO USDT</p>
-            <input type="number" id="swap-in" value="1000" oninput="Finance.calcSwap()">
-            <p style="text-align:center; margin:5px 0;">⬇️</p>
-            <div style="background:#000; padding:15px; border-radius:10px; text-align:center; border:1px solid #111;">
-                <span style="color:var(--green); font-size:24px; font-weight:bold;">$<span id="swap-out">0.010</span></span>
+        <section id="p-tasks" class="view">
+            <h2 style="margin-bottom:20px;">Missions</h2>
+            <div class="card">
+                <div class="card-header">DAILY TASKS</div>
+                <div class="task-row">
+                    <div class="task-info">
+                        <b>Spyder Community</b>
+                        <span>+1,000 SPYDER</span>
+                    </div>
+                    <button id="task-btn-1" class="btn-action" onclick="Tasks.do(1, 1000, 'https://t.me/SpyderCommunity')">JOIN</button>
+                </div>
+                <div class="task-row">
+                    <div class="task-info">
+                        <b>Follow X (Twitter)</b>
+                        <span>+500 SPYDER</span>
+                    </div>
+                    <button id="task-btn-2" class="btn-action" onclick="Tasks.do(2, 500, 'https://x.com')">FOLLOW</button>
+                </div>
             </div>
-            <button class="btn-main" style="margin-top:15px;" onclick="Finance.swap()">SWAP NOW</button>
-        </div>
-    </section>
+        </section>
 
-    <section id="p-wallet" class="view">
-        <h2 style="align-self:flex-start; margin-bottom:15px;">Finance</h2>
-        <div class="card" style="border:1px solid var(--green); text-align:center;">
-            <p style="font-size:11px; color:var(--dim);">USDT BALANCE</p>
-            <h1 style="color:var(--green); font-size:45px;">$<span id="ui-usdt">0.000</span></h1>
-        </div>
-
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:10px;">
-                <span>Ads Verification:</span>
-                <b id="ui-req-ads" style="color:var(--red);">0 / 10</b>
+        <section id="p-vault" class="view">
+            <h2 style="margin-bottom:20px;">Spyder Vault</h2>
+            <div class="card">
+                <div class="card-header">CONVERT COINS TO USDT</div>
+                <p style="font-size:12px; color:var(--dim);">Rate: 1,000 SPYDER = $0.010 USDT</p>
+                <input type="number" id="swap-input" value="1000" oninput="Finance.syncSwap()">
+                <div style="text-align:center; font-size:20px; margin:5px;">⬇️</div>
+                <div style="background:#000; padding:20px; border-radius:15px; text-align:center; border:1px solid #1a1a1f;">
+                    <span style="color:var(--green); font-size:28px; font-weight:bold;">$<span id="swap-output">0.010</span></span>
+                </div>
+                <button class="btn-action btn-full" onclick="Finance.executeSwap()">CONFIRM SWAP</button>
             </div>
-            <input type="number" id="wd-amount" value="0.005" step="0.005" oninput="Finance.calcWd()">
-            <input type="text" id="wd-addr" placeholder="USDT BEP20 Address">
-            <button id="btn-wd" class="btn-main" onclick="Finance.withdraw()">WITHDRAW</button>
-            <p id="ui-hint" style="font-size:10px; color:var(--dim); text-align:center; margin-top:10px;">
-                Min: $0.005 | Her $0.005 için +10 Reklam
-            </p>
-        </div>
-    </section>
+        </section>
+
+        <section id="p-wallet" class="view">
+            <h2 style="margin-bottom:20px;">Finance</h2>
+            <div class="card" style="border:1px solid var(--green); background:rgba(16,185,129,0.05); text-align:center; padding:30px;">
+                <p style="font-size:12px; color:var(--dim); font-weight:bold;">USDT BALANCE</p>
+                <h1 style="color:var(--green); font-size:50px;">$<span id="ui-usdt">0.000</span></h1>
+            </div>
+
+            <div class="card">
+                <div class="card-header">WITHDRAWAL SYSTEM</div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="font-size:13px;">Required Ads:</span>
+                    <b id="ui-ads-check" style="color:var(--red);">0 / 10</b>
+                </div>
+                <input type="number" id="wd-amount" value="0.005" step="0.005" oninput="Finance.syncWd()">
+                <input type="text" id="wd-address" placeholder="Enter USDT BEP20 Address">
+                <button id="btn-withdraw" class="btn-action btn-full" onclick="Finance.executeWd()">WITHDRAW NOW</button>
+                <p id="wd-hint" style="font-size:10px; color:var(--dim); text-align:center; margin-top:10px;">
+                    Min: $0.005 | Every $0.005 requires +10 Ads.
+                </p>
+            </div>
+        </section>
+    </main>
 
     <nav>
-        <div class="n-item active" onclick="nav('p-home', this)"><i>🎮</i>Oyna</div>
-        <div class="n-item" onclick="nav('p-tasks', this)"><i>📋</i>Görev</div>
-        <div class="n-item" onclick="nav('p-vault', this)"><i>🏛️</i>Vault</div>
-        <div class="n-item" onclick="nav('p-wallet', this)"><i>💰</i>Cüzdan</div>
+        <div class="nav-item active" onclick="nav('p-home', this)"><i>🎮</i>Oyna</div>
+        <div class="nav-item" onclick="nav('p-tasks', this)"><i>📋</i>Görev</div>
+        <div class="nav-item" onclick="nav('p-vault', this)"><i>🏛️</i>Vault</div>
+        <div class="nav-item" onclick="nav('p-wallet', this)"><i>💰</i>Cüzdan</div>
     </nav>
 
     <script>
@@ -138,80 +173,89 @@
         const db = firebase.firestore();
         const tg = window.Telegram.WebApp;
 
-        let user = { bal: 0, nrg: 1000, usdt: 0, ads: 0, task: false };
-        let ready = false;
+        let user = { bal: 0, nrg: 1000, usdt: 0, ads: 0, tasks: [] };
+        let isReady = false;
 
-        const Game = {
+        const App = {
             init: async () => {
-                setTimeout(() => { if(!ready) Game.start(); }, 3500);
-                const uid = tg.initDataUnsafe?.user?.id?.toString() || "8392479231";
+                setTimeout(() => { if(!isReady) App.start(); }, 3000);
+                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_test";
                 const doc = await db.collection("users").doc(uid).get();
                 if(doc.exists) user = { ...user, ...doc.data() };
-                Game.start();
+                App.start();
             },
             start: () => {
-                ready = true;
+                isReady = true;
                 document.getElementById('loader').style.display = 'none';
                 UI.refresh();
-                setInterval(() => { if(user.nrg < 1000) { user.nrg++; UI.refresh(); } }, 2500);
+                setInterval(() => { if(user.nrg < 1000) { user.nrg += 1; UI.refresh(); } }, 2000);
             },
             tap: (e) => {
-                if(!ready || user.nrg <= 0) return;
-                user.bal += 1; // +1 Coin
+                if(!isReady || user.nrg <= 0) return;
+                user.bal += 1;
                 user.nrg -= 1;
-                UI.pop(e); UI.refresh();
+                UI.spawnPop(e);
+                UI.refresh();
                 tg.HapticFeedback.impactOccurred('light');
-                if(user.bal % 50 === 0) Game.ad();
-                if(user.bal % 25 === 0) Game.save();
+                if(user.bal % 50 === 0) App.showAd();
+                if(user.bal % 20 === 0) App.save();
             },
-            ad: () => {
+            showAd: () => {
                 if(window.showAdexora) {
-                    window.showAdexora().then(() => { user.ads++; UI.refresh(); Game.save(); });
+                    window.showAdexora().then(() => { user.ads++; UI.refresh(); App.save(); });
                 }
             },
-            doTask: () => {
-                if(user.task) return;
-                tg.openTelegramLink('https://t.me/SpyderCommunity');
-                setTimeout(() => {
-                    user.bal += 500; user.task = true;
-                    tg.showAlert("Missions Completed! +500 Spyder");
-                    UI.refresh(); Game.save();
-                }, 7000);
-            },
             save: () => {
-                const uid = tg.initDataUnsafe?.user?.id?.toString() || "8392479231";
+                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_test";
                 db.collection("users").doc(uid).set(user, { merge: true });
             }
         };
 
+        const Tasks = {
+            do: (id, reward, link) => {
+                if(user.tasks.includes(id)) return;
+                tg.openLink(link);
+                const btn = document.getElementById(`task-btn-${id}`);
+                btn.innerText = "VERIFYING...";
+                setTimeout(() => {
+                    user.bal += reward;
+                    user.tasks.push(id);
+                    tg.showAlert(`Successfully! +${reward} Spyder added.`);
+                    UI.refresh(); App.save();
+                }, 6000);
+            }
+        };
+
         const Finance = {
-            calcSwap: () => {
-                const val = document.getElementById('swap-in').value;
-                document.getElementById('swap-out').innerText = (val * 0.00001).toFixed(3);
+            syncSwap: () => {
+                const val = document.getElementById('swap-input').value;
+                document.getElementById('swap-output').innerText = (val * 0.00001).toFixed(3);
             },
-            swap: () => {
-                const val = parseInt(document.getElementById('swap-in').value);
-                if(user.bal < val) return tg.showAlert("Yetersiz Bakiye!");
-                user.bal -= val; user.usdt += (val * 0.00001);
-                UI.refresh(); Game.save();
-                tg.showAlert("Takas Başarılı!");
+            executeSwap: () => {
+                const val = parseInt(document.getElementById('swap-input').value);
+                if(user.bal < val || val < 100) return tg.showAlert("Insufficient balance (Min 100)!");
+                user.bal -= val;
+                user.usdt += (val * 0.00001);
+                tg.showAlert("Swap completed!");
+                UI.refresh(); App.save();
             },
-            calcWd: () => {
+            syncWd: () => {
                 const amt = parseFloat(document.getElementById('wd-amount').value) || 0;
                 const reqAds = Math.max(10, Math.ceil(amt / 0.005) * 10);
-                
-                const uiAds = document.getElementById('ui-req-ads');
+                const uiAds = document.getElementById('ui-ads-check');
                 uiAds.innerText = `${user.ads} / ${reqAds}`;
                 uiAds.style.color = user.ads >= reqAds ? "var(--green)" : "var(--red)";
                 
                 const can = (amt >= 0.005 && user.usdt >= amt && user.ads >= reqAds);
-                document.getElementById('btn-wd').disabled = !can;
-                document.getElementById('ui-hint').innerText = `Min: $0.005 | $${amt.toFixed(3)} için ${reqAds} Reklam`;
+                document.getElementById('btn-withdraw').disabled = !can;
+                document.getElementById('wd-hint').innerText = `Amount $${amt.toFixed(3)} requires ${reqAds} Ads.`;
             },
-            withdraw: () => {
-                tg.showAlert("Çekim talebi gönderildi!");
+            executeWd: () => {
+                const addr = document.getElementById('wd-address').value;
+                if(addr.length < 10) return tg.showAlert("Invalid BEP20 Address!");
+                tg.showAlert("Withdrawal request sent to network!");
                 user.usdt = 0; user.ads = 0;
-                UI.refresh(); Game.save();
+                UI.refresh(); App.save();
             }
         };
 
@@ -222,34 +266,36 @@
                 document.getElementById('ui-nrg-bar').style.width = (user.nrg / 10) + "%";
                 document.getElementById('ui-usdt').innerText = user.usdt.toFixed(3);
                 
-                const tBtn = document.getElementById('task-btn');
-                if(user.task) { tBtn.innerText = "DONE"; tBtn.disabled = true; }
+                user.tasks.forEach(id => {
+                    const b = document.getElementById(`task-btn-${id}`);
+                    if(b) { b.innerText = "DONE"; b.disabled = true; b.style.background = "#1a1a1f"; }
+                });
                 
-                Finance.calcSwap(); Finance.calcWd();
+                Finance.syncSwap(); Finance.syncWd();
             },
-            pop: (e) => {
+            spawnPop: (e) => {
                 const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
                 const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
                 const p = document.createElement('div');
                 p.className = 'pop'; p.innerText = '+1';
-                p.style.left = x + 'px'; p.style.top = y + 'px';
+                p.style.left = (x - 15) + 'px'; p.style.top = (y - 30) + 'px';
                 document.body.appendChild(p);
-                setTimeout(() => p.remove(), 600);
+                setTimeout(() => p.remove(), 700);
             }
         };
 
         function nav(id, el) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.n-item').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             el.classList.add('active');
         }
 
-        const node = document.getElementById('tap-node');
-        node.addEventListener('touchstart', (e) => { e.preventDefault(); Game.tap(e); });
-        node.addEventListener('mousedown', (e) => { Game.tap(e); });
+        const btn = document.getElementById('tap-engine');
+        btn.addEventListener('touchstart', (e) => { e.preventDefault(); App.tap(e); });
+        btn.addEventListener('mousedown', (e) => { App.tap(e); });
 
-        window.onload = Game.init;
+        window.onload = App.init;
     </script>
 </body>
 </html>
