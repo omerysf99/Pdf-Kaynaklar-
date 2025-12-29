@@ -3,337 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin Pro</title>
+    <title>SpyderCoin - Wallet Edition</title>
     
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
-        :root { --bg: #0b0b0d; --card: #1c1c1e; --blue: #3a47ff; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; user-select: none; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+        :root { --bg: #0b0b0d; --card: #1c1c1e; --blue: #3a47ff; --green: #00d084; --text: #ffffff; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; height: 100vh; overflow: hidden; }
 
-        /* Üst Panel */
-        .header-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 92%; margin-top: 20px; }
+        /* Sayfa Yapısı */
+        .page { display: none; height: 100vh; flex-direction: column; align-items: center; padding-top: 20px; }
+        .page.active { display: flex; }
+
+        /* Cüzdan Kartı */
+        .wallet-card { width: 90%; background: linear-gradient(135deg, #1c1c1e 0%, #0b0b0d 100%); border: 1px solid #333; border-radius: 25px; padding: 25px; box-sizing: border-box; text-align: center; margin-top: 20px; }
+        .wallet-label { color: #888; font-size: 14px; margin-bottom: 10px; }
+        .wallet-usd { font-size: 38px; font-weight: 900; color: var(--green); margin: 5px 0; }
+        .wallet-token { font-size: 18px; color: #ccc; }
+        
+        .price-info { background: rgba(58, 71, 255, 0.1); border: 1px solid var(--blue); padding: 10px; border-radius: 12px; margin-top: 20px; font-size: 13px; }
+        .listing-date { margin-top: 30px; color: #ff9f0a; font-weight: bold; font-size: 14px; background: rgba(255, 159, 10, 0.1); padding: 15px; border-radius: 15px; width: 85%; text-align: center; border: 1px dashed #ff9f0a; }
+
+        /* Mevcut Oyun CSS'leri (Kısaltıldı) */
+        .header-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 92%; }
         .stat-box { background: var(--card); border: 1px solid #2c2c2e; padding: 12px 5px; border-radius: 15px; text-align: center; }
-        .stat-label { font-size: 10px; color: #888; display: block; margin-bottom: 5px; }
-        .stat-val { font-size: 14px; font-weight: bold; }
-
-        /* Bakiye */
         .balance-section { margin-top: 30px; display: flex; align-items: center; gap: 12px; }
-        .coin-logo { width: 45px; height: 45px; background: linear-gradient(180deg, #ffe000, #ff9000); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: rgba(0,0,0,0.6); border: 2px solid #fff; }
         .balance-text { font-size: 50px; font-weight: 900; }
-
-        /* Tıklama Alanı */
-        .tap-zone { position: relative; width: 300px; height: 300px; margin-top: 40px; display: flex; justify-content: center; align-items: center; cursor: pointer; touch-action: none; transition: opacity 0.3s; }
-        .blue-ring { position: absolute; width: 260px; height: 260px; border: 6px solid var(--blue); border-radius: 50%; box-shadow: 0 0 40px rgba(58, 71, 255, 0.3); pointer-events: none; }
-        #spider-main { width: 200px; height: 200px; pointer-events: none; transition: transform 0.05s; }
-
-        /* Reklam Butonu */
-        #ad-btn { background: var(--blue); color: white; border: none; padding: 15px 30px; border-radius: 12px; font-weight: bold; font-size: 16px; display: none; position: absolute; top: 50%; z-index: 50; cursor: pointer; box-shadow: 0 0 20px rgba(58, 71, 255, 0.5); }
-
-        /* Enerji Paneli */
-        .energy-section { width: 90%; margin-top: auto; margin-bottom: 100px; } /* Menü için boşluk bırakıldı */
-        .energy-info { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: bold; margin-bottom: 8px; }
-        .energy-bar-bg { width: 100%; height: 12px; background: #1a1a1a; border-radius: 20px; overflow: hidden; border: 1px solid #333; }
+        .tap-zone { position: relative; width: 300px; height: 300px; margin-top: 40px; display: flex; justify-content: center; align-items: center; touch-action: none; }
+        #spider-main { width: 200px; height: 200px; transition: transform 0.05s; }
+        #ad-btn { background: var(--blue); color: white; border: none; padding: 15px 30px; border-radius: 12px; font-weight: bold; position: absolute; z-index: 50; display: none; }
+        .energy-section { width: 90%; margin-top: auto; margin-bottom: 100px; }
+        .energy-bar-bg { width: 100%; height: 12px; background: #1a1a1a; border-radius: 20px; overflow: hidden; }
         .energy-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ffd60a, #ff9f0a); transition: width 0.3s; }
 
-        /* 📱 ALT SEKME MENÜSÜ */
-        .nav-bar { position: fixed; bottom: 15px; width: 92%; background: #151517; height: 70px; border-radius: 20px; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; border: 1px solid #2c2c2e; box-shadow: 0 -5px 25px rgba(0,0,0,0.5); z-index: 100; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 11px; gap: 4px; cursor: pointer; }
+        /* Alt Menü */
+        .nav-bar { position: fixed; bottom: 15px; width: 92%; left: 4%; background: #151517; height: 70px; border-radius: 20px; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; border: 1px solid #2c2c2e; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; font-size: 11px; gap: 4px; cursor: pointer; }
         .nav-item.active { color: var(--blue); }
-        .nav-icon { font-size: 20px; }
 
-        /* Efektler */
-        .web-effect { position: absolute; font-size: 45px; pointer-events: none; animation: webPop 0.6s forwards; z-index: 100; }
-        @keyframes webPop { 0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.4) rotate(15deg); } 100% { opacity: 0; transform: scale(1.1) translateY(-80px); } }
+        .web-effect { position: absolute; font-size: 45px; pointer-events: none; animation: webPop 0.6s forwards; }
+        @keyframes webPop { 0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.4); } 100% { opacity: 0; transform: scale(1.1) translateY(-80px); } }
     </style>
 </head>
 <body>
 
-    <div class="header-stats">
-        <div class="stat-box"><span class="stat-label">Tık Gücü</span><div class="stat-val">🟡 +1</div></div>
-        <div class="stat-box"><span class="stat-label">Hakkın</span><div class="stat-val">100</div></div>
-        <div class="stat-box"><span class="stat-label">Lig</span><div class="stat-val">Bronze</div></div>
+    <div id="game-page" class="page active">
+        <div class="header-stats">
+            <div class="stat-box"><span class="stat-label">Tık Gücü</span><div class="stat-val">🟡 +1</div></div>
+            <div class="stat-box"><span class="stat-label">Hakkın</span><div class="stat-val">100</div></div>
+            <div class="stat-box"><span class="stat-label">Lig</span><div class="stat-val">Bronze</div></div>
+        </div>
+        <div class="balance-section">
+            <div class="coin-logo">$</div>
+            <div class="balance-text" id="ui-balance">0</div>
+        </div>
+        <div class="tap-zone" id="tap-area">
+            <img src="https://img.icons8.com/color/512/spider.png" id="spider-main">
+            <button id="ad-btn" onclick="getEnergy()">⚡ Enerji Al</button>
+        </div>
+        <div class="energy-section">
+            <div class="energy-info">⚡ <span id="ui-energy">100</span> / 100</div>
+            <div class="energy-bar-bg"><div class="energy-bar-fill" id="energy-fill"></div></div>
+        </div>
     </div>
 
-    <div class="balance-section">
-        <div class="coin-logo">$</div>
-        <div class="balance-text" id="ui-balance">0</div>
-    </div>
+    <div id="wallet-page" class="page">
+        <h2 style="margin-top: 10px;">Cüzdanım</h2>
+        <div class="wallet-card">
+            <div class="wallet-label">Tahmini Bakiye ($USD)</div>
+            <div class="wallet-usd" id="wallet-usd-val">$0.00</div>
+            <div class="wallet-token" id="wallet-token-val">0 SPYDER</div>
+            <div class="price-info">
+                Anlık Fiyat: <span id="current-price-display" style="color: var(--green); font-weight: bold;">$0.00021</span>
+            </div>
+        </div>
 
-    <div class="tap-zone" id="tap-area">
-        <div class="blue-ring"></div>
-        <img src="https://img.icons8.com/color/512/spider.png" id="spider-main">
-        <button id="ad-btn" onclick="getEnergy()">⚡ Enerji Al</button>
-    </div>
-
-    <div class="energy-section">
-        <div class="energy-info">⚡ <span id="ui-energy">100</span> / 100</div>
-        <div class="energy-bar-bg"><div class="energy-bar-fill" id="energy-fill"></div></div>
+        <div class="listing-date">
+            🚀 Listeleme ve Ödemeler:<br>
+            <span style="font-size: 18px;">2026 - 4. Çeyrek</span>
+        </div>
+        
+        <p style="color: #666; font-size: 12px; width: 80%; text-align: center; margin-top: 20px;">
+            Ödemeler ağ yoğunluğuna göre Tonkeeper veya Telegram Wallet üzerinden yapılacaktır.
+        </p>
     </div>
 
     <nav class="nav-bar">
-        <div class="nav-item active">
-            <span class="nav-icon">🎮</span>
-            <span>Oyna</span>
-        </div>
-        <div class="nav-item" onclick="alert('Görevler yakında!')">
-            <span class="nav-icon">📋</span>
-            <span>Görevler</span>
-        </div>
-        <div class="nav-item" onclick="alert('Arkadaşlarını davet et!')">
-            <span class="nav-icon">👥</span>
-            <span>Arkadaş</span>
-        </div>
-        <div class="nav-item" onclick="alert('Cüzdan bağlanıyor...')">
-            <span class="nav-icon">💰</span>
-            <span>Cüzdan</span>
-        </div>
+        <div class="nav-item active" onclick="showPage('game')"><span>🎮</span><span>Oyna</span></div>
+        <div class="nav-item" onclick="alert('Yakında!')"><span>📋</span><span>Görevler</span></div>
+        <div class="nav-item" onclick="alert('Yakında!')"><span>👥</span><span>Arkadaş</span></div>
+        <div class="nav-item" id="nav-wallet" onclick="showPage('wallet')"><span>💰</span><span>Cüzdan</span></div>
     </nav>
 
     <script>
+        // 🛠️ ADMIN PANELİ - Fiyatı Buradan Değiştir
+        let coinPrice = 0.00021; // Bu değeri değiştirirsen cüzdandaki $ artar/azalır.
+
         let balance = parseInt(localStorage.getItem('spyderBalance')) || 0;
         let energy = parseInt(localStorage.getItem('spyderEnergy')) ?? 100;
 
-        const uiBalance = document.getElementById('ui-balance');
-        const uiEnergyNum = document.getElementById('ui-energy');
-        const uiEnergyBar = document.getElementById('energy-fill');
-        const adBtn = document.getElementById('ad-btn');
-        const tapArea = document.getElementById('tap-area');
-
         function updateUI() {
-            uiBalance.innerText = balance.toLocaleString();
-            uiEnergyNum.innerText = energy;
-            uiEnergyBar.style.width = (energy / 100 * 100) + "%";
+            document.getElementById('ui-balance').innerText = balance.toLocaleString();
+            document.getElementById('ui-energy').innerText = energy;
+            document.getElementById('energy-fill').style.width = (energy / 100 * 100) + "%";
             
+            // Cüzdan Verileri
+            document.getElementById('wallet-token-val').innerText = balance.toLocaleString() + " SPYDER";
+            document.getElementById('wallet-usd-val').innerText = "$" + (balance * coinPrice).toFixed(2);
+            document.getElementById('current-price-display').innerText = "$" + coinPrice;
+
             if (energy <= 0) {
-                adBtn.style.display = "block";
-                tapArea.style.opacity = "0.2";
+                document.getElementById('ad-btn').style.display = "block";
+                document.getElementById('tap-area').style.opacity = "0.2";
             } else {
-                adBtn.style.display = "none";
-                tapArea.style.opacity = "1";
+                document.getElementById('ad-btn').style.display = "none";
+                document.getElementById('tap-area').style.opacity = "1";
             }
 
             localStorage.setItem('spyderBalance', balance);
             localStorage.setItem('spyderEnergy', energy);
         }
 
-        function getEnergy() {
-            if (window.showAdexora) {
-                window.showAdexora()
-                    .then(() => {
-                        energy = 100; 
-                        updateUI();
-                        console.log('Reklam bitti, enerji 100!');
-                    })
-                    .catch(e => {
-                        console.error('Ad failed:', e);
-                        alert("Reklam şu an hazır değil!");
-                    });
-            } else {
-                alert("SDK yüklenemedi!");
-            }
-        }
-
-        function handleTap(x, y) {
-            if (energy > 0) {
-                balance += 1; 
-                energy -= 1;  
-                updateUI();
-                
-                const web = document.createElement('div');
-                web.className = 'web-effect';
-                web.innerText = "🕸️";
-                web.style.left = (x - 20) + "px";
-                web.style.top = (y - 40) + "px";
-                document.body.appendChild(web);
-                setTimeout(() => web.remove(), 600);
-
-                const spider = document.getElementById('spider-main');
-                spider.style.transform = "scale(0.9)";
-                setTimeout(() => spider.style.transform = "scale(1)", 50);
-            }
-        }
-
-        tapArea.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            for(let i=0; i<e.changedTouches.length; i++) {
-                handleTap(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
-            }
-        });
-
-        tapArea.addEventListener('mousedown', (e) => {
-            handleTap(e.clientX, e.clientY);
-        });
-
-        updateUI();
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin Pro</title>
-    
-    <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
-
-    <style>
-        :root { --bg: #0b0b0d; --card: #1c1c1e; --blue: #3a47ff; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; user-select: none; overflow: hidden; -webkit-tap-highlight-color: transparent; }
-
-        /* Üst Panel */
-        .header-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 92%; margin-top: 20px; }
-        .stat-box { background: var(--card); border: 1px solid #2c2c2e; padding: 12px 5px; border-radius: 15px; text-align: center; }
-        .stat-label { font-size: 10px; color: #888; display: block; margin-bottom: 5px; }
-        .stat-val { font-size: 14px; font-weight: bold; }
-
-        /* Bakiye */
-        .balance-section { margin-top: 30px; display: flex; align-items: center; gap: 12px; }
-        .coin-logo { width: 45px; height: 45px; background: linear-gradient(180deg, #ffe000, #ff9000); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: rgba(0,0,0,0.6); border: 2px solid #fff; }
-        .balance-text { font-size: 50px; font-weight: 900; }
-
-        /* Tıklama Alanı */
-        .tap-zone { position: relative; width: 300px; height: 300px; margin-top: 40px; display: flex; justify-content: center; align-items: center; cursor: pointer; touch-action: none; transition: opacity 0.3s; }
-        .blue-ring { position: absolute; width: 260px; height: 260px; border: 6px solid var(--blue); border-radius: 50%; box-shadow: 0 0 40px rgba(58, 71, 255, 0.3); pointer-events: none; }
-        #spider-main { width: 200px; height: 200px; pointer-events: none; transition: transform 0.05s; }
-
-        /* Reklam Butonu */
-        #ad-btn { background: var(--blue); color: white; border: none; padding: 15px 30px; border-radius: 12px; font-weight: bold; font-size: 16px; display: none; position: absolute; top: 50%; z-index: 50; cursor: pointer; box-shadow: 0 0 20px rgba(58, 71, 255, 0.5); }
-
-        /* Enerji Paneli */
-        .energy-section { width: 90%; margin-top: auto; margin-bottom: 100px; } /* Menü için boşluk bırakıldı */
-        .energy-info { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: bold; margin-bottom: 8px; }
-        .energy-bar-bg { width: 100%; height: 12px; background: #1a1a1a; border-radius: 20px; overflow: hidden; border: 1px solid #333; }
-        .energy-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ffd60a, #ff9f0a); transition: width 0.3s; }
-
-        /* 📱 ALT SEKME MENÜSÜ */
-        .nav-bar { position: fixed; bottom: 15px; width: 92%; background: #151517; height: 70px; border-radius: 20px; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; border: 1px solid #2c2c2e; box-shadow: 0 -5px 25px rgba(0,0,0,0.5); z-index: 100; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 11px; gap: 4px; cursor: pointer; }
-        .nav-item.active { color: var(--blue); }
-        .nav-icon { font-size: 20px; }
-
-        /* Efektler */
-        .web-effect { position: absolute; font-size: 45px; pointer-events: none; animation: webPop 0.6s forwards; z-index: 100; }
-        @keyframes webPop { 0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.4) rotate(15deg); } 100% { opacity: 0; transform: scale(1.1) translateY(-80px); } }
-    </style>
-</head>
-<body>
-
-    <div class="header-stats">
-        <div class="stat-box"><span class="stat-label">Tık Gücü</span><div class="stat-val">🟡 +1</div></div>
-        <div class="stat-box"><span class="stat-label">Hakkın</span><div class="stat-val">100</div></div>
-        <div class="stat-box"><span class="stat-label">Lig</span><div class="stat-val">Bronze</div></div>
-    </div>
-
-    <div class="balance-section">
-        <div class="coin-logo">$</div>
-        <div class="balance-text" id="ui-balance">0</div>
-    </div>
-
-    <div class="tap-zone" id="tap-area">
-        <div class="blue-ring"></div>
-        <img src="https://img.icons8.com/color/512/spider.png" id="spider-main">
-        <button id="ad-btn" onclick="getEnergy()">⚡ Enerji Al</button>
-    </div>
-
-    <div class="energy-section">
-        <div class="energy-info">⚡ <span id="ui-energy">100</span> / 100</div>
-        <div class="energy-bar-bg"><div class="energy-bar-fill" id="energy-fill"></div></div>
-    </div>
-
-    <nav class="nav-bar">
-        <div class="nav-item active">
-            <span class="nav-icon">🎮</span>
-            <span>Oyna</span>
-        </div>
-        <div class="nav-item" onclick="alert('Görevler yakında!')">
-            <span class="nav-icon">📋</span>
-            <span>Görevler</span>
-        </div>
-        <div class="nav-item" onclick="alert('Arkadaşlarını davet et!')">
-            <span class="nav-icon">👥</span>
-            <span>Arkadaş</span>
-        </div>
-        <div class="nav-item" onclick="alert('Cüzdan bağlanıyor...')">
-            <span class="nav-icon">💰</span>
-            <span>Cüzdan</span>
-        </div>
-    </nav>
-
-    <script>
-        let balance = parseInt(localStorage.getItem('spyderBalance')) || 0;
-        let energy = parseInt(localStorage.getItem('spyderEnergy')) ?? 100;
-
-        const uiBalance = document.getElementById('ui-balance');
-        const uiEnergyNum = document.getElementById('ui-energy');
-        const uiEnergyBar = document.getElementById('energy-fill');
-        const adBtn = document.getElementById('ad-btn');
-        const tapArea = document.getElementById('tap-area');
-
-        function updateUI() {
-            uiBalance.innerText = balance.toLocaleString();
-            uiEnergyNum.innerText = energy;
-            uiEnergyBar.style.width = (energy / 100 * 100) + "%";
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             
-            if (energy <= 0) {
-                adBtn.style.display = "block";
-                tapArea.style.opacity = "0.2";
-            } else {
-                adBtn.style.display = "none";
-                tapArea.style.opacity = "1";
-            }
-
-            localStorage.setItem('spyderBalance', balance);
-            localStorage.setItem('spyderEnergy', energy);
+            document.getElementById(pageId + '-page').classList.add('active');
+            if(pageId === 'game') document.querySelector('.nav-item:nth-child(1)').classList.add('active');
+            if(pageId === 'wallet') document.getElementById('nav-wallet').classList.add('active');
+            updateUI();
         }
 
         function getEnergy() {
             if (window.showAdexora) {
-                window.showAdexora()
-                    .then(() => {
-                        energy = 100; 
-                        updateUI();
-                        console.log('Reklam bitti, enerji 100!');
-                    })
-                    .catch(e => {
-                        console.error('Ad failed:', e);
-                        alert("Reklam şu an hazır değil!");
-                    });
-            } else {
-                alert("SDK yüklenemedi!");
-            }
+                window.showAdexora().then(() => { energy = 100; updateUI(); }).catch(e => alert("Reklam hazır değil!"));
+            } else { alert("SDK Hatası!"); }
         }
 
         function handleTap(x, y) {
             if (energy > 0) {
-                balance += 1; 
-                energy -= 1;  
-                updateUI();
-                
+                balance += 1; energy -= 1; updateUI();
                 const web = document.createElement('div');
-                web.className = 'web-effect';
-                web.innerText = "🕸️";
-                web.style.left = (x - 20) + "px";
-                web.style.top = (y - 40) + "px";
+                web.className = 'web-effect'; web.innerText = "🕸️";
+                web.style.left = (x - 20) + "px"; web.style.top = (y - 40) + "px";
                 document.body.appendChild(web);
                 setTimeout(() => web.remove(), 600);
-
                 const spider = document.getElementById('spider-main');
                 spider.style.transform = "scale(0.9)";
                 setTimeout(() => spider.style.transform = "scale(1)", 50);
             }
         }
 
-        tapArea.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            for(let i=0; i<e.changedTouches.length; i++) {
-                handleTap(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
-            }
-        });
-
-        tapArea.addEventListener('mousedown', (e) => {
-            handleTap(e.clientX, e.clientY);
-        });
+        const area = document.getElementById('tap-area');
+        area.addEventListener('touchstart', (e) => { e.preventDefault(); for(let i=0; i<e.changedTouches.length; i++) handleTap(e.changedTouches[i].clientX, e.changedTouches[i].clientY); });
+        area.addEventListener('mousedown', (e) => handleTap(e.clientX, e.clientY));
 
         updateUI();
     </script>
