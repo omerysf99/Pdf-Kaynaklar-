@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Realtime Rank</title>
+    <title>SpyderCoin - Firebase Realtime Rank</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <style>
         :root { --bg: #050505; --purple: #a855f7; --card: #151517; --text: #ffffff; --inactive: #71717a; }
         body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 0; height: 100vh; overflow: hidden; }
@@ -17,24 +21,11 @@
         .tap-zone { position: relative; width: 280px; height: 280px; display: flex; justify-content: center; align-items: center; margin: 30px 0; touch-action: none; }
         .glow { position: absolute; width: 260px; height: 260px; border: 8px solid var(--purple); border-radius: 50%; box-shadow: 0 0 40px var(--purple); }
         #spider-main { width: 190px; z-index: 10; transition: transform 0.05s; }
-        .pop { position: absolute; font-size: 40px; pointer-events: none; animation: fly 0.6s forwards; }
-        @keyframes fly { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: translateY(-130px) scale(1.6); } }
-
-        /* 🔋 ENERJİ */
-        .energy-box { width: 90%; margin-top: auto; margin-bottom: 110px; }
-        .energy-bar { width: 100%; height: 10px; background: #111; border-radius: 10px; border: 1px solid #333; overflow: hidden; }
-        #energy-fill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--purple), #4f46e5); transition: 0.3s; }
-
+        
         /* 🏆 SIRALAMA */
-        .rank-title { color: var(--purple); font-size: 24px; font-weight: bold; margin-bottom: 20px; }
-        .rank-list { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+        .rank-list { width: 100%; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding-bottom: 100px; }
         .rank-item { background: var(--card); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
         .rank-item.me { border: 1px solid var(--purple); background: rgba(168, 85, 247, 0.1); }
-
-        /* 🔐 KONTROL MERKEZİ */
-        #admin-panel { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; padding: 30px; flex-direction: column; align-items: center; }
-        .admin-card { background: var(--card); width: 100%; padding: 25px; border-radius: 20px; border: 1px solid #333; margin-top: 20px; }
-        .admin-close { background: #ff3b30; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; margin-top: auto; cursor: pointer; }
 
         /* 📱 ALT MENÜ */
         .nav-bar { position: fixed; bottom: 15px; width: 94%; left: 3%; background: rgba(21, 21, 23, 0.95); height: 70px; border-radius: 22px; display: grid; grid-template-columns: repeat(5, 1fr); border: 1px solid #2c2c2e; z-index: 1000; }
@@ -45,56 +36,29 @@
 <body>
 
     <div id="p-play" class="page active">
-        <div class="bal-text" id="ui-bal">0</div>
+        <div class="bal-text" id="ui-bal">Yükleniyor...</div>
         <div class="tap-zone" id="tap-target">
             <div class="glow"></div>
             <img src="https://api.mimic.ai/api/v1/files/image_7ba2e0.png" id="spider-main">
         </div>
-        <button id="adm-btn" style="display:none; background:none; border:1px solid var(--purple); color:var(--purple); padding:8px 15px; border-radius:10px; font-size:12px;" onclick="toggleAdmin(true)">🕵️ Kontrol Merkezi</button>
-        <div class="energy-box">
+        <div style="margin-top:auto; margin-bottom:110px; width:90%;">
             <div style="font-size:12px; margin-bottom:5px;">⚡ Enerji: <span id="ui-nrg">100</span>/100</div>
-            <div class="energy-bar"><div id="energy-fill"></div></div>
+            <div style="width:100%; height:8px; background:#111; border-radius:10px; overflow:hidden;">
+                <div id="nrg-bar" style="width:100%; height:100%; background:var(--purple); transition:0.3s;"></div>
+            </div>
         </div>
-    </div>
-
-    <div id="p-tasks" class="page">
-        <h2 style="color:var(--purple)">Görevler</h2>
-        <div class="rank-item">
-            <div><b>Telegram Kanalı</b><br><small style="color:var(--purple);">+555 SPYDER</small></div>
-            <button id="tg-btn" style="background:var(--purple); color:white; border:none; padding:8px 12px; border-radius:8px;" onclick="doTask()">Katıl</button>
-        </div>
-    </div>
-
-    <div id="p-friends" class="page">
-        <h2 style="color:var(--purple)">Arkadaşlar</h2>
-        <p style="text-align:center; color:#666;">Arkadaşlarını davet et, %10 bonus kazan!</p>
-        <button class="admin-close" style="background:var(--purple); margin-top:20px;">DAVET ET</button>
     </div>
 
     <div id="p-league" class="page">
-        <div class="rank-title">Sıralama</div>
+        <h2 style="color:var(--purple)">Sıralama</h2>
         <div class="rank-list" id="rank-container">
-            </div>
-    </div>
-
-    <div id="p-wallet" class="page">
-        <h2 style="color:var(--purple)">Cüzdan</h2>
-        <div class="admin-card" style="text-align:center;">
-            <div style="font-size:40px; color:#00d084; font-weight:900;">$0.00</div>
-            <p>Toplam: <span id="w-coin">0</span> SPYDER</p>
+            <p style="text-align:center; color:#666;">Yükleniyor...</p>
         </div>
     </div>
 
-    <div id="admin-panel">
-        <h1 style="color:var(--purple)">KONTROL MERKEZİ</h1>
-        <div class="admin-card">
-            <p>Admin: <b id="adm-name"></b></p>
-            <p>Bakiye: <b id="adm-bal">0</b></p>
-            <hr style="border:0; border-top:1px solid #222; margin:15px 0;">
-            <p style="font-size:11px; color:#666;">* Telegram Cloud Storage aktif.</p>
-        </div>
-        <button class="admin-close" onclick="toggleAdmin(false)">KAPAT</button>
-    </div>
+    <div id="p-tasks" class="page"><h2>Görevler</h2></div>
+    <div id="p-friends" class="page"><h2>Dostlar</h2></div>
+    <div id="p-wallet" class="page"><h2>Cüzdan</h2></div>
 
     <nav class="nav-bar">
         <div class="nav-item active" onclick="nav('p-play', this)"><span>🎮 Oyna</span></div>
@@ -105,75 +69,79 @@
     </nav>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        const MY_ID = 8392479231;
-        const u = tg.initDataUnsafe?.user || { id: 0, first_name: "Misafir" };
+        // FIREBASE AYARLARI (Buraya kendi config bilgilerini ekle kral)
+        const firebaseConfig = {
+            apiKey: "AIzaSy...",
+            authDomain: "spyder-coin.firebaseapp.com",
+            projectId: "spyder-coin",
+            storageBucket: "spyder-coin.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
+        };
 
-        let bal = parseInt(localStorage.getItem('spy_v9')) || 0;
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const tg = window.Telegram.WebApp;
+        const user = tg.initDataUnsafe?.user || { id: "test_8392479231", first_name: "Admin" };
+
+        let bal = 0;
         let nrg = 100;
 
-        function init() {
+        // 🟢 FIREBASE'DEN VERİ ÇEK VE OTOMATİK KAYDET
+        async function init() {
             tg.ready(); tg.expand();
-            tg.CloudStorage.getItem('spy_data_v9', (err, val) => {
-                if(!err && val) bal = parseInt(val);
-                updateUI();
-                updateRanks();
-            });
-            if (u.id === MY_ID) document.getElementById('adm-btn').style.display = 'block';
+            
+            const userRef = db.collection('users').doc(String(user.id));
+            const doc = await userRef.get();
+
+            if (!doc.exists) {
+                await userRef.set({ name: user.first_name, balance: 0, username: user.username || "" });
+            } else {
+                bal = doc.data().balance;
+            }
+            updateUI();
         }
 
         function updateUI() {
             document.getElementById('ui-bal').innerText = bal.toLocaleString();
             document.getElementById('ui-nrg').innerText = nrg;
-            document.getElementById('energy-fill').style.width = nrg + "%";
-            document.getElementById('adm-bal').innerText = bal;
-            document.getElementById('w-coin').innerText = bal.toLocaleString();
-            localStorage.setItem('spy_v9', bal);
+            document.getElementById('nrg-bar').style.width = nrg + "%";
         }
 
-        // 🏆 SIRALAMA GÜNCELLEME (EN ÇOK OLAN EN ÜSTTE)
-        function updateRanks() {
+        // 🏆 GERÇEK SIRALAMA MOTORU
+        async function getRankings() {
             const container = document.getElementById('rank-container');
-            const players = [
-                { name: u.first_name + " (Sen)", score: bal, me: true },
-                { name: "SpyderKing", score: 2500000, me: false },
-                { name: "VenomClicker", score: 1800000, me: false },
-                { name: "WebMaster", score: 1200000, me: false },
-                { name: "Shadow", score: 500000, me: false }
-            ];
+            container.innerHTML = "Yükleniyor...";
 
-            // Skora göre sırala (Büyükten küçüğe)
-            players.sort((a, b) => b.score - a.score);
-
+            // En yüksek 20 kişiyi getir
+            const snapshot = await db.collection('users').orderBy('balance', 'desc').limit(20).get();
+            
             container.innerHTML = "";
-            players.forEach((p, index) => {
+            let rank = 1;
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const isMe = doc.id === String(user.id);
                 container.innerHTML += `
-                    <div class="rank-item ${p.me ? 'me' : ''}">
-                        <span>${index + 1}. ${p.name}</span>
-                        <b>${p.score.toLocaleString()}${p.score >= 1000000 ? 'M' : ''}</b>
+                    <div class="rank-item ${isMe ? 'me' : ''}">
+                        <span>${rank}. ${data.name}</span>
+                        <b>${data.balance.toLocaleString()}</b>
                     </div>
                 `;
+                rank++;
             });
         }
 
         function tap(e) {
             if (nrg <= 0) return;
-            bal += 1; nrg--; 
+            bal += 1; nrg--;
             updateUI();
-            
-            const p = document.createElement('div');
-            p.className = 'pop'; p.innerText = "🕷️";
-            const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-            const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-            p.style.left = (x - 20) + "px"; p.style.top = (y - 50) + "px";
-            document.body.appendChild(p);
-            setTimeout(() => p.remove(), 600);
 
+            // Firebase güncelleme (Debounce ile yapılması önerilir ama şimdilik direkt)
+            db.collection('users').doc(String(user.id)).update({ balance: bal });
+
+            // Görsel efekt
             document.getElementById('spider-main').style.transform = "scale(0.85)";
-            setTimeout(() => { 
-                document.getElementById('spider-main').style.transform = "scale(1)"; 
-                tg.CloudStorage.setItem('spy_data_v9', String(bal));
-            }, 50);
+            setTimeout(() => document.getElementById('spider-main').style.transform = "scale(1)", 50);
         }
 
         function nav(id, el) {
@@ -181,14 +149,10 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             el.classList.add('active');
-            if(id === 'p-league') updateRanks(); // Sıralama sekmesine her basıldığında listeyi yenile
+            if(id === 'p-league') getRankings();
         }
 
-        function toggleAdmin(s) { document.getElementById('admin-panel').style.display = s ? 'flex' : 'none'; }
-        function doTask() { /* Görev mantığı aynı */ tg.openTelegramLink("https://t.me/SpyderCommunity"); }
-
         document.getElementById('tap-target').addEventListener('touchstart', (e) => { e.preventDefault(); tap(e); });
-        document.getElementById('tap-target').addEventListener('mousedown', tap);
         init();
     </script>
 </body>
