@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Kalıcı Bakiye</title>
+    <title>SpyderCoin - Data Armor Edition</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -15,35 +15,39 @@
         .page { display: none; height: 100vh; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
         .page.active { display: flex; }
 
-        /* 🕷️ OYUN ALANI */
+        /* 🕷️ OYUN VE ANİMASYON */
         .tap-zone { position: relative; width: 300px; height: 300px; display: flex; justify-content: center; align-items: center; margin: 30px 0; touch-action: none; }
         .purple-ring { position: absolute; width: 260px; height: 260px; border: 8px solid var(--purple); border-radius: 50%; box-shadow: 0 0 30px var(--purple); pointer-events: none; }
         #spider-img { width: 220px; z-index: 2; transition: transform 0.05s; pointer-events: none; }
         .web-effect { position: absolute; font-size: 50px; z-index: 999; pointer-events: none; animation: webPop 0.6s forwards; }
-        @keyframes webPop { 0% { opacity: 0; transform: scale(0.3); } 100% { opacity: 0; transform: scale(1.5) translateY(-120px); } }
+        @keyframes webPop { 0% { opacity: 0; transform: scale(0.3); } 100% { opacity: 0; transform: scale(1.5) translateY(-100px); } }
 
-        /* ALT PANEL */
+        /* NAV VE PANEL */
         .nav-bar { position: fixed; bottom: 20px; width: 92%; left: 4%; background: #151517; height: 75px; border-radius: 24px; display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid #2c2c2e; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #71717a; font-size: 11px; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #71717a; font-size: 11px; cursor: pointer; }
         .nav-item.active { color: var(--purple); }
-        
         #admin-panel { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; padding: 25px; overflow-y: auto; }
         .user-row { background: #111; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; border: 1px solid #222; }
         .btn-action { background: var(--purple); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        
+        /* KAYIT DURUMU */
+        #save-status { position: fixed; top: 10px; right: 10px; font-size: 10px; color: #444; }
     </style>
 </head>
 <body>
 
+    <div id="save-status">Senkronize...</div>
+
     <div id="game-page" class="page active">
-        <div style="font-size: 50px; font-weight: 900;" id="ui-balance">Yükleniyor...</div>
+        <div style="font-size: 50px; font-weight: 900;" id="ui-balance">0</div>
         <div class="tap-zone" id="tap-area">
             <div class="purple-ring"></div>
             <img src="https://api.mimic.ai/api/v1/files/image_7ac885.png" id="spider-img">
         </div>
-        <button id="admin-entry-btn" class="btn-action" style="display:none;" onclick="openAdmin()">🛠️ Yönetici</button>
+        <button id="admin-entry-btn" class="btn-action" style="display:none;" onclick="openAdmin()">Yönetici</button>
         
         <div style="width:90%; margin-top:auto; margin-bottom:110px;">
-            <div style="font-size:14px;">⚡ <span id="ui-energy">100</span> / 100</div>
+            <div style="font-size:14px;">⚡ Enerji: <span id="ui-energy">100</span></div>
             <div style="width:100%; height:8px; background:#1a1a1a; border-radius:10px; overflow:hidden;"><div id="energy-fill" style="width:100%; height:100%; background:orange;"></div></div>
         </div>
     </div>
@@ -51,16 +55,15 @@
     <div id="wallet-page" class="page">
         <h1>Cüzdan</h1>
         <div style="background:var(--card); width:100%; padding:30px; border-radius:25px; text-align:center; border: 1px solid #333;">
-            <div style="color:#888;">Bakiye</div>
             <div style="color:var(--green); font-size:40px; font-weight:900;" id="wallet-usd">$0.00</div>
             <div style="color:var(--purple); font-weight:bold;">🪙 <span id="wallet-coin">0</span> SPYDER</div>
         </div>
     </div>
 
     <div id="admin-panel">
-        <h2 style="color:var(--purple); text-align:center;">Üye Listesi</h2>
+        <h2 style="color:var(--purple); text-align:center;">Üye Takip</h2>
         <div id="admin-user-list"></div>
-        <button class="btn-action" style="background:red; margin-top:20px;" onclick="document.getElementById('admin-panel').style.display='none'">Kapat</button>
+        <button class="btn-action" style="background:red; width:100%;" onclick="document.getElementById('admin-panel').style.display='none'">Kapat</button>
     </div>
 
     <nav class="nav-bar">
@@ -71,6 +74,7 @@
     </nav>
 
     <script>
+        // FIREBASE CONFIG - BURAYI DOLDUR!
         const firebaseConfig = {
             apiKey: "SENIN_API_KEY",
             authDomain: "PROJE.firebaseapp.com",
@@ -83,44 +87,61 @@
         const db = firebase.firestore();
 
         const tg = window.Telegram.WebApp;
-        const tgUser = tg.initDataUnsafe?.user || { id: "8392479231", first_name: "Admin", username: "spyder" };
+        const tgUser = tg.initDataUnsafe?.user || { id: "8392479231", first_name: "Admin" };
         const MY_ADMIN_ID = "8392479231";
 
-        let balance = 0, energy = 100, price = 0.00021;
+        let balance = parseInt(localStorage.getItem('spyder_balance')) || 0;
+        let energy = 100;
+        let syncTimeout = null;
 
-        // ✅ BAKİYE KORUMA SİSTEMİ: Girişte Veriyi Çek
-        async function startApp() {
-            const userRef = db.collection('users').doc(String(tgUser.id));
-            const doc = await userRef.get();
+        // 🛠️ VERİ KORUMA ZIRHI 1: Girişte Hem Local Hem Firebase Kontrolü
+        async function initData() {
+            updateUI(); // Önce telefondaki eski bakiyeyi göster (hız için)
+            
+            try {
+                const userRef = db.collection('users').doc(String(tgUser.id));
+                const doc = await userRef.get();
 
-            if (doc.exists) {
-                // Eğer kullanıcı varsa eski bakiyesini getir
-                balance = doc.data().coins || 0;
-                console.log("Eski bakiye yüklendi: " + balance);
-            } else {
-                // Yeni kullanıcıysa sıfırla başlat
-                await userRef.set({
-                    id: tgUser.id,
-                    name: tgUser.first_name,
-                    username: "@" + (tgUser.username || "yok"),
-                    coins: 0,
-                    lastSeen: Date.now()
-                });
-                balance = 0;
-            }
+                if (doc.exists) {
+                    const cloudBalance = doc.data().coins || 0;
+                    // Eğer buluttaki veri telefondakinden fazlaysa bulutu esas al
+                    if (cloudBalance > balance) {
+                        balance = cloudBalance;
+                        localStorage.setItem('spyder_balance', balance);
+                        updateUI();
+                    }
+                } else {
+                    await userRef.set({
+                        id: tgUser.id,
+                        name: tgUser.first_name,
+                        username: "@" + (tgUser.username || "yok"),
+                        coins: balance,
+                        lastSeen: Date.now()
+                    });
+                }
+            } catch (e) { console.error("Firebase Hatası:", e); }
 
-            if (String(tgUser.id) === MY_ADMIN_ID) {
-                document.getElementById('admin-entry-btn').style.display = 'block';
-            }
-            updateUI();
+            if (String(tgUser.id) === MY_ADMIN_ID) document.getElementById('admin-entry-btn').style.display = 'block';
         }
 
-        // 💾 VERİ YAZMA: Her tıklamada ve çıkışta senkronize et
-        function syncBalance() {
-            db.collection('users').doc(String(tgUser.id)).update({
-                coins: balance,
-                lastSeen: Date.now()
-            }).catch(e => console.error("Kayıt hatası:", e));
+        // 🛠️ VERİ KORUMA ZIRHI 2: Akıllı Senkronizasyon
+        function requestSync() {
+            document.getElementById('save-status').innerText = "Kaydediliyor...";
+            localStorage.setItem('spyder_balance', balance); // Önce telefona çak
+
+            // Firebase'i her saniye yormamak için tık durunca gönder (Debounce)
+            clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(async () => {
+                try {
+                    await db.collection('users').doc(String(tgUser.id)).update({
+                        coins: balance,
+                        lastSeen: Date.now()
+                    });
+                    document.getElementById('save-status').innerText = "Buluta Kaydedildi ✅";
+                } catch (e) {
+                    document.getElementById('save-status').innerText = "Hata! ❌ (Offline)";
+                }
+            }, 1500); // 1.5 saniye tık gelmezse merkeze yollar
         }
 
         function handleTap(e) {
@@ -136,9 +157,7 @@
                 document.body.appendChild(web);
                 setTimeout(() => web.remove(), 600);
 
-                // Debounce mantığı: Çok hızlı tıklamalarda Firebase'i yormamak için her 5 tıkta bir veya 2 saniyede bir yazdırabilirsin. 
-                // Şimdilik her tıklamada küçük bir gecikmeyle gönderiyoruz:
-                syncBalance();
+                requestSync(); // Kayıt tetikle
 
                 document.getElementById('spider-img').style.transform = "scale(0.85)";
                 setTimeout(() => document.getElementById('spider-img').style.transform = "scale(1)", 50);
@@ -150,19 +169,19 @@
             document.getElementById('ui-energy').innerText = energy;
             document.getElementById('energy-fill').style.width = energy + "%";
             document.getElementById('wallet-coin').innerText = balance.toLocaleString();
-            document.getElementById('wallet-usd').innerText = "$" + (balance * price).toFixed(2);
+            document.getElementById('wallet-usd').innerText = "$" + (balance * 0.00021).toFixed(2);
         }
 
         async function openAdmin() {
             document.getElementById('admin-panel').style.display = 'flex';
-            const snapshot = await db.collection('users').orderBy('coins', 'desc').get();
+            const snapshot = await db.collection('users').orderBy('coins', 'desc').limit(50).get();
             const list = document.getElementById('admin-user-list');
             list.innerHTML = "";
             snapshot.forEach(doc => {
                 const u = doc.data();
                 const row = document.createElement('div');
                 row.className = 'user-row';
-                row.innerHTML = `<div><b>${u.name}</b><br><small>${u.username}</small></div><div style="color:var(--green);">🪙 ${u.coins}</div>`;
+                row.innerHTML = `<div><b>${u.name}</b><br><small>${u.id}</small></div><div style="color:var(--green);">🪙 ${u.coins}</div>`;
                 list.appendChild(row);
             });
         }
@@ -177,8 +196,7 @@
         document.getElementById('tap-area').addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(e); });
         document.getElementById('tap-area').addEventListener('mousedown', handleTap);
 
-        // Uygulama başladığında bakiye yükle
-        startApp();
+        initData();
     </script>
 </body>
 </html>
