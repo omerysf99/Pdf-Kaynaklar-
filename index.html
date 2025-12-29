@@ -3,102 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Spider Edition</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <title>SpyderCoin - Web Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --bg: #0a0a0b; --purple: #a855f7; --card: #1c1c1e; --text: #ffffff; --inactive: #8e8e93; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; padding: 0; height: 100vh; overflow: hidden; }
 
-        .page { display: none; height: 100vh; width: 100vw; flex-direction: column; align-items: center; padding: 20px; padding-bottom: 100px; position: absolute; inset: 0; }
+        .page { display: none; height: 100vh; width: 100vw; flex-direction: column; align-items: center; padding: 20px; padding-bottom: 120px; }
         .page.active { display: flex; }
 
         /* 🕷️ ANA EKRAN (OYNA) */
-        .bal-text { font-size: 64px; font-weight: 800; margin-top: 40px; }
-        .tap-label { color: var(--inactive); font-size: 18px; margin-bottom: 30px; }
-        .tap-zone { position: relative; width: 250px; height: 250px; background: var(--purple); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: transform 0.1s; box-shadow: 0 0 50px rgba(168, 85, 247, 0.4); }
-        .tap-zone::after { content: '🕷️'; font-size: 120px; } /* Örümcek emojisi eklendi */
+        .bal-container { text-align: center; margin-top: 40px; }
+        .bal-label { color: var(--inactive); font-size: 14px; margin-bottom: 5px; }
+        .bal-text { font-size: 72px; font-weight: 800; }
+
+        .tap-area { position: relative; margin-top: 50px; width: 280px; height: 280px; display: flex; justify-content: center; align-items: center; }
         
-        /* Ağ Animasyonu */
-        .web-anim { position: absolute; border: 2px solid white; border-radius: 50%; pointer-events: none; animation: webExpand 0.5s ease-out forwards; opacity: 0; }
-        @keyframes webExpand { 0% { width: 0; height: 0; opacity: 0.8; } 100% { width: 400px; height: 400px; opacity: 0; } }
+        /* Örümcek ve Daire Tasarımı */
+        .spider-circle {
+            width: 250px; height: 250px;
+            border: 4px solid var(--purple);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 120px;
+            background: rgba(168, 85, 247, 0.05);
+            box-shadow: 0 0 40px rgba(168, 85, 247, 0.3);
+            cursor: pointer;
+            transition: transform 0.05s;
+            z-index: 10;
+        }
+        .spider-circle:active { transform: scale(0.92); }
+
+        /* 🕸️ AĞ ANİMASYONU */
+        .web-effect {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5;
+            animation: webOut 0.6s ease-out forwards;
+        }
+        @keyframes webOut {
+            0% { width: 10px; height: 10px; opacity: 1; border-width: 1px; }
+            100% { width: 350px; height: 350px; opacity: 0; border-width: 3px; }
+        }
+
+        /* +1 YAZISI */
+        .plus-one {
+            position: absolute;
+            color: var(--purple);
+            font-size: 32px;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 20;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
 
         /* 🔋 ENERJİ */
-        .energy-container { width: 90%; margin-top: auto; }
-        .energy-stats { display: flex; align-items: center; gap: 8px; font-size: 16px; margin-bottom: 10px; }
-        .energy-bar { width: 100%; height: 12px; background: #2c2c2e; border-radius: 6px; overflow: hidden; }
-        #energy-fill { height: 100%; width: 100%; background: var(--purple); transition: width 0.2s; }
+        .energy-wrapper { width: 90%; margin-top: auto; }
+        .energy-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 16px; }
+        .energy-bar { width: 100%; height: 14px; background: #2c2c2e; border-radius: 10px; overflow: hidden; }
+        #energy-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #a855f7, #6366f1); transition: width 0.2s; }
 
-        /* 📋 GÖREVLER */
-        .task-card { background: var(--card); width: 100%; padding: 20px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .task-btn { background: var(--purple); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
-
-        /* 🔐 KONTROL MERKEZİ */
-        #admin-panel { position: fixed; inset: 0; background: black; z-index: 2000; display: none; padding: 40px 20px; flex-direction: column; align-items: center; }
-        .admin-box { background: var(--card); width: 100%; padding: 25px; border-radius: 20px; margin-top: 30px; }
-        .close-btn { background: #ff3b30; color: white; width: 100%; padding: 18px; border-radius: 15px; border: none; font-weight: bold; margin-top: auto; cursor: pointer; }
-
-        /* 📱 NAV BAR (4 Sekme: Lig Kaldırıldı) */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #121214; display: grid; grid-template-columns: repeat(4, 1fr); padding: 10px 0 25px; border-top: 1px solid #2c2c2e; z-index: 1000; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--inactive); font-size: 12px; text-decoration: none; cursor: pointer; }
+        /* 📱 ALT MENÜ */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #121214; display: grid; grid-template-columns: repeat(4, 1fr); padding: 15px 0 30px; border-top: 1px solid #2c2c2e; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--inactive); font-size: 12px; cursor: pointer; }
         .nav-item.active { color: var(--purple); }
-        .nav-icon { font-size: 20px; }
+        .nav-icon { font-size: 24px; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
     <div id="p-play" class="page active">
-        <div class="bal-text" id="ui-bal">0</div>
-        <div class="tap-label">Tap Zone</div>
-        <div class="tap-zone" id="tap-target"></div>
-        <button id="adm-btn" style="display:none; background:none; border:1px solid var(--purple); color:var(--purple); margin-top:20px; padding:10px; border-radius:8px;" onclick="toggleAdmin(true)">⚙️ Kontrol Merkezi</button>
-        <div class="energy-container">
-            <div class="energy-stats">⚡ Enerji: <span id="ui-nrg">100</span> / 100</div>
+        <div class="bal-container">
+            <div class="bal-label">SPYDER BALANCE</div>
+            <div class="bal-text" id="ui-bal">0</div>
+        </div>
+
+        <div class="tap-area" id="tap-zone">
+            <div class="spider-circle">🕷️</div>
+        </div>
+
+        <div class="energy-wrapper">
+            <div class="energy-info">
+                <span>⚡ Enerji</span>
+                <span><span id="ui-nrg">100</span> / 100</span>
+            </div>
             <div class="energy-bar"><div id="energy-fill"></div></div>
         </div>
     </div>
 
-    <div id="p-tasks" class="page">
-        <h2 style="color:var(--purple)">Görevler</h2>
-        <div class="task-card">
-            <div>
-                <b style="display:block">Telegram Kanalı</b>
-                <span style="color:var(--purple); font-size:14px;">+555 SPYDER</span>
-            </div>
-            <button class="task-btn" onclick="doTask()">Katıl</button>
-        </div>
-    </div>
-
-    <div id="p-friends" class="page">
-        <h2 style="color:var(--purple)">Dostlar</h2>
-        <div class="task-card" style="text-align:center; display:block">
-            <p>Arkadaşlarını davet ederek %10 bonus kazan!</p>
-            <button class="task-btn" style="width:100%">Arkadaşını Çağır</button>
-        </div>
-    </div>
-
-    <div id="p-wallet" class="page">
-        <h2 style="color:var(--purple)">Cüzdan</h2>
-        <div class="admin-box" style="text-align:center">
-            <div style="font-size:48px; color:#00d084; font-weight:bold">$0.00</div>
-            <p>Bakiye: <span id="w-bal">0</span> SPYDER</p>
-        </div>
-    </div>
-
-    <div id="admin-panel">
-        <h1 style="color:var(--purple); font-size: 32px;">KONTROL MERKEZİ</h1>
-        <div class="admin-box">
-            <p>Admin: <b id="adm-name"></b></p>
-            <p>Kullanıcı Adı: <b id="adm-user"></b></p>
-            <p>Bakiye: <b id="adm-bal">0</b></p>
-            <hr style="border:0; border-top:1px solid #333; margin:20px 0">
-            <p style="font-size:12px; color:#666">* Firebase olmadığı için veriler bulutta saklanır.</p>
-        </div>
-        <button class="close-btn" onclick="toggleAdmin(false)">KAPAT</button>
-        <p style="margin-top:20px; color:#444">@SpyderCoin_Bot</p>
-    </div>
+    <div id="p-tasks" class="page"><h2>Görevler</h2></div>
+    <div id="p-friends" class="page"><h2>Arkadaşlar</h2></div>
+    <div id="p-wallet" class="page"><h2>Cüzdan</h2></div>
 
     <nav class="nav-bar">
         <div class="nav-item active" onclick="nav('p-play', this)"><span class="nav-icon">🎮</span>Oyna</div>
@@ -109,55 +111,73 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        const MY_ID = 8392479231;
-        const u = tg.initDataUnsafe?.user || { id: 0, first_name: "Misafir" };
-
-        let bal = 0;
+        let bal = parseInt(localStorage.getItem('spyder_bal')) || 0;
         let nrg = 100;
 
         function init() {
-            tg.ready(); tg.expand();
-            if(u.id === MY_ID) {
-                document.getElementById('adm-btn').style.display = 'block';
-                document.getElementById('adm-name').innerText = u.first_name;
-                document.getElementById('adm-user').innerText = "@" + (u.username || "yok");
-            }
+            tg.ready();
+            tg.expand();
             updateUI();
+            
+            // Enerji Yenileme (Her 3 saniyede +1)
+            setInterval(() => {
+                if(nrg < 100) { nrg++; updateUI(); }
+            }, 3000);
+        }
+
+        function handleTap(e) {
+            if (nrg <= 0) {
+                tg.HapticFeedback.notificationOccurred('error');
+                return;
+            }
+
+            // Değerleri Artır
+            bal += 1;
+            nrg -= 1;
+            updateUI();
+            localStorage.setItem('spyder_bal', bal);
+
+            // Titreşim (Telegram)
+            tg.HapticFeedback.impactOccurred('medium');
+
+            // 🕸️ Ağ Animasyonu Oluştur
+            const zone = document.getElementById('tap-zone');
+            const web = document.createElement('div');
+            web.className = 'web-effect';
+            zone.appendChild(web);
+            setTimeout(() => web.remove(), 600);
+
+            // ➕ +1 Yazısı Oluştur
+            const touch = e.touches ? e.touches[0] : e;
+            const plus = document.createElement('div');
+            plus.className = 'plus-one';
+            plus.innerText = '+1';
+            plus.style.left = (touch.clientX - 20) + 'px';
+            plus.style.top = (touch.clientY - 40) + 'px';
+            plus.style.position = 'fixed';
+            document.body.appendChild(plus);
+            setTimeout(() => plus.remove(), 800);
         }
 
         function updateUI() {
             document.getElementById('ui-bal').innerText = bal.toLocaleString();
             document.getElementById('ui-nrg').innerText = nrg;
             document.getElementById('energy-fill').style.width = nrg + "%";
-            document.getElementById('w-bal').innerText = bal.toLocaleString();
-            document.getElementById('adm-bal').innerText = bal;
         }
 
-        function tap(e) {
-            if (nrg <= 0) return;
-            bal++; nrg--;
-            updateUI();
-
-            const effect = document.createElement('div');
-            effect.className = 'web-anim';
-            document.getElementById('tap-target').appendChild(effect);
-            setTimeout(() => effect.remove(), 500);
-
-            document.getElementById('tap-target').style.transform = 'scale(0.95)';
-            setTimeout(() => document.getElementById('tap-target').style.transform = 'scale(1)', 100);
-        }
-
-        function nav(id, el) {
+        function nav(pageId, el) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+            document.getElementById(pageId).classList.add('active');
             el.classList.add('active');
         }
 
-        function toggleAdmin(s) { document.getElementById('admin-panel').style.display = s ? 'flex' : 'none'; }
-        function doTask() { tg.openTelegramLink("https://t.me/SpyderCommunity"); }
+        const tapZone = document.querySelector('.spider-circle');
+        tapZone.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleTap(e);
+        });
 
-        document.getElementById('tap-target').addEventListener('touchstart', (e) => { e.preventDefault(); tap(e); });
         init();
     </script>
 </body>
