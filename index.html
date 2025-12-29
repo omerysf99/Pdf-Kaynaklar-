@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SpyderCoin - Full Edition</title>
+    <title>SpyderCoin - Admin Console</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -12,123 +12,102 @@
 
     <style>
         :root { --p-purple: #a855f7; --bg: #000; --card: #0f0f12; --text: #fff; --dim: #71717a; --green: #10b981; --red: #ef4444; --gold: #fbbf24; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
         #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .spin { width: 45px; height: 45px; border: 4px solid #111; border-top-color: var(--p-purple); border-radius: 50%; animation: s 1s linear infinite; }
+        .spin { width: 40px; height: 40px; border: 4px solid #111; border-top-color: var(--p-purple); border-radius: 50%; animation: s 1s linear infinite; }
         @keyframes s { to { transform: rotate(360deg); } }
 
         main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .view { display: none; flex-direction: column; padding: 20px; flex: 1; overflow-y: auto; }
         .view.active { display: flex; }
         
-        .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 20px; padding: 18px; margin-bottom: 12px; }
+        .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 18px; padding: 15px; margin-bottom: 12px; }
         
-        /* Tap to Earn Elements */
+        /* Tap Screen */
         .bal-txt { font-size: 50px; font-weight: 900; color: var(--p-purple); text-align: center; margin: 20px 0; }
-        .spyder-btn { width: 220px; height: 220px; background: radial-gradient(circle, #c084fc, #a855f7); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 40px rgba(168, 85, 247, 0.4); margin: 0 auto; cursor: pointer; transition: transform 0.05s; }
+        .spyder-btn { width: 210px; height: 210px; background: radial-gradient(circle, #c084fc, #a855f7); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 40px rgba(168, 85, 247, 0.4); margin: 0 auto; cursor: pointer; transition: transform 0.05s; }
         .spyder-btn:active { transform: scale(0.9); }
-        .spyder-btn span { font-size: 100px; pointer-events: none; }
+        .spyder-btn span { font-size: 90px; pointer-events: none; }
 
-        .energy-bar-bg { height: 10px; background: #111; border-radius: 5px; overflow: hidden; margin-top: 10px; }
-        #ui-nrg-bar { height: 100%; background: var(--p-purple); width: 100%; transition: width 0.3s; }
+        /* Admin Table */
+        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+        th { text-align: left; color: var(--dim); padding: 8px; border-bottom: 1px solid #222; }
+        td { padding: 10px 8px; border-bottom: 1px solid #111; }
+        .u-name { font-weight: bold; color: var(--p-purple); }
+        .u-info { color: var(--dim); font-size: 9px; }
 
-        /* UI Components */
-        .btn-main { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; font-size: 14px; }
-        .btn-main:disabled { background: #1a1a1f; color: #444; border: 1px solid #222; }
-        
+        /* General UI */
+        .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; }
+        .btn-main:disabled { background: #1a1a1f; color: #444; }
         input { width: 100%; padding: 12px; background: #050505; border: 1px solid #222; color: #fff; border-radius: 10px; margin: 8px 0; text-align: center; outline: none; }
-        input:focus { border-color: var(--p-purple); }
 
-        .task-item { display: flex; justify-content: space-between; align-items: center; }
-        .status-badge { font-weight: bold; font-size: 13px; }
-
-        nav { height: 85px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1a1a1f; padding-bottom: env(safe-area-inset-bottom); }
+        nav { height: 85px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1a1a1f; }
+        .nav-admin { grid-template-columns: repeat(5, 1fr) !important; }
         .n-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); font-size: 11px; }
         .n-item.active { color: var(--p-purple); }
-        .n-item i { font-size: 22px; margin-bottom: 4px; font-style: normal; }
+        .n-item i { font-size: 20px; font-style: normal; margin-bottom: 4px; }
 
         .pop { position: absolute; color: #fff; font-size: 30px; font-weight: 900; pointer-events: none; animation: pUp 0.6s forwards; z-index: 1000; }
-        @keyframes pUp { to { transform: translateY(-120px); opacity: 0; } }
+        @keyframes pUp { to { transform: translateY(-100px); opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="spin"></div>
-        <p style="color:var(--p-purple); margin-top:15px; font-size:12px; font-weight:bold;">SPYDER NETWORK CONNECTING...</p>
-    </div>
+    <div id="loader"><div class="spin"></div></div>
 
     <main>
         <section id="v-home" class="view active">
             <h1 class="bal-txt" id="ui-bal">0</h1>
-            <div style="flex:1; display:flex; align-items:center;">
-                <div class="spyder-btn" id="tap-node"><span>🕷️</span></div>
-            </div>
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; font-size:12px;">
-                    <span>⚡ ENERGY</span>
-                    <span id="ui-nrg">1000/1000</span>
-                </div>
-                <div class="energy-bar-bg"><div id="ui-nrg-bar"></div></div>
-            </div>
+            <div style="flex:1; display:flex; align-items:center;"><div class="spyder-btn" id="tap-node"><span>🕷️</span></div></div>
+            <div class="card"><div style="display:flex; justify-content:space-between; font-size:12px;"><span>ENERGY</span><span id="ui-nrg">1000/1000</span></div></div>
         </section>
 
         <section id="v-tasks" class="view">
-            <h2 style="margin-bottom:20px;">Missions</h2>
-            <div class="card">
-                <div class="task-item">
-                    <div>
-                        <b style="font-size:14px;">Join Spyder Community</b><br>
-                        <small style="color:var(--p-purple);">+5,000 SPYDER</small>
-                    </div>
-                    <button class="btn-main" style="width:auto; padding:8px 20px;" id="t-btn-1" onclick="Tasks.do(1, 5000, 'https://t.me/SpyderCommunity')">JOIN</button>
-                </div>
-            </div>
-            <div class="card" style="opacity:0.5;">
-                <div class="task-item">
-                    <div><b>Follow X (Twitter)</b><br><small>Coming Soon...</small></div>
-                </div>
+            <h2>Missions</h2>
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div><b>Telegram Group</b><br><small>+5,000 SPYDER</small></div>
+                <button class="btn-main" style="width:auto; padding:8px 15px;" id="t-btn-1" onclick="Tasks.do(1, 5000, 'https://t.me/SpyderCommunity')">JOIN</button>
             </div>
         </section>
 
         <section id="v-vault" class="view">
-            <h2>Vault Swap</h2>
-            <div class="card" style="margin-top:15px;">
-                <label style="font-size:11px; color:var(--dim);">Swap Spyder to USDT</label>
-                <input type="number" id="s-in" value="10000" oninput="Finance.syncSwap()">
-                <p style="text-align:center; font-size:24px; margin:10px 0;">⬇️</p>
-                <div style="text-align:center; background:#000; padding:15px; border-radius:12px; border:1px dashed #333;">
-                    <span style="color:var(--green); font-size:30px; font-weight:bold;">$<span id="s-out">0.10</span></span>
-                </div>
-                <button class="btn-main" style="margin-top:20px;" onclick="Finance.swap()">CONFIRM SWAP</button>
+            <h2>Vault</h2>
+            <div class="card">
+                <input type="number" id="s-in" value="10000" oninput="Finance.syncS()">
+                <p style="text-align:center; font-size:20px; margin:10px;">⬇️ $<span id="s-out">0.10</span></p>
+                <button class="btn-main" onclick="Finance.swap()">SWAP</button>
             </div>
         </section>
 
         <section id="v-wallet" class="view">
             <h2>Withdraw</h2>
-            <div class="card" style="text-align:center; background:linear-gradient(180deg, #0f0f12 0%, #000 100%);">
-                <span style="font-size:12px; color:var(--dim);">AVAILABLE BALANCE</span>
-                <h1 style="color:var(--green); font-size:45px; margin:5px 0;">$<span id="ui-usdt">0.000</span></h1>
-            </div>
+            <div class="card" style="text-align:center;"><h1 style="color:var(--green)">$<span id="ui-usdt">0.000</span></h1></div>
             <div class="card">
-                <label style="font-size:11px; color:var(--dim);">Amount to Withdraw ($)</label>
                 <input type="number" id="w-amt" value="0.01" step="0.01" oninput="UI.refresh()">
-                
-                <div style="display:flex; justify-content:space-between; margin:15px 0; font-size:13px;">
-                    <span>Required Ads:</span>
-                    <span id="ui-ad-status" style="font-weight:bold;">0/15</span>
-                </div>
-
-                <input type="text" id="w-adr" placeholder="BEP20 Wallet Address">
+                <div style="display:flex; justify-content:space-between; margin:10px 0;"><span>Ads Required:</span><span id="ui-ad-status">0/15</span></div>
+                <input type="text" id="w-adr" placeholder="Address">
                 <button id="w-btn" class="btn-main" onclick="Finance.withdraw()">WITHDRAW</button>
-                <p id="ui-pending" style="display:none; color:var(--gold); text-align:center; margin-top:12px; font-weight:bold;">⏳ Request Pending Review</p>
+            </div>
+        </section>
+
+        <section id="v-admin" class="view">
+            <h2 style="color:var(--gold)">Admin Console</h2>
+            <div class="card" style="padding:5px; overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr><th>User</th><th>Spyder</th><th>USDT</th><th>Ads</th><th>Tasks</th></tr>
+                    </thead>
+                    <tbody id="admin-table">
+                        <tr><td colspan="5" style="text-align:center;">Loading Users...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </section>
     </main>
 
-    <nav>
+    <nav id="main-nav">
         <div class="n-item active" onclick="nav('v-home', this)"><i>🎮</i>Play</div>
         <div class="n-item" onclick="nav('v-tasks', this)"><i>📢</i>Tasks</div>
         <div class="n-item" onclick="nav('v-vault', this)"><i>🏛️</i>Vault</div>
@@ -136,6 +115,7 @@
     </nav>
 
     <script>
+        const ADMIN_ID = "8392479231";
         const firebaseConfig = {
             apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY",
             authDomain: "pdfkaynak-51615.firebaseapp.com",
@@ -148,40 +128,79 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let user = { bal: 0, nrg: 1000, usdt: 0, ads: 0, tasks: [], wd_pending: false };
-        let isLoaded = false;
+        let user = { 
+            bal: 0, nrg: 1000, usdt: 0, ads: 0, tasks: [], 
+            name: tg.initDataUnsafe?.user?.first_name || "Guest",
+            username: tg.initDataUnsafe?.user?.username || "None",
+            lastSeen: "" 
+        };
 
         const App = {
             init: async () => {
-                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
-                try {
-                    const doc = await db.collection("users").doc(uid).get();
-                    if(doc.exists) user = { ...user, ...doc.data() };
-                    App.start();
-                } catch(e) { App.start(); }
-            },
-            start: () => {
-                isLoaded = true;
+                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev";
+                
+                // Admin Control
+                if(uid === ADMIN_ID) {
+                    const navBar = document.getElementById('main-nav');
+                    navBar.classList.add('nav-admin');
+                    navBar.innerHTML += `<div class="n-item" onclick="nav('v-admin', this); Admin.load();"><i>🔑</i>Admin</div>`;
+                }
+
+                const doc = await db.collection("users").doc(uid).get();
+                if(doc.exists) user = Object.assign(user, doc.data());
+                
                 document.getElementById('loader').style.display = 'none';
                 UI.refresh();
-                setInterval(() => { if(user.nrg < 1000) { user.nrg += 2; UI.refresh(); } }, 2500);
+                setInterval(() => { if(user.nrg < 1000) { user.nrg+=2; UI.refresh(); }}, 3000);
             },
             tap: (e) => {
-                if(!isLoaded || user.nrg <= 0) return;
+                if(user.nrg <= 0) return;
                 user.bal++; user.nrg--;
                 UI.pop(e); UI.refresh();
-                tg.HapticFeedback.impactOccurred('light');
-                if(user.bal % 50 === 0) App.showAd();
-                if(user.bal % 20 === 0) App.save();
+                if(user.bal % 50 === 0) App.ad();
+                if(user.bal % 25 === 0) App.save();
             },
-            showAd: () => {
-                if(window.showAdexora) {
-                    window.showAdexora().then(() => { user.ads++; UI.refresh(); App.save(); });
-                } else { user.ads++; UI.refresh(); } // Test modu
-            },
+            ad: () => { user.ads++; UI.refresh(); App.save(); },
             save: () => {
-                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
+                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev";
+                user.lastSeen = new Date().toLocaleString('tr-TR');
                 db.collection("users").doc(uid).set(user, { merge: true });
+            }
+        };
+
+        const Admin = {
+            load: async () => {
+                const snap = await db.collection("users").get();
+                const table = document.getElementById('admin-table');
+                table.innerHTML = "";
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    table.innerHTML += `
+                        <tr>
+                            <td>
+                                <span class="u-name">${d.name || 'Unknown'}</span><br>
+                                <span class="u-info">@${d.username || 'n/a'}</span><br>
+                                <span class="u-info" style="font-size:7px;">${d.lastSeen || 'Old'}</span>
+                            </td>
+                            <td>${(d.bal || 0).toLocaleString()}</td>
+                            <td style="color:var(--green)">$${(d.usdt || 0).toFixed(2)}</td>
+                            <td>${d.ads || 0}</td>
+                            <td>${(d.tasks || []).length}</td>
+                        </tr>`;
+                });
+            }
+        };
+
+        const Finance = {
+            syncS: () => document.getElementById('s-out').innerText = (document.getElementById('s-in').value * 0.00001).toFixed(2),
+            swap: () => {
+                const amt = parseInt(document.getElementById('s-in').value);
+                if(user.bal < amt) return tg.showAlert("Low Spyder!");
+                user.bal -= amt; user.usdt += (amt * 0.00001);
+                UI.refresh(); App.save();
+            },
+            withdraw: () => {
+                tg.showAlert("Request sent to Admin.");
             }
         };
 
@@ -189,35 +208,7 @@
             do: (id, rew, link) => {
                 if(user.tasks.includes(id)) return;
                 tg.openLink(link);
-                setTimeout(() => {
-                    tg.showConfirm("Did you join the channel?", (res) => {
-                        if(res) {
-                            user.bal += rew; user.tasks.push(id);
-                            UI.refresh(); App.save();
-                            tg.showAlert("Success! +5,000 Spyder added.");
-                        }
-                    });
-                }, 3000);
-            }
-        };
-
-        const Finance = {
-            syncSwap: () => document.getElementById('s-out').innerText = (document.getElementById('s-in').value * 0.00001).toFixed(2),
-            swap: () => {
-                const amt = parseInt(document.getElementById('s-in').value);
-                if(user.bal < amt) return tg.showAlert("Not enough Spyder!");
-                user.bal -= amt; user.usdt += (amt * 0.00001);
-                UI.refresh(); App.save();
-                tg.showAlert("Swap successful!");
-            },
-            withdraw: () => {
-                const amt = parseFloat(document.getElementById('w-amt').value);
-                const adr = document.getElementById('w-adr').value;
-                if(user.usdt < amt) return tg.showAlert("Insufficient balance!");
-                if(adr.length < 15) return tg.showAlert("Invalid address!");
-                user.wd_pending = true;
-                UI.refresh(); App.save();
-                tg.showAlert("Withdrawal request sent!");
+                setTimeout(() => { user.bal += rew; user.tasks.push(id); UI.refresh(); App.save(); }, 3000);
             }
         };
 
@@ -225,34 +216,17 @@
             refresh: () => {
                 document.getElementById('ui-bal').innerText = user.bal.toLocaleString();
                 document.getElementById('ui-nrg').innerText = `${user.nrg}/1000`;
-                document.getElementById('ui-nrg-bar').style.width = (user.nrg / 10) + "%";
                 document.getElementById('ui-usdt').innerText = user.usdt.toFixed(3);
                 
-                // Ads & Withdraw Logic
                 const wAmt = parseFloat(document.getElementById('w-amt').value) || 0;
                 const reqAds = Math.max(15, Math.ceil(wAmt / 0.01) * 15);
-                const adStatus = document.getElementById('ui-ad-status');
-                const wBtn = document.getElementById('w-btn');
-
-                adStatus.innerText = `${user.ads}/${reqAds}`;
-                if(user.ads >= reqAds && user.usdt >= wAmt && wAmt >= 0.01) {
-                    adStatus.style.color = "var(--green)";
-                    wBtn.disabled = user.wd_pending;
-                } else {
-                    adStatus.style.color = "var(--red)";
-                    wBtn.disabled = true;
-                }
-
-                if(user.wd_pending) {
-                    wBtn.style.display = 'none';
-                    document.getElementById('ui-pending').style.display = 'block';
-                }
-
-                // Tasks check
-                if(user.tasks.includes(1)) {
-                    const b = document.getElementById('t-btn-1');
-                    b.innerText = "DONE"; b.disabled = true;
-                }
+                const adEl = document.getElementById('ui-ad-status');
+                
+                adEl.innerText = `${user.ads}/${reqAds}`;
+                adEl.style.color = user.ads >= reqAds ? "var(--green)" : "var(--red)";
+                document.getElementById('w-btn').disabled = (user.ads < reqAds || user.usdt < wAmt);
+                
+                if(user.tasks.includes(1)) { const b = document.getElementById('t-btn-1'); b.innerText="DONE"; b.disabled=true; }
             },
             pop: (e) => {
                 const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
@@ -266,7 +240,6 @@
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.n-item').forEach(n => n.classList.remove('active'));
             document.getElementById(id).classList.add('active'); el.classList.add('active');
-            tg.HapticFeedback.impactOccurred('medium');
         }
 
         document.getElementById('tap-node').onclick = (e) => App.tap(e);
