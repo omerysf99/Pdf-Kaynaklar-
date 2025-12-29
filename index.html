@@ -3,803 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Advanced Ecosystem</title>
+    <title>SpyderCoin - Ads & Rewards Edition</title>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
     <style>
-        /* -------------------------------------------------------------------------- */
-        /* 1. ROOT & GLOBAL STYLES                          */
-        /* -------------------------------------------------------------------------- */
         :root {
             --bg: #070708;
             --purple: #a855f7;
-            --purple-dark: #7c3aed;
-            --purple-glow: rgba(168, 85, 247, 0.5);
+            --purple-glow: rgba(168, 85, 247, 0.4);
             --card: #141416;
-            --card-border: #232326;
             --text: #ffffff;
-            --text-dim: #a1a1aa;
+            --inactive: #8e8e93;
             --green: #10b981;
             --red: #ef4444;
-            --gold: #f59e0b;
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            outline: none;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', -apple-system, system-ui, sans-serif;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
+        .page { display: none; height: 100%; width: 100%; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; padding-bottom: 140px; }
+        .page.active { display: flex; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* -------------------------------------------------------------------------- */
-        /* 2. PAGE SYSTEM                                                            */
-        /* -------------------------------------------------------------------------- */
-        .page-container {
-            flex-grow: 1;
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
+        /* 🕷️ ANA EKRAN */
+        .bal-val { font-size: 64px; font-weight: 900; margin: 10px 0; text-shadow: 0 0 20px var(--purple-glow); }
+        .tap-zone { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; width: 100%; }
+        .spider-btn { width: 240px; height: 240px; background: var(--purple); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 110px; box-shadow: 0 0 60px var(--purple-glow); z-index: 5; transition: transform 0.05s; }
+        .spider-btn:active { transform: scale(0.92); }
 
-        .page {
-            display: none;
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            padding: 20px;
-            overflow-y: auto;
-            flex-direction: column;
-            padding-bottom: 140px;
-        }
+        /* 🕸️ AĞ ANİMASYONU */
+        .web-ring { position: absolute; border: 2px solid white; border-radius: 50%; pointer-events: none; animation: webExpand 0.5s ease-out forwards; }
+        @keyframes webExpand { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 450px; height: 450px; opacity: 0; } }
 
-        .page.active {
-            display: flex;
-        }
+        /* 🔋 ENERJİ */
+        .energy-box { width: 100%; max-width: 400px; margin-bottom: 10px; }
+        .bar-bg { width: 100%; height: 12px; background: #1c1c1e; border-radius: 10px; overflow: hidden; margin-top: 5px; }
+        #energy-fill { height: 100%; width: 100%; background: var(--purple); transition: width 0.3s; }
 
-        /* -------------------------------------------------------------------------- */
-        /* 3. HOME PAGE (TAP ENGINE)                        */
-        /* -------------------------------------------------------------------------- */
-        .balance-header {
-            text-align: center;
-            margin-top: 30px;
-            z-index: 10;
-        }
+        /* 💰 CÜZDAN & REKLAM ŞARTI */
+        .wallet-card { background: var(--card); border-radius: 20px; padding: 25px; width: 100%; border: 1px solid #232326; margin-top: 20px; }
+        .ad-counter { background: rgba(168, 85, 247, 0.1); border: 1px dashed var(--purple); padding: 15px; border-radius: 12px; margin: 15px 0; text-align: center; }
+        .btn-ad { background: #fff; color: #000; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: 900; margin-bottom: 10px; cursor: pointer; }
+        .btn-withdraw { background: var(--purple); color: #fff; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: 900; cursor: pointer; }
+        .btn-withdraw:disabled { background: #333; color: #666; cursor: not-allowed; }
 
-        .balance-label {
-            font-size: 14px;
-            color: var(--text-dim);
-            letter-spacing: 2px;
-            font-weight: 600;
-        }
+        input { width: 100%; background: #000; border: 1px solid #2c2c2e; padding: 15px; border-radius: 12px; color: #fff; margin-bottom: 15px; }
 
-        .balance-value {
-            font-size: 64px;
-            font-weight: 900;
-            margin: 10px 0;
-            background: linear-gradient(to bottom, #fff, #a855f7);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 15px var(--purple-glow));
-        }
-
-        .tap-world {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            perspective: 1000px;
-        }
-
-        .spider-portal {
-            position: relative;
-            width: 280px;
-            height: 280px;
-            border-radius: 50%;
-            background: radial-gradient(circle, var(--purple-dark) 0%, transparent 70%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 5;
-        }
-
-        .spider-portal::before {
-            content: '';
-            position: absolute;
-            inset: -10px;
-            border-radius: 50%;
-            border: 2px dashed var(--purple-glow);
-            animation: rotatePortal 20s linear infinite;
-        }
-
-        @keyframes rotatePortal {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .main-spider {
-            width: 240px;
-            height: 240px;
-            background: var(--purple);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 110px;
-            cursor: pointer;
-            box-shadow: 0 0 80px var(--purple-glow), inset 0 0 30px rgba(0,0,0,0.3);
-            transition: transform 0.05s ease;
-            position: relative;
-            z-index: 10;
-        }
-
-        /* 🕸️ WEB ANIMATION */
-        .web-layer {
-            position: absolute;
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            pointer-events: none;
-            animation: webFlash 0.5s ease-out forwards;
-        }
-
-        @keyframes webFlash {
-            0% { width: 0; height: 0; opacity: 1; border-width: 1px; }
-            100% { width: 500px; height: 500px; opacity: 0; border-width: 4px; }
-        }
-
-        .tap-score {
-            position: absolute;
-            color: #fff;
-            font-size: 32px;
-            font-weight: 900;
-            pointer-events: none;
-            z-index: 100;
-            animation: scoreFloat 0.7s ease-out forwards;
-            text-shadow: 0 0 10px var(--purple);
-        }
-
-        @keyframes scoreFloat {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-150px) scale(1.5); opacity: 0; }
-        }
-
-        /* -------------------------------------------------------------------------- */
-        /* 4. ENERGY & LEVEL SYSTEM                                                 */
-        /* -------------------------------------------------------------------------- */
-        .status-container {
-            width: 100%;
-            background: var(--card);
-            padding: 20px;
-            border-radius: 20px 20px 0 0;
-            border-top: 1px solid var(--card-border);
-        }
-
-        .level-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .energy-wrapper {
-            margin-bottom: 5px;
-        }
-
-        .energy-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            color: var(--text-dim);
-            margin-bottom: 8px;
-        }
-
-        .progress-bar-bg {
-            width: 100%;
-            height: 12px;
-            background: #1c1c1e;
-            border-radius: 6px;
-            overflow: hidden;
-            border: 1px solid #2c2c2e;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--purple), #c084fc);
-            width: 100%;
-            transition: width 0.3s ease;
-            box-shadow: 0 0 10px var(--purple);
-        }
-
-        /* -------------------------------------------------------------------------- */
-        /* 5. CARDS & UI COMPONENTS                         */
-        /* -------------------------------------------------------------------------- */
-        .section-title {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 20px;
-            background: linear-gradient(to right, #fff, var(--purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .task-card {
-            background: var(--card);
-            border-radius: 18px;
-            padding: 20px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid var(--card-border);
-            transition: 0.3s;
-        }
-
-        .task-card:active {
-            background: #1f1f22;
-            transform: scale(0.98);
-        }
-
-        .task-meta b {
-            display: block;
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
-
-        .task-meta span {
-            font-size: 14px;
-            color: var(--purple);
-            font-weight: 700;
-        }
-
-        .task-btn {
-            background: var(--purple);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 12px;
-            font-weight: 800;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
-        }
-
-        .task-btn.done {
-            background: #27272a;
-            color: #71717a;
-            box-shadow: none;
-        }
-
-        /* -------------------------------------------------------------------------- */
-        /* 6. WALLET & USDT WITHDRAW                          */
-        /* -------------------------------------------------------------------------- */
-        .wallet-hero {
-            text-align: center;
-            padding: 40px 20px;
-            background: radial-gradient(circle at top, rgba(168,85,247,0.1), transparent);
-            border-radius: 30px;
-            margin-bottom: 20px;
-        }
-
-        .usdt-balance {
-            font-size: 52px;
-            font-weight: 900;
-            color: var(--green);
-            margin: 10px 0;
-        }
-
-        .withdraw-form {
-            background: var(--card);
-            padding: 25px;
-            border-radius: 20px;
-            border: 1px solid var(--card-border);
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 13px;
-            color: var(--text-dim);
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .input-group input {
-            width: 100%;
-            background: #0a0a0b;
-            border: 1px solid #2c2c2e;
-            padding: 15px;
-            border-radius: 12px;
-            color: white;
-            font-size: 15px;
-        }
-
-        .input-group input:focus {
-            border-color: var(--purple);
-        }
-
-        /* -------------------------------------------------------------------------- */
-        /* 7. ADMIN PANEL                                   */
-        /* -------------------------------------------------------------------------- */
-        #admin-view {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            z-index: 9999;
-            display: none;
-            flex-direction: column;
-            padding: 40px 20px;
-        }
-
-        .admin-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .admin-header h1 {
-            color: var(--purple);
-            font-size: 32px;
-            font-weight: 900;
-            letter-spacing: 3px;
-            margin: 0;
-        }
-
-        .admin-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .admin-stat-card {
-            background: var(--card);
-            padding: 20px;
-            border-radius: 15px;
-            border: 1px solid var(--card-border);
-            text-align: center;
-        }
-
-        .admin-stat-card small { color: var(--text-dim); }
-        .admin-stat-card div { font-size: 20px; font-weight: bold; margin-top: 5px; color: var(--purple); }
-
-        .admin-logs {
-            flex-grow: 1;
-            background: #0a0a0b;
-            border-radius: 15px;
-            padding: 15px;
-            font-family: monospace;
-            font-size: 12px;
-            overflow-y: auto;
-            border: 1px solid #1c1c1e;
-            color: #00ff00;
-        }
-
-        .btn-emergency {
-            background: var(--red);
-            color: white;
-            border: none;
-            padding: 20px;
-            border-radius: 15px;
-            font-weight: bold;
-            margin-top: 20px;
-            cursor: pointer;
-        }
-
-        /* -------------------------------------------------------------------------- */
-        /* 8. NAVIGATION BAR                                */
-        /* -------------------------------------------------------------------------- */
-        .nav-bar {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: rgba(10, 10, 11, 0.95);
-            backdrop-filter: blur(15px);
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            padding: 15px 0 35px;
-            border-top: 1px solid var(--card-border);
-            z-index: 1000;
-        }
-
-        .nav-tab {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            color: var(--text-dim);
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .nav-tab.active {
-            color: var(--purple);
-            transform: translateY(-5px);
-        }
-
-        .nav-tab i {
-            font-size: 24px;
-        }
-
-        /* Utilities */
-        .hidden { display: none !important; }
+        /* 📱 NAV */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #0a0a0b; display: grid; grid-template-columns: repeat(4, 1fr); padding: 15px 0 35px; border-top: 1px solid #1c1c1e; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--inactive); font-size: 11px; cursor: pointer; }
+        .nav-item.active { color: var(--purple); }
     </style>
 </head>
 <body>
 
-    <div class="page-container">
-        
-        <div id="page-home" class="page active">
-            <div class="balance-header">
-                <div class="balance-label">TOTAL SPYDER</div>
-                <div class="balance-value" id="ui-balance">0</div>
-                <div id="ui-level-tag" style="font-size: 12px; color: var(--gold);">LEVEL 1: BABY SPYDER</div>
-            </div>
-
-            <div class="tap-world" id="tap-container">
-                <div class="spider-portal">
-                    <div class="main-spider" id="tap-spider">🕷️</div>
-                </div>
-                <button id="btn-admin-gate" style="display:none; position:absolute; top:10px; right:10px; background:none; border:1px solid var(--purple); color:var(--purple); padding:5px 10px; border-radius:8px; font-size:10px;" onclick="showAdmin(true)">DEBUG</button>
-            </div>
-
-            <div class="status-container">
-                <div class="energy-wrapper">
-                    <div class="energy-label">
-                        <span>⚡ Available Energy</span>
-                        <span><span id="ui-energy">1000</span> / <span id="ui-max-energy">1000</span></span>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div id="energy-bar" class="progress-bar-fill" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
+    <div id="p-home" class="page active">
+        <div style="text-align:center; margin-top:20px;">
+            <div style="color:var(--inactive); font-size:12px; letter-spacing:1px;">TOTAL BALANCE</div>
+            <div class="bal-val" id="ui-bal">0</div>
         </div>
-
-        <div id="page-tasks" class="page">
-            <h2 class="section-title">Special Tasks</h2>
-            <div class="task-card">
-                <div class="task-meta">
-                    <b>Join Telegram Community</b>
-                    <span>+100,000 SPYDER</span>
-                </div>
-                <button class="task-btn" onclick="handleTask('tg_join', 100000, 'https://t.me/SpyderCommunity')">JOIN</button>
-            </div>
-            <div class="task-card">
-                <div class="task-meta">
-                    <b>Verify USDT Wallet</b>
-                    <span>+50,000 SPYDER</span>
-                </div>
-                <button class="task-btn" onclick="nav('page-wallet', document.querySelector('[data-id=page-wallet]'))">GO</button>
-            </div>
+        <div class="tap-zone">
+            <div class="spider-btn" id="spider-btn">🕷️</div>
+            <button id="adm-gate" style="display:none; position:absolute; top:0; right:0;" onclick="alert('Admin Active')">⚙️</button>
         </div>
-
-        <div id="page-friends" class="page">
-            <h2 class="section-title">Spider Web (Ref)</h2>
-            <div class="wallet-hero" style="padding: 20px;">
-                <p style="color:var(--text-dim);">Invite friends and earn 10% of their taps!</p>
-                <div style="background:#000; padding:15px; border-radius:12px; margin:15px 0; font-size:13px; border:1px solid #333;" id="ui-ref-link">
-                    https://t.me/SpyderCoin_Bot?start=ref_12345
-                </div>
-                <button class="task-btn" style="width:100%" onclick="copyRef()">COPY LINK</button>
-            </div>
-            
-            <h3 style="font-size:16px; margin-bottom:15px;">Your Friends (0)</h3>
-            <div id="friend-list">
-                <p style="text-align:center; color:#444; margin-top:20px;">No friends in your web yet...</p>
-            </div>
+        <div class="energy-box">
+            <div style="font-size:13px; color:var(--inactive);">⚡ Energy: <span id="ui-nrg">1000</span> / 1000</div>
+            <div class="bar-bg"><div id="energy-fill"></div></div>
         </div>
-
-        <div id="page-wallet" class="page">
-            <h2 class="section-title">Vault</h2>
-            <div class="wallet-hero">
-                <div style="font-size:14px; color:var(--text-dim);">ESTIMATED BALANCE</div>
-                <div class="usdt-balance" id="ui-usdt-val">$0.00</div>
-                <div style="font-size:12px; color:var(--purple);">1,000,000 SPYDER = 10 USDT</div>
-            </div>
-
-            <div class="withdraw-form">
-                <div class="input-group">
-                    <label>USDT BEP20 ADDRESS</label>
-                    <input type="text" id="wallet-input" placeholder="0x..." onchange="saveWallet()">
-                </div>
-                <button class="task-btn" style="width:100%; padding:18px;" onclick="requestWithdraw()">WITHDRAW USDT</button>
-                <p style="font-size:11px; color:#555; margin-top:15px; text-align:center;">
-                    * Minimum withdrawal is 10 USDT. Manual review takes 24h.
-                </p>
-            </div>
-        </div>
-
     </div>
 
-    <div id="admin-view">
-        <div class="admin-header">
-            <h1>SPYDER CORE</h1>
-            <p style="color:var(--text-dim);">Real-time System Monitor</p>
+    <div id="p-tasks" class="page">
+        <h2 style="color:var(--purple)">Görevler</h2>
+        <div class="wallet-card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div><b>Telegram Kanalı</b><br><span style="color:var(--purple)">+5,000 SPYDER</span></div>
+            <button class="btn-withdraw" style="width:auto; padding:10px 20px;" onclick="tg.openTelegramLink('https://t.me/SpyderCommunity')">Katıl</button>
+        </div>
+    </div>
+
+    <div id="p-friends" class="page">
+        <h2 style="color:var(--purple)">Dostlar</h2>
+        <div class="wallet-card" style="text-align:center;">
+            <p>Arkadaşlarını çağır, %10 kazanç sağla!</p>
+            <button class="btn-ad">Davet Linki Kopyala</button>
+        </div>
+    </div>
+
+    <div id="p-wallet" class="page">
+        <h2 style="color:var(--purple)">Cüzdan</h2>
+        
+        <div style="text-align:center; margin:20px 0;">
+            <div id="ui-usdt" style="font-size:48px; font-weight:900; color:var(--green);">$0.00</div>
+            <div style="color:var(--inactive); font-size:12px;">Minimum Çekim: 0.01$ (1,000 SPYDER)</div>
         </div>
 
-        <div class="admin-grid">
-            <div class="admin-stat-card"><small>Total Users</small><div id="adm-total-users">1</div></div>
-            <div class="admin-stat-card"><small>Server Status</small><div style="color:var(--green)">ONLINE</div></div>
-            <div class="admin-stat-card"><small>Active Taps</small><div id="adm-active-taps">0</div></div>
-            <div class="admin-stat-card"><small>Your ID</small><div id="adm-my-id" style="font-size:12px;">-</div></div>
-        </div>
+        <div class="wallet-card">
+            <div class="ad-counter">
+                <div style="font-size:12px; color:var(--inactive);">ÖDEME KİLİDİ</div>
+                <div style="font-size:18px; font-weight:bold; margin:5px 0;">
+                    📺 İzlenen Reklam: <span id="ui-ads">0</span> / 20
+                </div>
+                <div style="font-size:10px; color:var(--purple);">Her çekim için 20 reklam izlemelisiniz.</div>
+            </div>
 
-        <div class="admin-logs" id="adm-logs">
-            [SYS] SpyderCore v4.0 initialized...<br>
-            [SYS] Database connected...<br>
-            [SYS] Ready for traffic...<br>
+            <button class="btn-ad" onclick="watchAd()">🎬 REKLAM İZLE (+1)</button>
+            
+            <label style="font-size:12px; color:var(--inactive); display:block; margin-bottom:5px;">USDT BEP20 ADRESİ</label>
+            <input type="text" id="wallet-addr" placeholder="0x...">
+            
+            <button id="btn-withdraw" class="btn-withdraw" onclick="requestPayout()" disabled>ÖDEME TALEP ET</button>
         </div>
-
-        <button class="btn-emergency" onclick="showAdmin(false)">EXIT ADMIN PANEL</button>
     </div>
 
     <nav class="nav-bar">
-        <div class="nav-tab active" data-id="page-home" onclick="nav('page-home', this)">
-            <i>🎮</i><span>Oyna</span>
-        </div>
-        <div class="nav-tab" data-id="page-tasks" onclick="nav('page-tasks', this)">
-            <i>📋</i><span>Görev</span>
-        </div>
-        <div class="nav-tab" data-id="page-friends" onclick="nav('page-friends', this)">
-            <i>👥</i><span>Dost</span>
-        </div>
-        <div class="nav-tab" data-id="page-wallet" onclick="nav('page-wallet', this)">
-            <i>💰</i><span>Cüzdan</span>
-        </div>
+        <div class="nav-item active" onclick="nav('p-home', this)"><span>🎮</span>Oyna</div>
+        <div class="nav-item" onclick="nav('p-tasks', this)"><span>📋</span>Görev</div>
+        <div class="nav-item" onclick="nav('p-friends', this)"><span>👥</span>Dost</div>
+        <div class="nav-item" onclick="nav('p-wallet', this)"><span>💰</span>Cüzdan</div>
     </nav>
 
     <script>
-        // --- ⚙️ CONFIGURATION ---
-        const firebaseConfig = {
-            apiKey: "AIzaSy...", 
-            authDomain: "spyder-coin.firebaseapp.com",
-            projectId: "spyder-coin",
-            storageBucket: "spyder-coin.appspot.com",
-            messagingSenderId: "...",
-            appId: "..."
-        };
-
-        // Initialize Firebase (Compat Mode)
+        // FIREBASE
+        const firebaseConfig = { apiKey: "AIzaSy...", projectId: "spyder-coin" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         const tg = window.Telegram.WebApp;
-        const MY_ADMIN_ID = "8392479231";
-        const user = tg.initDataUnsafe?.user || { id: "dev_8392479231", first_name: "Developer", username: "spyder_dev" };
+        const user = tg.initDataUnsafe?.user || { id: "8392479231", first_name: "Admin" };
 
-        // --- 📊 STATE ---
         let state = {
-            balance: 0,
-            energy: 1000,
-            maxEnergy: 1000,
-            level: 1,
-            wallet: "",
-            referrals: 0,
-            tapsCount: 0
+            bal: 0,
+            nrg: 1000,
+            ads: 0,
+            wallet: ""
         };
 
-        // --- 🚀 BOOTSTRAP ---
-        async function boot() {
-            tg.ready();
-            tg.expand();
-            
-            // UI Setup
-            document.getElementById('adm-my-id').innerText = user.id;
-            document.getElementById('ui-ref-link').innerText = `https://t.me/SpyderCoin_Bot?start=ref_${user.id}`;
-
-            // Load Data from Firebase
-            const userRef = db.collection('users').doc(String(user.id));
-            const doc = await userRef.get();
-
-            if (!doc.exists) {
-                await userRef.set({
-                    id: user.id,
-                    name: user.first_name,
-                    username: user.username || "",
-                    balance: 0,
-                    energy: 1000,
-                    wallet: "",
-                    level: 1,
-                    lastSeen: Date.now()
-                });
-                log(`[NEW] User ${user.id} registered.`);
+        async function init() {
+            tg.ready(); tg.expand();
+            const doc = await db.collection('users').doc(String(user.id)).get();
+            if (doc.exists) {
+                state = { ...state, ...doc.data() };
             } else {
-                const data = doc.data();
-                state.balance = data.balance || 0;
-                state.wallet = data.wallet || "";
-                state.level = data.level || 1;
-                
-                // Energy Recovery
-                const now = Date.now();
-                const offlineTime = Math.floor((now - (data.lastSeen || now)) / 1000);
-                state.energy = Math.min(1000, (data.energy || 1000) + offlineTime);
-                log(`[SYNC] Data restored. Energy +${offlineTime} recovered.`);
+                await db.collection('users').doc(String(user.id)).set(state);
             }
-
-            // Admin Logic
-            if (String(user.id) === MY_ADMIN_ID) {
-                document.getElementById('btn-admin-gate').style.display = 'block';
-            }
-
             updateUI();
-            setInterval(regenEnergy, 1000);
-            setInterval(syncToCloud, 15000); // 15 sec sync
+            setInterval(regen, 1000);
+            setInterval(sync, 15000);
         }
 
-        // --- 🕷️ TAP LOGIC ---
         function handleTap(e) {
-            if (state.energy <= 0) {
-                tg.HapticFeedback.notificationOccurred('error');
-                return;
-            }
-
-            // Multi-touch Support
-            const touches = e.touches ? e.touches.length : 1;
-            const tapPower = state.level; // Level 1 = 1 coin, Level 2 = 2 coins...
-
-            state.balance += (tapPower * touches);
-            state.energy -= touches;
-            state.tapsCount += touches;
-
+            if (state.nrg <= 0) return;
+            state.bal++; state.nrg--;
             updateUI();
             
             // FX
-            const touchObj = e.touches ? e.touches[0] : e;
-            createTapFX(touchObj.pageX, touchObj.pageY, `+${tapPower * touches}`);
-            createWebFX();
-
+            const ring = document.createElement('div');
+            ring.className = 'web-ring';
+            document.querySelector('.tap-zone').appendChild(ring);
+            setTimeout(() => ring.remove(), 500);
             tg.HapticFeedback.impactOccurred('light');
         }
 
-        function createTapFX(x, y, text) {
-            const el = document.createElement('div');
-            el.className = 'tap-score';
-            el.innerText = text;
-            el.style.left = `${x - 20}px`;
-            el.style.top = `${y - 40}px`;
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 700);
+        function watchAd() {
+            // Burada gerçek reklam SDK'nızı (AdsGram vb.) bağlayabilirsiniz.
+            // Şimdilik simüle ediyoruz.
+            tg.showConfirm("Reklam izleniyor... (Simülasyon)", (ok) => {
+                if(ok) {
+                    state.ads++;
+                    updateUI();
+                    tg.showAlert("Reklam başarıyla izlendi! " + state.ads + "/20");
+                }
+            });
         }
 
-        function createWebFX() {
-            const ring = document.createElement('div');
-            ring.className = 'web-layer';
-            document.getElementById('tap-container').appendChild(ring);
-            setTimeout(() => ring.remove(), 500);
+        function requestPayout() {
+            const addr = document.getElementById('wallet-addr').value;
+            if(!addr.startsWith("0x")) return tg.showAlert("Geçerli bir BEP20 adresi girin!");
+            
+            tg.showConfirm("0.01$ tutarındaki ödeme talebiniz alınsın mı?", (ok) => {
+                if(ok) {
+                    // Ödeme sonrası reklam sayacını sıfırla (isteğe bağlı)
+                    state.bal -= 1000;
+                    state.ads = 0; 
+                    sync();
+                    updateUI();
+                    tg.showAlert("Talebiniz alındı! Reklam sayacınız bir sonraki çekim için sıfırlandı.");
+                }
+            });
         }
 
-        // --- 🛠️ UI ENGINE ---
         function updateUI() {
-            document.getElementById('ui-balance').innerText = Math.floor(state.balance).toLocaleString();
-            document.getElementById('ui-energy').innerText = state.energy;
-            document.getElementById('energy-bar').style.width = `${(state.energy / state.maxEnergy) * 100}%`;
+            document.getElementById('ui-bal').innerText = state.bal.toLocaleString();
+            document.getElementById('ui-nrg').innerText = state.nrg;
+            document.getElementById('energy-fill').style.width = (state.nrg / 10) + "%";
             
-            // USDT Conversion
-            const usdt = (state.balance / 100000).toFixed(2);
-            document.getElementById('ui-usdt-val').innerText = `$${usdt}`;
-            
-            // Admin Panel UI
-            if (String(user.id) === MY_ADMIN_ID) {
-                document.getElementById('adm-active-taps').innerText = state.tapsCount;
+            const usdtVal = (state.bal * 0.00001).toFixed(3);
+            document.getElementById('ui-usdt').innerText = "$" + usdtVal;
+            document.getElementById('ui-ads').innerText = state.ads;
+
+            // ŞART KONTROLÜ
+            const btn = document.getElementById('btn-withdraw');
+            if (state.bal >= 1000 && state.ads >= 20) {
+                btn.disabled = false;
+                btn.style.background = "var(--green)";
+            } else {
+                btn.disabled = true;
+                btn.style.background = "#333";
             }
         }
 
-        function regenEnergy() {
-            if (state.energy < state.maxEnergy) {
-                state.energy++;
-                updateUI();
-            }
-        }
-
-        // --- 🛰️ CLOUD SYNC ---
-        async function syncToCloud() {
-            try {
-                const userRef = db.collection('users').doc(String(user.id));
-                await userRef.update({
-                    balance: state.balance,
-                    energy: state.energy,
-                    wallet: state.wallet,
-                    lastSeen: Date.now()
-                });
-                log(`[CLOUD] Progress saved.`);
-            } catch (err) {
-                log(`[ERR] Sync failed: ${err.message}`);
-            }
-        }
-
-        // --- 📋 TASK & ACTIONS ---
-        function handleTask(id, reward, link) {
-            tg.openLink(link);
-            log(`[TASK] User clicked ${id}`);
-            
-            setTimeout(() => {
-                state.balance += reward;
-                updateUI();
-                tg.showAlert(`SUCCESS! +${reward.toLocaleString()} SPYDER added to your vault.`);
-                syncToCloud();
-            }, 5000);
-        }
-
-        function saveWallet() {
-            state.wallet = document.getElementById('wallet-input').value;
-            syncToCloud();
-            tg.showScanQrPopup({ text: "Wallet saved!" });
-        }
-
-        function requestWithdraw() {
-            if (state.balance < 1000000) {
-                tg.showAlert("Insufficient balance! You need at least 1,000,000 SPYDER (10 USDT).");
-                return;
-            }
-            if (!state.wallet.startsWith("0x")) {
-                tg.showAlert("Please enter a valid USDT BEP20 address.");
-                return;
-            }
-            tg.showAlert("Withdrawal request sent! Our team will verify your taps and process the payment within 24-48 hours.");
-            log(`[WITHDRAW] User ${user.id} requested payout.`);
-        }
-
-        // --- 🗺️ NAVIGATION ---
-        function nav(pageId, el) {
+        function regen() { if(state.nrg < 1000) { state.nrg++; updateUI(); } }
+        async function sync() { await db.collection('users').doc(String(user.id)).update(state); }
+        
+        function nav(id, el) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            
-            document.getElementById(pageId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
             el.classList.add('active');
-            
-            tg.HapticFeedback.impactOccurred('medium');
         }
 
-        function showAdmin(val) {
-            document.getElementById('admin-view').style.display = val ? 'flex' : 'none';
-        }
-
-        function log(msg) {
-            const logger = document.getElementById('adm-logs');
-            const time = new Date().toLocaleTimeString();
-            logger.innerHTML += `[${time}] ${msg}<br>`;
-            logger.scrollTop = logger.scrollHeight;
-        }
-
-        function copyRef() {
-            const link = document.getElementById('ui-ref-link').innerText;
-            navigator.clipboard.writeText(link);
-            tg.showAlert("Invite link copied to clipboard!");
-        }
-
-        // --- 🖱️ EVENT LISTENERS ---
-        const tapBtn = document.getElementById('tap-spider');
-        tapBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            handleTap(e);
-        });
-
-        // Initialize
-        boot();
-
+        document.getElementById('spider-btn').addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(e); });
+        init();
     </script>
 </body>
 </html>
