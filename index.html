@@ -3,130 +3,309 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Firebase God Mode</title>
+    <title>SpyderCoin - Web Edition</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <style>
-        :root { --bg: #050505; --purple: #a855f7; --card: #151517; --text: #ffffff; --red: #ff3b30; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 0; height: 100vh; overflow: hidden; }
+        :root { --bg: #1a1a1a; --card-bg: #2c2c2c; --purple: #a855f7; --text: #ffffff; --inactive-text: #888; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        .page { display: none; height: 100vh; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
-        .page.active { display: flex; }
+        /* Başlık */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; color: var(--text); }
+        .header-title { font-weight: 600; font-size: 18px; }
 
-        /* 🕷️ ANA EKRAN */
-        .bal-text { font-size: 55px; font-weight: 900; margin-top: 30px; text-shadow: 0 0 20px var(--purple); }
-        .tap-zone { position: relative; width: 280px; height: 280px; display: flex; justify-content: center; align-items: center; margin: 30px 0; touch-action: none; }
-        .glow { position: absolute; width: 260px; height: 260px; border: 8px solid var(--purple); border-radius: 50%; box-shadow: 0 0 40px var(--purple); }
-        #spider-main { width: 190px; z-index: 10; transition: transform 0.05s; }
+        /* Ana İçerik */
+        .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px 20px; overflow-y: auto; flex-grow: 1; padding-bottom: 100px; /* Nav bar için boşluk */ }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; position: relative; }
 
-        /* 🏆 SIRALAMA (FIREBASE TABANLI) */
-        .rank-list { width: 100%; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding-bottom: 120px; }
-        .rank-item { background: var(--card); padding: 18px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
-        .rank-item.me { border: 1px solid var(--purple); background: rgba(168, 85, 247, 0.1); }
+        /* Sol Üst Kart - Ana Tıklama Alanı */
+        #p-play { grid-column: 1 / span 1; grid-row: 1 / span 2; } /* Görsele göre düzenlendi */
+        .balance-display { font-size: 48px; font-weight: 800; text-align: center; margin-bottom: 10px; }
+        .tap-label { text-align: center; font-size: 14px; color: var(--inactive-text); margin-bottom: 20px; }
+        
+        .tap-zone { position: relative; width: 140px; height: 140px; border-radius: 50%; background: var(--purple); margin: 0 auto; display: flex; justify-content: center; align-items: center; touch-action: none; cursor: pointer; }
+        .tap-zone::before { content: '🕸️'; font-size: 80px; position: absolute; } /* Örümcek emojisi */
+        .web-effect { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%); animation: webPulse 0.4s ease-out; opacity: 0; }
+        @keyframes webPulse { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.2); opacity: 0; } }
 
-        /* 🔐 ADMİN & ÜYE TAKİP */
-        #admin-panel { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; padding: 30px; flex-direction: column; align-items: center; }
-        .admin-card { background: var(--card); width: 100%; padding: 25px; border-radius: 20px; border: 1px solid #333; margin-top: 20px; }
-        .red-btn { background: var(--red); color: white; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: auto; }
+        .energy-section { margin-top: auto; padding-top: 20px; border-top: 1px solid #333; }
+        .energy-label { font-size: 12px; color: var(--inactive-text); display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .energy-bar-bg { background: #333; height: 8px; border-radius: 4px; overflow: hidden; }
+        #energy-fill { background: linear-gradient(90deg, #6366f1, var(--purple)); height: 100%; width: 100%; transition: width 0.3s ease-out; }
 
-        /* 📱 ALT MENÜ */
-        .nav-bar { position: fixed; bottom: 15px; width: 94%; left: 3%; background: rgba(21, 21, 23, 0.95); height: 70px; border-radius: 22px; display: grid; grid-template-columns: repeat(5, 1fr); border: 1px solid #2c2c2e; z-index: 1000; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; color: #71717a; gap: 4px; }
+        /* Görev Kartı */
+        #p-tasks-card { grid-column: 2 / span 1; }
+        .task-title { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+        .task-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .task-btn { background: var(--purple); color: var(--text); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; }
+        .task-btn.done { background: #555; color: #bbb; cursor: default; }
+
+        /* Sıralama Kartı (Görselde "Siranisleri" olarak geçiyor) */
+        #p-rank-card { grid-column: 2 / span 1; }
+        .rank-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .rank-item-me { border: 1px solid var(--purple); padding: 8px; border-radius: 8px; background: rgba(168, 85, 247, 0.1); }
+        .rank-title { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+
+        /* Dost Kartı (Görselde "p-Leagus" olarak geçiyor) */
+        #p-friends-card { grid-column: 1 / span 1; }
+        .invite-btn { background: var(--purple); color: var(--text); padding: 10px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; border: none; width: 100%; margin-top: 15px; cursor: pointer; }
+
+        /* Cüzdan Kartı */
+        #p-wallet-card { grid-column: 2 / span 1; }
+        .wallet-balance { font-size: 32px; font-weight: 800; margin-top: 5px; }
+        .wallet-spyder { font-size: 14px; color: var(--inactive-text); margin-top: 5px; }
+
+        /* Alt Navigasyon */
+        .nav-bar { display: flex; justify-content: space-around; background: var(--card-bg); border-top: 1px solid #333; padding: 10px 0; position: fixed; bottom: 0; left: 0; right: 0; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 12px; color: var(--inactive-text); cursor: pointer; padding: 5px 0; }
         .nav-item.active { color: var(--purple); }
+        .nav-item span { margin-top: 4px; }
     </style>
 </head>
 <body>
 
-    <div id="p-play" class="page active">
-        <div class="bal-text" id="ui-bal">0</div>
-        <div class="tap-zone" id="tap-target">
-            <div class="glow"></div>
-            <img src="https://api.mimic.ai/api/v1/files/image_7ba2e0.png" id="spider-main">
-        </div>
-        <button id="adm-trigger" style="display:none; background:none; border:1px solid var(--purple); color:var(--purple); padding:8px 15px; border-radius:10px;" onclick="toggleAdmin(true)">🕵️ Kontrol Merkezi</button>
+    <div class="header">
+        <span class="header-title">SpyderCoin - Web Edition</span>
+        <button id="admin-toggle" style="background: none; border: none; color: var(--purple); font-size: 14px; cursor: pointer; display: none;">⚙️</button>
     </div>
 
-    <div id="p-league" class="page">
-        <h2 style="color:var(--purple); margin-bottom: 20px;">Sıralama</h2>
-        <div class="rank-list" id="rank-container">
-            <p style="text-align:center; color:#666;">Yükleniyor...</p>
+    <div class="main-content">
+        <div id="p-play" class="card">
+            <div class="balance-display" id="ui-bal">0</div>
+            <div class="tap-label">Tap Zone</div>
+            
+            <div class="tap-zone" id="tap-target">
+                <div class="web-effect"></div>
+            </div>
+
+            <div class="energy-section">
+                <div class="energy-label">
+                    <span>⚡ Enerji:</span>
+                    <span id="ui-nrg-val">100</span>/<span id="ui-nrg-max">100</span>
+                </div>
+                <div class="energy-bar-bg">
+                    <div id="energy-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="p-tasks-card" class="card">
+            <div class="task-title">Telegram Kanal</div>
+            <small style="color:var(--purple);">+555 SPYDER</small>
+            <button id="tg-task-btn" class="task-btn" style="margin-top:10px;" onclick="doTelegramTask()">Katıl</button>
+        </div>
+
+        <div id="p-rank-card" class="card">
+            <div class="rank-title">Sıralama</div>
+            <div class="rank-list" id="rank-container">
+                <p style="text-align:center; color:#666;">Yükleniyor...</p>
+            </div>
+        </div>
+
+        <div id="p-friends-card" class="card">
+            <p style="font-size:16px; font-weight:600;">Arkadaş Davet Et</p>
+            <small style="color:var(--inactive-text);">Arkadaşlarını davet et, bonus kazan!</small>
+            <button class="invite-btn">Davet Et</button>
+        </div>
+
+        <div id="p-wallet-card" class="card">
+            <p style="font-size:14px; color:var(--inactive-text);">Bakiyen</p>
+            <div class="wallet-balance" id="w-usd">$0.00</div>
+            <div class="wallet-spyder"><span id="w-coin">0</span> SPYDER</div>
         </div>
     </div>
-
-    <div id="admin-panel">
-        <h1 style="color:var(--purple); font-size: 24px;">KONTROL MERKEZİ</h1>
-        <div class="admin-card">
-            <p>Admin: <b id="adm-name">...</b></p>
-            <p>Kullanıcı Adı: <b id="adm-user">...</b></p>
-            <p>Bakiye: <b id="adm-bal">0</b></p>
-            <hr style="border:0; border-top:1px solid #333; margin:15px 0;">
-            <p style="font-size:11px; color:#666;">* Firebase Firestore kuralları uygulanmaktadır. Tüm üyeler @SpyderCoin_Bot üzerinden takip edilebilir.</p>
-        </div>
-        <button class="red-btn" onclick="toggleAdmin(false)">Kapat</button>
-        <p style="margin-top:20px; font-size:12px; color:#444;">@SpyderCoin_Bot</p>
-    </div>
-
-    <div id="p-tasks" class="page"><h2>Görevler</h2></div>
-    <div id="p-friends" class="page"><h2>Dostlar</h2></div>
-    <div id="p-wallet" class="page"><h2>Cüzdan</h2></div>
 
     <nav class="nav-bar">
-        <div class="nav-item active" onclick="nav('p-play', this)"><span>🎮 Oyna</span></div>
-        <div class="nav-item" onclick="nav('p-tasks', this)"><span>📋 Görev</span></div>
-        <div class="nav-item" onclick="nav('p-friends', this)"><span>👥 Dost</span></div>
-        <div class="nav-item" onclick="nav('p-league', this)"><span>🏆 Lig</span></div>
-        <div class="nav-item" onclick="nav('p-wallet', this)"><span>💰 Cüzdan</span></div>
+        <div class="nav-item active" onclick="nav('p-play', this)">
+            <span>🎮</span><span>Oyna</span>
+        </div>
+        <div class="nav-item" onclick="nav('p-tasks-card', this)">
+            <span>📋</span><span>Görev</span>
+        </div>
+        <div class="nav-item" onclick="nav('p-friends-card', this)">
+            <span>👥</span><span>Dost</span>
+        </div>
+        <div class="nav-item" onclick="nav('p-rank-card', this)">
+            <span>🏆</span><span>Lig</span>
+        </div>
+        <div class="nav-item" onclick="nav('p-wallet-card', this)">
+            <span>💰</span><span>Cüzdan</span>
+        </div>
     </nav>
 
+    <div id="admin-panel" style="position: fixed; inset: 0; background: #1a1a1a; z-index: 9999; display: none; flex-direction: column; align-items: center; padding: 30px;">
+        <h1 style="color:var(--purple);">KONTROL MERKEZİ</h1>
+        <div class="card" style="width:100%; margin-top:20px;">
+            <p>Admin: <b id="adm-name"></b></p>
+            <p>Kullanıcı Adı: <b id="adm-user"></b></p>
+            <p>Bakiye: <b id="adm-bal">0</b></p>
+        </div>
+        <button style="background: #ff3b30; color: white; padding: 15px; border-radius: 12px; border:none; width:100%; margin-top: auto;" onclick="toggleAdmin(false)">Kapat</button>
+    </div>
+
     <script>
-        // 🛠️ FIREBASE CONFIG
-        const firebaseConfig = { apiKey: "BURAYA_KENDI_API_KEY", projectId: "PROJECT_ID", appId: "APP_ID" };
+        // 🛠️ FIREBASE CONFIG - BURAYA KENDİ BİLGİLERİNİ GİR KRAL
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        
         const tg = window.Telegram.WebApp;
-        const MY_ID = 8392479231;
-        const u = tg.initDataUnsafe?.user || { id: 12345, first_name: "TestUser", username: "tester" };
+        const MY_ADMIN_ID = "8392479231"; // Senin Telegram ID'n
+        const user = tg.initDataUnsafe?.user || { id: "test_user_123", first_name: "Misafir", username: "testuser" };
 
-        let bal = 0;
+        let balance = 0;
+        let energy = 100;
+        const maxEnergy = 100;
+        const energyRechargeRate = 1; // saniyede 1 enerji
+        let lastTapTime = 0;
+        let isTelegramTaskDone = localStorage.getItem(`tg_task_${user.id}`) === 'true';
 
         async function init() {
-            tg.ready(); tg.expand();
-            const userRef = db.collection('users').doc(String(u.id));
+            tg.ready();
+            tg.expand();
+
+            const userRef = db.collection('users').doc(String(user.id));
             const doc = await userRef.get();
+
             if (!doc.exists) {
-                await userRef.set({ name: u.first_name, username: u.username || "yok", balance: 0 });
+                await userRef.set({ name: user.first_name, username: user.username || "", balance: 0, lastEnergyRecharge: Date.now() });
             } else {
-                bal = doc.data().balance;
+                const data = doc.data();
+                balance = data.balance;
+                
+                // Enerji geri yükleme hesaplaması
+                const now = Date.now();
+                const lastRecharge = data.lastEnergyRecharge || now;
+                const timePassed = Math.floor((now - lastRecharge) / 1000);
+                energy = Math.min(maxEnergy, (data.energy || maxEnergy) + timePassed * energyRechargeRate);
+                await userRef.update({ energy: energy, lastEnergyRecharge: now });
             }
-            if (u.id === MY_ID) {
-                document.getElementById('adm-trigger').style.display = 'block';
-                document.getElementById('adm-name').innerText = u.first_name;
-                document.getElementById('adm-user').innerText = "@" + (u.username || "yok");
-            }
+
             updateUI();
+            
+            if (String(user.id) === MY_ADMIN_ID) {
+                document.getElementById('admin-toggle').style.display = 'block';
+                document.getElementById('adm-name').innerText = user.first_name;
+                document.getElementById('adm-user').innerText = "@" + (user.username || "yok");
+            }
+            if (isTelegramTaskDone) {
+                document.getElementById('tg-task-btn').innerText = "Tamamlandı";
+                document.getElementById('tg-task-btn').classList.add('done');
+                document.getElementById('tg-task-btn').onclick = null;
+            }
+            setInterval(rechargeEnergy, 1000); // Her saniye enerji doldur
         }
 
-        function updateUI() {
-            document.getElementById('ui-bal').innerText = bal.toLocaleString();
-            document.getElementById('adm-bal').innerText = bal.toLocaleString();
+        async function updateUI() {
+            document.getElementById('ui-bal').innerText = balance.toLocaleString();
+            document.getElementById('ui-nrg-val').innerText = energy;
+            document.getElementById('energy-fill').style.width = (energy / maxEnergy * 100) + "%";
+            
+            document.getElementById('adm-bal').innerText = balance.toLocaleString(); // Admin paneli
+            
+            document.getElementById('w-coin').innerText = balance.toLocaleString();
+            // Basit bir USD değeri illüzyonu
+            document.getElementById('w-usd').innerText = `$${(balance * 0.000001).toFixed(6)}`; 
         }
 
-        // 🏆 GERÇEK SIRALAMA (EN ÇOK OLAN EN ÜSTTE)
+        async function rechargeEnergy() {
+            if (energy < maxEnergy) {
+                energy = Math.min(maxEnergy, energy + energyRechargeRate);
+                updateUI();
+                await db.collection('users').doc(String(user.id)).update({ energy: energy, lastEnergyRecharge: Date.now() });
+            }
+        }
+
+        // 🕸️ ÖRÜMCEK AĞI ANİMASYONU
+        function playWebAnimation(e) {
+            const tapZone = document.getElementById('tap-target');
+            const webEffect = tapZone.querySelector('.web-effect');
+            
+            // Mevcut animasyonu sıfırla ve yeniden başlat
+            webEffect.style.animation = 'none';
+            void webEffect.offsetWidth; // DOM'u yeniden çizmeye zorla
+            webEffect.style.animation = null;
+            webEffect.style.animation = 'webPulse 0.4s ease-out forwards';
+        }
+
+        // Tıklama Fonksiyonu
+        async function handleTap(e) {
+            if (energy <= 0) {
+                tg.showAlert('Enerjin bitti! Bekle ve yeniden doldur.');
+                return;
+            }
+
+            // Tıklama hızı sınırlaması
+            const now = Date.now();
+            if (now - lastTapTime < 50) return; // 50ms (saniyede 20 tıklama)
+            lastTapTime = now;
+
+            balance += 1; // Tık başına 1 puan
+            energy--;
+            updateUI();
+            playWebAnimation(); // Ağ animasyonunu oynat
+
+            // Firebase'e sadece belli aralıklarla veya uygulama kapanırken yaz (optimizasyon için)
+            // Şimdilik her tıklamada yazıyoruz, Firebase kuralları spamı engelleyecek
+            await db.collection('users').doc(String(user.id)).update({ balance: balance, energy: energy, lastEnergyRecharge: Date.now() });
+        }
+
+        // Görev: Telegram Kanalı
+        async function doTelegramTask() {
+            if (isTelegramTaskDone) {
+                tg.showAlert('Bu görevi zaten tamamladın!');
+                return;
+            }
+
+            const btn = document.getElementById('tg-task-btn');
+            btn.innerText = "Kontrol Ediliyor...";
+            btn.classList.remove('active');
+            btn.classList.add('done'); // Görsel olarak disabled gibi yap
+            btn.onclick = null; // Tıklamayı engelle
+
+            tg.openTelegramLink("https://t.me/SpyderCommunity");
+
+            // 3 saniye sonra ödül ver (illüzyon)
+            setTimeout(async () => {
+                balance += 555;
+                isTelegramTaskDone = true;
+                localStorage.setItem(`tg_task_${user.id}`, 'true');
+
+                await db.collection('users').doc(String(user.id)).update({ balance: balance });
+                updateUI();
+                tg.showNotification({
+                    type: 'success',
+                    text: 'Tebrikler! +555 SPYDER kazandın.'
+                });
+                btn.innerText = "Tamamlandı";
+            }, 3000);
+        }
+
+        // Sıralama Listesini Getir
         async function fetchRankings() {
             const container = document.getElementById('rank-container');
-            container.innerHTML = "Yükleniyor...";
-            const snapshot = await db.collection('users').orderBy('balance', 'desc').limit(25).get();
+            container.innerHTML = "<p style='text-align:center; color:#666;'>Yükleniyor...</p>";
+
+            // En yüksek 10 kullanıcıyı çek
+            const snapshot = await db.collection('users').orderBy('balance', 'desc').limit(10).get();
+            
             container.innerHTML = "";
             let rank = 1;
             snapshot.forEach(doc => {
                 const data = doc.data();
-                const isMe = doc.id === String(u.id);
+                const isMe = doc.id === String(user.id);
                 container.innerHTML += `
-                    <div class="rank-item ${isMe ? 'me' : ''}">
+                    <div class="rank-item ${isMe ? 'rank-item-me' : ''}">
                         <span>${rank}. ${data.name}</span>
                         <b>${data.balance.toLocaleString()}</b>
                     </div>
@@ -135,23 +314,44 @@
             });
         }
 
-        function tap(e) {
-            bal++; updateUI();
-            db.collection('users').doc(String(u.id)).update({ balance: bal });
-            document.getElementById('spider-main').style.transform = "scale(0.85)";
-            setTimeout(() => document.getElementById('spider-main').style.transform = "scale(1)", 50);
+        // Admin Panelini Aç/Kapat
+        function toggleAdmin(show) {
+            document.getElementById('admin-panel').style.display = show ? 'flex' : 'none';
         }
 
-        function nav(id, el) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            el.classList.add('active');
-            if(id === 'p-league') fetchRankings();
+        // Navigasyon Fonksiyonu (Görseldeki gibi sekmeler arası geçiş)
+        function nav(targetId, navItem) {
+            // Tüm kartları gizle
+            document.querySelectorAll('.main-content > .card').forEach(card => card.style.display = 'none');
+            // Hedef kartı göster
+            const targetCard = document.getElementById(targetId);
+            if (targetCard) {
+                targetCard.style.display = 'flex';
+            }
+
+            // Navigasyon itemlerini güncelle
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            navItem.classList.add('active');
+
+            // Eğer "Lig" sekmesine tıklanırsa sıralamayı yenile
+            if (targetId === 'p-rank-card') {
+                fetchRankings();
+            }
         }
 
-        function toggleAdmin(s) { document.getElementById('admin-panel').style.display = s ? 'flex' : 'none'; }
-        document.getElementById('tap-target').addEventListener('touchstart', (e) => { e.preventDefault(); tap(e); });
+        // Event Listener'lar
+        document.getElementById('tap-target').addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(e); });
+        document.getElementById('tap-target').addEventListener('mousedown', handleTap);
+        document.getElementById('admin-toggle').addEventListener('click', () => toggleAdmin(true));
+
+        // Başlangıçta sadece p-play ve ilk nav-item aktif olsun
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.main-content > .card').forEach(card => card.style.display = 'none');
+            document.getElementById('p-play').style.display = 'flex';
+            document.querySelector('.nav-item.active').classList.remove('active');
+            document.querySelector('.nav-bar .nav-item:nth-child(1)').classList.add('active');
+        });
+
         init();
     </script>
 </body>
