@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Spyder Tap - Telegram</title>
+    <title>Spyder Tap Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #0f1014;
-            --card-bg: #1c1f24;
-            --accent: #f1c40f;
-            --spider-red: #e74c3c;
+            --bg-dark: #000000;
+            --card-bg: #1c1c1e;
+            --gold: #f3ba2f;
+            --gray-text: #8e8e93;
+            --blue-accent: #3a47ff;
         }
 
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg-dark);
             color: white;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -24,504 +25,249 @@
             height: 100vh;
             overflow: hidden;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* Üst Bilgi Panelleri */
-        .top-stats {
-            display: flex;
-            gap: 10px;
-            width: 90%;
+        /* Üst Bilgi Paneli */
+        .header-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            width: 92%;
             margin-top: 15px;
         }
 
-        .stat-box {
-            flex: 1;
+        .header-card {
             background: var(--card-bg);
-            padding: 10px;
             border-radius: 12px;
+            padding: 10px 5px;
             text-align: center;
-            font-size: 11px;
-            border: 1px solid #2d3436;
+            border: 1px solid #2c2c2e;
         }
 
-        .stat-box span {
-            display: block;
-            font-weight: bold;
-            font-size: 14px;
-            color: var(--accent);
-        }
+        .card-label { font-size: 10px; color: #ff9f0a; margin-bottom: 4px; }
+        .card-label.blue { color: #5e5ce6; }
+        .card-label.green { color: #32d74b; }
+        
+        .card-value { font-size: 13px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 4px; }
 
-        /* Ana Bakiye */
-        .balance-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 30px 0;
-            font-size: 42px;
-            font-weight: 800;
-        }
-
-        .coin-icon {
-            width: 45px;
-            height: 45px;
-            background: var(--accent);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: black;
-            font-size: 24px;
-            box-shadow: 0 0 15px var(--accent);
-        }
-
-        /* Seviye Çubuğu */
-        .level-info {
-            width: 85%;
-            margin-bottom: 20px;
-        }
-        .level-text {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #2d3436;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            width: 45%;
-            height: 100%;
-            background: linear-gradient(90deg, #6c5ce7, #a29bfe);
-        }
-
-        /* SPYDER TIKLAMA ALANI */
-        .clicker-area {
-            position: relative;
-            width: 280px;
-            height: 280px;
-            background: radial-gradient(circle, #2d3436 0%, #0f1014 70%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.1s ease;
-            border: 5px solid #1e272e;
-        }
-
-        .clicker-area:active {
-            transform: scale(0.95);
-        }
-
-        .spyder-image {
-            width: 80%;
-            /* Örümcek görseli buraya gelecek - Şimdilik Emoji */
-            font-size: 120px;
-            filter: drop-shadow(0 0 20px var(--spider-red));
-        }
-
-        /* Enerji ve Alt Bar */
-        .energy-info {
+        /* Ana Bakiye Bölümü */
+        .main-balance {
             margin-top: 30px;
             display: flex;
             align-items: center;
-            gap: 5px;
-            font-size: 18px;
-            font-weight: bold;
+            gap: 12px;
         }
 
+        .gold-coin {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(180deg, #ffe000 0%, #ff9000 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: bold;
+            color: rgba(0,0,0,0.5);
+            box-shadow: 0 0 20px rgba(243, 186, 47, 0.4);
+            border: 2px solid #fff;
+        }
+
+        .balance-text { font-size: 48px; font-weight: 800; }
+
+        /* Seviye Çubuğu */
+        .level-container { width: 90%; margin-top: 25px; }
+        .level-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px; font-weight: 600; }
+        .level-bar-bg { width: 100%; height: 12px; background: #2c2c2e; border-radius: 10px; position: relative; overflow: hidden; }
+        .level-bar-fill { width: 45%; height: 100%; background: linear-gradient(90deg, #5e5ce6, #bf5af2); border-radius: 10px; }
+
+        /* Spyder Tıklama Alanı */
+        .spyder-wrapper {
+            position: relative;
+            margin-top: 40px;
+            width: 320px;
+            height: 320px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .outer-glow {
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            background: rgba(58, 71, 255, 0.15);
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: 1;
+        }
+
+        .blue-circle {
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            border: 12px solid var(--blue-accent);
+            border-radius: 50%;
+            z-index: 2;
+            box-shadow: inset 0 0 20px rgba(58, 71, 255, 0.5);
+        }
+
+        #spyder-btn {
+            z-index: 3;
+            width: 220px;
+            cursor: pointer;
+            transition: transform 0.05s scale;
+            filter: drop-shadow(0 0 15px rgba(255,0,0,0.3));
+        }
+
+        #spyder-btn:active { transform: scale(0.92); }
+
+        /* Enerji Göstergesi */
+        .energy-section { margin-top: auto; margin-bottom: 90px; width: 90%; }
+        .energy-text { display: flex; align-items: center; gap: 6px; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .energy-bar-bg { width: 100%; height: 14px; background: #2c2c2e; border-radius: 20px; border: 1px solid #3a3a3c; }
+        .energy-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ffd60a, #ff9f0a); border-radius: 20px; transition: width 0.2s; }
+
+        /* Alt Navigasyon */
         .bottom-nav {
             position: fixed;
-            bottom: 0;
-            width: 100%;
-            height: 70px;
-            background: #1c1f24;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid #2d3436;
+            bottom: 10px;
+            width: 94%;
+            background: #1c1c1e;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 12px 0;
+            border-radius: 20px;
+            border: 1px solid #2c2c2e;
         }
 
-        .nav-item {
-            text-align: center;
-            font-size: 12px;
-            color: #888;
-        }
+        .nav-item { text-align: center; font-size: 11px; color: var(--gray-text); }
+        .nav-icon { font-size: 20px; margin-bottom: 4px; display: block; }
 
-        /* Yüzen Sayı Animasyonu */
-        .floating-text {
+        /* Sayı Animasyonu */
+        .tap-number {
             position: absolute;
             color: white;
-            font-weight: bold;
-            font-size: 24px;
+            font-size: 32px;
+            font-weight: 900;
             pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
-            z-index: 100;
+            animation: tapAnimation 0.8s ease-out forwards;
+            z-index: 10;
         }
 
-        @keyframes floatUp {
+        @keyframes tapAnimation {
             0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-100px); }
+            100% { opacity: 0; transform: translateY(-120px); }
         }
     </style>
 </head>
 <body>
 
-    <div class="top-stats">
-        <div class="stat-box">Tık Başı Kazanç<span>+1</span></div>
-        <div class="stat-box">Sıradaki Seviye<span>5K</span></div>
-        <div class="stat-box">Saatlik Kar<span>0</span></div>
+    <div class="header-grid">
+        <div class="header-card">
+            <div class="card-label">Earn per tap</div>
+            <div class="card-value"><span style="color:var(--gold)">💰</span> +1</div>
+        </div>
+        <div class="header-card">
+            <div class="card-label blue">Coins to level up</div>
+            <div class="card-value">5K</div>
+        </div>
+        <div class="header-card">
+            <div class="card-label green">Profit per hour</div>
+            <div class="card-value"><span style="color:var(--gold)">💰</span> 0</div>
+        </div>
     </div>
 
-    <div class="balance-container">
-        <div class="coin-icon">💰</div>
-        <span id="coin-count">100</span>
+    <div class="main-balance">
+        <div class="gold-coin">$</div>
+        <div class="balance-text" id="balance">100</div>
     </div>
 
-    <div class="level-info">
-        <div class="level-text">
+    <div class="level-container">
+        <div class="level-header">
             <span>Bronze ></span>
-            <span>Level 1/10</span>
+            <span style="color:var(--gray-text)">Level 1/10</span>
         </div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="progress-fill"></div>
+        <div class="level-bar-bg">
+            <div class="level-bar-fill"></div>
         </div>
     </div>
 
-    <div class="clicker-area" id="click-target">
-        <div class="spyder-image">🕷️</div>
+    <div class="spyder-wrapper">
+        <div class="outer-glow"></div>
+        <div class="blue-circle"></div>
+        <img src="https://img.freepik.com/premium-photo/cute-spider-cartoon-character_1025756-343.jpg" id="spyder-btn" alt="Spyder">
     </div>
 
-    <div class="energy-info">
-        ⚡ <span id="current-energy">1000</span> / 1000
+    <div class="energy-section">
+        <div class="energy-text">
+            <span style="color:#ffd60a">⚡</span> 
+            <span id="energy-val">1000</span> / 1000
+        </div>
+        <div class="energy-bar-bg">
+            <div class="energy-bar-fill" id="energy-bar"></div>
+        </div>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item">🏠<br>Home</div>
-        <div class="nav-item">💰<br>Earn</div>
-        <div class="nav-item">🚀<br>Boost</div>
-        <div class="nav-item">👤<br>Profile</div>
+        <div class="nav-item"><span class="nav-icon">🏠</span>Home</div>
+        <div class="nav-item"><span class="nav-icon">⛏️</span>Mine</div>
+        <div class="nav-item"><span class="nav-icon">👥</span>Friends</div>
+        <div class="nav-item"><span class="nav-icon">🚀</span>Boost</div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let coins = 100;
+        let balance = 100;
         let energy = 1000;
         const maxEnergy = 1000;
 
-        const coinDisplay = document.getElementById('coin-count');
-        const energyDisplay = document.getElementById('current-energy');
-        const clickTarget = document.getElementById('click-target');
-        const progressFill = document.getElementById('progress-fill');
+        const balanceEl = document.getElementById('balance');
+        const energyEl = document.getElementById('energy-val');
+        const energyBar = document.getElementById('energy-bar');
+        const spyderBtn = document.getElementById('spyder-btn');
 
-        clickTarget.addEventListener('touchstart', (e) => {
+        // Tıklama Olayı
+        spyderBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
             if (energy > 0) {
-                // Enerji düşür ve para ekle
-                energy--;
-                coins++;
-                
-                // UI Güncelle
-                coinDisplay.innerText = coins;
-                energyDisplay.innerText = energy;
-                progressFill.style.width = (coins / 50).toFixed(0) + "%"; // Basit seviye ilerlemesi
+                // Mantık
+                balance += 1;
+                energy -= 1;
 
-                // Haptic Feedback (Telegram Titreşimi)
+                // Güncelleme
+                balanceEl.innerText = balance.toLocaleString();
+                energyEl.innerText = energy;
+                energyBar.style.width = (energy / maxEnergy * 100) + "%";
+
+                // Efektler
                 tg.HapticFeedback.impactOccurred('medium');
-
-                // Tıklanan yerde sayı fırlat
-                createFloatingText(e.touches[0].clientX, e.touches[0].clientY);
+                createTapAnim(e.touches[0].clientX, e.touches[0].clientY);
             }
         });
 
-        function createFloatingText(x, y) {
-            const text = document.createElement('div');
-            text.className = 'floating-text';
-            text.innerText = '+1';
-            text.style.left = x + 'px';
-            text.style.top = y + 'px';
-            document.body.appendChild(text);
-
-            setTimeout(() => {
-                text.remove();
-            }, 800);
+        function createTapAnim(x, y) {
+            const num = document.createElement('div');
+            num.className = 'tap-number';
+            num.innerText = '+1';
+            num.style.left = (x - 20) + 'px';
+            num.style.top = (y - 40) + 'px';
+            document.body.appendChild(num);
+            
+            setTimeout(() => num.remove(), 800);
         }
 
-        // Enerji Yenileme (Saniyede 1)
+        // Enerji Yenileme
         setInterval(() => {
             if (energy < maxEnergy) {
-                energy++;
-                energyDisplay.innerText = energy;
+                energy += 1;
+                energyEl.innerText = energy;
+                energyBar.style.width = (energy / maxEnergy * 100) + "%";
             }
-        }, 1500);
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Spyder Tap - Telegram</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root {
-            --bg-color: #0f1014;
-            --card-bg: #1c1f24;
-            --accent: #f1c40f;
-            --spider-red: #e74c3c;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            user-select: none;
-        }
-
-        /* Üst Bilgi Panelleri */
-        .top-stats {
-            display: flex;
-            gap: 10px;
-            width: 90%;
-            margin-top: 15px;
-        }
-
-        .stat-box {
-            flex: 1;
-            background: var(--card-bg);
-            padding: 10px;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 11px;
-            border: 1px solid #2d3436;
-        }
-
-        .stat-box span {
-            display: block;
-            font-weight: bold;
-            font-size: 14px;
-            color: var(--accent);
-        }
-
-        /* Ana Bakiye */
-        .balance-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 30px 0;
-            font-size: 42px;
-            font-weight: 800;
-        }
-
-        .coin-icon {
-            width: 45px;
-            height: 45px;
-            background: var(--accent);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: black;
-            font-size: 24px;
-            box-shadow: 0 0 15px var(--accent);
-        }
-
-        /* Seviye Çubuğu */
-        .level-info {
-            width: 85%;
-            margin-bottom: 20px;
-        }
-        .level-text {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #2d3436;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            width: 45%;
-            height: 100%;
-            background: linear-gradient(90deg, #6c5ce7, #a29bfe);
-        }
-
-        /* SPYDER TIKLAMA ALANI */
-        .clicker-area {
-            position: relative;
-            width: 280px;
-            height: 280px;
-            background: radial-gradient(circle, #2d3436 0%, #0f1014 70%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.1s ease;
-            border: 5px solid #1e272e;
-        }
-
-        .clicker-area:active {
-            transform: scale(0.95);
-        }
-
-        .spyder-image {
-            width: 80%;
-            /* Örümcek görseli buraya gelecek - Şimdilik Emoji */
-            font-size: 120px;
-            filter: drop-shadow(0 0 20px var(--spider-red));
-        }
-
-        /* Enerji ve Alt Bar */
-        .energy-info {
-            margin-top: 30px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            height: 70px;
-            background: #1c1f24;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid #2d3436;
-        }
-
-        .nav-item {
-            text-align: center;
-            font-size: 12px;
-            color: #888;
-        }
-
-        /* Yüzen Sayı Animasyonu */
-        .floating-text {
-            position: absolute;
-            color: white;
-            font-weight: bold;
-            font-size: 24px;
-            pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
-            z-index: 100;
-        }
-
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-100px); }
-        }
-    </style>
-</head>
-<body>
-
-    <div class="top-stats">
-        <div class="stat-box">Tık Başı Kazanç<span>+1</span></div>
-        <div class="stat-box">Sıradaki Seviye<span>5K</span></div>
-        <div class="stat-box">Saatlik Kar<span>0</span></div>
-    </div>
-
-    <div class="balance-container">
-        <div class="coin-icon">💰</div>
-        <span id="coin-count">100</span>
-    </div>
-
-    <div class="level-info">
-        <div class="level-text">
-            <span>Bronze ></span>
-            <span>Level 1/10</span>
-        </div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="progress-fill"></div>
-        </div>
-    </div>
-
-    <div class="clicker-area" id="click-target">
-        <div class="spyder-image">🕷️</div>
-    </div>
-
-    <div class="energy-info">
-        ⚡ <span id="current-energy">1000</span> / 1000
-    </div>
-
-    <div class="bottom-nav">
-        <div class="nav-item">🏠<br>Home</div>
-        <div class="nav-item">💰<br>Earn</div>
-        <div class="nav-item">🚀<br>Boost</div>
-        <div class="nav-item">👤<br>Profile</div>
-    </div>
-
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        let coins = 100;
-        let energy = 1000;
-        const maxEnergy = 1000;
-
-        const coinDisplay = document.getElementById('coin-count');
-        const energyDisplay = document.getElementById('current-energy');
-        const clickTarget = document.getElementById('click-target');
-        const progressFill = document.getElementById('progress-fill');
-
-        clickTarget.addEventListener('touchstart', (e) => {
-            if (energy > 0) {
-                // Enerji düşür ve para ekle
-                energy--;
-                coins++;
-                
-                // UI Güncelle
-                coinDisplay.innerText = coins;
-                energyDisplay.innerText = energy;
-                progressFill.style.width = (coins / 50).toFixed(0) + "%"; // Basit seviye ilerlemesi
-
-                // Haptic Feedback (Telegram Titreşimi)
-                tg.HapticFeedback.impactOccurred('medium');
-
-                // Tıklanan yerde sayı fırlat
-                createFloatingText(e.touches[0].clientX, e.touches[0].clientY);
-            }
-        });
-
-        function createFloatingText(x, y) {
-            const text = document.createElement('div');
-            text.className = 'floating-text';
-            text.innerText = '+1';
-            text.style.left = x + 'px';
-            text.style.top = y + 'px';
-            document.body.appendChild(text);
-
-            setTimeout(() => {
-                text.remove();
-            }, 800);
-        }
-
-        // Enerji Yenileme (Saniyede 1)
-        setInterval(() => {
-            if (energy < maxEnergy) {
-                energy++;
-                energyDisplay.innerText = energy;
-            }
-        }, 1500);
+        }, 2000);
     </script>
 </body>
 </html>
