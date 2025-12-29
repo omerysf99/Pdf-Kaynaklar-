@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SpyderCoin - Business Edition</title>
+    <title>SpyderCoin - Full Control</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -16,30 +16,32 @@
         
         #loader { position: fixed; inset: 0; background: #000; z-index: 15000; display: flex; align-items: center; justify-content: center; }
         main { flex: 1; overflow-y: auto; padding-bottom: 90px; display: flex; flex-direction: column; }
-        .view { display: none; padding: 20px; flex-direction: column; animation: fadeIn 0.3s ease; }
+        .view { display: none; padding: 20px; flex-direction: column; animation: fadeIn 0.2s ease; }
         .view.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 16px; padding: 15px; margin-bottom: 12px; }
-        .bal-txt { font-size: 54px; font-weight: 800; color: var(--p-purple); text-align: center; margin: 20px 0; }
+        .bal-txt { font-size: 50px; font-weight: 800; color: var(--p-purple); text-align: center; margin: 15px 0; }
         
-        .spyder-btn { width: 220px; height: 220px; background: radial-gradient(circle, #c084fc, #a855f7); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 30px rgba(168, 85, 247, 0.3); margin: 40px auto; cursor: pointer; border: 8px solid rgba(255,255,255,0.1); }
+        .spyder-btn { width: 200px; height: 200px; background: radial-gradient(circle, #c084fc, #a855f7); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 30px rgba(168, 85, 247, 0.3); margin: 30px auto; cursor: pointer; border: 6px solid rgba(255,255,255,0.1); }
         .spyder-btn:active { transform: scale(0.92); }
-        .spyder-btn span { font-size: 100px; pointer-events: none; }
+        .spyder-btn span { font-size: 90px; pointer-events: none; }
 
         .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; }
-        .btn-main:disabled { background: #1a1a1f; color: #444; border: 1px solid #222; }
         input { width: 100%; padding: 12px; background: #050505; border: 1px solid #222; color: #fff; border-radius: 10px; margin: 8px 0; text-align: center; outline: none; }
 
-        /* Admin Table & Requests */
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        td { padding: 12px 8px; border-bottom: 1px solid #1a1a1f; }
-        .req-card { border-left: 4px solid var(--gold); margin-bottom: 10px; padding-left: 10px; }
+        /* Gelişmiş Admin Tablosu */
+        .admin-table-container { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 400px; }
+        th { text-align: left; color: var(--dim); padding: 8px; border-bottom: 1px solid #222; }
+        td { padding: 10px 8px; border-bottom: 1px solid #111; vertical-align: middle; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
 
-        nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #050505; display: flex; border-top: 1px solid #1a1a1f; }
+        nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #050505; display: flex; border-top: 1px solid #1a1a1f; z-index: 1000; }
         .n-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); }
         .n-item.active { color: var(--p-purple); }
         .n-item i { font-size: 20px; font-style: normal; margin-bottom: 4px; }
+        .n-item span { font-size: 10px; }
     </style>
 </head>
 <body>
@@ -58,34 +60,69 @@
             </div>
         </section>
 
-        <section id="v-wallet" class="view">
-            <h2>Para Çek</h2>
-            <div class="card" style="text-align: center;">
-                <h1 style="color: var(--green); font-size: 40px;">$<span id="ui-usdt">0.000</span></h1>
+        <section id="v-tasks" class="view">
+            <h2>Görevler</h2>
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div><b>Telegram Kanalı</b><br><small style="color:var(--p-purple)">+5,000 Spyder</small></div>
+                <button class="btn-main" style="width:auto; padding:8px 15px;" id="t-btn-1" onclick="Tasks.do(1, 5000, 'https://t.me/SpyderCommunity')">KATIL</button>
             </div>
+        </section>
+
+        <section id="v-vault" class="view">
+            <h2>Dönüştür</h2>
+            <div class="card">
+                <input type="number" id="s-in" value="10000" oninput="Finance.sync()">
+                <div style="text-align: center; margin: 10px 0;">⬇️</div>
+                <div style="background: #000; padding: 15px; border-radius: 12px; text-align: center; border: 1px dashed #333;">
+                    <span style="color: var(--green); font-size: 24px;">$<span id="s-out">0.10</span></span>
+                </div>
+                <button class="btn-main" style="margin-top: 15px;" onclick="Finance.swap()">SWAP</button>
+            </div>
+        </section>
+
+        <section id="v-wallet" class="view">
+            <h2>Cüzdan</h2>
+            <div class="card" style="text-align: center;"><h1 style="color: var(--green)">$<span id="ui-usdt">0.000</span></h1></div>
             <div class="card">
                 <input type="number" id="w-amt" value="0.10" step="0.01" oninput="UI.refresh()">
-                <div style="display: flex; justify-content: space-between; padding: 10px 0; font-size: 13px;">
-                    <span>Reklam Şartı:</span><span id="ui-ad-status">0/15</span>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; font-size: 12px;">
+                    <span>Reklam:</span><span id="ui-ad-status">0/15</span>
                 </div>
                 <input type="text" id="w-adr" placeholder="BEP20 Cüzdan Adresi">
-                <button id="w-btn" class="btn-main" onclick="Finance.requestWithdraw()">ÇEKİM TALEBİ OLUŞTUR</button>
+                <button id="w-btn" class="btn-main" onclick="Finance.requestWithdraw()">ÇEKİM TALEBİ</button>
             </div>
         </section>
 
         <section id="v-admin" class="view">
-            <h2 style="color: var(--p-purple)">Admin Paneli</h2>
+            <h2 style="color:var(--p-purple)">Admin Paneli</h2>
             
-            <h4 style="margin: 15px 0 10px; color: var(--gold);">💰 Ödeme Talepleri</h4>
+            <h4 style="margin: 15px 0 5px; color:var(--gold)">💰 Talepler</h4>
             <div id="admin-requests"></div>
 
-            <h4 style="margin: 20px 0 10px;">👥 Tüm Üyeler</h4>
-            <div class="card" style="padding: 0;"><table id="admin-table"></table></div>
+            <h4 style="margin: 15px 0 5px;">👥 Tüm Üyeler (Detaylı)</h4>
+            <div class="card" style="padding: 0; overflow: hidden;">
+                <div class="admin-table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Kullanıcı</th>
+                                <th>Spyder</th>
+                                <th>USDT</th>
+                                <th>Reklam</th>
+                                <th>Görev</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
         </section>
     </main>
 
     <nav id="main-nav">
         <div class="n-item active" onclick="nav('v-play', this)"><i>🎮</i><span>Oyna</span></div>
+        <div class="n-item" onclick="nav('v-tasks', this)"><i>📢</i><span>Görev</span></div>
+        <div class="n-item" onclick="nav('v-vault', this)"><i>🏛️</i><span>Vault</span></div>
         <div class="n-item" onclick="nav('v-wallet', this)"><i>💰</i><span>Cüzdan</span></div>
     </nav>
 
@@ -96,14 +133,15 @@
         const db = firebase.firestore();
         const tg = window.Telegram.WebApp;
 
-        let user = { bal:0, nrg:1000, usdt:0, ads:0, tasks:[], isBanned: false };
+        let user = { bal:0, nrg:1000, usdt:0, ads:0, tasks:[], isBanned: false, name: "Misafir", username: "n/a" };
         let tapCount = 0;
 
         const App = {
             init: async () => {
                 const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev";
-                
-                // Admin Girişi
+                user.name = tg.initDataUnsafe?.user?.first_name || "Misafir";
+                user.username = tg.initDataUnsafe?.user?.username || "n/a";
+
                 if(uid === ADMIN_ID) {
                     await db.collection("users").doc(uid).update({ isBanned: false });
                     document.getElementById('main-nav').innerHTML += `<div class="n-item" onclick="nav('v-admin', this); Admin.load();"><i>🔑</i><span>Admin</span></div>`;
@@ -119,95 +157,76 @@
             tap: () => {
                 if(user.nrg <= 0) return;
                 user.bal++; user.nrg--; tapCount++;
-                
-                // Her 25 tıklamada 1 Reklam Göster
-                if(tapCount >= 25) {
-                    tapCount = 0;
-                    App.showAd();
-                }
-
+                if(tapCount >= 25) { tapCount = 0; App.showAd(); }
                 UI.refresh();
                 if(user.bal % 50 === 0) App.save();
             },
             showAd: () => {
                 if(window.showAdexora) {
-                    window.showAdexora()
-                        .then(() => { 
-                            user.ads++; 
-                            UI.refresh(); 
-                            App.save(); 
-                        })
-                        .catch(e => console.log("Reklam yüklenemedi"));
+                    window.showAdexora().then(() => { user.ads++; UI.refresh(); App.save(); }).catch(e => console.log("Ad fail"));
                 }
             },
             save: () => {
                 const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev";
-                db.collection("users").doc(uid).set({
-                    ...user,
-                    name: tg.initDataUnsafe?.user?.first_name || "Guest",
-                    username: tg.initDataUnsafe?.user?.username || "n/a",
-                    lastSeen: new Date().toLocaleString()
-                }, { merge: true });
-            }
-        };
-
-        const Finance = {
-            requestWithdraw: async () => {
-                const amt = parseFloat(document.getElementById('w-amt').value);
-                const adr = document.getElementById('w-adr').value;
-                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev";
-
-                if(user.usdt < amt) return tg.showAlert("Yetersiz bakiye!");
-                if(adr.length < 10) return tg.showAlert("Geçerli bir adres girin!");
-
-                // Talebi Firebase'e Gönder
-                await db.collection("withdrawals").add({
-                    uid: uid,
-                    name: user.name,
-                    username: user.username,
-                    amount: amt,
-                    address: adr,
-                    status: "pending",
-                    date: new Date().toLocaleString()
-                });
-
-                user.usdt -= amt;
-                App.save();
-                UI.refresh();
-                tg.showAlert("Ödeme talebiniz admin paneline düştü!");
+                db.collection("users").doc(uid).set({...user, lastSeen: new Date().toLocaleString()}, { merge: true });
             }
         };
 
         const Admin = {
             load: async () => {
-                // Talepleri Yükle
                 const reqSnap = await db.collection("withdrawals").where("status","==","pending").get();
                 const reqDiv = document.getElementById('admin-requests');
                 reqDiv.innerHTML = "";
                 reqSnap.forEach(doc => {
                     const r = doc.data();
-                    reqDiv.innerHTML += `
-                        <div class="card req-card">
-                            <b>${r.name} (@${r.username})</b><br>
-                            <span style="color:var(--green)">Miktar: $${r.amount}</span><br>
-                            <small style="word-break:break-all;">Adres: ${r.address}</small><br>
-                            <button class="btn-main" style="padding:5px; margin-top:5px; background:var(--green); font-size:10px;" onclick="Admin.completeWithdraw('${doc.id}')">ÖDENDİ İŞARETLE</button>
-                        </div>`;
+                    reqDiv.innerHTML += `<div class="card"><small>${r.name}</small><br><b style="color:var(--green)">$${r.amount}</b><br><small style="font-size:9px">${r.address}</small><br><button onclick="Admin.complete('${doc.id}')" style="background:var(--green); border:none; color:#fff; padding:4px 8px; border-radius:5px; margin-top:5px; font-size:10px;">ÖDENDİ</button></div>`;
                 });
 
-                // Üyeleri Yükle
                 const userSnap = await db.collection("users").get();
-                const table = document.getElementById('admin-table');
-                table.innerHTML = "";
+                const tbody = document.getElementById('admin-table-body');
+                tbody.innerHTML = "";
                 userSnap.forEach(doc => {
                     const d = doc.data();
-                    table.innerHTML += `<tr><td><b>${d.name}</b><br><small>@${d.username}</small></td><td style="text-align:right">$${(d.usdt || 0).toFixed(2)}</td></tr>`;
+                    const row = `<tr>
+                        <td>
+                            <div style="display:flex; align-items:center;">
+                                <span class="status-dot" style="background:${d.isBanned ? 'var(--red)':'var(--green)'}"></span>
+                                <div><b>${d.name || 'Bilinmiyor'}</b><br><small style="color:var(--dim)">@${d.username || 'n/a'}</small></div>
+                            </div>
+                        </td>
+                        <td>${(d.bal || 0).toLocaleString()}</td>
+                        <td style="color:var(--green)">$${(d.usdt || 0).toFixed(2)}</td>
+                        <td>${d.ads || 0}</td>
+                        <td>${(d.tasks || []).length}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
                 });
             },
-            completeWithdraw: async (id) => {
-                await db.collection("withdrawals").doc(id).update({ status: "completed" });
-                tg.showAlert("İşlem tamamlandı.");
-                Admin.load();
+            complete: async (id) => { await db.collection("withdrawals").doc(id).update({status:"completed"}); Admin.load(); }
+        };
+
+        const Finance = {
+            sync: () => document.getElementById('s-out').innerText = (document.getElementById('s-in').value * 0.00001).toFixed(2),
+            swap: () => {
+                const amt = parseInt(document.getElementById('s-in').value);
+                if(user.bal < amt) return;
+                user.bal -= amt; user.usdt += (amt * 0.00001);
+                UI.refresh(); App.save();
+            },
+            requestWithdraw: async () => {
+                const amt = parseFloat(document.getElementById('w-amt').value);
+                const adr = document.getElementById('w-adr').value;
+                if(user.usdt < amt || adr.length < 5) return;
+                await db.collection("withdrawals").add({ uid: tg.initDataUnsafe?.user?.id, name: user.name, username: user.username, amount: amt, address: adr, status: "pending", date: new Date().toLocaleString() });
+                user.usdt -= amt; App.save(); UI.refresh(); tg.showAlert("Talebiniz iletildi.");
+            }
+        };
+
+        const Tasks = {
+            do: (id, rew, link) => {
+                if(user.tasks.includes(id)) return;
+                tg.openLink(link);
+                setTimeout(() => { user.bal += rew; user.tasks.push(id); UI.refresh(); App.save(); }, 3000);
             }
         };
 
@@ -217,11 +236,11 @@
                 document.getElementById('ui-nrg').style.width = (user.nrg / 10) + "%";
                 document.getElementById('ui-nrg-txt').innerText = `ENERJİ: ${user.nrg}/1000`;
                 document.getElementById('ui-usdt').innerText = user.usdt.toFixed(3);
-                
                 const wAmt = parseFloat(document.getElementById('w-amt').value) || 0;
                 const reqAds = Math.max(15, Math.ceil(wAmt / 0.01) * 15);
                 document.getElementById('ui-ad-status').innerText = `${user.ads}/${reqAds}`;
                 document.getElementById('w-btn').disabled = (user.ads < reqAds || user.usdt < wAmt);
+                if(user.tasks.includes(1)) { const b = document.getElementById('t-btn-1'); b.innerText="OK"; b.disabled=true; }
             }
         };
 
