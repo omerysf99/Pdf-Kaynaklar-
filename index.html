@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SpyderCoin Elite - Cloud Logic</title>
+    <title>SpyderCoin - Ultimate Cloud</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -12,143 +12,86 @@
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
-        /* CSS CORE ARCHITECTURE */
         :root {
-            --p-purple: #a855f7; --p-deep: #6b21a8; --p-glow: rgba(168, 85, 247, 0.5);
-            --bg-black: #050505; --bg-card: #0f0f12; --border: #1a1a1f;
-            --text: #ffffff; --text-dim: #71717a; --green: #10b981; --gold: #f59e0b;
+            --p-purple: #a855f7; --p-deep: #7c3aed; --bg: #050505; --card: #0f0f12;
+            --text: #ffffff; --dim: #71717a; --glow: rgba(168, 85, 247, 0.5);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: 'Segoe UI', Roboto, sans-serif; }
-        body { background: var(--bg-black); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: sans-serif; }
+        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* LOADING SYSTEM */
-        #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.5s; }
+        /* LOADING SCREEN (Görseldeki yer) */
+        #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .spin { width: 50px; height: 50px; border: 5px solid #111; border-top-color: var(--p-purple); border-radius: 50%; animation: s 1s linear infinite; }
         @keyframes s { to { transform: rotate(360deg); } }
 
-        /* VIEWPORT & PAGES */
-        .stage { flex: 1; overflow-y: auto; padding-bottom: 120px; position: relative; }
-        .view { display: none; flex-direction: column; align-items: center; padding: 25px; width: 100%; animation: fade 0.3s ease; }
+        /* MAIN UI */
+        .stage { flex: 1; overflow-y: auto; padding-bottom: 100px; }
+        .view { display: none; flex-direction: column; align-items: center; padding: 20px; animation: f 0.3s ease; }
         .view.active { display: flex; }
-        @keyframes fade { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        @keyframes f { from { opacity: 0; } to { opacity: 1; } }
 
-        /* MINING UI */
-        .bal-wrap { text-align: center; margin: 20px 0; }
-        .bal-main { font-size: 58px; font-weight: 900; background: linear-gradient(#fff, var(--p-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px var(--p-glow)); }
-        .clicker-zone { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 300px; }
-        .core-node { width: 250px; height: 250px; background: radial-gradient(circle at 30% 30%, #d8b4fe, var(--p-deep)); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 100px; box-shadow: 0 0 60px var(--p-glow); cursor: pointer; transition: transform 0.05s; z-index: 10; }
-        .core-node:active { transform: scale(0.92); }
+        .bal-display { font-size: 55px; font-weight: 900; background: linear-gradient(#fff, var(--p-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 20px 0; }
+        .core-btn { width: 240px; height: 240px; background: radial-gradient(circle, #c084fc, var(--p-deep)); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 90px; box-shadow: 0 0 50px var(--glow); cursor: pointer; transition: 0.05s; }
+        .core-btn:active { transform: scale(0.92); }
 
-        /* CARDS & MODULES */
-        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 20px; width: 100%; margin-top: 15px; }
-        .stat-bar { height: 12px; background: #1a1a1e; border-radius: 10px; overflow: hidden; margin-top: 10px; border: 1px solid #27272a; }
-        .bar-fill { height: 100%; background: linear-gradient(90deg, var(--p-purple), #c084fc); transition: width 0.3s; }
+        .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 20px; padding: 15px; width: 100%; margin-top: 15px; }
+        .bar-bg { height: 12px; background: #1a1a1e; border-radius: 10px; overflow: hidden; margin-top: 8px; }
+        .bar-fill { height: 100%; background: var(--p-purple); width: 100%; transition: 0.3s; }
 
-        /* NAV DOCK */
-        .nav { position: fixed; bottom: 0; width: 100%; height: 95px; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--border); padding-bottom: 25px; z-index: 5000; }
-        .n-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: var(--text-dim); font-weight: bold; cursor: pointer; }
-        .n-item.active { color: var(--p-purple); }
-        .n-item i { font-style: normal; font-size: 26px; margin-bottom: 4px; }
+        /* NAVIGATION */
+        nav { position: fixed; bottom: 0; width: 100%; height: 90px; background: rgba(0,0,0,0.9); display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid #1a1a1f; padding-bottom: 20px; }
+        .n-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); font-size: 10px; }
+        .n-btn.active { color: var(--p-purple); }
+        .n-btn i { font-style: normal; font-size: 24px; }
 
-        /* UTILS */
-        .btn-action { width: 100%; padding: 18px; border-radius: 16px; border: none; background: var(--p-purple); color: #fff; font-weight: 900; font-size: 16px; cursor: pointer; text-transform: uppercase; }
-        .btn-action:disabled { background: #27272a; color: #52525b; cursor: not-allowed; }
-        .pop-txt { position: absolute; color: white; font-size: 35px; font-weight: 900; pointer-events: none; animation: pUp 0.8s forwards; z-index: 100; }
-        @keyframes pUp { to { transform: translateY(-150px); opacity: 0; } }
+        .pop { position: absolute; color: #fff; font-size: 32px; font-weight: 900; pointer-events: none; animation: p 0.8s forwards; }
+        @keyframes p { to { transform: translateY(-120px); opacity: 0; } }
     </style>
 </head>
 <body>
 
     <div id="loader">
         <div class="spin"></div>
-        <p style="margin-top:20px; color:var(--p-purple); font-weight:800; letter-spacing:2px;">SECURE CLOUD SYNCING...</p>
+        <p style="margin-top:20px; color:var(--p-purple); font-weight:bold;">SECURE CLOUD SYNCING...</p>
     </div>
 
     <main class="stage">
         <section id="p-home" class="view active">
-            <div class="card" style="background:var(--gold); color:#000; text-align:center;" onclick="Game.rewardAd()">
-                <b>📺 BONUS REKLAM (+25 SPYDER)</b>
-            </div>
-            <div class="bal-wrap">
-                <p style="font-size:12px; letter-spacing:3px; color:var(--text-dim);">TOTAL SPYDER</p>
-                <h1 class="bal-main" id="ui-bal">0</h1>
-            </div>
-            <div class="clicker-zone">
-                <div class="core-node" id="node-target">🕷️</div>
-            </div>
+            <h1 class="bal-display" id="ui-bal">0</h1>
+            <div class="core-btn" id="node">🕷️</div>
             <div class="card">
                 <div style="display:flex; justify-content:space-between; font-weight:bold;">
                     <span>⚡ ENERGY</span>
-                    <span id="ui-nrg-text">1000/1000</span>
+                    <span id="ui-nrg">1000/1000</span>
                 </div>
-                <div class="stat-bar"><div id="ui-nrg-fill" class="bar-fill"></div></div>
+                <div class="bar-bg"><div id="ui-fill" class="bar-fill"></div></div>
             </div>
+            <button onclick="Game.ad()" style="width:100%; margin-top:15px; padding:15px; background:orange; border:none; border-radius:10px; font-weight:bold;">📺 REKLAM İZLE (+25)</button>
         </section>
 
-        <section id="p-tasks" class="view">
-            <h2 style="align-self:flex-start;">Mission Hub</h2>
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div><b>Kanal Görevi</b><br><span style="color:var(--p-purple)">+111 SPYDER</span></div>
-                <button class="btn-action" style="width:auto; padding:10px 20px;" id="task-btn" onclick="Game.startTask()">KATIL</button>
-            </div>
-        </section>
-
-        <section id="p-vault" class="view">
-            <h2 style="align-self:flex-start;">Financial Swap</h2>
-            <div class="card">
-                <input type="number" id="swap-val" value="1000" oninput="Finance.preview()" style="width:100%; background:#000; border:1px solid #333; color:#fff; padding:15px; border-radius:12px; font-size:24px; text-align:center; outline:none;">
-                <p style="text-align:center; margin:10px 0;">⬇️</p>
-                <div style="background:#000; padding:15px; border-radius:12px; text-align:center; font-size:24px; color:var(--green); font-weight:bold;">$<span id="swap-res">0.0100</span></div>
-                <button class="btn-action" style="margin-top:20px;" onclick="Finance.execute()">TAKAS ET</button>
-            </div>
-        </section>
-
-        <section id="p-wallet" class="view">
-            <h2 style="align-self:flex-start;">Ödemeler</h2>
-            <div class="card" style="text-align:center; border: 1px solid var(--green);">
-                <p style="color:var(--text-dim)">USDT BAKİYENİZ</p>
-                <h1 style="font-size:45px; color:var(--green);">$<span id="ui-usdt">0.00</span></h1>
-            </div>
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <span>Reklam Kontrolü</span>
-                    <span id="ui-ads-check" style="color:red; font-weight:bold;">0 / 20</span>
-                </div>
-                <input type="text" id="wallet-addr" placeholder="USDT BEP20 ADRESİ" style="width:100%; background:#000; border:1px solid #333; color:#fff; padding:15px; border-radius:12px; text-align:center; outline:none; margin-bottom:15px;">
-                <button id="payout-btn" class="btn-action" disabled onclick="Finance.withdraw()">ÖDEME TALEBİ GÖNDER</button>
-            </div>
-        </section>
-
-        <section id="p-rank" class="view">
-            <h2 style="align-self:flex-start;">Global Leaderboard</h2>
-            <div class="card" id="rank-list">Yükleniyor...</div>
-        </section>
+        <section id="p-tasks" class="view"><h2>Görevler</h2></section>
+        <section id="p-vault" class="view"><h2>Takas</h2></section>
+        <section id="p-wallet" class="view"><h2>Cüzdan</h2></section>
+        <section id="p-rank" class="view"><h2>Rank</h2><div id="rank-list" class="card"></div></section>
     </main>
 
-    <nav class="nav">
-        <div class="n-item active" onclick="nav('p-home', this)"><i>🎮</i><span>OYNA</span></div>
-        <div class="n-item" onclick="nav('p-tasks', this)"><i>📋</i><span>GÖREV</span></div>
-        <div class="n-item" onclick="nav('p-vault', this)"><i>🏛️</i><span>VAULT</span></div>
-        <div class="n-item" onclick="nav('p-wallet', this)"><i>💰</i><span>CÜZDAN</span></div>
-        <div class="n-item" onclick="nav('p-rank', this)"><i>🏆</i><span>RANK</span></div>
+    <nav>
+        <div class="n-btn active" onclick="nav('p-home', this)"><i>🎮</i>Oyna</div>
+        <div class="n-btn" onclick="nav('p-tasks', this)"><i>📋</i>Görev</div>
+        <div class="n-btn" onclick="nav('p-vault', this)"><i>🏛️</i>Vault</div>
+        <div class="n-btn" onclick="nav('p-wallet', this)"><i>💰</i>Cüzdan</div>
+        <div class="n-btn" onclick="nav('p-rank', this)"><i>🏆</i>Rank</div>
     </nav>
 
     <script>
-        /**
-         * ==========================================
-         * CLOUD ARCHITECTURE & GAME ENGINE
-         * ==========================================
-         */
-
         const firebaseConfig = {
             apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY",
             authDomain: "pdfkaynak-51615.firebaseapp.com",
             projectId: "pdfkaynak-51615",
             storageBucket: "pdfkaynak-51615.firebasestorage.app",
             messagingSenderId: "228512804576",
-            appId: "1:228512804576:web:a0bba02ca83b4fa7adea85",
-            measurementId: "G-9QJTFKZXJC"
+            appId: "1:228512804576:web:a0bba02ca83b4fa7adea85"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -156,151 +99,75 @@
         const auth = firebase.auth();
         const tg = window.Telegram.WebApp;
 
-        const App = {
-            uid: "8392479231", // Admin/Sabit ID
-            data: { bal: 0, nrg: 1000, ads: 0, usdt: 0, task: false, name: "Miner" },
-            isReady: false
-        };
+        let user = { bal: 0, nrg: 1000, ads: 0, name: "Miner" };
+        let uid = "8392479231"; 
+        let isLoaded = false;
 
         const Game = {
             init: async () => {
                 try {
-                    await auth.signInAnonymously();
-                    App.uid = tg.initDataUnsafe?.user?.id?.toString() || App.uid;
-                    App.data.name = tg.initDataUnsafe?.user?.first_name || "Guest Miner";
+                    // ANONİM GİRİŞ (Hatanın çözümü burada)
+                    const res = await auth.signInAnonymously();
+                    uid = tg.initDataUnsafe?.user?.id?.toString() || res.user.uid;
+                    user.name = tg.initDataUnsafe?.user?.first_name || "Guest";
 
-                    const doc = await db.collection("users").doc(App.uid).get();
-                    if(doc.exists) {
-                        App.data = { ...App.data, ...doc.data() };
-                    }
-                    App.isReady = true;
-                    document.getElementById('loader').style.opacity = '0';
-                    setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+                    const doc = await db.collection("users").doc(uid).get();
+                    if(doc.exists) user = { ...user, ...doc.data() };
+                    
+                    isLoaded = true;
+                    document.getElementById('loader').style.display = 'none';
                     UI.refresh();
-                } catch(e) { console.error(e); }
+                } catch(e) {
+                    console.error(e);
+                    // Bağlantı başarısız olsa bile oyunu aç (Offline mod)
+                    document.getElementById('loader').style.display = 'none';
+                    isLoaded = true; 
+                    UI.refresh();
+                }
             },
-
             tap: (e) => {
-                if(!App.isReady || App.data.nrg <= 0) return;
-                App.data.bal++;
-                App.data.nrg--;
-                
-                // Visual Effect
-                const x = e.touches ? e.touches[0].clientX : e.clientX;
-                const y = e.touches ? e.touches[0].clientY : e.clientY;
-                UI.pop(x, y);
-
-                UI.refresh();
+                if(!isLoaded || user.nrg <= 0) return;
+                user.bal++; user.nrg--;
+                UI.pop(e); UI.refresh();
                 tg.HapticFeedback.impactOccurred('light');
-                if(App.data.bal % 15 === 0) Cloud.sync();
+                if(user.bal % 10 === 0) Game.save();
             },
-
-            rewardAd: () => {
+            ad: () => {
                 window.showAdexora().then(() => {
-                    App.data.bal += 25; App.data.ads++;
-                    UI.refresh(); Cloud.sync();
-                }).catch(() => tg.showAlert("Reklam yüklenemedi."));
-            },
-
-            startTask: () => {
-                if(App.data.task) return;
-                tg.openTelegramLink('https://t.me/SpyderCommunity');
-                const btn = document.getElementById('task-btn');
-                let s = 10;
-                const inv = setInterval(() => {
-                    btn.innerText = `BEKLE (${s}s)`; s--;
-                    if(s < 0) {
-                        clearInterval(inv);
-                        App.data.bal += 111; App.data.task = true;
-                        btn.innerText = "ALINDI"; btn.disabled = true;
-                        UI.refresh(); Cloud.sync();
-                    }
-                }, 1000);
-            }
-        };
-
-        const Finance = {
-            preview: () => {
-                const v = document.getElementById('swap-val').value;
-                document.getElementById('swap-res').innerText = (v * 0.00001).toFixed(4);
-            },
-            execute: () => {
-                const v = parseInt(document.getElementById('swap-val').value);
-                if(App.data.bal < v) return tg.showAlert("Yetersiz Spyder!");
-                App.data.bal -= v; App.data.usdt += (v * 0.00001);
-                UI.refresh(); Cloud.sync();
-                tg.showAlert("Takas Başarılı!");
-            },
-            withdraw: () => {
-                const addr = document.getElementById('wallet-addr').value;
-                if(addr.length < 20) return tg.showAlert("Geçerli bir BEP20 adresi girin!");
-                tg.showAlert("Ödeme talebiniz alındı! (24 Saat İçinde İncelenir)");
-                App.data.usdt = 0; App.data.ads = 0;
-                UI.refresh(); Cloud.sync();
-            }
-        };
-
-        const Cloud = {
-            sync: async () => {
-                if(!App.isReady) return;
-                await db.collection("users").doc(App.uid).set(App.data, { merge: true });
-            },
-            loadRank: async () => {
-                const list = document.getElementById('rank-list');
-                const snap = await db.collection("users").orderBy("bal", "desc").limit(10).get();
-                let h = "";
-                let i = 1;
-                snap.forEach(d => {
-                    const ud = d.data();
-                    h += `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #222">
-                            <span>#${i} ${ud.name || 'Miner'}</span>
-                            <b style="color:var(--p-purple)">${ud.bal.toLocaleString()} SPY</b>
-                          </div>`;
-                    i++;
+                    user.bal += 25; user.ads++; UI.refresh(); Game.save();
                 });
-                list.innerHTML = h;
+            },
+            save: () => {
+                if(isLoaded) db.collection("users").doc(uid).set(user, { merge: true });
             }
         };
 
         const UI = {
             refresh: () => {
-                document.getElementById('ui-bal').innerText = App.data.bal.toLocaleString();
-                document.getElementById('ui-nrg-text').innerText = `${App.data.nrg}/1000`;
-                document.getElementById('ui-nrg-fill').style.width = (App.data.nrg / 10) + "%";
-                document.getElementById('ui-usdt').innerText = App.data.usdt.toFixed(4);
-                
-                const reqAds = Math.max(20, Math.ceil(App.data.usdt / 0.01 * 20));
-                document.getElementById('ui-ads-check').innerText = `${App.data.ads} / ${reqAds}`;
-                document.getElementById('ui-ads-check').style.color = App.data.ads >= reqAds ? "var(--green)" : "red";
-                
-                document.getElementById('payout-btn').disabled = !(App.data.usdt >= 0.01 && App.data.ads >= reqAds);
-                Finance.preview();
+                document.getElementById('ui-bal').innerText = user.bal.toLocaleString();
+                document.getElementById('ui-nrg').innerText = user.nrg + "/1000";
+                document.getElementById('ui-fill').style.width = (user.nrg / 10) + "%";
             },
-            pop: (x, y) => {
-                const d = document.createElement('div');
-                d.className = 'pop-txt'; d.innerText = '+1';
-                d.style.left = x + 'px'; d.style.top = y + 'px';
-                document.body.appendChild(d);
-                setTimeout(() => d.remove(), 800);
+            pop: (e) => {
+                const x = e.touches ? e.touches[0].clientX : e.clientX;
+                const y = e.touches ? e.touches[0].clientY : e.clientY;
+                const p = document.createElement('div');
+                p.className = 'pop'; p.innerText = '+1';
+                p.style.left = x + 'px'; p.style.top = y + 'px';
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 800);
             }
         };
 
         function nav(id, el) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.n-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('.n-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             el.classList.add('active');
-            if(id === 'p-rank') Cloud.loadRank();
         }
 
-        // INIT
-        const target = document.getElementById('node-target');
-        target.addEventListener('touchstart', (e) => { e.preventDefault(); Game.tap(e); });
-        target.addEventListener('mousedown', (e) => { if(!('ontouchstart' in window)) Game.tap(e); });
-
-        setInterval(() => { if(App.data.nrg < 1000) { App.data.nrg += 1; UI.refresh(); } }, 2000);
-        setInterval(Cloud.sync, 30000); // 30 saniyede bir oto-sync
-
+        document.getElementById('node').addEventListener('touchstart', (e) => { e.preventDefault(); Game.tap(e); });
+        setInterval(() => { if(user.nrg < 1000) { user.nrg++; UI.refresh(); } }, 2000);
         window.onload = Game.init;
     </script>
 </body>
