@@ -3,174 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Single Power</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>SpyderCoin - Tap Only</title>
     <style>
-        :root { --bg: #000; --card: #111112; --gold: #f3ba2f; --blue: #3a47ff; --neon: #00f2ff; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; height: 100vh; overflow-y: auto; overflow-x: hidden; user-select: none; -webkit-tap-highlight-color: transparent; }
+        :root { --bg: #0d0d0f; --card: #1c1c1e; --blue: #3a47ff; --gold: #f3ba2f; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; user-select: none; -webkit-tap-highlight-color: transparent; }
 
-        .container { display: flex; flex-direction: column; align-items: center; padding-bottom: 40px; }
+        /* Üst Bilgi Kartları */
+        .header-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 92%; margin-top: 15px; }
+        .stat-box { background: var(--card); padding: 10px 5px; border-radius: 12px; text-align: center; border: 1px solid #2c2c2e; }
+        .stat-label { font-size: 10px; color: #888; display: block; margin-bottom: 4px; }
+        .stat-val { font-size: 13px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 4px; }
 
-        /* Üst Panel */
-        .header { width: 90%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
-        .h-card { background: var(--card); border: 1px solid #222; border-radius: 12px; padding: 10px 5px; text-align: center; }
-        .h-label { font-size: 9px; color: #666; display: block; }
-        .h-val { font-size: 13px; font-weight: bold; color: var(--gold); }
+        /* Ana Bakiye */
+        .balance-container { margin-top: 30px; display: flex; align-items: center; gap: 10px; }
+        .coin-icon { width: 45px; height: 45px; background: linear-gradient(180deg, #ffe000, #ff9000); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: rgba(0,0,0,0.6); border: 2px solid #fff; }
+        .balance-amount { font-size: 55px; font-weight: 900; }
 
-        /* Bakiye */
-        .balance-area { margin-top: 20px; text-align: center; }
-        .balance-num { font-size: 50px; font-weight: 900; background: linear-gradient(to bottom, #fff, #888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        /* Level Bar */
+        .level-info { width: 90%; margin-top: 20px; display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+        .progress-container { width: 90%; height: 8px; background: #222; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 30%; background: linear-gradient(90deg, #6a5acd, #3a47ff); border-radius: 10px; }
 
-        /* ANA TIKLAMA ALANI */
-        .tap-section { position: relative; width: 300px; height: 300px; display: flex; justify-content: center; align-items: center; margin-top: 20px; touch-action: none; }
-        .tap-glow { position: absolute; width: 250px; height: 250px; background: radial-gradient(circle, var(--blue) 0%, transparent 70%); filter: blur(30px); opacity: 0.3; }
-        #spider-main { font-size: 150px; z-index: 10; transition: transform 0.05s; pointer-events: none; }
+        /* TIKLAMA ALANI */
+        .click-area { position: relative; width: 320px; height: 320px; margin-top: 40px; display: flex; justify-content: center; align-items: center; cursor: pointer; touch-action: none; }
+        .outer-ring { position: absolute; width: 280px; height: 280px; border-radius: 50%; border: 8px solid var(--blue); box-shadow: 0 0 40px rgba(58, 71, 255, 0.3); z-index: 1; }
+        .spider-img { width: 200px; height: 200px; z-index: 2; transition: transform 0.05s ease; filter: drop-shadow(0 0 20px rgba(0,0,0,0.5)); }
 
-        /* Enerji */
-        .energy-box { width: 85%; margin-top: 10px; }
-        .energy-bar-bg { width: 100%; height: 12px; background: #1a1a1a; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
-        .energy-bar-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--neon)); width: 100%; transition: width 0.2s; }
+        /* Enerji Paneli */
+        .energy-panel { width: 90%; margin-top: auto; margin-bottom: 30px; display: flex; flex-direction: column; gap: 10px; }
+        .energy-text { font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .energy-bar-bg { width: 100%; height: 14px; background: #1a1a1a; border-radius: 20px; border: 1px solid #333; overflow: hidden; }
+        .energy-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ffd60a, #ff9f0a); transition: width 0.2s; }
 
-        /* MINE KUTUSU */
-        .action-card { background: var(--card); width: 90%; border-radius: 20px; padding: 20px; border: 1px solid #222; margin-top: 25px; box-sizing: border-box; text-align: center; }
-        .timer-text { font-size: 32px; font-weight: 800; color: var(--gold); margin: 5px 0; }
-        .btn-main { background: var(--blue); color: white; border: none; padding: 12px 0; width: 100%; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; }
-
-        /* REF KUTUSU */
-        .ref-box { background: #080808; border: 1px dashed #333; border-radius: 10px; padding: 10px; font-size: 11px; color: var(--neon); margin: 15px 0; word-break: break-all; }
-
-        /* Floating Text */
-        .float { position: absolute; color: white; font-size: 32px; font-weight: 900; pointer-events: none; animation: fly 0.6s ease-out forwards; z-index: 1000; }
-        @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
+        /* Yüzen +1 Efekti */
+        .floating-plus { position: absolute; color: white; font-size: 35px; font-weight: 900; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 100; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-150px); } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <div class="h-card"><span class="h-label">TIK GÜCÜ</span><span class="h-val" id="ui-power">+1</span></div>
-        <div class="h-card"><span class="h-label">HIZ/SN</span><span class="h-val" id="ui-speed">1</span></div>
-        <div class="h-card"><span class="h-label">LİMAN</span><span class="h-val">S1</span></div>
+    <div class="header-stats">
+        <div class="stat-box"><span class="stat-label">Tık Başı</span><div class="stat-val"><span style="color:var(--gold)">🟡</span> +1</div></div>
+        <div class="stat-box"><span class="stat-label">Üst Seviye</span><div class="stat-val">5K</div></div>
+        <div class="stat-box"><span class="stat-label">Saatlik Kar</span><div class="stat-val"><span style="color:var(--gold)">🟡</span> 0</div></div>
     </div>
 
-    <div class="balance-area">
-        <div class="balance-num" id="ui-balance">0</div>
+    <div class="balance-container">
+        <div class="coin-icon">$</div>
+        <div class="balance-amount" id="balance">100</div>
     </div>
 
-    <div class="tap-section" id="tap-area">
-        <div class="tap-glow"></div>
-        <div id="spider-main">🕷️</div>
+    <div class="level-info"><span>Bronze ></span><span>Level 1/10</span></div>
+    <div class="progress-container"><div class="progress-fill"></div></div>
+
+    <div class="click-area" id="tap-target">
+        <div class="outer-ring"></div>
+        <img src="https://img.icons8.com/color/512/spider.png" class="spider-img" id="spider">
     </div>
 
-    <div class="energy-box">
-        <div style="font-size: 12px; margin-bottom: 5px; display: flex; justify-content: space-between;">
-            <span>⚡ Enerji</span>
-            <span><span id="ui-energy">1000</span> / <span id="ui-max">1000</span></span>
-        </div>
-        <div class="energy-bar-bg"><div id="energy-fill" class="energy-bar-fill"></div></div>
+    <div class="energy-panel">
+        <div class="energy-text">⚡ <span id="energy-num">1000</span> / 1000</div>
+        <div class="energy-bar-bg"><div class="energy-bar-fill" id="energy-bar"></div></div>
     </div>
 
-    <div class="action-card">
-        <div style="font-size: 12px; color: #888;">OTOMATİK MADENCİLİK</div>
-        <div class="timer-text" id="ui-timer">10:00</div>
-        <p style="font-size: 14px; margin: 5px 0;">Biriken: <b id="ui-acc" style="color:var(--gold)">0</b></p>
-        <button class="btn-main" id="mine-btn" onclick="mineControl()">Madenciliği Başlat</button>
-    </div>
+    <script>
+        let coins = 100;
+        let energy = 1000;
+        const tapPower = 1;
 
-    <div class="action-card">
-        <b style="font-size: 14px;">ARKADAŞ DAVET LİNKİ</b>
-        <div class="ref-box" id="ui-reflink">...</div>
-        <button class="btn-main" style="background:#222; font-size:13px;" onclick="copyRef()">Linki Kopyala</button>
-    </div>
-</div>
+        const balanceEl = document.getElementById('balance');
+        const energyEl = document.getElementById('energy-num');
+        const energyBar = document.getElementById('energy-bar');
+        const spider = document.getElementById('spider');
+        const tapTarget = document.getElementById('tap-target');
 
-<script>
-    const tg = window.Telegram.WebApp; tg.expand();
-    const user = tg.initDataUnsafe.user;
+        tapTarget.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            
+            // Çoklu dokunuş desteği
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (energy >= tapPower) {
+                    // Veri Güncelleme
+                    coins += tapPower;
+                    energy -= tapPower;
+                    
+                    // Arayüz Güncelleme
+                    balanceEl.innerText = coins.toLocaleString();
+                    energyEl.innerText = energy;
+                    energyBar.style.width = (energy / 10) + "%";
 
-    // DATA
-    let balance = 0, energy = 1000, maxEnergy = 1000, power = 1;
-    let mineSpeed = 1, mineTime = 600, acc = 0, isMining = false, interval;
-
-    const ref = `https://t.me/SpyderCoinBot?start=${user ? user.id : '8392479231'}`;
-    document.getElementById('ui-reflink').innerText = ref;
-
-    function refresh() {
-        document.getElementById('ui-balance').innerText = Math.floor(balance).toLocaleString();
-        document.getElementById('ui-energy').innerText = energy;
-        document.getElementById('ui-max').innerText = maxEnergy;
-        document.getElementById('energy-fill').style.width = (energy/maxEnergy*100) + "%";
-        document.getElementById('ui-power').innerText = "+" + power;
-        document.getElementById('ui-speed').innerText = mineSpeed;
-    }
-
-    // TIKLAMA MOTORU
-    document.getElementById('tap-area').addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        for(let i=0; i<e.changedTouches.length; i++) {
-            if(energy >= power) {
-                balance += power; energy -= power;
-                createFloat(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+                    // Efektler
+                    createPlusEffect(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+                }
             }
+
+            // Örümcek Esneme Animasyonu
+            spider.style.transform = "scale(0.9)";
+            setTimeout(() => { spider.style.transform = "scale(1)"; }, 50);
+        });
+
+        function createPlusEffect(x, y) {
+            const plus = document.createElement('div');
+            plus.className = 'floating-plus';
+            plus.innerText = "+" + tapPower;
+            plus.style.left = (x - 20) + "px";
+            plus.style.top = (y - 50) + "px";
+            
+            document.body.appendChild(plus);
+            
+            setTimeout(() => {
+                plus.remove();
+            }, 800);
         }
-        refresh();
-        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-    });
 
-    function createFloat(x, y) {
-        const f = document.createElement('div');
-        f.className = 'float'; f.innerText = "+" + power;
-        f.style.left = (x - 15) + 'px'; f.style.top = (y - 30) + 'px';
-        document.body.appendChild(f);
-        document.getElementById('spider-main').style.transform = "scale(0.9)";
-        setTimeout(() => { f.remove(); document.getElementById('spider-main').style.transform = "scale(1)"; }, 600);
-    }
-
-    // MINING MOTORU
-    function mineControl() {
-        if(isMining) return;
-        isMining = true; acc = 0; mineTime = 600;
-        const btn = document.getElementById('mine-btn');
-        btn.innerText = "Madencilik Yapılıyor...";
-        btn.style.opacity = "0.5";
-
-        interval = setInterval(() => {
-            mineTime--; acc += mineSpeed;
-            updateMineUI();
-            if(mineTime <= 0) finishMining();
-        }, 1000);
-    }
-
-    function updateMineUI() {
-        let m = Math.floor(mineTime/60), s = mineTime%60;
-        document.getElementById('ui-timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
-        document.getElementById('ui-acc').innerText = acc;
-    }
-
-    function finishMining() {
-        clearInterval(interval); isMining = false;
-        const btn = document.getElementById('mine-btn');
-        btn.innerText = "Ödülü Topla (" + acc + ")";
-        btn.style.opacity = "1";
-        btn.onclick = () => {
-            balance += acc; acc = 0;
-            btn.innerText = "Madenciliği Başlat";
-            btn.onclick = mineControl;
-            document.getElementById('ui-timer').innerText = "10:00";
-            document.getElementById('ui-acc').innerText = "0";
-            refresh();
-        };
-    }
-
-    function copyRef() {
-        navigator.clipboard.writeText(ref);
-        tg.showPopup({message: "Link kopyalandı! Arkadaşlarına gönder."});
-    }
-
-    // Enerji Yenileme (2 saniyede 1)
-    setInterval(() => { if(energy < maxEnergy) { energy++; refresh(); } }, 2000);
-
-    refresh();
-</script>
+        // Otomatik Enerji Dolumu
+        setInterval(() => {
+            if (energy < 1000) {
+                energy++;
+                energyEl.innerText = energy;
+                energyBar.style.width = (energy / 10) + "%";
+            }
+        }, 1500);
+    </script>
 </body>
 </html>
