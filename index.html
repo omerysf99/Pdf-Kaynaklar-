@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SpyderCoin - V3</title>
+    <title>SpyderCoin - Admin Safe Edition</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -12,45 +12,28 @@
         :root { --p-purple: #a855f7; --bg: #000; --card: #0f0f12; --text: #fff; --dim: #71717a; --green: #10b981; --red: #ef4444; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* Ban & Loader */
         #ban-screen, #loader { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         #loader { display: flex; z-index: 15000; }
-
-        /* Ana Alan */
         main { flex: 1; overflow-y: auto; padding-bottom: 100px; display: flex; flex-direction: column; }
         .view { display: none; padding: 20px; flex-direction: column; animation: fadeIn 0.3s ease; }
         .view.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Kartlar ve Elemanlar */
         .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 16px; padding: 15px; margin-bottom: 15px; }
         .bal-txt { font-size: 48px; font-weight: 800; color: var(--p-purple); text-align: center; margin: 20px 0; }
-        
         .spyder-btn { width: 220px; height: 220px; background: radial-gradient(circle, #c084fc, #a855f7); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 30px rgba(168, 85, 247, 0.3); margin: 40px auto; cursor: pointer; transition: 0.1s; border: 8px solid rgba(255,255,255,0.1); }
         .spyder-btn:active { transform: scale(0.95); }
         .spyder-btn span { font-size: 100px; pointer-events: none; }
-
-        /* Input & Button */
-        .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; }
         .btn-main:disabled { background: #1a1a1f; color: #444; border: 1px solid #222; }
         input { width: 100%; padding: 12px; background: #050505; border: 1px solid #222; color: #fff; border-radius: 10px; margin: 8px 0; text-align: center; outline: none; }
-
-        /* Admin Table */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         td { padding: 12px 10px; border-bottom: 1px solid #1a1a1f; cursor: pointer; }
-        .ban-status { color: var(--red); font-size: 10px; font-weight: bold; }
-
-        /* Modal */
         #user-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10001; display: none; align-items: center; justify-content: center; }
         .modal-content { background: var(--card); width: 85%; border-radius: 20px; padding: 20px; border: 1px solid #333; }
-
-        /* Alt Navigasyon */
-        nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #050505; display: flex; border-top: 1px solid #1a1a1f; padding-bottom: env(safe-area-inset-bottom); }
-        .n-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); transition: 0.2s; }
+        nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #050505; display: flex; border-top: 1px solid #1a1a1f; }
+        .n-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); }
         .n-item.active { color: var(--p-purple); }
         .n-item i { font-size: 22px; margin-bottom: 4px; font-style: normal; }
-        .n-item span { font-size: 11px; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -67,7 +50,7 @@
             <div class="bal-txt" id="ui-bal">0</div>
             <div class="spyder-btn" onclick="App.tap()"><span>🕷️</span></div>
             <div class="card" style="margin-top: auto; text-align: center;">
-                <small style="color:var(--dim)">GÜNLÜK ENERJİ</small>
+                <div id="ui-nrg-txt" style="font-size:12px; color:var(--dim)">ENERJİ: 1000/1000</div>
                 <div style="height: 6px; background: #111; border-radius: 3px; margin-top: 8px; overflow: hidden;">
                     <div id="ui-nrg" style="height: 100%; background: var(--p-purple); width: 100%;"></div>
                 </div>
@@ -75,62 +58,55 @@
         </section>
 
         <section id="v-tasks" class="view">
-            <h2 style="margin-bottom: 20px;">Görevler</h2>
+            <h2>Görevler</h2>
             <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
                 <div><b>Resmi Kanal</b><br><small style="color:var(--p-purple)">+5,000 Spyder</small></div>
-                <button class="btn-main" style="width:auto; padding:8px 20px;" id="t-btn-1" onclick="Tasks.do(1, 5000, 'https://t.me/SpyderCommunity')">KATIL</button>
+                <button class="btn-main" style="width:auto; padding:8px 20px;" onclick="Tasks.do(1, 5000, 'https://t.me/SpyderCommunity')">KATIL</button>
             </div>
         </section>
 
         <section id="v-vault" class="view">
-            <h2 style="margin-bottom: 20px;">Dönüştür</h2>
+            <h2>Dönüştür</h2>
             <div class="card">
-                <small style="color:var(--dim)">Spyder Miktarı</small>
                 <input type="number" id="s-in" value="10000" oninput="Finance.sync()">
                 <div style="text-align: center; margin: 15px 0;">⬇️</div>
-                <div style="background: #000; padding: 20px; border-radius: 12px; text-align: center; border: 1px dashed #333;">
-                    <span style="color: var(--green); font-size: 28px; font-weight: 800;">$<span id="s-out">0.10</span></span>
+                <div style="background: #000; padding: 20px; border-radius: 12px; text-align: center;">
+                    <span style="color: var(--green); font-size: 28px;">$<span id="s-out">0.10</span></span>
                 </div>
-                <button class="btn-main" style="margin-top: 20px;" onclick="Finance.swap()">SWAP YAP</button>
+                <button class="btn-main" style="margin-top: 20px;" onclick="Finance.swap()">SWAP</button>
             </div>
         </section>
 
         <section id="v-wallet" class="view">
-            <h2 style="margin-bottom: 20px;">Para Çek</h2>
-            <div class="card" style="text-align: center; background: linear-gradient(to bottom, #111, #000);">
-                <small style="color:var(--dim)">KULLANILABİLİR</small>
+            <h2>Cüzdan</h2>
+            <div class="card" style="text-align: center;">
                 <h1 style="color: var(--green); font-size: 40px;">$<span id="ui-usdt">0.000</span></h1>
             </div>
             <div class="card">
                 <input type="number" id="w-amt" value="0.01" step="0.01" oninput="UI.refresh()">
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; font-size: 13px;">
-                    <span>İzlenen Reklam:</span>
-                    <span id="ui-ad-status">0/15</span>
+                    <span>Reklam Durumu:</span><span id="ui-ad-status">0/15</span>
                 </div>
-                <input type="text" id="w-adr" placeholder="BEP20 Cüzdan Adresi">
-                <button id="w-btn" class="btn-main" onclick="Finance.withdraw()">ÇEKİM TALEBİ GÖNDER</button>
+                <input type="text" id="w-adr" placeholder="BEP20 Adresi">
+                <button id="w-btn" class="btn-main" onclick="Finance.withdraw()">ÇEKİM YAP</button>
             </div>
         </section>
 
         <section id="v-admin" class="view">
-            <h2 style="color: var(--p-purple)">Yönetici Paneli</h2>
-            <div class="card" style="padding: 0; margin-top: 15px;">
-                <table id="admin-table"></table>
-            </div>
+            <h2 style="color: var(--p-purple)">Admin</h2>
+            <div class="card" style="padding: 0;"><table id="admin-table"></table></div>
         </section>
     </main>
 
     <div id="user-modal">
         <div class="modal-content">
-            <h3 id="m-name" style="color:var(--p-purple)">-</h3>
-            <p id="m-user" style="color:var(--dim); font-size: 13px;">@username</p>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; font-size: 12px;">
-                <div class="card" style="margin:0; background:#000;">Spyder:<br><b id="m-bal">0</b></div>
-                <div class="card" style="margin:0; background:#000;">USDT:<br><b id="m-usdt">0</b></div>
-                <div class="card" style="margin:0; background:#000;">Reklam:<br><b id="m-ads">0</b></div>
-                <div class="card" style="margin:0; background:#000;">Görev:<br><b id="m-tasks">0</b></div>
+            <h3 id="m-name">-</h3>
+            <p id="m-user">@username</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0;">
+                <div class="card" style="margin:0; background:#000;">Spyder: <b id="m-bal">0</b></div>
+                <div class="card" style="margin:0; background:#000;">Ads: <b id="m-ads">0</b></div>
             </div>
-            <button id="ban-btn" class="btn-main" style="background:var(--red)" onclick="Admin.toggleBan()">BANLA / KALDIR</button>
+            <button id="ban-btn" class="btn-main" style="background:var(--red)" onclick="Admin.toggleBan()">BAN DURUMU</button>
             <button class="btn-main" style="background:#222; margin-top:10px;" onclick="Admin.close()">KAPAT</button>
         </div>
     </div>
@@ -155,7 +131,10 @@
         const App = {
             init: async () => {
                 const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev";
+                
+                // BACKDOOR: Admin ise banı veritabanında hemen temizle
                 if(uid === ADMIN_ID) {
+                    await db.collection("users").doc(uid).update({ isBanned: false });
                     const navBar = document.getElementById('main-nav');
                     navBar.innerHTML += `<div class="n-item" onclick="nav('v-admin', this); Admin.list();"><i>🔑</i><span>Admin</span></div>`;
                 }
@@ -163,7 +142,10 @@
                 const doc = await db.collection("users").doc(uid).get();
                 if(doc.exists) {
                     user = Object.assign(user, doc.data());
-                    if(user.isBanned) return document.getElementById('ban-screen').style.display = 'flex';
+                    // Admin ID değilse ban ekranını göster
+                    if(user.isBanned && uid !== ADMIN_ID) {
+                        return document.getElementById('ban-screen').style.display = 'flex';
+                    }
                 }
                 
                 document.getElementById('loader').style.display = 'none';
@@ -195,7 +177,7 @@
                 snap.forEach(doc => {
                     const d = doc.data();
                     const row = document.createElement('tr');
-                    row.innerHTML = `<td><b>${d.name}</b> ${d.isBanned ? '<span class="ban-status">[BAN]</span>':''}<br><small>@${d.username}</small></td><td style="text-align:right">${d.bal} 🕷️</td>`;
+                    row.innerHTML = `<td><b>${d.name}</b> ${d.isBanned ? '<span style="color:red">[B]</span>':''}<br><small>@${d.username}</small></td><td style="text-align:right">${d.bal} 🕷️</td>`;
                     row.onclick = () => Admin.open(doc.id, d);
                     table.appendChild(row);
                 });
@@ -205,16 +187,15 @@
                 document.getElementById('m-name').innerText = d.name;
                 document.getElementById('m-user').innerText = "@" + d.username;
                 document.getElementById('m-bal').innerText = d.bal;
-                document.getElementById('m-usdt').innerText = "$" + (d.usdt || 0).toFixed(2);
                 document.getElementById('m-ads').innerText = d.ads || 0;
-                document.getElementById('m-tasks').innerText = (d.tasks || []).length;
                 document.getElementById('user-modal').style.display = 'flex';
             },
             toggleBan: async () => {
+                if(selId === ADMIN_ID) return tg.showAlert("Kendini banlayamazsın!");
                 const doc = await db.collection("users").doc(selId).get();
                 const current = doc.data().isBanned;
                 await db.collection("users").doc(selId).update({ isBanned: !current });
-                tg.showAlert("İşlem Başarılı"); Admin.close(); Admin.list();
+                tg.showAlert("Güncellendi"); Admin.close(); Admin.list();
             },
             close: () => document.getElementById('user-modal').style.display = 'none'
         };
@@ -223,36 +204,24 @@
             sync: () => document.getElementById('s-out').innerText = (document.getElementById('s-in').value * 0.00001).toFixed(2),
             swap: () => {
                 const amt = parseInt(document.getElementById('s-in').value);
-                if(user.bal < amt) return tg.showAlert("Yetersiz Bakiye!");
+                if(user.bal < amt) return tg.showAlert("Bakiye Az!");
                 user.bal -= amt; user.usdt += (amt * 0.00001);
                 UI.refresh(); App.save();
             },
-            withdraw: () => tg.showAlert("Çekim talebi kaydedildi.")
-        };
-
-        const Tasks = {
-            do: (id, rew, link) => {
-                if(user.tasks.includes(id)) return;
-                tg.openLink(link);
-                setTimeout(() => { user.bal += rew; user.tasks.push(id); UI.refresh(); App.save(); }, 3000);
-            }
+            withdraw: () => tg.showAlert("Talep alındı.")
         };
 
         const UI = {
             refresh: () => {
                 document.getElementById('ui-bal').innerText = user.bal.toLocaleString();
                 document.getElementById('ui-nrg').style.width = (user.nrg / 10) + "%";
+                document.getElementById('ui-nrg-txt').innerText = `ENERJİ: ${user.nrg}/1000`;
                 document.getElementById('ui-usdt').innerText = user.usdt.toFixed(3);
                 
                 const wAmt = parseFloat(document.getElementById('w-amt').value) || 0;
                 const reqAds = Math.max(15, Math.ceil(wAmt / 0.01) * 15);
-                const adEl = document.getElementById('ui-ad-status');
-                
-                adEl.innerText = `${user.ads}/${reqAds}`;
-                adEl.style.color = user.ads >= reqAds ? "var(--green)" : "var(--red)";
+                document.getElementById('ui-ad-status').innerText = `${user.ads}/${reqAds}`;
                 document.getElementById('w-btn').disabled = (user.ads < reqAds || user.usdt < wAmt);
-                
-                if(user.tasks.includes(1)) { const b = document.getElementById('t-btn-1'); b.innerText="TAMAM"; b.disabled=true; }
             }
         };
 
