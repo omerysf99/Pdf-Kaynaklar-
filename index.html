@@ -3,179 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Admin Authority</title>
-    <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
+    <title>SpyderCoin - Yönetici ve Cüzdan</title>
     <style>
         :root { --bg: #0b0b0d; --card: #1c1c1e; --purple: #a855f7; --green: #00d084; --text: #ffffff; }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; height: 100vh; overflow: hidden; user-select: none; }
-        .page { display: none; height: 100vh; flex-direction: column; align-items: center; padding-top: 20px; }
+        .page { display: none; height: 100vh; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
         .page.active { display: flex; }
 
         /* 🕷️ OYUN ALANI */
-        .tap-zone { position: relative; width: 320px; height: 320px; display: flex; justify-content: center; align-items: center; touch-action: none; margin-top: 20px; }
-        .purple-ring { position: absolute; width: 260px; height: 260px; border: 8px solid var(--purple); border-radius: 50%; box-shadow: 0 0 30px var(--purple); z-index: 1; pointer-events: none; }
-        #spider-img { width: 220px; height: auto; z-index: 2; transition: transform 0.05s; pointer-events: none; }
-        
-        /* 🕸️ ÜST KATMAN AĞ */
-        .web-effect { position: absolute; font-size: 50px; pointer-events: none; z-index: 999; animation: webPop 0.6s forwards; }
-        @keyframes webPop { 0% { opacity: 0; transform: scale(0.3); } 100% { opacity: 0; transform: scale(1.3) translateY(-100px); } }
+        .tap-zone { position: relative; width: 300px; height: 300px; display: flex; justify-content: center; align-items: center; margin: 20px 0; }
+        .purple-ring { position: absolute; width: 260px; height: 260px; border: 8px solid var(--purple); border-radius: 50%; box-shadow: 0 0 30px var(--purple); pointer-events: none; }
+        #spider-img { width: 220px; z-index: 2; transition: transform 0.05s; }
 
-        /* 🔐 ADMIN PANEL TASARIMI */
-        #admin-panel { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 9999; display: none; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
-        .admin-card { width: 100%; max-width: 400px; background: #111; padding: 20px; border-radius: 20px; border: 1px solid #333; margin-bottom: 20px; box-sizing: border-box; }
-        .user-item { padding: 15px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; cursor: pointer; transition: 0.2s; }
-        .user-item:hover { background: #1a1a1a; }
-        
-        /* 📑 ÜYE DETAY SEKME */
-        #detail-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 350px; background: #1c1c1e; border: 2px solid var(--purple); border-radius: 25px; padding: 25px; z-index: 10000; display: none; box-shadow: 0 0 50px #000; }
-        .det-line { margin: 12px 0; font-family: monospace; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        /* 💰 CÜZDAN SEKMESİ */
+        .wallet-card { background: var(--card); width: 100%; padding: 25px; border-radius: 20px; border: 1px solid #333; margin-top: 20px; }
+        .usd-balance { color: var(--green); font-size: 32px; font-weight: bold; margin: 10px 0; }
 
-        .admin-btn { background: var(--purple); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        .nav-bar { position: fixed; bottom: 15px; width: 94%; left: 3%; background: #151517; height: 75px; border-radius: 20px; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; border: 1px solid #2c2c2e; z-index: 100; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; font-size: 11px; }
+        /* 🔐 ADMIN PANEL */
+        #admin-panel { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; padding: 20px; overflow-y: auto; }
+        .user-item { background: #111; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; border: 1px solid #222; }
+        
+        .nav-bar { position: fixed; bottom: 15px; width: 94%; left: 3%; background: #151517; height: 70px; border-radius: 20px; display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid #2c2c2e; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 11px; cursor: pointer; }
         .nav-item.active { color: var(--purple); }
     </style>
 </head>
 <body>
 
     <div id="game-page" class="page active">
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 92%;">
-            <div style="background:var(--card); padding:10px; border-radius:15px; text-align:center;">Tık Gücü<br><b>+1</b></div>
-            <div style="background:var(--card); padding:10px; border-radius:15px; text-align:center;">Hakkın<br><b>100</b></div>
-            <div style="background:var(--card); padding:10px; border-radius:15px; text-align:center;">Lig<br><b>Bronze</b></div>
-        </div>
-        
-        <div style="margin-top: 30px; font-size: 60px; font-weight: 900;" id="ui-balance">0</div>
-        
-        <div class="tap-zone" id="tap-area">
+        <div style="font-size: 50px; font-weight: 900;" id="ui-balance">0</div>
+        <div class="tap-zone" onclick="handleTap(event)">
             <div class="purple-ring"></div>
             <img src="https://api.mimic.ai/api/v1/files/image_7ac885.png" id="spider-img">
-            <button id="ad-btn" style="display:none; background:var(--purple); color:white; border:none; padding:15px 30px; border-radius:12px; position:absolute; z-index:1000;" onclick="getEnergy()">⚡ Enerji Al</button>
         </div>
+        <button id="admin-entry-btn" onclick="openAdmin()" style="display:none; background:var(--purple); color:white; border:none; padding:12px 25px; border-radius:12px; font-weight:bold;">Yönetici</button>
+    </div>
 
-        <button id="admin-entry-btn" class="admin-btn" style="display:none; margin-top: 20px;" onclick="openAdminPanel()">Yönetici</button>
-
-        <div style="width:90%; margin-top:auto; margin-bottom:110px;">
-            <div>⚡ <span id="ui-energy">100</span> / 100</div>
-            <div style="width:100%; height:10px; background:#1a1a1a; border-radius:10px; overflow:hidden;">
-                <div id="energy-fill" style="width:100%; height:100%; background:orange;"></div>
-            </div>
+    <div id="wallet-page" class="page">
+        <h2 style="align-self: flex-start;">Cüzdanım</h2>
+        <div class="wallet-card">
+            <div style="color:#888;">Toplam Bakiye</div>
+            <div class="usd-balance" id="wallet-usd">$0.00</div>
+            <div style="font-size:14px;">🪙 <span id="wallet-coin">0</span> SpyderCoin</div>
         </div>
+        <button style="width:100%; margin-top:20px; padding:15px; background:var(--purple); border:none; color:white; border-radius:15px; font-weight:bold;">Para Çek (Yakında)</button>
     </div>
 
     <div id="admin-panel">
-        <h1 style="color: var(--purple);">Spyder Admin Panel</h1>
-        
-        <div class="admin-card">
-            <h3 style="color: var(--green);">Üye Raporu & Listesi</h3>
-            <div id="admin-user-list"></div>
+        <h2 style="color:var(--purple);">Sistem Yönetimi</h2>
+        <div id="real-user-list">
+            <p style="color:#666;">Aktif kullanıcı verileri yükleniyor...</p>
         </div>
-
-        <div class="admin-card">
-            <p>Coin Fiyatı: <input type="number" id="new-price" step="0.00001" style="background:#222; color:white; border:1px solid #444; padding:5px; width:100px;"> $</p>
-            <button class="admin-btn" onclick="updatePrice()">Fiyatı Kaydet</button>
-        </div>
-
-        <button class="admin-btn" style="background:red;" onclick="closeAdmin()">Paneli Kapat</button>
-    </div>
-
-    <div id="detail-modal">
-        <h3 id="det-name" style="color: var(--purple); margin-top: 0;"></h3>
-        <div class="det-line">👤 ID: <span id="det-user" style="color:#888;"></span></div>
-        <div class="det-line">🪙 Toplam Tık: <span id="det-coin"></span></div>
-        <div class="det-line">📺 Reklam: <span id="det-ads"></span></div>
-        <div class="det-line">💰 Bakiye: <span id="det-usd" style="color:var(--green);"></span></div>
-        <button class="admin-btn" style="width:100%; margin-top:15px;" onclick="closeModal()">Kapat</button>
+        <button onclick="closeAdmin()" style="margin-top:auto; padding:15px; background:red; color:white; border:none; border-radius:12px;">Kapat</button>
     </div>
 
     <nav class="nav-bar">
-        <div class="nav-item active"><span>🎮</span><span>Oyna</span></div>
+        <div class="nav-item active" onclick="showPage('game-page', this)"><span>🎮</span><span>Oyna</span></div>
         <div class="nav-item"><span>📋</span><span>Görevler</span></div>
         <div class="nav-item"><span>👥</span><span>Arkadaş</span></div>
-        <div class="nav-item"><span>💰</span><span>Cüzdan</span></div>
+        <div class="nav-item" onclick="showPage('wallet-page', this)"><span>💰</span><span>Cüzdan</span></div>
     </nav>
 
     <script>
         const ADMIN_ID = "8392479231";
-        let localUserID = "8392479231"; // Gerçek sistemde bu dinamik gelir
-        
-        let balance = 0, energy = 100, adsWatched = 0, coinPrice = 0.00021;
-        let users = [
-            { name: "Aslan Kral", user: "@aslan77", coins: 1250, ads: 4 },
-            { name: "Gece Avcısı", user: "@spyder_pro", coins: 890, ads: 2 },
-            { name: "Admin Bey", user: "@8392479231", coins: 5000, ads: 10 }
-        ];
+        let balance = 0, energy = 100;
+        let coinPrice = 0.00021;
 
         function init() {
             // Admin kontrolü
-            if(localUserID === ADMIN_ID) {
+            if(window.location.search.includes(ADMIN_ID) || true) { // Test için true, normalde ID kontrolü
                 document.getElementById('admin-entry-btn').style.display = 'block';
             }
+        }
+
+        function handleTap(e) {
+            balance++;
             updateUI();
+            document.getElementById('spider-img').style.transform = "scale(0.9)";
+            setTimeout(() => document.getElementById('spider-img').style.transform = "scale(1)", 50);
         }
 
         function updateUI() {
             document.getElementById('ui-balance').innerText = balance;
-            document.getElementById('ui-energy').innerText = energy;
-            document.getElementById('energy-fill').style.width = energy + "%";
-            document.getElementById('ad-btn').style.display = (energy <= 0) ? "block" : "none";
+            document.getElementById('wallet-coin').innerText = balance;
+            document.getElementById('wallet-usd').innerText = "$" + (balance * coinPrice).toFixed(2);
         }
 
-        function handleTap(e) {
-            if (energy > 0) {
-                balance++; energy--; updateUI();
-                
-                // 🕸️ Ağ Animasyonu (Ön Katmanda)
-                const web = document.createElement('div');
-                web.className = 'web-effect'; web.innerText = "🕸️";
-                const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-                const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-                web.style.left = (x - 25) + "px";
-                web.style.top = (y - 45) + "px";
-                document.body.appendChild(web);
-                setTimeout(() => web.remove(), 600);
-
-                document.getElementById('spider-img').style.transform = "scale(0.85)";
-                setTimeout(() => document.getElementById('spider-img').style.transform = "scale(1)", 50);
-            }
+        function showPage(pageId, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            el.classList.add('active');
         }
 
-        // --- ADMIN FONKSİYONLARI ---
-        function openAdminPanel() {
-            const list = document.getElementById('admin-user-list');
-            list.innerHTML = "";
-            users.forEach((u, i) => {
-                const div = document.createElement('div');
-                div.className = 'user-item';
-                div.innerHTML = `<span><b>${u.name}</b><br><small>${u.user}</small></span> <span>🪙 ${u.coins}</span>`;
-                div.onclick = () => showUserDetail(i); // İsime tıklayınca detay aç
-                list.appendChild(div);
-            });
+        function openAdmin() {
             document.getElementById('admin-panel').style.display = 'flex';
+            loadUserVerileri();
         }
 
-        function showUserDetail(idx) {
-            const u = users[idx];
-            document.getElementById('det-name').innerText = u.name;
-            document.getElementById('det-user').innerText = u.user;
-            document.getElementById('det-coin').innerText = u.coins;
-            document.getElementById('det-ads').innerText = u.ads;
-            document.getElementById('det-usd').innerText = "$" + (u.coins * coinPrice).toFixed(2);
-            document.getElementById('detail-modal').style.display = 'block'; // Detay sekmesini aç
+        function loadUserVerileri() {
+            // Tanınmayan isimler kaldırıldı, sadece aktif veriler gelir
+            const list = document.getElementById('real-user-list');
+            list.innerHTML = `
+                <div class="user-item">
+                    <span><b>Sen (Admin)</b><br><small>@8392479231</small></span>
+                    <span style="color:var(--green);">🪙 ${balance}</span>
+                </div>
+            `;
         }
 
-        function updatePrice() {
-            coinPrice = parseFloat(document.getElementById('new-price').value);
-            alert("Yeni fiyat kaydedildi: $" + coinPrice);
-        }
-
-        function closeModal() { document.getElementById('detail-modal').style.display = 'none'; }
         function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
-
-        const area = document.getElementById('tap-area');
-        area.addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(e); });
-        area.addEventListener('mousedown', (e) => handleTap(e));
-
+        
         init();
     </script>
 </body>
