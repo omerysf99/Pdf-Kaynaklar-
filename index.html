@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SpyderCoin - Firebase Full Setup</title>
+    <title>SpyderCoin - Firebase Full Integration</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -17,106 +17,126 @@
             --text: #fff; --dim: #71717a; --green: #10b981; --red: #ef4444; --gold: #fbbf24;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* Loader Ekranı */
-        #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .spin { width: 40px; height: 40px; border: 4px solid #111; border-top-color: var(--p-purple); border-radius: 50%; animation: s 1s linear infinite; }
+        /* Loader */
+        #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        .spin { width: 45px; height: 45px; border: 4px solid #111; border-top-color: var(--p-purple); border-radius: 50%; animation: s 1s linear infinite; }
         @keyframes s { to { transform: rotate(360deg); } }
 
-        /* Sayfa Yapısı */
-        .view { display: none; flex-direction: column; padding: 20px; flex: 1; overflow-y: auto; }
-        .view.active { display: flex; }
-
-        .bal-txt { font-size: 50px; font-weight: 900; color: var(--p-purple); text-align: center; margin: 20px 0; }
-        .spyder-btn { width: 220px; height: 220px; background: radial-gradient(circle, #c084fc, #a855f7); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 40px var(--p-purple); cursor: pointer; transition: transform 0.05s; margin: 0 auto; }
-        .spyder-btn:active { transform: scale(0.95); }
-        .spyder-btn span { font-size: 100px; pointer-events: none; }
-
-        .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 15px; padding: 15px; margin-bottom: 12px; width: 100%; }
-        input { width: 100%; background: #000; border: 1px solid #222; color: #fff; padding: 12px; border-radius: 10px; margin: 8px 0; text-align: center; }
-        .btn-main { width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; }
-        .btn-main:disabled { opacity: 0.3; }
-
-        /* Status Etiketleri */
-        .status-badge { font-size: 11px; padding: 8px; border-radius: 10px; font-weight: bold; width: 100%; text-align: center; margin-top: 10px; }
-        .pending { color: var(--gold); border: 1px solid var(--gold); background: rgba(251, 191, 36, 0.1); }
-        .approved { color: var(--green); border: 1px solid var(--green); background: rgba(16, 185, 129, 0.1); }
-
-        /* Navigasyon */
-        nav { height: 80px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1a1a1f; }
+        /* Navigation */
+        nav { height: 80px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1a1a1f; position: sticky; bottom: 0; }
         .nav-admin { grid-template-columns: repeat(5, 1fr) !important; }
         .n-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); font-size: 10px; cursor: pointer; }
         .n-item.active { color: var(--p-purple); }
-        .n-item i { font-style: normal; font-size: 22px; margin-bottom: 3px; }
+        .n-item i { font-style: normal; font-size: 24px; margin-bottom: 3px; }
 
-        /* Pop Efekti */
-        .pop { position: absolute; color: #fff; font-size: 28px; font-weight: bold; pointer-events: none; animation: up 0.6s forwards; z-index: 1000; }
-        @keyframes up { to { transform: translateY(-100px); opacity: 0; } }
+        /* Views */
+        .view { display: none; flex-direction: column; padding: 20px; flex: 1; overflow-y: auto; }
+        .view.active { display: flex; }
+
+        /* UI Elements */
+        .bal-txt { font-size: 52px; font-weight: 900; color: var(--p-purple); text-align: center; margin: 15px 0; text-shadow: 0 0 20px rgba(168, 85, 247, 0.3); }
+        .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 18px; padding: 15px; margin-bottom: 12px; }
+        .btn-main { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s; }
+        .btn-main:active { transform: scale(0.98); opacity: 0.8; }
+        .btn-main:disabled { background: #222; color: #555; cursor: not-allowed; }
+
+        /* Tapper */
+        .tap-zone { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
+        .spyder-btn { 
+            width: 230px; height: 230px; background: radial-gradient(circle, #c084fc, #a855f7); 
+            border-radius: 50%; display: flex; justify-content: center; align-items: center; 
+            box-shadow: 0 0 50px rgba(168, 85, 247, 0.5); user-select: none;
+        }
+        .spyder-btn span { font-size: 110px; pointer-events: none; }
+
+        /* Badges */
+        .status-badge { width: 100%; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: bold; text-align: center; margin-top: 10px; }
+        .pending { background: rgba(251, 191, 36, 0.1); color: var(--gold); border: 1px solid var(--gold); }
+        .approved { background: rgba(16, 185, 129, 0.1); color: var(--green); border: 1px solid var(--green); }
+
+        .pop { position: absolute; color: #fff; font-size: 32px; font-weight: bold; pointer-events: none; animation: up 0.7s forwards; z-index: 1000; }
+        @keyframes up { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
+
+        input { width: 100%; background: #000; border: 1px solid #222; color: #fff; padding: 14px; border-radius: 12px; margin: 10px 0; text-align: center; font-size: 16px; }
     </style>
 </head>
 <body>
 
     <div id="loader">
         <div class="spin"></div>
-        <p style="color:var(--p-purple); margin-top:15px; font-weight:bold;">FIREBASE CONNECTING...</p>
+        <p style="color:var(--p-purple); margin-top:15px; font-weight:bold; letter-spacing:1px;">SPYDER NETWORK...</p>
     </div>
 
     <main style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
         <section id="p-home" class="view active">
             <h1 class="bal-txt" id="ui-bal">0</h1>
-            <div style="flex:1; display:flex; align-items:center;">
+            <div class="tap-zone">
                 <div class="spyder-btn" id="tap-node"><span>🕷️</span></div>
             </div>
             <div class="card">
-                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;"><span>⚡ ENERGY</span><span id="ui-nrg">1000/1000</span></div>
-                <div style="height:6px; background:#111; border-radius:3px; overflow:hidden;"><div id="ui-nrg-bar" style="height:100%; background:var(--p-purple); width:100%;"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;">
+                    <span style="color:var(--dim)">⚡ ENERGY</span><span id="ui-nrg" style="font-weight:bold;">1000/1000</span>
+                </div>
+                <div style="height:8px; background:#111; border-radius:4px; overflow:hidden;">
+                    <div id="ui-nrg-bar" style="height:100%; background:var(--p-purple); width:100%; transition: width 0.3s;"></div>
+                </div>
             </div>
         </section>
 
         <section id="p-tasks" class="view">
-            <h2>Missions</h2>
-            <div class="card" style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
-                <div><b>Official Channel</b><br><small style="color:var(--p-purple)">+1,000 SPYDER</small></div>
-                <button class="btn-main" style="width:auto; padding:8px 15px;" id="t-btn-1" onclick="Tasks.do(1, 1000, 'https://t.me/SpyderCommunity')">JOIN</button>
+            <h2 style="margin-bottom:20px;">Missions</h2>
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <b style="font-size:16px;">Spyder Telegram</b><br>
+                    <span style="color:var(--p-purple); font-size:13px; font-weight:bold;">+1,000 SPYDER</span>
+                </div>
+                <button class="btn-main" style="width:auto; padding:10px 20px;" id="t-btn-1" onclick="Tasks.do(1, 1000, 'https://t.me/SpyderCommunity')">JOIN</button>
             </div>
         </section>
 
         <section id="p-vault" class="view">
-            <h2>Vault Swap</h2>
-            <div class="card" style="margin-top:20px;">
+            <h2 style="margin-bottom:20px;">Vault Swap</h2>
+            <div class="card">
+                <label style="font-size:11px; color:var(--dim)">AMOUNT TO SWAP</label>
                 <input type="number" id="s-in" value="1000" oninput="Finance.syncS()">
-                <div style="text-align:center; color:var(--green); font-size:24px; font-weight:bold; padding:10px;">$ <span id="s-out">0.010</span></div>
-                <button class="btn-main" id="swap-btn" onclick="Finance.swap()">SWAP NOW</button>
-                <div id="swap-status" class="status-badge approved" style="display:none;">ONAYLANDI ✓</div>
+                <div style="text-align:center; color:var(--green); font-size:28px; font-weight:bold; margin:15px;">$ <span id="s-out">0.010</span></div>
+                <button class="btn-main" id="swap-btn" onclick="Finance.swap()">SWAP TO USDT</button>
+                <div id="swap-status" class="status-badge approved" style="display:none;">İŞLEM ONAYLANDI ✓</div>
             </div>
         </section>
 
         <section id="p-wallet" class="view">
-            <h2>Finance</h2>
-            <div class="card" style="text-align:center; border:1px solid var(--green); margin-top:20px;">
-                <p style="font-size:11px; color:var(--dim)">USDT BALANCE</p>
-                <h1 style="color:var(--green); font-size:40px;">$<span id="ui-usdt">0.000</span></h1>
+            <h2 style="margin-bottom:20px;">Wallet</h2>
+            <div class="card" style="text-align:center; border:1px solid var(--green); background: rgba(16, 185, 129, 0.05);">
+                <p style="font-size:12px; color:var(--dim)">TOTAL WITHDRAWABLE</p>
+                <h1 style="color:var(--green); font-size:45px;">$<span id="ui-usdt">0.000</span></h1>
             </div>
             <div class="card">
-                <div style="display:flex; justify-content:space-between; font-size:12px;"><span>Ads Verification:</span><b id="ui-ads" style="color:var(--red);">0/10</b></div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:10px;">
+                    <span>Ads (Daily):</span>
+                    <b id="ui-ads" style="color:var(--red);">0 / 10</b>
+                </div>
                 <input type="number" id="w-amt" value="0.005" step="0.005" oninput="Finance.syncW()">
-                <input type="text" id="w-adr" placeholder="BEP20 Address">
+                <input type="text" id="w-adr" placeholder="Wallet BEP20 Address">
                 <button id="w-btn" class="btn-main" onclick="Finance.withdraw()">WITHDRAW</button>
                 <div id="wd-status" class="status-badge pending" style="display:none;">ADMİN ONAYI BEKLENİYOR...</div>
             </div>
         </section>
 
         <section id="p-admin" class="view">
-            <h2 style="color:var(--gold)">👑 Admin</h2>
-            <div class="card" style="flex:1; overflow:auto;">
+            <h2 style="color:var(--gold)">👑 Admin Control</h2>
+            <div class="card" style="flex:1; overflow:auto; padding:5px;">
                 <table style="width:100%; font-size:11px; border-collapse: collapse;">
-                    <thead style="border-bottom:1px solid #222; color:var(--dim)"><tr><th>UID</th><th>Coin</th><th>USDT</th><th>Ads</th></tr></thead>
+                    <thead style="color:var(--dim); border-bottom:1px solid #222;">
+                        <tr><th style="padding:10px 5px; text-align:left;">UID</th><th>COIN</th><th>USDT</th><th>ADS</th></tr>
+                    </thead>
                     <tbody id="admin-list"></tbody>
                 </table>
             </div>
-            <button class="btn-main" style="background:var(--gold); color:#000; margin-top:10px;" onclick="Admin.load()">VERİLERİ YENİLE</button>
+            <button class="btn-main" style="background:var(--gold); color:#000; margin-top:10px;" onclick="Admin.load()">YENİLE</button>
         </section>
     </main>
 
@@ -128,7 +148,7 @@
     </nav>
 
     <script>
-        // --- FIREBASE AYARLARI ---
+        // --- CONFIG ---
         const ADMIN_ID = "8392479231";
         const firebaseConfig = {
             apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY",
@@ -137,54 +157,59 @@
             appId: "1:228512804576:web:a0bba02ca83b4fa7adea85"
         };
 
-        // Başlatma
+        // --- INIT FIREBASE ---
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const tg = window.Telegram.WebApp;
+        tg.expand();
 
         let user = { bal: 0, nrg: 1000, usdt: 0, ads: 0, tasks: [], wd_pending: false };
-        let isReady = false;
+        let isStarted = false;
 
         const App = {
             init: async () => {
-                const uid = tg.initDataUnsafe?.user?.id?.toString() || "guest_mode";
+                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
                 
-                // Admin Navigasyon Ekle
+                // Admin UI Check
                 if(uid === ADMIN_ID) {
                     const navBar = document.getElementById('main-nav');
                     navBar.classList.add('nav-admin');
                     navBar.innerHTML += `<div class="n-item" style="color:var(--gold)" onclick="nav('p-admin', this)"><i>👑</i>Admin</div>`;
                 }
 
-                // Veri çekme ve Hata Kontrolü (Loader Fix)
-                const failsafe = setTimeout(() => App.start(), 3500); 
+                // Failsafe Start (Max 4s wait)
+                const fs = setTimeout(() => App.launch(), 4000);
 
                 try {
                     const doc = await db.collection("users").doc(uid).get();
                     if(doc.exists) user = { ...user, ...doc.data() };
-                    clearTimeout(failsafe);
-                    App.start();
-                } catch(e) { 
-                    console.error("Firebase Error:", e);
-                    App.start(); 
+                    clearTimeout(fs);
+                    App.launch();
+                } catch(e) {
+                    console.error("DB Connection Failed", e);
+                    App.launch();
                 }
             },
-            start: () => {
-                if(isReady) return; isReady = true;
-                document.getElementById('loader').style.display = 'none';
+            launch: () => {
+                if(isStarted) return; isStarted = true;
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
                 UI.refresh();
-                setInterval(() => { if(user.nrg < 1000) { user.nrg++; UI.refresh(); } }, 2500);
+                // Energy Refill
+                setInterval(() => { if(user.nrg < 1000) { user.nrg += 1; UI.refresh(); }}, 2000);
             },
             tap: (e) => {
                 if(user.nrg <= 0) return;
                 user.bal++; user.nrg--;
                 UI.pop(e); UI.refresh();
-                if(user.bal % 50 === 0) App.ad();
-                if(user.bal % 20 === 0) App.save();
+                if(user.bal % 40 === 0) App.showAd();
+                if(user.bal % 25 === 0) App.save();
             },
-            ad: () => { if(window.showAdexora) window.showAdexora().then(() => { user.ads++; UI.refresh(); App.save(); }); },
+            showAd: () => {
+                if(window.showAdexora) window.showAdexora().then(() => { user.ads++; UI.refresh(); App.save(); });
+            },
             save: () => {
-                const uid = tg.initDataUnsafe?.user?.id?.toString() || "guest_mode";
+                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
                 db.collection("users").doc(uid).set(user, { merge: true });
             }
         };
@@ -193,50 +218,53 @@
             do: (id, rew, link) => {
                 if(user.tasks.includes(id)) return;
                 tg.openLink(link);
-                setTimeout(() => { user.bal += rew; user.tasks.push(id); UI.refresh(); App.save(); }, 5000);
+                setTimeout(() => {
+                    user.bal += rew; user.tasks.push(id);
+                    UI.refresh(); App.save();
+                    tg.showPopup({ message: `Success! +${rew} added.` });
+                }, 6000);
             }
         };
 
         const Finance = {
             syncS: () => document.getElementById('s-out').innerText = (document.getElementById('s-in').value * 0.00001).toFixed(3),
             swap: () => {
-                const v = parseInt(document.getElementById('s-in').value);
-                if(user.bal < v) return tg.showAlert("Yetersiz Bakiye!");
-                user.bal -= v; user.usdt += (v * 0.00001);
+                const amt = parseInt(document.getElementById('s-in').value);
+                if(user.bal < amt) return tg.showAlert("Yetersiz SPYDER!");
+                user.bal -= amt;
+                user.usdt += (amt * 0.00001);
                 
-                // Görsel Onay
-                document.getElementById('swap-btn').style.display = 'none';
-                document.getElementById('swap-status').style.display = 'block';
+                const btn = document.getElementById('swap-btn');
+                const status = document.getElementById('swap-status');
+                btn.style.display = 'none'; status.style.display = 'block';
+                
                 UI.refresh(); App.save();
-                setTimeout(() => {
-                    document.getElementById('swap-btn').style.display = 'block';
-                    document.getElementById('swap-status').style.display = 'none';
-                }, 3000);
+                setTimeout(() => { btn.style.display = 'block'; status.style.display = 'none'; }, 3000);
             },
             syncW: () => {
-                const a = parseFloat(document.getElementById('w-amt').value) || 0;
-                const r = Math.max(10, Math.ceil(a / 0.005) * 10);
-                document.getElementById('ui-ads').innerText = `${user.ads}/${r}`;
-                const can = (a >= 0.005 && user.usdt >= a && user.ads >= r && !user.wd_pending);
-                document.getElementById('w-btn').disabled = !can;
+                const amt = parseFloat(document.getElementById('w-amt').value) || 0;
+                const req = Math.max(10, Math.ceil(amt / 0.005) * 10);
+                document.getElementById('ui-ads').innerText = `${user.ads} / ${req}`;
+                const valid = (amt >= 0.005 && user.usdt >= amt && user.ads >= req && !user.wd_pending);
+                document.getElementById('w-btn').disabled = !valid;
             },
             withdraw: () => {
                 user.wd_pending = true;
                 UI.refresh(); App.save();
-                tg.showAlert("Talebiniz alındı, admin onayı bekleniyor.");
+                tg.showAlert("Talebiniz Kaydedildi. Admin onayı bekleniyor.");
             }
         };
 
         const Admin = {
             load: async () => {
-                const body = document.getElementById('admin-list');
-                body.innerHTML = "Yükleniyor...";
+                const list = document.getElementById('admin-list');
+                list.innerHTML = "<tr><td colspan='4'>Veriler Çekiliyor...</td></tr>";
                 const snap = await db.collection("users").get();
-                body.innerHTML = "";
+                list.innerHTML = "";
                 snap.forEach(doc => {
                     const d = doc.data();
-                    body.innerHTML += `<tr style="${d.wd_pending ? 'background:rgba(255,184,0,0.1)' : ''}">
-                        <td style="padding:8px">${doc.id.slice(0,5)}</td>
+                    list.innerHTML += `<tr style="${d.wd_pending ? 'background:rgba(255,184,0,0.1)' : ''}">
+                        <td style="padding:10px 5px;">${doc.id.slice(0,6)}</td>
                         <td>${(d.bal || 0).toLocaleString()}</td>
                         <td>$${(d.usdt || 0).toFixed(3)}</td>
                         <td>${d.ads || 0}${d.wd_pending ? '⚠️' : ''}</td>
@@ -252,15 +280,16 @@
                 document.getElementById('ui-nrg-bar').style.width = (user.nrg / 10) + "%";
                 document.getElementById('ui-usdt').innerText = user.usdt.toFixed(3);
                 
-                user.tasks.forEach(id => { const b = document.getElementById(`t-btn-${id}`); if(b){ b.innerText="OK"; b.disabled=true; }});
-                
-                if(user.wd_pending) {
-                    document.getElementById('w-btn').style.display = 'none';
-                    document.getElementById('wd-status').style.display = 'block';
-                } else {
-                    document.getElementById('w-btn').style.display = 'block';
-                    document.getElementById('wd-status').style.display = 'none';
-                }
+                user.tasks.forEach(id => {
+                    const b = document.getElementById(`t-btn-${id}`);
+                    if(b) { b.innerText = "DONE"; b.disabled = true; }
+                });
+
+                const wBtn = document.getElementById('w-btn');
+                const wSt = document.getElementById('wd-status');
+                if(user.wd_pending) { wBtn.style.display = 'none'; wSt.style.display = 'block'; }
+                else { wBtn.style.display = 'block'; wSt.style.display = 'none'; }
+
                 Finance.syncS(); Finance.syncW();
             },
             pop: (e) => {
@@ -282,7 +311,6 @@
         node.addEventListener('touchstart', (e) => { e.preventDefault(); App.tap(e); });
         node.addEventListener('mousedown', (e) => App.tap(e));
 
-        // Başlat
         App.init();
     </script>
 </body>
