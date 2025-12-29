@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Mine Update</title>
+    <title>SpyderCoin - Ultimate Mine Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -26,42 +26,33 @@
         .tab-content.active { display: flex; }
 
         /* Ortak Header */
-        .header-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 92%; margin-top: 15px; }
+        .header-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 92%; margin-top: 15px; z-index: 10; }
         .header-card { background: var(--card-bg); border-radius: 12px; padding: 12px 2px; text-align: center; border: 1px solid #2c2c2e; }
         .card-label { font-size: 10px; color: #8e8e93; margin-bottom: 4px; }
         .card-value { font-size: 14px; font-weight: bold; }
 
-        .balance-container { margin-top: 30px; display: flex; align-items: center; gap: 12px; }
+        .balance-container { margin-top: 30px; display: flex; align-items: center; gap: 12px; z-index: 10; }
         .gold-icon { width: 40px; height: 40px; background: linear-gradient(180deg, #ffe000, #ff9000); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: rgba(0,0,0,0.6); border: 2px solid #fff; }
         .balance-text { font-size: 48px; font-weight: 850; }
 
-        /* Ana Sayfa */
-        .game-area { position: relative; margin-top: 40px; width: 250px; height: 250px; display: flex; justify-content: center; align-items: center; }
-        .ring { position: absolute; width: 100%; height: 100%; border: 8px solid var(--blue-glow); border-radius: 50%; box-shadow: 0 0 30px rgba(58, 71, 255, 0.4); }
-        #spyder { font-size: 110px; z-index: 2; cursor: pointer; transition: transform 0.05s; touch-action: none; }
-
-        /* Mine Sayfası */
-        #mine-page { padding-top: 50px; text-align: center; position: relative; }
-        .mine-card { background: #1c1c1e; width: 85%; padding: 30px 10px; border-radius: 20px; border: 1px solid #333; }
+        /* Mine Sayfası (Tüm Ekranı Kaplayan) */
+        #mine-page { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            z-index: 100; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .mine-full-container { text-align: center; width: 100%; }
         .mine-btn { background: linear-gradient(90deg, #5e5ce6, #bf5af2); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-weight: bold; font-size: 18px; margin-top: 20px; cursor: pointer; }
-        .timer-text { font-size: 32px; font-weight: bold; margin: 15px 0; color: var(--gold); }
+        .extend-btn { background: #2c2c2e; color: #8e8e93; border: 1px solid #444; padding: 10px 20px; border-radius: 20px; font-size: 14px; margin-top: 10px; cursor: pointer; }
+        .timer-text { font-size: 64px; font-weight: bold; margin: 20px 0; color: var(--gold); text-shadow: 0 0 20px rgba(243, 186, 47, 0.3); }
         
         /* Animasyonlu Örümcekler */
-        .mini-spyder { position: absolute; font-size: 24px; pointer-events: none; transition: all 2s linear; z-index: 5; }
+        .mini-spyder { position: absolute; font-size: 32px; pointer-events: none; transition: all 2s linear; z-index: 105; }
 
-        /* Alt Nav */
-        .nav { position: fixed; bottom: 15px; width: 92%; background: #1c1c1e; display: grid; grid-template-columns: repeat(4, 1fr); padding: 12px 0; border-radius: 20px; z-index: 1000; }
+        /* Navigasyon */
+        .nav { position: fixed; bottom: 15px; width: 92%; background: #1c1c1e; display: grid; grid-template-columns: repeat(4, 1fr); padding: 12px 0; border-radius: 20px; z-index: 200; }
         .nav-btn { text-align: center; font-size: 11px; color: #8e8e93; cursor: pointer; }
         .nav-btn.active { color: white; }
-        .nav-btn i { display: block; font-size: 20px; margin-bottom: 4px; font-style: normal; }
-
-        /* Boost Modal (Aynı kaldı) */
-        #boost-modal { position: fixed; bottom: -100%; left: 0; width: 100%; height: 75%; background: var(--modal-bg); border-top: 2px solid #333; border-radius: 30px 30px 0 0; z-index: 1100; transition: bottom 0.4s ease; padding: 20px; box-sizing: border-box; }
-        #boost-modal.active { bottom: 0; }
-        .boost-item { background: #1c1c1e; border-radius: 15px; padding: 15px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; border: 1px solid #2c2c2e; }
-        
-        .plus-one { position: absolute; color: white; font-size: 30px; font-weight: 900; pointer-events: none; animation: up 0.7s forwards; z-index: 1000; }
-        @keyframes up { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
 <body>
@@ -69,69 +60,61 @@
     <div class="header-grid">
         <div class="header-card"><div class="card-label">Tık Başı</div><div id="tap-val" class="card-value">+1</div></div>
         <div class="header-card"><div class="card-label">Limit</div><div id="limit-val" class="card-value">1000</div></div>
-        <div class="header-card"><div class="card-label">Mine Geliri</div><div id="mine-income-val" class="card-value">500</div></div>
+        <div class="header-card"><div class="card-label">Saniye/Kar</div><div class="card-value">0.000001</div></div>
     </div>
 
     <div class="balance-container">
         <div class="gold-icon">$</div>
-        <div class="balance-text" id="balance">100</div>
+        <div class="balance-text" id="balance">100.000000</div>
     </div>
 
-    <div id="home-page" class="tab-content active">
-        <div class="game-area">
-            <div class="ring"></div>
-            <div id="spyder">🕷️</div>
-        </div>
-        <div style="margin-top:auto; margin-bottom:100px; width:90%">
-            <div style="font-weight: bold;">⚡ <span id="energy-num">1000</span> / <span id="max-energy-num">1000</span></div>
-            <div style="width:100%; height:12px; background:#2c2c2e; border-radius:10px; margin-top:8px;">
-                <div id="energy-bar" style="height:100%; background:linear-gradient(90deg, #ffd60a, #ff9f0a); border-radius:10px; width:100%;"></div>
+    <div id="mine-page" class="tab-content">
+        <div id="spider-container" style="position: absolute; width:100%; height:100%; top:0; left:0; pointer-events:none;"></div>
+        
+        <div class="mine-full-container">
+            <div id="mine-status-icon" style="font-size: 80px; filter: drop-shadow(0 0 15px #5e5ce6);">⛏️</div>
+            <h1 id="mine-title" style="margin-top: 20px; letter-spacing: 2px;">SPYDER MINING</h1>
+            
+            <div id="mine-timer" class="timer-text">10:00</div>
+            
+            <div id="reward-display" style="font-family: monospace; color: #00ff00; font-size: 18px; margin-bottom: 20px;">
+                Biriken: <span id="current-mine-reward">0.000000</span> $
+            </div>
+
+            <div id="mine-controls">
+                <button id="mine-action-btn" class="mine-btn" onclick="startMineWithAd()">Mine Başlat (Reklam)</button>
+                <div id="extend-controls" style="display: none;">
+                    <button class="extend-btn" onclick="extendMineTime()">⏱️ Süreyi Uzat (+10dk Reklam)</button>
+                    <p style="font-size: 12px; color: #555; margin-top: 5px;">Maksimum 60 dakika</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="mine-page" class="tab-content">
-        <div class="mine-card">
-            <div id="mine-status-icon" style="font-size: 60px;">⛏️</div>
-            <h2 id="mine-title">Spyder Mining</h2>
-            <div id="mine-timer" class="timer-text">10:00</div>
-            <div id="mine-reward-info" style="color: #8e8e93; margin-bottom: 20px;">Tahmini Kazanç: 500 $</div>
-            <button id="mine-action-btn" class="mine-btn" onclick="startMineWithAd()">Mine Başlat (Reklam)</button>
+    <div id="home-page" class="tab-content active">
+        <div style="margin-top: 100px; text-align: center; opacity: 0.5;">
+            <div style="font-size: 100px;">🕷️</div>
+            <p>Ana sayfaya dönmek için "Mine" sekmesinden çıkın.</p>
         </div>
-        <div id="spider-container" style="position: absolute; width:100%; height:100%; top:0; left:0; pointer-events:none;"></div>
-    </div>
-
-    <div id="boost-modal">
-        <div style="text-align: center; font-weight: bold; margin-bottom: 20px;">Boosters <span style="float:right" onclick="toggleBoost()">✕</span></div>
-        <div class="boost-item" onclick="useFullEnergy()"><div style="font-size:30px">⚡</div><div><b>Full energy</b><br><span id="full-energy-count">2/2 available</span></div></div>
-        <div class="boost-item" onclick="buyMultitap()"><div style="font-size:30px">👆</div><div><b>Multitap</b><br><span id="mt-price">💰 121</span></div></div>
-        <div class="boost-item" onclick="buyEnergyLimit()"><div style="font-size:30px">🔋</div><div><b>Energy limit</b><br><span id="el-price">💰 9999</span></div></div>
     </div>
 
     <div class="nav">
         <div class="nav-btn active" onclick="showTab('home')"><i>🏠</i>Home</div>
         <div class="nav-btn" onclick="showTab('mine')"><i>⛏️</i>Mine</div>
         <div class="nav-btn"><i>👥</i>Friends</div>
-        <div class="nav-btn" onclick="toggleBoost()"><i>🚀</i>Boost</div>
+        <div class="nav-btn"><i>🚀</i>Boost</div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let coins = 100;
-        let energy = 1000;
-        let maxEnergy = 1000;
-        let tapPower = 1;
-        let fullEnergyDaily = 2;
-        let multitapPrice = 121;
-        let energyLimitPrice = 9999;
-
-        // Mine Değişkenleri
+        let coins = 100.000000;
         let isMining = false;
-        let mineTime = 600; // 10 dakika (600 saniye)
-        let mineReward = 500;
+        let mineTime = 600; // Saniye
+        let currentMineReward = 0.000000;
         let mineInterval;
+        const rewardPerSec = 0.000001;
 
         function showTab(tab) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -140,25 +123,25 @@
             event.currentTarget.classList.add('active');
         }
 
-        function toggleBoost() { document.getElementById('boost-modal').classList.toggle('active'); }
-
         // MINE MANTIĞI
         function startMineWithAd() {
             if (isMining) return;
-            
-            alert("Reklam izleniyor... (Simülasyon)"); // Buraya gerçek reklam kodu gelebilir
+            alert("Reklam izleniyor... Maden açılıyor.");
             
             setTimeout(() => {
                 isMining = true;
-                mineTime = 600;
+                mineTime = 600; 
+                currentMineReward = 0;
                 document.getElementById('mine-action-btn').style.display = 'none';
+                document.getElementById('extend-controls').style.display = 'block';
                 document.getElementById('mine-status-icon').innerText = '⚙️';
                 
-                // Örümcekleri oluştur
                 createMiningSpiders();
 
                 mineInterval = setInterval(() => {
                     mineTime--;
+                    currentMineReward += rewardPerSec; // Her saniye 0.000001 artış
+                    
                     updateMineUI();
                     
                     if (mineTime <= 0) {
@@ -166,48 +149,60 @@
                         finishMining();
                     }
                 }, 1000);
-            }, 2000);
+            }, 1500);
+        }
+
+        function extendMineTime() {
+            if (mineTime + 600 > 3600) {
+                alert("Maksimum 60 dakika sınırına ulaştınız!");
+                return;
+            }
+            alert("Reklam izleniyor... +10 Dakika eklendi.");
+            mineTime += 600;
+            updateMineUI();
         }
 
         function updateMineUI() {
             let m = Math.floor(mineTime / 60);
             let s = mineTime % 60;
             document.getElementById('mine-timer').innerText = `${m}:${s < 10 ? '0' + s : s}`;
+            document.getElementById('current-mine-reward').innerText = currentMineReward.toFixed(6);
         }
 
         function finishMining() {
+            isMining = false;
             document.getElementById('mine-status-icon').innerText = '✅';
-            document.getElementById('mine-title').innerText = "Maden Hazır!";
-            document.getElementById('mine-action-btn').innerText = "Ödülü Al (Reklam)";
+            document.getElementById('mine-title').innerText = "Maden Tamamlandı!";
+            document.getElementById('mine-action-btn').innerText = "Kazancı Al (Reklam)";
             document.getElementById('mine-action-btn').style.display = 'inline-block';
+            document.getElementById('extend-controls').style.display = 'none';
             document.getElementById('mine-action-btn').setAttribute('onclick', 'claimMineReward()');
-            // Örümcekleri temizle
             document.getElementById('spider-container').innerHTML = '';
         }
 
         function claimMineReward() {
-            alert("Reklam izleniyor... Ödül yükleniyor.");
+            alert("Reklam izleniyor... Bakiyeniz aktarılıyor.");
             setTimeout(() => {
-                coins += mineReward;
-                isMining = false;
+                coins += currentMineReward;
                 document.getElementById('mine-status-icon').innerText = '⛏️';
-                document.getElementById('mine-title').innerText = "Spyder Mining";
+                document.getElementById('mine-title').innerText = "SPYDER MINING";
                 document.getElementById('mine-action-btn').innerText = "Mine Başlat (Reklam)";
                 document.getElementById('mine-action-btn').setAttribute('onclick', 'startMineWithAd()');
                 document.getElementById('mine-timer').innerText = "10:00";
-                updateUI();
+                document.getElementById('current-mine-reward').innerText = "0.000000";
+                updateGlobalUI();
                 tg.HapticFeedback.notificationOccurred('success');
-            }, 2000);
+            }, 1500);
         }
 
         function createMiningSpiders() {
             const container = document.getElementById('spider-container');
-            for(let i=0; i<8; i++) {
+            for(let i=0; i<12; i++) {
                 const s = document.createElement('div');
                 s.className = 'mini-spyder';
                 s.innerText = '🕷️';
-                s.style.left = Math.random() * 80 + '%';
-                s.style.top = Math.random() * 80 + '%';
+                s.style.left = Math.random() * 90 + '%';
+                s.style.top = Math.random() * 90 + '%';
                 container.appendChild(s);
                 moveSpider(s);
             }
@@ -215,47 +210,16 @@
 
         function moveSpider(el) {
             if(!isMining) return;
-            el.style.left = Math.random() * 80 + '%';
-            el.style.top = Math.random() * 80 + '%';
+            el.style.left = Math.random() * 90 + '%';
+            el.style.top = Math.random() * 90 + '%';
             setTimeout(() => moveSpider(el), 2000);
         }
 
-        // Ana Sayfa Tıklama ve UI (Öncekiyle aynı)
-        document.getElementById('spyder').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (energy >= tapPower) {
-                coins += tapPower; energy -= tapPower; updateUI();
-                createPlus(e.touches[0].clientX, e.touches[0].clientY);
-                tg.HapticFeedback.impactOccurred('light');
-            }
-        });
-
-        function updateUI() {
-            document.getElementById('balance').innerText = coins.toLocaleString();
-            document.getElementById('energy-num').innerText = Math.floor(energy);
-            document.getElementById('max-energy-num').innerText = maxEnergy;
-            document.getElementById('energy-bar').style.width = (energy / maxEnergy * 100) + "%";
-            document.getElementById('tap-val').innerText = "+" + tapPower;
-            document.getElementById('limit-val').innerText = maxEnergy;
-            document.getElementById('mt-price').innerText = "💰 " + multitapPrice.toLocaleString();
-            document.getElementById('el-price').innerText = "💰 " + energyLimitPrice.toLocaleString();
-            document.getElementById('full-energy-count').innerText = fullEnergyDaily + "/2 available";
+        function updateGlobalUI() {
+            document.getElementById('balance').innerText = coins.toFixed(6);
         }
 
-        function createPlus(x, y) {
-            const p = document.createElement('div');
-            p.className = 'plus-one'; p.innerText = "+" + tapPower;
-            p.style.left = (x - 20) + 'px'; p.style.top = (y - 50) + 'px';
-            document.body.appendChild(p);
-            setTimeout(() => p.remove(), 700);
-        }
-
-        function buyMultitap() { if (coins >= multitapPrice) { coins -= multitapPrice; tapPower += 1; multitapPrice *= 2; updateUI(); } }
-        function buyEnergyLimit() { if (coins >= energyLimitPrice) { coins -= energyLimitPrice; maxEnergy += 500; energy = maxEnergy; energyLimitPrice *= 2; updateUI(); } }
-        function useFullEnergy() { if (fullEnergyDaily > 0) { energy = maxEnergy; fullEnergyDaily -= 1; updateUI(); toggleBoost(); } }
-
-        setInterval(() => { if (energy < maxEnergy) { energy = Math.min(maxEnergy, energy + 1); updateUI(); } }, 1500);
-        updateUI();
+        updateGlobalUI();
     </script>
 </body>
 </html>
