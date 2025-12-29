@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SpyderCoin - Firebase Full Integration</title>
+    <title>SpyderCoin - Admin Master</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -21,12 +21,15 @@
         body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
         /* Loader */
-        #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .spin { width: 45px; height: 45px; border: 4px solid #111; border-top-color: var(--p-purple); border-radius: 50%; animation: s 1s linear infinite; }
         @keyframes s { to { transform: rotate(360deg); } }
 
+        /* Ban Screen */
+        #ban-screen { position: fixed; inset: 0; background: #991b1b; z-index: 20000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+
         /* Navigation */
-        nav { height: 80px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1a1a1f; position: sticky; bottom: 0; }
+        nav { height: 80px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1a1a1f; }
         .nav-admin { grid-template-columns: repeat(5, 1fr) !important; }
         .n-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); font-size: 10px; cursor: pointer; }
         .n-item.active { color: var(--p-purple); }
@@ -36,107 +39,94 @@
         .view { display: none; flex-direction: column; padding: 20px; flex: 1; overflow-y: auto; }
         .view.active { display: flex; }
 
-        /* UI Elements */
-        .bal-txt { font-size: 52px; font-weight: 900; color: var(--p-purple); text-align: center; margin: 15px 0; text-shadow: 0 0 20px rgba(168, 85, 247, 0.3); }
+        .bal-txt { font-size: 52px; font-weight: 900; color: var(--p-purple); text-align: center; margin: 15px 0; }
         .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 18px; padding: 15px; margin-bottom: 12px; }
-        .btn-main { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s; }
-        .btn-main:active { transform: scale(0.98); opacity: 0.8; }
-        .btn-main:disabled { background: #222; color: #555; cursor: not-allowed; }
+        .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; }
+        .btn-main:disabled { opacity: 0.3; }
 
         /* Tapper */
-        .tap-zone { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
-        .spyder-btn { 
-            width: 230px; height: 230px; background: radial-gradient(circle, #c084fc, #a855f7); 
-            border-radius: 50%; display: flex; justify-content: center; align-items: center; 
-            box-shadow: 0 0 50px rgba(168, 85, 247, 0.5); user-select: none;
-        }
-        .spyder-btn span { font-size: 110px; pointer-events: none; }
+        .tap-zone { flex: 1; display: flex; justify-content: center; align-items: center; }
+        .spyder-btn { width: 220px; height: 220px; background: radial-gradient(circle, #c084fc, #a855f7); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 50px rgba(168, 85, 247, 0.4); user-select: none; }
+        .spyder-btn span { font-size: 100px; pointer-events: none; }
 
-        /* Badges */
         .status-badge { width: 100%; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: bold; text-align: center; margin-top: 10px; }
         .pending { background: rgba(251, 191, 36, 0.1); color: var(--gold); border: 1px solid var(--gold); }
         .approved { background: rgba(16, 185, 129, 0.1); color: var(--green); border: 1px solid var(--green); }
 
-        .pop { position: absolute; color: #fff; font-size: 32px; font-weight: bold; pointer-events: none; animation: up 0.7s forwards; z-index: 1000; }
-        @keyframes up { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
+        /* Admin Table */
+        .admin-table { width: 100%; font-size: 10px; border-collapse: collapse; }
+        .admin-table th, .admin-table td { padding: 8px 4px; border-bottom: 1px solid #222; text-align: left; }
+        .adm-btn { padding: 4px 8px; border-radius: 4px; border: none; font-size: 9px; font-weight: bold; cursor: pointer; margin-right: 2px; color: #fff; }
 
-        input { width: 100%; background: #000; border: 1px solid #222; color: #fff; padding: 14px; border-radius: 12px; margin: 10px 0; text-align: center; font-size: 16px; }
+        .pop { position: absolute; color: #fff; font-size: 32px; font-weight: bold; pointer-events: none; animation: up 0.7s forwards; }
+        @keyframes up { to { opacity: 0; transform: translateY(-120px); } }
+
+        input { width: 100%; background: #000; border: 1px solid #222; color: #fff; padding: 12px; border-radius: 10px; margin: 10px 0; text-align: center; }
     </style>
 </head>
 <body>
 
     <div id="loader">
         <div class="spin"></div>
-        <p style="color:var(--p-purple); margin-top:15px; font-weight:bold; letter-spacing:1px;">SPYDER NETWORK...</p>
+        <p style="color:var(--p-purple); margin-top:15px; font-weight:bold;">SECURE CONNECTION...</p>
     </div>
 
-    <main style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+    <div id="ban-screen">
+        <h1 style="font-size: 40px;">🚫 BANLANDIN</h1>
+        <p style="margin-top: 10px; opacity: 0.8;">Kural ihlali nedeniyle erişimin engellendi.</p>
+    </div>
+
+    <main id="app-content" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
         <section id="p-home" class="view active">
             <h1 class="bal-txt" id="ui-bal">0</h1>
-            <div class="tap-zone">
-                <div class="spyder-btn" id="tap-node"><span>🕷️</span></div>
-            </div>
+            <div class="tap-zone"><div class="spyder-btn" id="tap-node"><span>🕷️</span></div></div>
             <div class="card">
-                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;">
-                    <span style="color:var(--dim)">⚡ ENERGY</span><span id="ui-nrg" style="font-weight:bold;">1000/1000</span>
-                </div>
-                <div style="height:8px; background:#111; border-radius:4px; overflow:hidden;">
-                    <div id="ui-nrg-bar" style="height:100%; background:var(--p-purple); width:100%; transition: width 0.3s;"></div>
-                </div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;"><span>⚡ ENERGY</span><span id="ui-nrg">1000/1000</span></div>
+                <div style="height:6px; background:#111; border-radius:3px; overflow:hidden;"><div id="ui-nrg-bar" style="height:100%; background:var(--p-purple); width:100%;"></div></div>
             </div>
         </section>
 
         <section id="p-tasks" class="view">
-            <h2 style="margin-bottom:20px;">Missions</h2>
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <b style="font-size:16px;">Spyder Telegram</b><br>
-                    <span style="color:var(--p-purple); font-size:13px; font-weight:bold;">+1,000 SPYDER</span>
-                </div>
-                <button class="btn-main" style="width:auto; padding:10px 20px;" id="t-btn-1" onclick="Tasks.do(1, 1000, 'https://t.me/SpyderCommunity')">JOIN</button>
+            <h2>Missions</h2>
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                <div><b>Official Channel</b><br><span style="color:var(--p-purple);">+1,000 SPYDER</span></div>
+                <button class="btn-main" style="width:auto; padding:8px 15px;" id="t-btn-1" onclick="Tasks.do(1, 1000, 'https://t.me/SpyderCommunity')">JOIN</button>
             </div>
         </section>
 
         <section id="p-vault" class="view">
-            <h2 style="margin-bottom:20px;">Vault Swap</h2>
-            <div class="card">
-                <label style="font-size:11px; color:var(--dim)">AMOUNT TO SWAP</label>
+            <h2>Vault Swap</h2>
+            <div class="card" style="margin-top:15px;">
                 <input type="number" id="s-in" value="1000" oninput="Finance.syncS()">
-                <div style="text-align:center; color:var(--green); font-size:28px; font-weight:bold; margin:15px;">$ <span id="s-out">0.010</span></div>
-                <button class="btn-main" id="swap-btn" onclick="Finance.swap()">SWAP TO USDT</button>
-                <div id="swap-status" class="status-badge approved" style="display:none;">İŞLEM ONAYLANDI ✓</div>
+                <div style="text-align:center; color:var(--green); font-size:24px; font-weight:bold; margin:10px;">$ <span id="s-out">0.010</span></div>
+                <button class="btn-main" id="swap-btn" onclick="Finance.swap()">SWAP NOW</button>
+                <div id="swap-status" class="status-badge approved" style="display:none;">ONAYLANDI ✓</div>
             </div>
         </section>
 
         <section id="p-wallet" class="view">
-            <h2 style="margin-bottom:20px;">Wallet</h2>
-            <div class="card" style="text-align:center; border:1px solid var(--green); background: rgba(16, 185, 129, 0.05);">
-                <p style="font-size:12px; color:var(--dim)">TOTAL WITHDRAWABLE</p>
-                <h1 style="color:var(--green); font-size:45px;">$<span id="ui-usdt">0.000</span></h1>
+            <h2>Wallet</h2>
+            <div class="card" style="text-align:center; border:1px solid var(--green); margin-top:15px;">
+                <h1 style="color:var(--green); font-size:40px;">$<span id="ui-usdt">0.000</span></h1>
             </div>
             <div class="card">
-                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:10px;">
-                    <span>Ads (Daily):</span>
-                    <b id="ui-ads" style="color:var(--red);">0 / 10</b>
-                </div>
+                <div style="display:flex; justify-content:space-between; font-size:12px;"><span>Ads:</span><b id="ui-ads" style="color:var(--red);">0/10</b></div>
                 <input type="number" id="w-amt" value="0.005" step="0.005" oninput="Finance.syncW()">
-                <input type="text" id="w-adr" placeholder="Wallet BEP20 Address">
+                <input type="text" id="w-adr" placeholder="BEP20 Address">
                 <button id="w-btn" class="btn-main" onclick="Finance.withdraw()">WITHDRAW</button>
                 <div id="wd-status" class="status-badge pending" style="display:none;">ADMİN ONAYI BEKLENİYOR...</div>
             </div>
         </section>
 
         <section id="p-admin" class="view">
-            <h2 style="color:var(--gold)">👑 Admin Control</h2>
+            <h2 style="color:var(--gold)">👑 Master Panel</h2>
             <div class="card" style="flex:1; overflow:auto; padding:5px;">
-                <table style="width:100%; font-size:11px; border-collapse: collapse;">
-                    <thead style="color:var(--dim); border-bottom:1px solid #222;">
-                        <tr><th style="padding:10px 5px; text-align:left;">UID</th><th>COIN</th><th>USDT</th><th>ADS</th></tr>
-                    </thead>
+                <table class="admin-table">
+                    <thead><tr><th>User</th><th>USDT</th><th>Ads</th><th>Action</th></tr></thead>
                     <tbody id="admin-list"></tbody>
                 </table>
             </div>
-            <button class="btn-main" style="background:var(--gold); color:#000; margin-top:10px;" onclick="Admin.load()">YENİLE</button>
+            <button class="btn-main" style="background:var(--gold); color:#000; margin-top:10px;" onclick="Admin.load()">RELOAD LIST</button>
         </section>
     </main>
 
@@ -148,7 +138,6 @@
     </nav>
 
     <script>
-        // --- CONFIG ---
         const ADMIN_ID = "8392479231";
         const firebaseConfig = {
             apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY",
@@ -157,119 +146,113 @@
             appId: "1:228512804576:web:a0bba02ca83b4fa7adea85"
         };
 
-        // --- INIT FIREBASE ---
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const tg = window.Telegram.WebApp;
-        tg.expand();
 
-        let user = { bal: 0, nrg: 1000, usdt: 0, ads: 0, tasks: [], wd_pending: false };
-        let isStarted = false;
+        let user = { bal: 0, nrg: 1000, usdt: 0, ads: 0, tasks: [], wd_pending: false, banned: false };
+        let ready = false;
 
         const App = {
             init: async () => {
-                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
+                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_test";
                 
-                // Admin UI Check
                 if(uid === ADMIN_ID) {
-                    const navBar = document.getElementById('main-nav');
-                    navBar.classList.add('nav-admin');
-                    navBar.innerHTML += `<div class="n-item" style="color:var(--gold)" onclick="nav('p-admin', this)"><i>👑</i>Admin</div>`;
+                    const nb = document.getElementById('main-nav');
+                    nb.classList.add('nav-admin');
+                    nb.innerHTML += `<div class="n-item" style="color:var(--gold)" onclick="nav('p-admin', this)"><i>👑</i>Admin</div>`;
                 }
 
-                // Failsafe Start (Max 4s wait)
-                const fs = setTimeout(() => App.launch(), 4000);
+                setTimeout(() => App.boot(), 4000);
 
                 try {
                     const doc = await db.collection("users").doc(uid).get();
                     if(doc.exists) user = { ...user, ...doc.data() };
-                    clearTimeout(fs);
-                    App.launch();
-                } catch(e) {
-                    console.error("DB Connection Failed", e);
-                    App.launch();
-                }
+                    App.boot();
+                } catch(e) { App.boot(); }
             },
-            launch: () => {
-                if(isStarted) return; isStarted = true;
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+            boot: () => {
+                if(ready) return; ready = true;
+                document.getElementById('loader').style.display = 'none';
+                
+                if(user.banned) {
+                    document.getElementById('app-content').style.display = 'none';
+                    document.getElementById('main-nav').style.display = 'none';
+                    document.getElementById('ban-screen').style.display = 'flex';
+                    return;
+                }
+                
                 UI.refresh();
-                // Energy Refill
-                setInterval(() => { if(user.nrg < 1000) { user.nrg += 1; UI.refresh(); }}, 2000);
+                setInterval(() => { if(user.nrg < 1000) { user.nrg++; UI.refresh(); }}, 2500);
             },
             tap: (e) => {
-                if(user.nrg <= 0) return;
+                if(user.nrg <= 0 || user.banned) return;
                 user.bal++; user.nrg--;
                 UI.pop(e); UI.refresh();
-                if(user.bal % 40 === 0) App.showAd();
+                if(user.bal % 50 === 0) App.ad();
                 if(user.bal % 25 === 0) App.save();
             },
-            showAd: () => {
-                if(window.showAdexora) window.showAdexora().then(() => { user.ads++; UI.refresh(); App.save(); });
-            },
-            save: () => {
-                const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
-                db.collection("users").doc(uid).set(user, { merge: true });
-            }
+            ad: () => { if(window.showAdexora) window.showAdexora().then(() => { user.ads++; UI.refresh(); App.save(); }); },
+            save: () => db.collection("users").doc(tg.initDataUnsafe?.user?.id?.toString() || "dev_test").set(user, { merge: true })
         };
 
         const Tasks = {
             do: (id, rew, link) => {
                 if(user.tasks.includes(id)) return;
                 tg.openLink(link);
-                setTimeout(() => {
-                    user.bal += rew; user.tasks.push(id);
-                    UI.refresh(); App.save();
-                    tg.showPopup({ message: `Success! +${rew} added.` });
-                }, 6000);
+                setTimeout(() => { user.bal += rew; user.tasks.push(id); UI.refresh(); App.save(); }, 6000);
             }
         };
 
         const Finance = {
             syncS: () => document.getElementById('s-out').innerText = (document.getElementById('s-in').value * 0.00001).toFixed(3),
             swap: () => {
-                const amt = parseInt(document.getElementById('s-in').value);
-                if(user.bal < amt) return tg.showAlert("Yetersiz SPYDER!");
-                user.bal -= amt;
-                user.usdt += (amt * 0.00001);
-                
-                const btn = document.getElementById('swap-btn');
-                const status = document.getElementById('swap-status');
-                btn.style.display = 'none'; status.style.display = 'block';
-                
+                const v = parseInt(document.getElementById('s-in').value);
+                if(user.bal < v) return tg.showAlert("Yetersiz Bakiye!");
+                user.bal -= v; user.usdt += (v * 0.00001);
+                document.getElementById('swap-btn').style.display = 'none';
+                document.getElementById('swap-status').style.display = 'block';
                 UI.refresh(); App.save();
-                setTimeout(() => { btn.style.display = 'block'; status.style.display = 'none'; }, 3000);
+                setTimeout(() => { document.getElementById('swap-btn').style.display = 'block'; document.getElementById('swap-status').style.display = 'none'; }, 3000);
             },
             syncW: () => {
-                const amt = parseFloat(document.getElementById('w-amt').value) || 0;
-                const req = Math.max(10, Math.ceil(amt / 0.005) * 10);
-                document.getElementById('ui-ads').innerText = `${user.ads} / ${req}`;
-                const valid = (amt >= 0.005 && user.usdt >= amt && user.ads >= req && !user.wd_pending);
-                document.getElementById('w-btn').disabled = !valid;
+                const a = parseFloat(document.getElementById('w-amt').value) || 0;
+                const r = Math.max(10, Math.ceil(a / 0.005) * 10);
+                document.getElementById('ui-ads').innerText = `${user.ads}/${r}`;
+                document.getElementById('w-btn').disabled = !(a >= 0.005 && user.usdt >= a && user.ads >= r && !user.wd_pending);
             },
-            withdraw: () => {
-                user.wd_pending = true;
-                UI.refresh(); App.save();
-                tg.showAlert("Talebiniz Kaydedildi. Admin onayı bekleniyor.");
-            }
+            withdraw: () => { user.wd_pending = true; UI.refresh(); App.save(); tg.showAlert("Talebiniz alındı!"); }
         };
 
         const Admin = {
             load: async () => {
-                const list = document.getElementById('admin-list');
-                list.innerHTML = "<tr><td colspan='4'>Veriler Çekiliyor...</td></tr>";
+                const body = document.getElementById('admin-list');
+                body.innerHTML = "Loading...";
                 const snap = await db.collection("users").get();
-                list.innerHTML = "";
+                body.innerHTML = "";
                 snap.forEach(doc => {
                     const d = doc.data();
-                    list.innerHTML += `<tr style="${d.wd_pending ? 'background:rgba(255,184,0,0.1)' : ''}">
-                        <td style="padding:10px 5px;">${doc.id.slice(0,6)}</td>
-                        <td>${(d.bal || 0).toLocaleString()}</td>
+                    if(doc.id === ADMIN_ID) return;
+                    body.innerHTML += `<tr style="${d.wd_pending ? 'background:rgba(251,191,36,0.1)' : ''}">
+                        <td>${doc.id.slice(0,5)}</td>
                         <td>$${(d.usdt || 0).toFixed(3)}</td>
                         <td>${d.ads || 0}${d.wd_pending ? '⚠️' : ''}</td>
+                        <td style="display:flex;">
+                            <button class="adm-btn" style="background:var(--green)" onclick="Admin.action('${doc.id}', 'pay')">OK</button>
+                            <button class="adm-btn" style="background:var(--red)" onclick="Admin.action('${doc.id}', 'ban')">BAN</button>
+                        </td>
                     </tr>`;
                 });
+            },
+            action: async (uid, type) => {
+                if(type === 'pay') {
+                    await db.collection("users").doc(uid).update({ usdt: 0, ads: 0, wd_pending: false });
+                    tg.showAlert("Ödeme Onaylandı, Bakiye Sıfırlandı.");
+                } else {
+                    await db.collection("users").doc(uid).update({ banned: true });
+                    tg.showAlert("Kullanıcı BANLANDI.");
+                }
+                Admin.load();
             }
         };
 
@@ -279,17 +262,12 @@
                 document.getElementById('ui-nrg').innerText = `${user.nrg}/1000`;
                 document.getElementById('ui-nrg-bar').style.width = (user.nrg / 10) + "%";
                 document.getElementById('ui-usdt').innerText = user.usdt.toFixed(3);
+                user.tasks.forEach(id => { const b = document.getElementById(`t-btn-${id}`); if(b){ b.innerText="OK"; b.disabled=true; }});
                 
-                user.tasks.forEach(id => {
-                    const b = document.getElementById(`t-btn-${id}`);
-                    if(b) { b.innerText = "DONE"; b.disabled = true; }
-                });
-
                 const wBtn = document.getElementById('w-btn');
                 const wSt = document.getElementById('wd-status');
                 if(user.wd_pending) { wBtn.style.display = 'none'; wSt.style.display = 'block'; }
                 else { wBtn.style.display = 'block'; wSt.style.display = 'none'; }
-
                 Finance.syncS(); Finance.syncW();
             },
             pop: (e) => {
