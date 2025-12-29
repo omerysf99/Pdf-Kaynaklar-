@@ -3,115 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SpyderCoin - Admin Console</title>
-    
+    <title>Spyder - Admin Control</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
         :root { --p-purple: #a855f7; --bg: #000; --card: #0f0f12; --text: #fff; --dim: #71717a; --green: #10b981; --red: #ef4444; --gold: #fbbf24; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .spin { width: 40px; height: 40px; border: 4px solid #111; border-top-color: var(--p-purple); border-radius: 50%; animation: s 1s linear infinite; }
-        @keyframes s { to { transform: rotate(360deg); } }
-
-        main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        /* Ban Screen */
+        #ban-screen { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        
         .view { display: none; flex-direction: column; padding: 20px; flex: 1; overflow-y: auto; }
         .view.active { display: flex; }
-        
         .card { background: var(--card); border: 1px solid #1a1a1f; border-radius: 18px; padding: 15px; margin-bottom: 12px; }
         
-        /* Tap Screen */
-        .bal-txt { font-size: 50px; font-weight: 900; color: var(--p-purple); text-align: center; margin: 20px 0; }
-        .spyder-btn { width: 210px; height: 210px; background: radial-gradient(circle, #c084fc, #a855f7); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 40px rgba(168, 85, 247, 0.4); margin: 0 auto; cursor: pointer; transition: transform 0.05s; }
-        .spyder-btn:active { transform: scale(0.9); }
-        .spyder-btn span { font-size: 90px; pointer-events: none; }
-
         /* Admin Table */
-        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
-        th { text-align: left; color: var(--dim); padding: 8px; border-bottom: 1px solid #222; }
-        td { padding: 10px 8px; border-bottom: 1px solid #111; }
-        .u-name { font-weight: bold; color: var(--p-purple); }
-        .u-info { color: var(--dim); font-size: 9px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        td { padding: 12px 8px; border-bottom: 1px solid #111; cursor: pointer; }
+        
+        /* Modal - Detay Paneli */
+        #user-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10001; display: none; align-items: center; justify-content: center; }
+        .modal-content { background: var(--card); width: 90%; border-radius: 25px; padding: 25px; border: 1px solid var(--p-purple); }
 
-        /* General UI */
-        .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; cursor: pointer; }
-        .btn-main:disabled { background: #1a1a1f; color: #444; }
-        input { width: 100%; padding: 12px; background: #050505; border: 1px solid #222; color: #fff; border-radius: 10px; margin: 8px 0; text-align: center; outline: none; }
-
-        nav { height: 85px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1a1a1f; }
+        .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--p-purple); color: #fff; font-weight: bold; margin-top: 10px; }
+        .btn-ban { background: var(--red) !important; }
+        
+        nav { height: 80px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1a1a1f; }
         .nav-admin { grid-template-columns: repeat(5, 1fr) !important; }
-        .n-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); font-size: 11px; }
+        .n-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); font-size: 10px; }
         .n-item.active { color: var(--p-purple); }
-        .n-item i { font-size: 20px; font-style: normal; margin-bottom: 4px; }
-
-        .pop { position: absolute; color: #fff; font-size: 30px; font-weight: 900; pointer-events: none; animation: pUp 0.6s forwards; z-index: 1000; }
-        @keyframes pUp { to { transform: translateY(-100px); opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="loader"><div class="spin"></div></div>
+    <div id="ban-screen">
+        <h1 style="font-size: 80px;">🚫</h1>
+        <h2 style="color:var(--red)">HESABINIZ BANLANDI</h2>
+        <p style="color:var(--dim); margin-top:10px;">Kural ihlali nedeniyle erişiminiz kısıtlanmıştır.</p>
+    </div>
+
+    <div id="loader" style="position:fixed; inset:0; background:#000; z-index:15000; display:flex; align-items:center; justify-content:center;">Yukleniyor...</div>
 
     <main>
         <section id="v-home" class="view active">
-            <h1 class="bal-txt" id="ui-bal">0</h1>
-            <div style="flex:1; display:flex; align-items:center;"><div class="spyder-btn" id="tap-node"><span>🕷️</span></div></div>
-            <div class="card"><div style="display:flex; justify-content:space-between; font-size:12px;"><span>ENERGY</span><span id="ui-nrg">1000/1000</span></div></div>
-        </section>
-
-        <section id="v-tasks" class="view">
-            <h2>Missions</h2>
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div><b>Telegram Group</b><br><small>+5,000 SPYDER</small></div>
-                <button class="btn-main" style="width:auto; padding:8px 15px;" id="t-btn-1" onclick="Tasks.do(1, 5000, 'https://t.me/SpyderCommunity')">JOIN</button>
-            </div>
-        </section>
-
-        <section id="v-vault" class="view">
-            <h2>Vault</h2>
-            <div class="card">
-                <input type="number" id="s-in" value="10000" oninput="Finance.syncS()">
-                <p style="text-align:center; font-size:20px; margin:10px;">⬇️ $<span id="s-out">0.10</span></p>
-                <button class="btn-main" onclick="Finance.swap()">SWAP</button>
-            </div>
-        </section>
-
-        <section id="v-wallet" class="view">
-            <h2>Withdraw</h2>
-            <div class="card" style="text-align:center;"><h1 style="color:var(--green)">$<span id="ui-usdt">0.000</span></h1></div>
-            <div class="card">
-                <input type="number" id="w-amt" value="0.01" step="0.01" oninput="UI.refresh()">
-                <div style="display:flex; justify-content:space-between; margin:10px 0;"><span>Ads Required:</span><span id="ui-ad-status">0/15</span></div>
-                <input type="text" id="w-adr" placeholder="Address">
-                <button id="w-btn" class="btn-main" onclick="Finance.withdraw()">WITHDRAW</button>
+            <h1 id="ui-bal" style="font-size:50px; text-align:center; color:var(--p-purple); margin:20px;">0</h1>
+            <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+                <div onclick="App.tap()" style="width:200px; height:200px; background:var(--p-purple); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:80px; box-shadow:0 0 30px var(--p-purple)">🕷️</div>
             </div>
         </section>
 
         <section id="v-admin" class="view">
-            <h2 style="color:var(--gold)">Admin Console</h2>
-            <div class="card" style="padding:5px; overflow-x:auto;">
-                <table>
-                    <thead>
-                        <tr><th>User</th><th>Spyder</th><th>USDT</th><th>Ads</th><th>Tasks</th></tr>
-                    </thead>
-                    <tbody id="admin-table">
-                        <tr><td colspan="5" style="text-align:center;">Loading Users...</td></tr>
-                    </tbody>
-                </table>
+            <h2>Yönetici Paneli</h2>
+            <div class="card" style="margin-top:15px; padding:0;">
+                <table id="admin-table"></table>
             </div>
         </section>
     </main>
 
+    <div id="user-modal">
+        <div class="modal-content">
+            <h3 id="m-name" style="color:var(--p-purple)">İsim</h3>
+            <p id="m-user" style="color:var(--dim); font-size:12px;">@kullanici</p>
+            <hr style="margin:15px 0; border:0; border-top:1px solid #222;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:13px;">
+                <div>💰 Spyder:<br><b id="m-bal">0</b></div>
+                <div>💵 USDT:<br><b id="m-usdt">0</b></div>
+                <div>📺 Reklam:<br><b id="m-ads">0</b></div>
+                <div>✅ Görev:<br><b id="m-tasks">0</b></div>
+            </div>
+            <p style="font-size:10px; color:var(--dim); margin-top:15px;">Son Görülme: <span id="m-seen">?</span></p>
+            <button id="ban-btn" class="btn-main btn-ban" onclick="Admin.toggleBan()">BANLA</button>
+            <button class="btn-main" style="background:#222;" onclick="Admin.closeModal()">KAPAT</button>
+        </div>
+    </div>
+
     <nav id="main-nav">
-        <div class="n-item active" onclick="nav('v-home', this)"><i>🎮</i>Play</div>
-        <div class="n-item" onclick="nav('v-tasks', this)"><i>📢</i>Tasks</div>
+        <div class="n-item active" onclick="nav('v-home', this)"><i>🎮</i>Oyna</div>
+        <div class="n-item" onclick="nav('v-tasks', this)"><i>📢</i>Görev</div>
         <div class="n-item" onclick="nav('v-vault', this)"><i>🏛️</i>Vault</div>
-        <div class="n-item" onclick="nav('v-wallet', this)"><i>💰</i>Wallet</div>
+        <div class="n-item" onclick="nav('v-wallet', this)"><i>💰</i>Cüzdan</div>
     </nav>
 
     <script>
@@ -126,113 +99,99 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const tg = window.Telegram.WebApp;
-        tg.expand();
 
-        let user = { 
-            bal: 0, nrg: 1000, usdt: 0, ads: 0, tasks: [], 
-            name: tg.initDataUnsafe?.user?.first_name || "Guest",
-            username: tg.initDataUnsafe?.user?.username || "None",
-            lastSeen: "" 
-        };
+        let user = { bal:0, usdt:0, ads:0, tasks:[], isBanned: false };
+        let selectedUserId = null;
 
         const App = {
             init: async () => {
                 const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev";
                 
-                // Admin Control
+                // Admin Nav Ekle
                 if(uid === ADMIN_ID) {
                     const navBar = document.getElementById('main-nav');
                     navBar.classList.add('nav-admin');
-                    navBar.innerHTML += `<div class="n-item" onclick="nav('v-admin', this); Admin.load();"><i>🔑</i>Admin</div>`;
+                    navBar.innerHTML += `<div class="n-item" onclick="nav('v-admin', this); Admin.list();"><i>🔑</i>Admin</div>`;
                 }
 
                 const doc = await db.collection("users").doc(uid).get();
-                if(doc.exists) user = Object.assign(user, doc.data());
+                if(doc.exists) {
+                    user = Object.assign(user, doc.data());
+                    if(user.isBanned) {
+                        document.getElementById('ban-screen').style.display = 'flex';
+                        return;
+                    }
+                }
                 
                 document.getElementById('loader').style.display = 'none';
-                UI.refresh();
-                setInterval(() => { if(user.nrg < 1000) { user.nrg+=2; UI.refresh(); }}, 3000);
+                App.save(); // İlk girişte ismi kaydet
             },
-            tap: (e) => {
-                if(user.nrg <= 0) return;
-                user.bal++; user.nrg--;
-                UI.pop(e); UI.refresh();
-                if(user.bal % 50 === 0) App.ad();
-                if(user.bal % 25 === 0) App.save();
+            tap: () => {
+                user.bal++;
+                document.getElementById('ui-bal').innerText = user.bal;
+                if(user.bal % 50 === 0) App.save();
             },
-            ad: () => { user.ads++; UI.refresh(); App.save(); },
             save: () => {
                 const uid = tg.initDataUnsafe?.user?.id?.toString() || "dev";
-                user.lastSeen = new Date().toLocaleString('tr-TR');
-                db.collection("users").doc(uid).set(user, { merge: true });
+                const data = {
+                    ...user,
+                    name: tg.initDataUnsafe?.user?.first_name || "Guest",
+                    username: tg.initDataUnsafe?.user?.username || "n/a",
+                    lastSeen: new Date().toLocaleString('tr-TR')
+                };
+                db.collection("users").doc(uid).set(data, { merge: true });
             }
         };
 
         const Admin = {
-            load: async () => {
+            list: async () => {
                 const snap = await db.collection("users").get();
                 const table = document.getElementById('admin-table');
                 table.innerHTML = "";
                 snap.forEach(doc => {
                     const d = doc.data();
-                    table.innerHTML += `
-                        <tr>
-                            <td>
-                                <span class="u-name">${d.name || 'Unknown'}</span><br>
-                                <span class="u-info">@${d.username || 'n/a'}</span><br>
-                                <span class="u-info" style="font-size:7px;">${d.lastSeen || 'Old'}</span>
-                            </td>
-                            <td>${(d.bal || 0).toLocaleString()}</td>
-                            <td style="color:var(--green)">$${(d.usdt || 0).toFixed(2)}</td>
-                            <td>${d.ads || 0}</td>
-                            <td>${(d.tasks || []).length}</td>
-                        </tr>`;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>
+                            <b style="${d.isBanned ? 'color:red;text-decoration:line-through;' : ''}">${d.name}</b><br>
+                            <small style="color:var(--dim)">@${d.username}</small>
+                        </td>
+                        <td style="text-align:right; color:var(--p-purple)">${d.bal} 🕷️</td>
+                    `;
+                    row.onclick = () => Admin.openUser(doc.id, d);
+                    table.appendChild(row);
                 });
-            }
-        };
-
-        const Finance = {
-            syncS: () => document.getElementById('s-out').innerText = (document.getElementById('s-in').value * 0.00001).toFixed(2),
-            swap: () => {
-                const amt = parseInt(document.getElementById('s-in').value);
-                if(user.bal < amt) return tg.showAlert("Low Spyder!");
-                user.bal -= amt; user.usdt += (amt * 0.00001);
-                UI.refresh(); App.save();
             },
-            withdraw: () => {
-                tg.showAlert("Request sent to Admin.");
-            }
-        };
-
-        const Tasks = {
-            do: (id, rew, link) => {
-                if(user.tasks.includes(id)) return;
-                tg.openLink(link);
-                setTimeout(() => { user.bal += rew; user.tasks.push(id); UI.refresh(); App.save(); }, 3000);
-            }
-        };
-
-        const UI = {
-            refresh: () => {
-                document.getElementById('ui-bal').innerText = user.bal.toLocaleString();
-                document.getElementById('ui-nrg').innerText = `${user.nrg}/1000`;
-                document.getElementById('ui-usdt').innerText = user.usdt.toFixed(3);
+            openUser: (id, d) => {
+                selectedUserId = id;
+                document.getElementById('m-name').innerText = d.name;
+                document.getElementById('m-user').innerText = "@" + d.username;
+                document.getElementById('m-bal').innerText = d.bal.toLocaleString();
+                document.getElementById('m-usdt').innerText = "$" + (d.usdt || 0).toFixed(2);
+                document.getElementById('m-ads').innerText = d.ads || 0;
+                document.getElementById('m-tasks').innerText = (d.tasks || []).length;
+                document.getElementById('m-seen').innerText = d.lastSeen || "Bilinmiyor";
                 
-                const wAmt = parseFloat(document.getElementById('w-amt').value) || 0;
-                const reqAds = Math.max(15, Math.ceil(wAmt / 0.01) * 15);
-                const adEl = document.getElementById('ui-ad-status');
+                const banBtn = document.getElementById('ban-btn');
+                banBtn.innerText = d.isBanned ? "BAN KALDIR" : "BANLA";
+                banBtn.style.background = d.isBanned ? "var(--green)" : "var(--red)";
                 
-                adEl.innerText = `${user.ads}/${reqAds}`;
-                adEl.style.color = user.ads >= reqAds ? "var(--green)" : "var(--red)";
-                document.getElementById('w-btn').disabled = (user.ads < reqAds || user.usdt < wAmt);
-                
-                if(user.tasks.includes(1)) { const b = document.getElementById('t-btn-1'); b.innerText="DONE"; b.disabled=true; }
+                document.getElementById('user-modal').style.display = 'flex';
             },
-            pop: (e) => {
-                const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-                const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-                const p = document.createElement('div'); p.className='pop'; p.innerText='+1'; p.style.left=x+'px'; p.style.top=y+'px';
-                document.body.appendChild(p); setTimeout(()=>p.remove(),600);
+            toggleBan: async () => {
+                const btn = document.getElementById('ban-btn');
+                const isBanning = btn.innerText === "BANLA";
+                
+                await db.collection("users").doc(selectedUserId).update({
+                    isBanned: isBanning
+                });
+                
+                tg.showAlert(isBanning ? "Kullanıcı Banlandı!" : "Ban Kaldırıldı!");
+                Admin.closeModal();
+                Admin.list();
+            },
+            closeModal: () => {
+                document.getElementById('user-modal').style.display = 'none';
             }
         };
 
@@ -242,7 +201,6 @@
             document.getElementById(id).classList.add('active'); el.classList.add('active');
         }
 
-        document.getElementById('tap-node').onclick = (e) => App.tap(e);
         App.init();
     </script>
 </body>
