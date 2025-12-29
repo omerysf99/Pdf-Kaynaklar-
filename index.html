@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Ad Edition</title>
+    <title>SpyderCoin - Anti-Cheat Edition</title>
     
     <script src="https://adexora.my.id/cdn/ads.js?id=YOUR_APP_ID"></script>
 
@@ -23,7 +23,7 @@
         .level-container { width: 90%; margin-top: 30px; }
         .level-row { display: flex; justify-content: space-between; font-size: 13px; color: #ccc; margin-bottom: 8px; }
         .level-bar-bg { width: 100%; height: 8px; background: #222; border-radius: 10px; overflow: hidden; }
-        .level-bar-fill { height: 100%; width: 35%; background: var(--blue); }
+        .level-bar-fill { height: 100%; width: 40%; background: var(--blue); }
 
         .tap-zone { position: relative; width: 320px; height: 320px; margin-top: 40px; display: flex; justify-content: center; align-items: center; cursor: pointer; touch-action: none; }
         .blue-ring { position: absolute; width: 280px; height: 280px; border: 8px solid var(--blue); border-radius: 50%; box-shadow: 0 0 50px rgba(58, 71, 255, 0.4); pointer-events: none; }
@@ -37,7 +37,7 @@
         .web-effect { position: absolute; font-size: 45px; pointer-events: none; animation: webPop 0.6s forwards; z-index: 100; }
         @keyframes webPop { 
             0% { opacity: 0; transform: scale(0.3); } 
-            50% { opacity: 1; transform: scale(1.5) rotate(20deg); } 
+            50% { opacity: 1; transform: scale(1.5); } 
             100% { opacity: 0; transform: scale(1.1) translateY(-80px); } 
         }
     </style>
@@ -71,30 +71,29 @@
     </div>
 
     <script>
+        // Veri Yönetimi - Bakiye ve Enerji Kayıtlı Tutulur
         let balance = parseInt(localStorage.getItem('spyderBalance')) || 0;
-        let energy = 1000;
+        let energy = parseInt(localStorage.getItem('spyderEnergy')) ?? 1000;
         let clickCounter = 0; 
 
         const updateUI = () => {
             document.getElementById('ui-balance').innerText = balance.toLocaleString();
             document.getElementById('ui-energy').innerText = energy;
             document.getElementById('energy-fill').style.width = (energy / 10) + "%";
+            
+            // Verileri kaydet
             localStorage.setItem('spyderBalance', balance);
+            localStorage.setItem('spyderEnergy', energy);
         };
 
-        // 🔵 REKLAM FONKSİYONU
+        // 🔵 REKLAM MEKANİZMASI (Daha Güçlü)
         const showAd = () => {
-            console.log('Reklam sırası geldi, yükleniyor...');
-            if (window.showAdexora) {
+            if (typeof window.showAdexora === "function") {
                 window.showAdexora()
-                    .then(() => {
-                        console.log('Ad completed! Reward granted.');
-                    })
-                    .catch(e => {
-                        console.error('Ad failed:', e);
-                    });
+                    .then(() => console.log('Ad completed!'))
+                    .catch(e => console.error('Ad failed:', e));
             } else {
-                console.error('SDK henüz yüklenmemiş.');
+                console.warn('Ad SDK loading or ID incorrect.');
             }
         };
 
@@ -104,7 +103,7 @@
                 energy -= 1;
                 clickCounter += 1;
 
-                // 25 TIKLAMADA BİR REKLAM MK!
+                // 25 Tıkta Bir Reklam
                 if (clickCounter >= 25) {
                     clickCounter = 0;
                     showAd();
@@ -130,6 +129,8 @@
         };
 
         const area = document.getElementById('tap-area');
+
+        // Mobil Dokunma
         area.addEventListener('touchstart', (e) => {
             e.preventDefault();
             for(let i=0; i<e.changedTouches.length; i++) {
@@ -137,14 +138,20 @@
             }
         });
 
+        // Mouse Tıklama
         area.addEventListener('mousedown', (e) => {
             handleAction(e.clientX, e.clientY);
         });
 
+        // Enerji Yenileme (Sayfa kapalıyken bile kaydeder)
         setInterval(() => {
-            if (energy < 1000) { energy++; updateUI(); }
+            if (energy < 1000) { 
+                energy++; 
+                updateUI(); 
+            }
         }, 1500);
 
+        // Sayfa ilk açıldığında UI senkronize et
         updateUI();
     </script>
 </body>
