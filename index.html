@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Full Screen Edition</title>
+    <title>SpyderCoin - Spider Edition</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -12,7 +12,6 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; padding: 0; height: 100vh; overflow: hidden; }
 
-        /* Tüm sekmelerin tam ekran kapsama alanı */
         .page { display: none; height: 100vh; width: 100vw; flex-direction: column; align-items: center; padding: 20px; padding-bottom: 100px; position: absolute; inset: 0; }
         .page.active { display: flex; }
 
@@ -20,7 +19,7 @@
         .bal-text { font-size: 64px; font-weight: 800; margin-top: 40px; }
         .tap-label { color: var(--inactive); font-size: 18px; margin-bottom: 30px; }
         .tap-zone { position: relative; width: 250px; height: 250px; background: var(--purple); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: transform 0.1s; box-shadow: 0 0 50px rgba(168, 85, 247, 0.4); }
-        .tap-zone::after { content: '🕸️'; font-size: 120px; } /* Örümcek ağı emojisi */
+        .tap-zone::after { content: '🕷️'; font-size: 120px; } /* Örümcek emojisi eklendi */
         
         /* Ağ Animasyonu */
         .web-anim { position: absolute; border: 2px solid white; border-radius: 50%; pointer-events: none; animation: webExpand 0.5s ease-out forwards; opacity: 0; }
@@ -32,20 +31,17 @@
         .energy-bar { width: 100%; height: 12px; background: #2c2c2e; border-radius: 6px; overflow: hidden; }
         #energy-fill { height: 100%; width: 100%; background: var(--purple); transition: width 0.2s; }
 
-        /* 🏆 SIRALAMA */
-        .rank-item { background: #1c1c1e; width: 100%; padding: 18px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; font-size: 18px; }
-
         /* 📋 GÖREVLER */
         .task-card { background: var(--card); width: 100%; padding: 20px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .task-btn { background: var(--purple); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; }
+        .task-btn { background: var(--purple); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
 
         /* 🔐 KONTROL MERKEZİ */
         #admin-panel { position: fixed; inset: 0; background: black; z-index: 2000; display: none; padding: 40px 20px; flex-direction: column; align-items: center; }
         .admin-box { background: var(--card); width: 100%; padding: 25px; border-radius: 20px; margin-top: 30px; }
-        .close-btn { background: #ff3b30; color: white; width: 100%; padding: 18px; border-radius: 15px; border: none; font-weight: bold; margin-top: auto; }
+        .close-btn { background: #ff3b30; color: white; width: 100%; padding: 18px; border-radius: 15px; border: none; font-weight: bold; margin-top: auto; cursor: pointer; }
 
-        /* 📱 NAV BAR */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #121214; display: grid; grid-template-columns: repeat(5, 1fr); padding: 10px 0 25px; border-top: 1px solid #2c2c2e; z-index: 1000; }
+        /* 📱 NAV BAR (4 Sekme: Lig Kaldırıldı) */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #121214; display: grid; grid-template-columns: repeat(4, 1fr); padding: 10px 0 25px; border-top: 1px solid #2c2c2e; z-index: 1000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--inactive); font-size: 12px; text-decoration: none; cursor: pointer; }
         .nav-item.active { color: var(--purple); }
         .nav-icon { font-size: 20px; }
@@ -83,12 +79,6 @@
         </div>
     </div>
 
-    <div id="p-league" class="page">
-        <h2 style="color:var(--purple)">Sıralama</h2>
-        <div id="rank-list" style="width:100%">
-            </div>
-    </div>
-
     <div id="p-wallet" class="page">
         <h2 style="color:var(--purple)">Cüzdan</h2>
         <div class="admin-box" style="text-align:center">
@@ -114,7 +104,6 @@
         <div class="nav-item active" onclick="nav('p-play', this)"><span class="nav-icon">🎮</span>Oyna</div>
         <div class="nav-item" onclick="nav('p-tasks', this)"><span class="nav-icon">📋</span>Görev</div>
         <div class="nav-item" onclick="nav('p-friends', this)"><span class="nav-icon">👥</span>Dost</div>
-        <div class="nav-item" onclick="nav('p-league', this)"><span class="nav-icon">🏆</span>Lig</div>
         <div class="nav-item" onclick="nav('p-wallet', this)"><span class="nav-icon">💰</span>Cüzdan</div>
     </nav>
 
@@ -149,13 +138,11 @@
             bal++; nrg--;
             updateUI();
 
-            // Ağ animasyonu tetikleme
             const effect = document.createElement('div');
             effect.className = 'web-anim';
             document.getElementById('tap-target').appendChild(effect);
             setTimeout(() => effect.remove(), 500);
 
-            // Tıklama titretme
             document.getElementById('tap-target').style.transform = 'scale(0.95)';
             setTimeout(() => document.getElementById('tap-target').style.transform = 'scale(1)', 100);
         }
@@ -165,12 +152,6 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             el.classList.add('active');
-            if(id === 'p-league') updateRanks();
-        }
-
-        function updateRanks() {
-            const list = document.getElementById('rank-list');
-            list.innerHTML = `<div class="rank-item"><span>1. ${u.first_name} (Sen)</span><b>${bal.toLocaleString()}</b></div>`;
         }
 
         function toggleAdmin(s) { document.getElementById('admin-panel').style.display = s ? 'flex' : 'none'; }
