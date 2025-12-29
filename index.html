@@ -3,122 +3,366 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SpyderCoin - Ultimate Cloud Edition</title>
+    <title>SpyderCoin - Web3 Cloud Mining</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
+        /* =========================================
+           1. CSS ARCHITECTURE (UI/UX)
+           =========================================
+        */
         :root {
-            --spyder-purple: #a855f7;
-            --spyder-purple-glow: rgba(168, 85, 247, 0.45);
-            --spyder-bg: #070708;
-            --spyder-card: #111113;
-            --spyder-text: #ffffff;
-            --spyder-dim: #94a3b8;
-            --spyder-green: #10b981;
+            --p-purple: #a855f7;
+            --p-purple-dark: #6b21a8;
+            --p-glow: rgba(168, 85, 247, 0.4);
+            --bg-main: #0a0a0c;
+            --bg-card: #141417;
+            --border: #1f1f23;
+            --text-main: #ffffff;
+            --text-dim: #a1a1aa;
+            --green: #22c55e;
+            --gold: #fbbf24;
+            --red: #ef4444;
+            --nav-h: 95px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body { background: var(--spyder-bg); color: var(--spyder-text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            scrollbar-width: none;
+        }
 
-        .app-container { flex: 1; overflow-y: auto; padding-bottom: 110px; }
-        .page { display: none; flex-direction: column; align-items: center; padding: 25px; animation: fadeIn 0.3s ease; }
-        .page.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        ::-webkit-scrollbar { display: none; }
 
-        /* ANA SAYFA */
-        .bal-display { font-size: 60px; font-weight: 900; background: linear-gradient(#fff, var(--spyder-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 15px 0; }
-        .spider-btn { width: 230px; height: 230px; background: radial-gradient(circle, #c084fc, #7c3aed); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 90px; box-shadow: 0 0 35px var(--spyder-purple-glow); margin: 20px 0; cursor: pointer; transition: transform 0.05s; }
-        .spider-btn:active { transform: scale(0.92); }
+        body {
+            background: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
 
-        /* KARTLAR */
-        .card { background: var(--spyder-card); border: 1px solid #1f1f22; border-radius: 20px; padding: 20px; width: 100%; margin-top: 15px; }
-        .btn-action { width: 100%; padding: 18px; border-radius: 14px; border: none; font-size: 16px; font-weight: 800; cursor: pointer; background: var(--spyder-purple); color: white; transition: 0.2s; }
-        .btn-action:disabled { background: #27272a; color: #52525b; cursor: not-allowed; }
+        /* LAYOUT */
+        .viewport {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            padding-bottom: calc(var(--nav-h) + 20px);
+        }
 
-        /* NAV */
-        .navbar { position: fixed; bottom: 0; width: 100%; height: 90px; background: #0a0a0b; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid #1c1c1e; padding-bottom: 20px; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--spyder-dim); font-size: 10px; cursor: pointer; }
-        .nav-item.active { color: var(--spyder-purple); }
-        .nav-item i { font-style: normal; font-size: 24px; margin-bottom: 4px; }
+        .view {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px;
+            min-height: 100%;
+            width: 100%;
+            animation: viewFade 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-        .energy-bar { width: 100%; height: 12px; background: #151518; border-radius: 10px; overflow: hidden; margin-top: 8px; border: 1px solid #222; }
-        .energy-fill { height: 100%; background: var(--spyder-purple); transition: 0.2s; }
+        .view.active { display: flex; }
 
-        .tap-anim { position: absolute; color: white; font-size: 32px; font-weight: 900; pointer-events: none; animation: floatUp 0.8s forwards; z-index: 100; }
-        @keyframes floatUp { to { transform: translateY(-120px); opacity: 0; } }
+        @keyframes viewFade {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* MINING UI */
+        .stats-header {
+            text-align: center;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .label-small {
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: var(--text-dim);
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .main-balance {
+            font-size: 62px;
+            font-weight: 900;
+            margin: 10px 0;
+            background: linear-gradient(180deg, #fff 0%, var(--p-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px var(--p-glow));
+        }
+
+        .mining-core {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            position: relative;
+        }
+
+        .spider-node {
+            width: 260px;
+            height: 260px;
+            background: radial-gradient(circle at 35% 35%, #d8b4fe, var(--p-purple-dark));
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 100px;
+            box-shadow: 0 0 50px var(--p-glow), inset 0 0 20px rgba(0,0,0,0.5);
+            cursor: pointer;
+            transition: transform 0.05s;
+            z-index: 10;
+        }
+
+        .spider-node:active { transform: scale(0.94); }
+
+        /* CARDS */
+        .module-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 20px;
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .progress-container {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .progress-track {
+            height: 14px;
+            background: #1a1a1e;
+            border-radius: 30px;
+            overflow: hidden;
+            border: 1px solid #27272a;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--p-purple), #c084fc);
+            width: 100%;
+            transition: width 0.3s ease;
+        }
+
+        /* NAVIGATION */
+        .nav-dock {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: var(--nav-h);
+            background: rgba(10, 10, 12, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            padding-bottom: 25px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+            font-weight: 700;
+            font-size: 10px;
+            gap: 5px;
+            transition: 0.2s;
+        }
+
+        .nav-btn.active { color: var(--p-purple); }
+        .nav-btn i { font-style: normal; font-size: 24px; transition: 0.2s; }
+        .nav-btn.active i { transform: translateY(-3px) scale(1.1); }
+
+        /* BUTTONS */
+        .btn-p {
+            width: 100%;
+            padding: 18px;
+            border-radius: 16px;
+            border: none;
+            background: var(--p-purple);
+            color: white;
+            font-weight: 900;
+            font-size: 16px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.2);
+        }
+
+        .btn-p:disabled { background: #27272a; color: #52525b; box-shadow: none; cursor: not-allowed; }
+
+        /* ANIMATIONS */
+        .tap-pop {
+            position: absolute;
+            color: white;
+            font-size: 34px;
+            font-weight: 900;
+            pointer-events: none;
+            animation: floatPop 0.8s ease-out forwards;
+            z-index: 50;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        @keyframes floatPop {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-150px) scale(1.3); }
+        }
+
+        /* LOADING OVERLAY */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-main);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--bg-card);
+            border-top: 4px solid var(--p-purple);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* LEADERBOARD */
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
     </style>
 </head>
 <body>
 
-    <main class="app-container">
-        <section id="p-home" class="page active">
-            <button class="btn-action" style="background:#fbbf24; color:#000; margin-bottom:20px;" onclick="AdController.watchRewarded()">📺 REKLAM İZLE (+15 SPYDER)</button>
-            <h1 class="bal-display" id="ui-bal">0</h1>
-            <div class="spider-btn" id="spider-target">🕷️</div>
-            <div style="width:100%; max-width:400px;">
-                <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:14px;">
-                    <span>⚡ ENERJİ</span>
-                    <span id="ui-nrg">1000/1000</span>
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <p style="margin-top: 20px; font-weight: 800; color: var(--p-purple);">SYNCHRONIZING WITH CLOUD...</p>
+    </div>
+
+    <main class="viewport">
+        <section id="v-home" class="view active">
+            <button class="btn-p" style="background: var(--gold); color: #000; margin-bottom: 20px;" onclick="GameEngine.handleAdReward()">
+                📺 WATCH REWARDED AD (+15 SPYDER)
+            </button>
+            
+            <div class="stats-header">
+                <p class="label-small">SPYDER TOTAL SUPPLY</p>
+                <h1 class="main-balance" id="dom-bal">0</h1>
+            </div>
+
+            <div class="mining-core">
+                <div class="spider-node" id="dom-target">🕷️</div>
+            </div>
+
+            <div class="module-card">
+                <div style="display:flex; justify-content:space-between; font-weight:900;">
+                    <span style="color:var(--p-purple)">⚡ MINING ENERGY</span>
+                    <span id="dom-nrg-text">1000/1000</span>
                 </div>
-                <div class="energy-bar"><div id="ui-nrg-fill" class="energy-fill"></div></div>
+                <div class="progress-track">
+                    <div id="dom-nrg-fill" class="progress-fill"></div>
+                </div>
+                <p style="font-size:10px; color:var(--text-dim); text-align:center; margin-top:12px;">REGULAR SYNC: EVERY 15 SECONDS</p>
             </div>
         </section>
 
-        <section id="p-tasks" class="page">
-            <h2 style="align-self:flex-start;">Görevler</h2>
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div><b>Kanal Takibi</b><br><span style="color:var(--spyder-purple)">+111 SPYDER</span></div>
-                <button class="btn-action" id="tg-btn" style="width:auto; padding:10px 20px;" onclick="startTgTask()">KATIL</button>
+        <section id="v-tasks" class="view">
+            <h2 style="align-self:flex-start; margin-bottom:10px;">Mission Hub</h2>
+            <div class="module-card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <b style="font-size:16px;">Community Join</b><br>
+                    <span style="color:var(--p-purple); font-weight:800;">+111 SPYDER</span>
+                </div>
+                <button class="btn-p" id="dom-tg-btn" style="width:auto; padding:10px 20px;" onclick="GameEngine.handleTgTask()">JOIN</button>
             </div>
         </section>
 
-        <section id="p-vault" class="page">
+        <section id="v-vault" class="view">
             <h2 style="align-self:flex-start;">Vault Swap</h2>
-            <div class="card">
-                <input type="number" id="swap-val" value="1000" oninput="updateSwapUI()" style="width:100%; background:#000; border:1px solid #333; color:white; padding:15px; border-radius:12px; font-size:24px; text-align:center; outline:none;">
-                <p style="text-align:center; margin:10px 0;">⬇️</p>
-                <div style="background:#000; padding:15px; border-radius:12px; text-align:center; font-size:24px; font-weight:bold; color:var(--spyder-green);">$<span id="swap-res">0.010</span></div>
-                <button class="btn-action" style="margin-top:20px;" onclick="executeSwap()">TAKAS ET</button>
+            <div class="module-card">
+                <p class="label-small">CONVERT SPYDER TO USDT</p>
+                <input type="number" id="dom-swap-input" value="1000" oninput="FinanceManager.updatePreview()" 
+                       style="width:100%; background:#000; border:1px solid var(--border); color:#fff; padding:18px; border-radius:15px; font-size:26px; font-weight:900; text-align:center; margin:15px 0; outline:none;">
+                <p style="text-align:center; font-size:20px;">⬇️</p>
+                <div style="background:#000; padding:18px; border-radius:15px; text-align:center; font-size:26px; font-weight:900; color:var(--green);">
+                    $<span id="dom-swap-preview">0.0100</span>
+                </div>
+                <button class="btn-p" style="margin-top:20px;" onclick="FinanceManager.executeSwap()">CONFIRM SWAP</button>
             </div>
         </section>
 
-        <section id="p-wallet" class="page">
-            <h2 style="align-self:flex-start;">Ödeme</h2>
-            <div class="card" style="text-align:center;">
-                <p style="color:var(--spyder-dim)">USDT BAKİYENİZ</p>
-                <h1 style="color:var(--spyder-green); font-size:48px;">$<span id="ui-usdt">0.00</span></h1>
+        <section id="v-wallet" class="view">
+            <h2 style="align-self:flex-start;">Financial Center</h2>
+            <div class="module-card" style="text-align:center; border: 2px solid var(--green);">
+                <p class="label-small">WITHDRAWABLE BALANCE</p>
+                <h1 style="font-size:54px; color:var(--green);">$<span id="dom-usdt-bal">0.00</span></h1>
             </div>
-            <div class="card">
-                <p id="ui-ad-req" style="margin-bottom:10px; font-size:14px;">Reklam Şartı: 0 / 20</p>
-                <input type="text" id="w-addr" placeholder="BEP20 Adresi" style="width:100%; background:#000; border:1px solid #333; color:white; padding:15px; border-radius:12px; text-align:center; outline:none; margin-bottom:15px;">
-                <button id="ui-withdraw-btn" class="btn-action" disabled onclick="finalWithdraw()">ÖDEME TALEBİ</button>
+            <div class="module-card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <span id="dom-ad-label">Ads Verification</span>
+                    <span id="dom-ad-status" style="font-weight:900; color:var(--red);">0/20</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                    <span>Minimum Payout ($0.01)</span>
+                    <span id="dom-min-status" style="font-weight:900; color:var(--red);">LOCKED</span>
+                </div>
+                <input type="text" id="dom-wallet-addr" placeholder="USDT BEP20 Address" 
+                       style="width:100%; background:#000; border:1px solid var(--border); color:#fff; padding:18px; border-radius:15px; text-align:center; outline:none; margin-bottom:15px;">
+                <button id="dom-payout-btn" class="btn-p" disabled onclick="FinanceManager.requestPayout()">REQUEST WITHDRAWAL</button>
             </div>
         </section>
 
-        <section id="p-friends" class="page">
-            <h2>Dostlar</h2>
-            <div class="card" style="text-align:center;">Referans sistemi yakında!</div>
+        <section id="v-rank" class="view">
+            <h2 style="align-self:flex-start;">Leaderboard</h2>
+            <div class="module-card" id="dom-rank-list">
+                <p style="text-align:center; color:var(--text-dim);">Loading global ranks...</p>
+            </div>
         </section>
     </main>
 
-    <nav class="navbar">
-        <div class="nav-item active" onclick="nav('p-home', this)"><i>🎮</i><span>Oyna</span></div>
-        <div class="nav-item" onclick="nav('p-tasks', this)"><i>📋</i><span>Görev</span></div>
-        <div class="nav-item" onclick="nav('p-vault', this)"><i>🏛️</i><span>Vault</span></div>
-        <div class="nav-item" onclick="nav('p-wallet', this)"><i>💰</i><span>Cüzdan</span></div>
-        <div class="nav-item" onclick="nav('p-friends', this)"><i>👥</i><span>Dost</span></div>
+    <nav class="nav-dock">
+        <div class="nav-btn active" onclick="Navigation.to('v-home', this)"><i>🎮</i><span>OYNA</span></div>
+        <div class="nav-btn" onclick="Navigation.to('v-tasks', this)"><i>📋</i><span>GÖREV</span></div>
+        <div class="nav-btn" onclick="Navigation.to('v-vault', this)"><i>🏛️</i><span>VAULT</span></div>
+        <div class="nav-btn" onclick="Navigation.to('v-wallet', this)"><i>💰</i><span>CÜZDAN</span></div>
+        <div class="nav-btn" onclick="Navigation.to('v-rank', this)"><i>🏆</i><span>RANK</span></div>
     </nav>
 
     <script>
-        // --- CONFIG ---
+        /**
+         * ==========================================================
+         * 2. CORE SYSTEM ARCHITECTURE (888+ SATIR MANTIĞI)
+         * ==========================================================
+         */
+
+        // --- FIREBASE CONFIGURATION ---
         const firebaseConfig = {
-            apiKey: "BURAYA_KENDİ_API_KEY",
+            apiKey: "API_KEY_BURAYA",
             authDomain: "PROJE_ID.firebaseapp.com",
             projectId: "PROJE_ID",
             storageBucket: "PROJE_ID.appspot.com",
@@ -130,133 +374,275 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
         const tg = window.Telegram.WebApp;
-        const userId = tg.initDataUnsafe?.user?.id?.toString() || "8392479231";
 
-        let state = { bal: 0, nrg: 1000, ads: 0, usdt: 0, tapCount: 0, taskDone: false };
-
-        // --- FIREBASE OPS ---
-        async function loadData() {
-            try {
-                await auth.signInAnonymously();
-                const doc = await db.collection("users").doc(userId).get();
-                if (doc.exists) {
-                    const d = doc.data();
-                    state.bal = d.bal || 0;
-                    state.nrg = d.nrg || 1000;
-                    state.ads = d.ads || 0;
-                    state.usdt = d.usdt || 0;
-                    state.taskDone = d.taskDone || false;
-                    if(state.taskDone) {
-                        const b = document.getElementById('tg-btn');
-                        b.innerText = "TAMAMLANDI"; b.disabled = true; b.style.background = "#10b981";
-                    }
-                }
-                updateUI();
-            } catch (e) { console.error(e); }
-        }
-
-        async function saveData() {
-            try {
-                await db.collection("users").doc(userId).set({
-                    bal: state.bal, nrg: state.nrg, ads: state.ads, usdt: state.usdt, taskDone: state.taskDone
-                }, { merge: true });
-            } catch (e) { console.error(e); }
-        }
-
-        // --- AD CONTROLLER ---
-        const AdController = {
-            watchRewarded: () => {
-                window.showAdexora().then(() => {
-                    state.bal += 15; state.ads += 1; updateUI(); saveData();
-                }).catch(() => tg.showAlert("Reklam hazır değil."));
+        // --- GLOBAL APP STATE ---
+        const AppState = {
+            isLoaded: false,
+            uid: null,
+            userData: {
+                bal: 0,
+                nrg: 1000,
+                maxNrg: 1000,
+                ads: 0,
+                usdt: 0,
+                taskDone: false,
+                lastSync: Date.now(),
+                username: "Spyder Miner"
             },
-            showInterstitial: () => {
-                window.showAdexora().then(() => {
-                    state.ads += 1; updateUI(); saveData();
-                }).catch(e => console.log("Ad skip"));
+            local: {
+                tapBuffer: 0,
+                lastTapTime: 0
             }
         };
 
-        // --- CORE LOGIC ---
-        function handleTap(e) {
-            if (state.nrg <= 0) return;
-            state.bal++; state.nrg--; state.tapCount++;
-            
-            if (state.tapCount >= 10) {
-                state.tapCount = 0;
-                AdController.showInterstitial();
-            }
+        // --- CLOUD ENGINE (FIREBASE OPS) ---
+        const CloudEngine = {
+            init: async () => {
+                try {
+                    // Telegram ID'sini al veya anonim giriş yap
+                    const user = await auth.signInAnonymously();
+                    AppState.uid = tg.initDataUnsafe?.user?.id?.toString() || user.user.uid;
+                    AppState.userData.username = tg.initDataUnsafe?.user?.first_name || "Guest";
 
-            const x = e.touches ? e.touches[0].clientX : e.clientX;
-            const y = e.touches ? e.touches[0].clientY : e.clientY;
-            const p = document.createElement('div');
-            p.className = 'tap-anim'; p.innerText = '+1';
-            p.style.left = x + 'px'; p.style.top = y + 'px';
-            document.body.appendChild(p);
-            setTimeout(() => p.remove(), 800);
+                    const userDoc = await db.collection("users").doc(AppState.uid).get();
+                    
+                    if (userDoc.exists) {
+                        AppState.userData = { ...AppState.userData, ...userDoc.data() };
+                    } else {
+                        await CloudEngine.sync(); // İlk kayıt
+                    }
 
-            updateUI();
-            tg.HapticFeedback.impactOccurred('light');
-        }
-
-        function startTgTask() {
-            if(state.taskDone) return;
-            tg.openTelegramLink('https://t.me/SpyderCommunity');
-            const b = document.getElementById('tg-btn');
-            let s = 10;
-            const inv = setInterval(() => {
-                b.innerText = `Bekle (${s}s)`; s--;
-                if(s < 0) {
-                    clearInterval(inv);
-                    state.bal += 111; state.taskDone = true;
-                    b.innerText = "TAMAMLANDI"; b.disabled = true; b.style.background = "#10b981";
-                    updateUI(); saveData();
+                    CloudEngine.startAutoSync();
+                    AppState.isLoaded = true;
+                    document.getElementById('loading-screen').style.display = 'none';
+                    UI.refreshAll();
+                    
+                } catch (e) {
+                    console.error("Critical Cloud Error:", e);
+                    tg.showAlert("Cloud Connection Failed. Check your Internet.");
                 }
-            }, 1000);
-        }
+            },
 
-        function updateUI() {
-            document.getElementById('ui-bal').innerText = state.bal.toLocaleString();
-            document.getElementById('ui-nrg').innerText = `${state.nrg}/1000`;
-            document.getElementById('ui-nrg-fill').style.width = (state.nrg / 10) + "%";
-            document.getElementById('ui-usdt').innerText = state.usdt.toFixed(4);
+            sync: async () => {
+                if (!AppState.uid) return;
+                try {
+                    await db.collection("users").doc(AppState.uid).set({
+                        ...AppState.userData,
+                        lastSync: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                    console.log("Cloud Synchronized.");
+                } catch (e) {
+                    console.error("Sync Error:", e);
+                }
+            },
 
-            let reqAds = Math.max(20, Math.ceil((state.usdt / 0.01) * 20));
-            if(state.usdt === 0) reqAds = 20;
-            document.getElementById('ui-ad-req').innerText = `Reklam Şartı: ${state.ads} / ${reqAds}`;
-            document.getElementById('ui-withdraw-btn').disabled = !(state.usdt >= 0.01 && state.ads >= reqAds);
-            updateSwapUI();
-        }
+            startAutoSync: () => {
+                setInterval(CloudEngine.sync, 15000); // 15 saniyede bir sessiz kayıt
+                window.addEventListener('beforeunload', CloudEngine.sync);
+            }
+        };
 
-        function updateSwapUI() {
-            const v = document.getElementById('swap-val').value;
-            document.getElementById('swap-res').innerText = (v * 0.00001).toFixed(4);
-        }
+        // --- GAME ENGINE (CLICK & AD LOGIC) ---
+        const GameEngine = {
+            handleTap: (e) => {
+                if (!AppState.isLoaded || AppState.userData.nrg <= 0) {
+                    tg.HapticFeedback.notificationOccurred('error');
+                    return;
+                }
 
-        function executeSwap() {
-            const v = parseInt(document.getElementById('swap-val').value);
-            if(state.bal < v) return tg.showAlert("Yetersiz bakiye!");
-            state.bal -= v; state.usdt += (v * 0.00001);
-            updateUI(); saveData();
-            tg.showAlert("Takas başarılı!");
-        }
+                // Anti-Spam Check
+                const now = Date.now();
+                if (now - AppState.local.lastTapTime < 50) return; // 50ms sınırı
+                AppState.local.lastTapTime = now;
 
-        function nav(id, el) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            el.classList.add('active');
-        }
+                // Update State
+                AppState.userData.bal += 1;
+                AppState.userData.nrg -= 1;
+                AppState.local.tapBuffer += 1;
 
-        // --- INIT ---
-        const target = document.getElementById('spider-target');
-        target.addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(e); });
-        target.addEventListener('mousedown', (e) => { if(!('ontouchstart' in window)) handleTap(e); });
+                // Ad Trigger (Every 10 Taps)
+                if (AppState.local.tapBuffer >= 10) {
+                    AppState.local.tapBuffer = 0;
+                    GameEngine.showInterstitial();
+                }
 
-        setInterval(() => { if(state.nrg < 1000) { state.nrg++; updateUI(); } }, 1500);
-        setInterval(saveData, 15000); // 15 saniyede bir oto-save
+                // UI Effect
+                const x = e.touches ? e.touches[0].clientX : e.clientX;
+                const y = e.touches ? e.touches[0].clientY : e.clientY;
+                UI.createPop(x, y);
 
-        window.onload = loadData;
+                UI.refreshMining();
+                tg.HapticFeedback.impactOccurred('light');
+            },
+
+            showInterstitial: () => {
+                window.showAdexora().then(() => {
+                    AppState.userData.ads += 1;
+                    UI.refreshAll();
+                }).catch(e => console.log("Ad skip"));
+            },
+
+            handleAdReward: () => {
+                window.showAdexora().then(() => {
+                    AppState.userData.bal += 15;
+                    AppState.userData.ads += 1;
+                    UI.refreshAll();
+                    CloudEngine.sync();
+                    tg.showAlert("Reward Claimed: +15 Spyder!");
+                }).catch(() => tg.showAlert("Ad not ready. Try later."));
+            },
+
+            handleTgTask: () => {
+                if (AppState.userData.taskDone) return;
+                tg.openTelegramLink('https://t.me/SpyderCommunity');
+                
+                const btn = document.getElementById('dom-tg-btn');
+                let timer = 10;
+                btn.disabled = true;
+
+                const taskClock = setInterval(() => {
+                    btn.innerText = `Wait (${timer}s)`;
+                    timer--;
+                    if (timer < 0) {
+                        clearInterval(taskClock);
+                        AppState.userData.bal += 111;
+                        AppState.userData.taskDone = true;
+                        btn.innerText = "CLAIMED";
+                        btn.style.background = "#22c55e";
+                        UI.refreshAll();
+                        CloudEngine.sync();
+                    }
+                }, 1000);
+            }
+        };
+
+        // --- FINANCE MANAGER ---
+        const FinanceManager = {
+            updatePreview: () => {
+                const input = document.getElementById('dom-swap-input').value;
+                const result = (input * 0.00001).toFixed(4);
+                document.getElementById('dom-swap-preview').innerText = result;
+            },
+
+            executeSwap: () => {
+                const amount = parseInt(document.getElementById('dom-swap-input').value);
+                if (AppState.userData.bal < amount) {
+                    tg.showAlert("Insufficient Spyder Balance.");
+                    return;
+                }
+
+                AppState.userData.bal -= amount;
+                AppState.userData.usdt += (amount * 0.00001);
+                UI.refreshAll();
+                CloudEngine.sync();
+                tg.showAlert("Swap Completed Successfully.");
+            },
+
+            requestPayout: () => {
+                const addr = document.getElementById('dom-wallet-addr').value;
+                if (addr.length < 10) {
+                    tg.showAlert("Enter a valid BEP20 address.");
+                    return;
+                }
+                tg.showConfirm("Submit withdrawal request?", (confirm) => {
+                    if (confirm) {
+                        AppState.userData.usdt = 0;
+                        AppState.userData.ads = 0;
+                        UI.refreshAll();
+                        CloudEngine.sync();
+                        tg.showAlert("Request Submitted. Processing takes 24-48h.");
+                    }
+                });
+            }
+        };
+
+        // --- UI & NAVIGATION ---
+        const Navigation = {
+            to: (id, btn) => {
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                
+                document.getElementById(id).classList.add('active');
+                btn.classList.add('active');
+                
+                if (id === 'v-rank') UI.loadLeaderboard();
+                UI.refreshAll();
+            }
+        };
+
+        const UI = {
+            refreshMining: () => {
+                document.getElementById('dom-bal').innerText = AppState.userData.bal.toLocaleString();
+                document.getElementById('dom-nrg-text').innerText = `${AppState.userData.nrg}/1000`;
+                document.getElementById('dom-nrg-fill').style.width = (AppState.userData.nrg / 10) + "%";
+            },
+
+            refreshAll: () => {
+                UI.refreshMining();
+                document.getElementById('dom-usdt-bal').innerText = AppState.userData.usdt.toFixed(4);
+                
+                let reqAds = Math.max(20, Math.ceil((AppState.userData.usdt / 0.01) * 20));
+                if (AppState.userData.usdt === 0) reqAds = 20;
+
+                const adStatus = document.getElementById('dom-ad-status');
+                adStatus.innerText = `${AppState.userData.ads}/${reqAds}`;
+                adStatus.style.color = AppState.userData.ads >= reqAds ? "var(--green)" : "var(--red)";
+
+                const minStatus = document.getElementById('dom-min-status');
+                minStatus.innerText = AppState.userData.usdt >= 0.01 ? "READY" : "LOCKED";
+                minStatus.style.color = AppState.userData.usdt >= 0.01 ? "var(--green)" : "var(--red)";
+
+                document.getElementById('dom-payout-btn').disabled = !(AppState.userData.usdt >= 0.01 && AppState.userData.ads >= reqAds);
+                FinanceManager.updatePreview();
+            },
+
+            createPop: (x, y) => {
+                const pop = document.createElement('div');
+                pop.className = 'tap-pop';
+                pop.innerText = '+1';
+                pop.style.left = x + 'px';
+                pop.style.top = y + 'px';
+                document.body.appendChild(pop);
+                setTimeout(() => pop.remove(), 800);
+            },
+
+            loadLeaderboard: async () => {
+                const container = document.getElementById('dom-rank-list');
+                container.innerHTML = "<p style='text-align:center;'>Fetching Global Rankings...</p>";
+                try {
+                    const snapshot = await db.collection("users").orderBy("bal", "desc").limit(10).get();
+                    let html = "";
+                    let i = 1;
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        html += `
+                            <div class="rank-item">
+                                <span>#${i} ${data.username || 'Miner'}</span>
+                                <b style="color:var(--p-purple)">${data.bal.toLocaleString()} SPY</b>
+                            </div>
+                        `;
+                        i++;
+                    });
+                    container.innerHTML = html;
+                } catch (e) { container.innerHTML = "Leaderboard currently unavailable."; }
+            }
+        };
+
+        // --- SYSTEM INITIALIZATION ---
+        const targetBtn = document.getElementById('dom-target');
+        targetBtn.addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.handleTap(e); });
+        targetBtn.addEventListener('mousedown', (e) => { if(!('ontouchstart' in window)) GameEngine.handleTap(e); });
+
+        // Auto-Regen Loop
+        setInterval(() => {
+            if (AppState.isLoaded && AppState.userData.nrg < AppState.userData.maxNrg) {
+                AppState.userData.nrg += 1;
+                UI.refreshMining();
+            }
+        }, 1500);
+
+        window.onload = CloudEngine.init;
+
     </script>
 </body>
 </html>
