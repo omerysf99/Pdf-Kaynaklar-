@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Click & Admin</title>
+    <title>SpyderCoin - Telegram Cloud Edition</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { --bg: #0b0b0d; --card: #151517; --purple: #a855f7; --green: #00d084; --text: #ffffff; }
+        :root { --bg: #0b0b0d; --card: #151517; --purple: #a855f7; --text: #ffffff; }
         body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; height: 100vh; overflow: hidden; user-select: none; }
         
         .page { display: flex; height: 100vh; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
@@ -23,17 +21,15 @@
         .pop { position: absolute; font-size: 45px; pointer-events: none; animation: popUp 0.6s forwards; z-index: 100; }
         @keyframes popUp { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 0; transform: scale(1.4) translateY(-100px); } }
 
-        /* 🔐 ADMİN PANELİ */
-        #admin-panel { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; padding: 20px; overflow-y: auto; }
-        .u-row { background: #111; padding: 15px; border-radius: 12px; margin-bottom: 8px; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
-        
+        /* 🔐 ADMİN PANELİ (LocalStorage Üzerinden) */
+        #admin-panel { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; padding: 20px; }
+        .status-bar { position: fixed; top: 10px; font-size: 10px; color: #555; }
         .btn { background: var(--purple); color: #fff; border: none; padding: 12px 25px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        #save-status { position: fixed; top: 10px; font-size: 10px; color: #444; width: 100%; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div id="save-status">Sistem Aktif 🕷️</div>
+    <div class="status-bar" id="sync-status">Bulut Senkronize 🕷️</div>
 
     <div class="page">
         <div style="font-size: 60px; font-weight: 900; margin-bottom: 10px;" id="ui-bal">0</div>
@@ -54,51 +50,57 @@
     </div>
 
     <div id="admin-panel">
-        <h2 style="color:var(--purple); text-align:center;">Spyder Üye Listesi</h2>
-        <div id="user-list"></div>
-        <button class="btn" style="background:red; width:100%;" onclick="hideAdmin()">PANELİ KAPAT</button>
+        <h2 style="color:var(--purple); text-align:center;">Spyder Yönetim</h2>
+        <p style="text-align:center;">Bulut depolama aktif. Veriler Telegram ID bazlı saklanıyor.</p>
+        <div style="background:#111; padding:15px; border-radius:10px; border:1px solid #333;">
+            <p>Senin ID: <b id="my-id-display"></b></p>
+            <p>Senin Bakiyen: <b id="my-bal-display">0</b></p>
+        </div>
+        <button class="btn" style="background:red; width:100%;" onclick="document.getElementById('admin-panel').style.display='none'">KAPAT</button>
     </div>
 
     <script>
-        // --- FIREBASE AYARLARI ---
-        const config = { apiKey: "API_KEY_BURAYA", projectId: "PROJE_ID_BURAYA" };
-        firebase.initializeApp(config);
-        const db = firebase.firestore();
-
-        const MY_ID = "8392479231";
         const tg = window.Telegram.WebApp;
-        const u = tg.initDataUnsafe?.user || { id: "8392479231", first_name: "Admin" };
+        const MY_ID = "8392479231"; // Senin ID
+        const u = tg.initDataUnsafe?.user || { id: 0, first_name: "Misafir" };
 
-        let bal = parseInt(localStorage.getItem('spy_b')) || 0;
+        let bal = 0;
         let nrg = 100;
 
-        // VERİ YÜKLEME
-        async function init() {
-            const doc = await db.collection('users').doc(String(u.id)).get();
-            if (doc.exists) {
-                if (doc.data().coins > bal) bal = doc.data().coins;
-            } else {
-                await db.collection('users').doc(String(u.id)).set({ id: u.id, name: u.first_name, coins: bal });
+        // ☁️ TELEGRAM BULUTTAN VERİ ÇEKME
+        function loadData() {
+            tg.CloudStorage.getItem('spy_balance', (err, value) => {
+                if (!err && value) {
+                    bal = parseInt(value);
+                } else {
+                    // Bulutta yoksa yerelden bak
+                    bal = parseInt(localStorage.getItem('spy_b')) || 0;
+                }
+                updateUI();
+            });
+
+            if (String(u.id) === MY_ID) {
+                document.getElementById('adm-btn').style.display = 'block';
+                document.getElementById('my-id-display').innerText = u.id;
             }
-            if (String(u.id) === MY_ID) document.getElementById('adm-btn').style.display = 'block';
-            updateUI();
         }
 
         function updateUI() {
             document.getElementById('ui-bal').innerText = bal.toLocaleString();
             document.getElementById('ui-nrg').innerText = nrg;
             document.getElementById('nrg-bar').style.width = nrg + "%";
+            document.getElementById('my-bal-display').innerText = bal;
             localStorage.setItem('spy_b', bal);
         }
 
-        async function sync() {
-            await db.collection('users').doc(String(u.id)).update({ coins: bal, last: Date.now() });
+        // ☁️ TELEGRAM BULUTA VERİ KAYDETME
+        function sync() {
+            tg.CloudStorage.setItem('spy_balance', String(bal));
         }
 
-        // 🕷️ TIKLAMA VE EMOJİ
         function tap(e) {
             if (nrg > 0) {
-                bal += 1; // Tık başı +1
+                bal += 1;
                 nrg--;
                 updateUI();
                 
@@ -109,32 +111,23 @@
                 p.style.left = (x - 20) + "px"; p.style.top = (y - 50) + "px";
                 document.body.appendChild(p);
                 
-                setTimeout(() => { p.remove(); sync(); }, 600);
+                setTimeout(() => { p.remove(); }, 600);
                 document.getElementById('spider-img').style.transform = "scale(0.85)";
-                setTimeout(() => document.getElementById('spider-img').style.transform = "scale(1)", 50);
+                setTimeout(() => { document.getElementById('spider-img').style.transform = "scale(1)"; sync(); }, 50);
             }
         }
 
-        // ADMİN PANELİ
-        async function showAdmin() {
+        function showAdmin() {
             document.getElementById('admin-panel').style.display = 'flex';
-            const snap = await db.collection('users').orderBy('coins', 'desc').get();
-            const list = document.getElementById('user-list');
-            list.innerHTML = "";
-            snap.forEach(doc => {
-                const ud = doc.data();
-                list.innerHTML += `<div class="u-row">
-                    <div><b>${ud.name}</b><br><small>ID: ${ud.id}</small></div>
-                    <div style="color:var(--green); font-weight:bold;">🪙 ${ud.coins}</div>
-                </div>`;
-            });
         }
 
-        function hideAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
-
+        // Olay dinleyiciler
         document.getElementById('tap-area').addEventListener('touchstart', (e) => { e.preventDefault(); tap(e); });
         document.getElementById('tap-area').addEventListener('mousedown', tap);
-        init();
+
+        tg.ready();
+        tg.expand();
+        loadData();
     </script>
 </body>
 </html>
