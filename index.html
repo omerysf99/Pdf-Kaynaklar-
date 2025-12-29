@@ -6,88 +6,81 @@
     <title>SpyderCoin - God Mode</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --bg: #050505; --purple: #a855f7; --gold: #fbbf24; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; user-select: none; }
+        :root { --bg: #050505; --purple: #a855f7; --text: #ffffff; --red: #ff3b30; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; overflow: hidden; }
         
-        /* 🕷️ OYUN EKRANI */
-        .game-container { display: flex; flex-direction: column; align-items: center; height: 100vh; padding: 20px; }
-        .balance-area { font-size: 55px; font-weight: 900; color: var(--text); text-shadow: 0 0 20px var(--purple); margin-top: 40px; }
+        /* 🕷️ OYUN ALANI */
+        .page { display: flex; flex-direction: column; align-items: center; height: 100vh; padding: 20px; box-sizing: border-box; }
+        .bal { font-size: 60px; font-weight: 900; margin-top: 40px; text-shadow: 0 0 20px var(--purple); }
         
-        .spider-box { position: relative; width: 320px; height: 320px; display: flex; justify-content: center; align-items: center; margin: 40px 0; }
-        .glow-ring { position: absolute; width: 280px; height: 280px; border: 6px solid var(--purple); border-radius: 50%; box-shadow: 0 0 50px var(--purple); animation: pulse 2s infinite; }
-        #spider-main { width: 220px; z-index: 10; transition: transform 0.05s; }
+        .tap-area { position: relative; width: 300px; height: 300px; display: flex; justify-content: center; align-items: center; margin: 40px 0; touch-action: none; }
+        .ring { position: absolute; width: 280px; height: 280px; border: 8px solid var(--purple); border-radius: 50%; box-shadow: 0 0 40px var(--purple); }
+        #spider { width: 220px; z-index: 10; transition: transform 0.05s; }
         
-        @keyframes pulse { 0% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.5; transform: scale(1); } }
-        .tap-pop { position: absolute; font-size: 40px; pointer-events: none; animation: flyUp 0.7s forwards; z-index: 100; }
-        @keyframes flyUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-150px) scale(1.5); } }
+        .emoji-pop { position: absolute; font-size: 40px; pointer-events: none; animation: fly 0.6s forwards; }
+        @keyframes fly { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: translateY(-120px) scale(1.5); } }
 
-        /* 🔋 ENERJİ BARI */
-        .energy-container { width: 90%; background: #111; height: 12px; border-radius: 20px; margin-top: auto; margin-bottom: 30px; border: 1px solid #333; overflow: hidden; }
-        #energy-fill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--purple), #6366f1); transition: width 0.3s; }
-
-        /* 🔐 ADMİN MODU */
-        #admin-panel { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; padding: 30px; flex-direction: column; }
-        .admin-btn { background: rgba(168, 85, 247, 0.2); border: 1px solid var(--purple); color: var(--purple); padding: 10px 20px; border-radius: 10px; font-weight: bold; margin-bottom: 20px; }
+        /* 🔐 KONTROL MERKEZİ */
+        #admin-panel { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; padding: 30px; flex-direction: column; align-items: center; }
+        .admin-card { background: #151517; width: 100%; padding: 25px; border-radius: 20px; border: 1px solid #333; margin-top: 20px; }
+        .admin-btn { background: var(--red); color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; margin-top: auto; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="game-container">
-        <div class="balance-area" id="bal">0</div>
+    <div class="page">
+        <div class="bal" id="ui-bal">0</div>
         
-        <div class="spider-box" id="tap-target">
-            <div class="glow-ring"></div>
-            <img src="https://api.mimic.ai/api/v1/files/image_7ba2e0.png" id="spider-main">
+        <div class="tap-area" id="tap-target">
+            <div class="ring"></div>
+            <img src="https://api.mimic.ai/api/v1/files/image_7ba2e0.png" id="spider">
         </div>
 
-        <button id="adm-trigger" class="admin-btn" style="display:none;" onclick="toggleAdmin(true)">🕵️ ADMİN PANELİ</button>
+        <button id="adm-trigger" style="display:none; background:none; border:1px solid var(--purple); color:var(--purple); padding:10px 20px; border-radius:10px;" onclick="toggleAdmin(true)">🕵️ KONTROL MERKEZİ</button>
 
-        <div style="font-size: 14px; margin-bottom: 5px;">⚡ Enerji: <span id="nrg-val">100</span>/100</div>
-        <div class="energy-container">
-            <div id="energy-fill"></div>
+        <div style="margin-top:auto; width:100%; margin-bottom:40px;">
+            <div style="font-size:12px; margin-bottom:5px;">⚡ Enerji: <span id="ui-nrg">100</span>/100</div>
+            <div style="width:100%; height:8px; background:#111; border-radius:10px; overflow:hidden;">
+                <div id="nrg-bar" style="width:100%; height:100%; background:var(--purple); transition: 0.2s;"></div>
+            </div>
         </div>
     </div>
 
     <div id="admin-panel">
-        <h1 style="color:var(--purple)">KONTROL MERKEZİ</h1>
-        <div style="background:#111; padding:20px; border-radius:15px; border:1px solid #222;">
+        <h1 style="color:var(--purple); font-size: 28px;">KONTROL MERKEZİ</h1>
+        <div class="admin-card">
             <p>Admin: <b id="adm-name"></b></p>
             <p>Kullanıcı Adı: <b id="adm-user"></b></p>
-            <p>Bakiye: <b id="adm-bal"></b></p>
-            <hr style="border:0; border-top:1px solid #333;">
-            <p style="font-size:12px; color:#666;">* Firebase olmadığı için tüm üyeleri bir kanala logluyorum. Kanaldan herkesi takip edebilirsin.</p>
+            <p>Senin Bakiyen: <b id="adm-bal-val">0</b></p>
+            <hr style="border:0; border-top:1px solid #222; margin: 15px 0;">
+            <p style="font-size:11px; color:#666; line-height: 1.5;">* Firebase olmadığı için tüm üyeleri bir kanala logluyorum. Kanaldan herkesi takip edebilirsin.</p>
         </div>
-        <button class="admin-btn" style="margin-top:20px; background:red; color:white;" onclick="toggleAdmin(false)">KAPAT</button>
+        <button class="admin-btn" onclick="toggleAdmin(false)">KAPAT</button>
+        <p style="margin-top:20px; color:#333; font-size:12px;">@SpyderCoin_Bot</p>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         const MY_ID = 8392479231;
-        const user = tg.initDataUnsafe?.user || { id: 123, first_name: "Test", username: "testuser" };
+        const user = tg.initDataUnsafe?.user || { id: 0, first_name: "User", username: "unknown" };
 
-        let bal = parseInt(localStorage.getItem('s_b')) || 0;
+        let bal = parseInt(localStorage.getItem('spy_bal')) || 0;
         let nrg = 100;
-        let lastReport = 0;
 
-        // 🛠️ LOG SİSTEMİ (Senin Bot Token ve Chat ID'ni buraya yazarsan her tıklandığında sana mesaj gelir)
-        const BOT_TOKEN = "BURAYA_BOT_TOKEN_YAZ"; 
-        const MY_CHAT_ID = "8392479231";
+        // 🛠️ TAKİP SİSTEMİ (TOKEN VE ID GİR)
+        const BOT_TOKEN = "7547185360:AAHY_Z1_v... (Senin Tokenin)"; 
+        const LOG_CHAT_ID = "8392479231"; // Mesajların geleceği Chat ID
 
-        function sendLog(action) {
-            // Her saniye rapor atıp spam yapmasın diye filtre
-            if (Date.now() - lastReport < 5000) return; 
-            lastReport = Date.now();
-
-            const text = `🔔 *YENİ RAPOR*\n👤 Ad: ${user.first_name}\n🆔 ID: ${user.id}\n👤 User: @${user.username || 'yok'}\n💰 Bakiye: ${bal}\n🚀 Eylem: ${action}`;
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(text)}&parse_mode=Markdown`);
+        function reportToAdmin(action) {
+            const text = `🕷️ *Spyder Raporu*\n👤 İsim: ${user.first_name}\n🆔 ID: ${user.id}\n👤 User: @${user.username || 'yok'}\n💰 Bakiye: ${bal}\n🚀 Olay: ${action}`;
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${LOG_CHAT_ID}&text=${encodeURIComponent(text)}&parse_mode=Markdown`);
         }
 
         function init() {
-            tg.ready();
-            tg.expand();
+            tg.ready(); tg.expand();
             
-            // Veriyi Telegram Buluttan çek
-            tg.CloudStorage.getItem('spy_v4', (err, val) => {
+            // Veriyi Telegram Cloud'dan çek
+            tg.CloudStorage.getItem('spy_save', (err, val) => {
                 if(!err && val) bal = parseInt(val);
                 updateUI();
             });
@@ -97,50 +90,42 @@
                 document.getElementById('adm-name').innerText = user.first_name;
                 document.getElementById('adm-user').innerText = "@" + (user.username || "yok");
             }
-            
-            sendLog("Oyuna Giriş Yaptı");
+            reportToAdmin("Oyuna Giriş Yaptı");
         }
 
         function updateUI() {
-            document.getElementById('bal').innerText = bal.toLocaleString();
-            document.getElementById('nrg-val').innerText = nrg;
-            document.getElementById('energy-fill').style.width = nrg + "%";
-            document.getElementById('adm-bal').innerText = bal;
-            localStorage.setItem('s_b', bal);
+            document.getElementById('ui-bal').innerText = bal.toLocaleString();
+            document.getElementById('ui-nrg').innerText = nrg;
+            document.getElementById('nrg-bar').style.width = nrg + "%";
+            document.getElementById('adm-bal-val').innerText = bal;
+            localStorage.setItem('spy_bal', bal);
         }
 
-        function handleTap(e) {
+        function tap(e) {
             if (nrg <= 0) return;
+            bal += 1; nrg--; updateUI();
 
-            bal += 1; // Tık başı kazanç
-            nrg--;
-            updateUI();
-
-            // 🕷️ Örümcek Efekti
             const p = document.createElement('div');
-            p.className = 'tap-pop'; p.innerText = "🕷️";
+            p.className = 'emoji-pop'; p.innerText = "🕷️";
             const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
             const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
             p.style.left = (x - 20) + "px"; p.style.top = (y - 40) + "px";
             document.body.appendChild(p);
-            setTimeout(() => p.remove(), 700);
+            setTimeout(() => p.remove(), 600);
 
-            // Görsel tepki
-            document.getElementById('spider-main').style.transform = "scale(0.9)";
+            document.getElementById('spider').style.transform = "scale(0.9)";
             setTimeout(() => {
-                document.getElementById('spider-main').style.transform = "scale(1)";
-                tg.CloudStorage.setItem('spy_v4', String(bal));
+                document.getElementById('spider').style.transform = "scale(1)";
+                tg.CloudStorage.setItem('spy_save', String(bal));
             }, 50);
 
-            if (bal % 50 === 0) sendLog("50 Tık Daha Yaptı");
+            if (bal % 100 === 0) reportToAdmin("100 Tık Daha Yaptı");
         }
 
-        function toggleAdmin(show) {
-            document.getElementById('admin-panel').style.display = show ? 'flex' : 'none';
-        }
+        function toggleAdmin(s) { document.getElementById('admin-panel').style.display = s ? 'flex' : 'none'; }
 
-        document.getElementById('tap-target').addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(e); });
-        document.getElementById('tap-target').addEventListener('mousedown', handleTap);
+        document.getElementById('tap-target').addEventListener('touchstart', (e) => { e.preventDefault(); tap(e); });
+        document.getElementById('tap-target').addEventListener('mousedown', tap);
 
         init();
     </script>
