@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Absolute Protection</title>
+    <title>SpyderCoin - Click & Admin</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -11,169 +11,111 @@
 
     <style>
         :root { --bg: #0b0b0d; --card: #151517; --purple: #a855f7; --green: #00d084; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; padding: 0; height: 100vh; overflow: hidden; user-select: none; }
-        .page { display: none; height: 100vh; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
-        .page.active { display: flex; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; height: 100vh; overflow: hidden; user-select: none; }
+        
+        .page { display: flex; height: 100vh; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
 
-        /* HEADER STATS */
-        .top-stats { display: flex; gap: 10px; width: 100%; margin-top: 10px; }
-        .s-box { background: var(--card); flex: 1; padding: 12px; border-radius: 15px; text-align: center; border: 1px solid #222; }
-        .s-box span { display: block; font-size: 10px; color: #888; margin-bottom: 4px; }
-        .s-box b { font-size: 15px; }
-
-        /* TAP AREA */
-        .main-tap { position: relative; width: 300px; height: 300px; display: flex; justify-content: center; align-items: center; margin: 30px 0; }
-        .ring { position: absolute; width: 280px; height: 280px; border: 10px solid var(--purple); border-radius: 50%; box-shadow: 0 0 35px var(--purple); pointer-events: none; }
-        #spider-main { width: 200px; z-index: 10; transition: transform 0.05s; pointer-events: none; }
+        /* 🕷️ TIKLAMA ALANI */
+        .tap-zone { position: relative; width: 300px; height: 300px; display: flex; justify-content: center; align-items: center; touch-action: none; }
+        .ring { position: absolute; width: 270px; height: 270px; border: 8px solid var(--purple); border-radius: 50%; box-shadow: 0 0 30px var(--purple); pointer-events: none; }
+        #spider-img { width: 200px; z-index: 10; transition: transform 0.05s; pointer-events: none; }
+        
         .pop { position: absolute; font-size: 45px; pointer-events: none; animation: popUp 0.6s forwards; z-index: 100; }
-        @keyframes popUp { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 0; transform: scale(1.4) translateY(-120px); } }
+        @keyframes popUp { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 0; transform: scale(1.4) translateY(-100px); } }
 
-        /* ÖZEL ADMİN PANELİ */
-        #admin-panel { position: fixed; inset: 0; background: #000; z-index: 99999; display: none; flex-direction: column; padding: 25px; overflow-y: auto; }
-        .admin-title { font-size: 26px; color: var(--purple); font-weight: 900; text-align: center; margin-bottom: 25px; }
-        .u-row { background: #111; padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
-        .u-info b { font-size: 14px; color: #fff; }
-        .u-info small { color: #555; display: block; }
-        .u-val { text-align: right; color: var(--green); font-weight: bold; }
-
-        /* NAV */
-        .nav { position: fixed; bottom: 15px; width: 92%; left: 4%; background: rgba(20,20,22,0.9); height: 75px; border-radius: 25px; display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid #333; }
-        .nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #71717a; font-size: 11px; }
-        .nav-btn.active { color: var(--purple); font-weight: bold; }
-
-        .btn { background: var(--purple); color: #fff; border: none; padding: 14px; border-radius: 15px; font-weight: 800; width: 100%; cursor: pointer; }
-        #ad-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100000; display: none; align-items: center; justify-content: center; padding: 30px; }
+        /* 🔐 ADMİN PANELİ */
+        #admin-panel { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; padding: 20px; overflow-y: auto; }
+        .u-row { background: #111; padding: 15px; border-radius: 12px; margin-bottom: 8px; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        
+        .btn { background: var(--purple); color: #fff; border: none; padding: 12px 25px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        #save-status { position: fixed; top: 10px; font-size: 10px; color: #444; width: 100%; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div id="game" class="page active">
-        <div class="top-stats">
-            <div class="s-box"><span>Tık Gücü</span><b>+1</b></div>
-            <div class="s-box"><span>Hakkın</span><b id="ui-hakkın">100</b></div>
-            <div class="s-box"><span>Lig</span><b>Bronze</b></div>
-        </div>
+    <div id="save-status">Sistem Aktif 🕷️</div>
 
-        <div style="font-size: 55px; font-weight: 900; margin-top: 15px;" id="ui-bal">0</div>
-
-        <div class="main-tap" id="tap-area">
+    <div class="page">
+        <div style="font-size: 60px; font-weight: 900; margin-bottom: 10px;" id="ui-bal">0</div>
+        
+        <div class="tap-zone" id="tap-area">
             <div class="ring"></div>
-            <img src="https://api.mimic.ai/api/v1/files/image_7ba2e0.png" id="spider-main">
+            <img src="https://api.mimic.ai/api/v1/files/image_7ba2e0.png" id="spider-img">
         </div>
 
-        <button id="adm-btn" class="btn" style="display:none; width:auto; margin-bottom:20px;" onclick="showAdmin()">🛠️ ADMİN PANELİ</button>
+        <button id="adm-btn" class="btn" style="display:none;" onclick="showAdmin()">🛠️ ADMİN PANELİ</button>
 
-        <div style="width:100%; margin-top:auto; margin-bottom:100px;">
-            <div style="font-size:12px; margin-bottom:6px;">⚡ Enerji: <span id="ui-nrg">100</span>/100</div>
+        <div style="width:100%; margin-top: 40px;">
+            <div style="font-size:14px; margin-bottom:5px;">⚡ Enerji: <span id="ui-nrg">100</span>/100</div>
             <div style="width:100%; height:10px; background:#111; border-radius:10px; overflow:hidden;">
-                <div id="nrg-bar" style="width:100%; height:100%; background:linear-gradient(90deg, #f59e0b, #ef4444); transition: 0.2s;"></div>
+                <div id="nrg-bar" style="width:100%; height:100%; background:orange; transition: 0.2s;"></div>
             </div>
         </div>
     </div>
 
-    <div id="wallet" class="page">
-        <h1 style="margin-top:20px;">Cüzdan</h1>
-        <div style="background:var(--card); width:100%; padding:40px 20px; border-radius:30px; text-align:center; border: 1px solid #333;">
-            <div id="w-usd" style="color:var(--green); font-size:45px; font-weight:900;">$0.00</div>
-            <div style="color:var(--purple); font-weight:bold; font-size:18px;">🪙 <span id="w-coin">0</span> SPYDER</div>
-        </div>
-    </div>
-
     <div id="admin-panel">
-        <div class="admin-title">Spyder Admin Panel</div>
+        <h2 style="color:var(--purple); text-align:center;">Spyder Üye Listesi</h2>
         <div id="user-list"></div>
-        <button class="btn" style="background:#ef4444; margin-top:25px;" onclick="hideAdmin()">KAPAT</button>
-        <div style="text-align:center; margin-top:20px; color:#333; font-size:12px;">@SpyderCoin_Bot</div>
+        <button class="btn" style="background:red; width:100%;" onclick="hideAdmin()">PANELİ KAPAT</button>
     </div>
-
-    <div id="ad-modal">
-        <div style="background:var(--card); padding:30px; border-radius:25px; text-align:center; border:1px solid var(--purple);">
-            <h2>Enerji Bitti!</h2>
-            <p style="color:#777;">Reklam izleyerek +100 Enerji kazan.</p>
-            <button class="btn" style="background:var(--green);" onclick="watchAd()">📺 REKLAM İZLE</button>
-        </div>
-    </div>
-
-    <nav class="nav">
-        <div class="nav-btn active" onclick="nav('game', this)"><span>🎮</span><span>Oyna</span></div>
-        <div class="nav-btn"><span>📋</span><span>Görevler</span></div>
-        <div class="nav-btn"><span>👥</span><span>Arkadaş</span></div>
-        <div class="nav-btn" onclick="nav('wallet', this)"><span>💰</span><span>Cüzdan</span></div>
-    </nav>
 
     <script>
-        // FIREBASE AYARLARI
-        const config = { apiKey: "API_KEY", projectId: "PROJE_ID" };
+        // --- FIREBASE AYARLARI ---
+        const config = { apiKey: "API_KEY_BURAYA", projectId: "PROJE_ID_BURAYA" };
         firebase.initializeApp(config);
         const db = firebase.firestore();
 
-        const ADMIN_ID = "8392479231";
+        const MY_ID = "8392479231";
         const tg = window.Telegram.WebApp;
-        const u = tg.initDataUnsafe?.user || { id: "8392479231", first_name: "Admin", username: "yenidenchalpyus" };
+        const u = tg.initDataUnsafe?.user || { id: "8392479231", first_name: "Admin" };
 
         let bal = parseInt(localStorage.getItem('spy_b')) || 0;
-        let ads = parseInt(localStorage.getItem('spy_a')) || 0;
         let nrg = 100;
 
-        // VERİ KORUMA: Girişte Firebase Kontrolü
+        // VERİ YÜKLEME
         async function init() {
             const doc = await db.collection('users').doc(String(u.id)).get();
             if (doc.exists) {
-                const data = doc.data();
-                if (data.coins > bal) bal = data.coins;
-                ads = data.adsWatched || 0;
+                if (doc.data().coins > bal) bal = doc.data().coins;
             } else {
-                await db.collection('users').doc(String(u.id)).set({
-                    id: u.id, name: u.first_name, username: u.username || "yok", coins: bal, adsWatched: ads
-                });
+                await db.collection('users').doc(String(u.id)).set({ id: u.id, name: u.first_name, coins: bal });
             }
-            if (String(u.id) === ADMIN_ID) document.getElementById('adm-btn').style.display = 'block';
-            up();
+            if (String(u.id) === MY_ID) document.getElementById('adm-btn').style.display = 'block';
+            updateUI();
         }
 
-        function up() {
+        function updateUI() {
             document.getElementById('ui-bal').innerText = bal.toLocaleString();
             document.getElementById('ui-nrg').innerText = nrg;
-            document.getElementById('ui-hakkın').innerText = nrg;
             document.getElementById('nrg-bar').style.width = nrg + "%";
-            document.getElementById('w-coin').innerText = bal.toLocaleString();
-            document.getElementById('w-usd').innerText = "$" + (bal * 0.00021).toFixed(2);
             localStorage.setItem('spy_b', bal);
-            localStorage.setItem('spy_a', ads);
         }
 
-        async function save() {
-            await db.collection('users').doc(String(u.id)).update({
-                coins: bal, adsWatched: ads, last: Date.now()
-            });
+        async function sync() {
+            await db.collection('users').doc(String(u.id)).update({ coins: bal, last: Date.now() });
         }
 
-        // TIK BAŞI KAZANÇ VE EFEKT
+        // 🕷️ TIKLAMA VE EMOJİ
         function tap(e) {
             if (nrg > 0) {
                 bal += 1; // Tık başı +1
                 nrg--;
-                up();
+                updateUI();
+                
                 const p = document.createElement('div');
                 p.className = 'pop'; p.innerText = "🕷️";
                 const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
                 const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
                 p.style.left = (x - 20) + "px"; p.style.top = (y - 50) + "px";
                 document.body.appendChild(p);
-                setTimeout(() => { p.remove(); save(); }, 600);
-                document.getElementById('spider-main').style.transform = "scale(0.85)";
-                setTimeout(() => document.getElementById('spider-main').style.transform = "scale(1)", 50);
-            } else {
-                document.getElementById('ad-modal').style.display = 'flex';
+                
+                setTimeout(() => { p.remove(); sync(); }, 600);
+                document.getElementById('spider-img').style.transform = "scale(0.85)";
+                setTimeout(() => document.getElementById('spider-img').style.transform = "scale(1)", 50);
             }
         }
 
-        function watchAd() {
-            ads++; nrg = 100; save(); up();
-            document.getElementById('ad-modal').style.display = 'none';
-        }
-
-        // SANA ÖZEL ADMİN PANELİ
+        // ADMİN PANELİ
         async function showAdmin() {
             document.getElementById('admin-panel').style.display = 'flex';
             const snap = await db.collection('users').orderBy('coins', 'desc').get();
@@ -182,21 +124,16 @@
             snap.forEach(doc => {
                 const ud = doc.data();
                 list.innerHTML += `<div class="u-row">
-                    <div class="u-info"><b>${ud.name}</b><small>@${ud.username} | 📺 ${ud.adsWatched || 0}</small></div>
-                    <div class="u-val">🪙 ${ud.coins}</div>
+                    <div><b>${ud.name}</b><br><small>ID: ${ud.id}</small></div>
+                    <div style="color:var(--green); font-weight:bold;">🪙 ${ud.coins}</div>
                 </div>`;
             });
         }
 
         function hideAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
-        function nav(p, el) {
-            document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(nb => nb.classList.remove('active'));
-            document.getElementById(p).classList.add('active');
-            el.classList.add('active');
-        }
 
         document.getElementById('tap-area').addEventListener('touchstart', (e) => { e.preventDefault(); tap(e); });
+        document.getElementById('tap-area').addEventListener('mousedown', tap);
         init();
     </script>
 </body>
