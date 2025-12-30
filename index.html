@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spyder Network Platinum v18.8</title>
+    <title>Spyder Network Platinum v19.0</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -27,9 +27,6 @@
         .view.active { display: flex; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* BAN */
-        #ban-overlay { position: fixed; inset: 0; background: #000; z-index: 999999; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; border: 5px solid var(--error); }
-
         /* STAT CARDS */
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .stat-card { background: var(--bg-card); padding: 12px 5px; border-radius: 18px; text-align: center; border: 1px solid var(--border); }
@@ -45,7 +42,6 @@
 
         /* TAP AREA */
         .tap-area { width: 210px; height: 210px; background: radial-gradient(circle, #10b981 0%, #064e3b 100%); border-radius: 50%; margin: 30px auto; display: flex; align-items: center; justify-content: center; font-size: 80px; cursor: pointer; transition: 0.1s; box-shadow: 0 0 50px rgba(16, 185, 129, 0.15); user-select: none; }
-        .tap-area:active { transform: scale(0.92); }
 
         /* NAV */
         nav { position: fixed; bottom: 0; width: 100%; height: 95px; background: #050505; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: 20px; z-index: 1000; }
@@ -53,60 +49,43 @@
         .nav-item.active { color: var(--p-purple); }
         .nav-item i { font-size: 22px; margin-bottom: 4px; font-style: normal; }
 
-        /* MODAL */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 25px; }
-        .modal-content { background: var(--bg-card); border: 1px solid var(--p-purple); border-radius: 30px; padding: 25px; width: 100%; max-width: 400px; }
-
-        /* SWAP & CALC INFO */
-        .swap-info { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 0 10px; font-size: 13px; font-weight: 600; }
-        .calc-box { margin-top: 5px; font-size: 12px; color: var(--warning); font-weight: 700; text-align: center; display: none; border: 1px dashed var(--warning); padding: 8px; border-radius: 10px; }
+        /* REKLAM DURUM KUTUSU */
+        .calc-status { 
+            margin: 5px 0; 
+            padding: 12px; 
+            border-radius: 15px; 
+            border: 1px dashed var(--warning); 
+            text-align: center; 
+            font-size: 13px; 
+            font-weight: 800;
+            display: none;
+            background: rgba(245, 158, 11, 0.05);
+        }
+        .calc-status.ready { 
+            border-color: var(--p-green); 
+            color: var(--p-green);
+            background: rgba(16, 185, 129, 0.05);
+        }
     </style>
 </head>
 <body>
-
-<div id="ban-overlay">
-    <h1 class="orbitron" style="color:var(--error); font-size: 50px;">YASAKLANDIN</h1>
-    <p>Sistem ihlali tespit edildi.</p>
-</div>
-
-<div id="admin-modal" class="modal">
-    <div class="modal-content">
-        <h3 id="m-user-tag" class="orbitron" style="text-align:center; color:var(--p-purple); margin-bottom:15px; font-size: 18px;"></h3>
-        <div id="m-stats" class="stat-grid" style="grid-template-columns: 1fr 1fr; gap: 8px;"></div>
-        <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
-            <button id="m-ban-btn" class="btn-main" style="background:var(--error);" onclick="Admin.execBan()">BANLA</button>
-            <button class="btn-main" style="background:#222;" onclick="Admin.close()">KAPAT</button>
-        </div>
-    </div>
-</div>
 
 <main id="viewport">
     <section id="v-home" class="view active">
         <div class="stat-grid">
             <div class="stat-card"><small>SPYDER</small><b id="u-bal">0</b></div>
             <div class="stat-card"><small>CÜZDAN</small><b id="u-usdt" style="color:var(--p-green)">$0.00</b></div>
-            <div class="stat-card"><small>İZLENEN REK.</small><b id="u-ads-count">0</b></div>
+            <div class="stat-card"><small>İZLENEN</small><b id="u-ads-count">0</b></div>
         </div>
         <div id="spyder-btn" class="tap-area" onclick="App.tap()">🕷️</div>
-        <button class="btn-main" style="background:linear-gradient(90deg, #f59e0b, #d97706); margin-top: 40px;" onclick="App.watchAd()">📺 ENERJİ FULLLE (REKLAM)</button>
-    </section>
-
-    <section id="v-swap" class="view">
-        <h2 class="orbitron" style="margin-bottom: 20px;">TAKAS</h2>
-        <div class="action-box">
-            <div class="swap-info"><span>Gidecek Spyder:</span><span id="sw-out-spy">0</span></div>
-            <div class="swap-info"><span>Gelecek USDT:</span><span id="sw-in-usdt">$0.00</span></div>
-            <hr style="border: 0.1px solid var(--border); margin: 15px 0;">
-            <h1 id="sw-preview" class="orbitron" style="text-align:center; color:var(--p-purple); font-size: 38px;">$0.00</h1>
-        </div>
-        <button class="btn-main" onclick="App.processSwap()">TÜMÜNÜ USDT'YE ÇEVİR</button>
+        <button class="btn-main" style="background:linear-gradient(90deg, #f59e0b, #d97706); margin-top: 40px;" onclick="App.watchAd()">📺 REKLAM İZLE (ENERJİ)</button>
     </section>
 
     <section id="v-wallet" class="view">
         <h2 class="orbitron">CÜZDAN</h2>
         <div class="action-box" style="margin-top:15px;">
-            <small style="color:var(--text-dim); text-align: center; display: block;">BAKİYE</small>
-            <h2 id="w-balance-txt" style="font-size: 50px; text-align:center; margin: 10px 0;">$0.00</h2>
+            <small style="color:var(--text-dim); text-align: center; display: block;">KULLANILABİLİR BAKİYE</small>
+            <h1 id="w-balance-txt" style="font-size: 50px; text-align:center; margin: 10px 0;">$0.00</h1>
             
             <div style="background: #1a1608; border-left: 4px solid var(--warning); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 11px;">
                 • Min çekim <b>1.00 USDT</b>.<br>
@@ -114,11 +93,11 @@
             </div>
 
             <div class="input-group">
-                <input type="number" id="withdraw-amount" placeholder="MİKTAR" oninput="App.liveCalc()">
+                <input type="number" id="withdraw-amount" placeholder="ÇEKİLECEK TUTAR" oninput="App.liveCalc()">
             </div>
             
-            <div id="calc-result" class="calc-box">
-                Gerekli Reklam: <span id="needed-ads-val">0</span>
+            <div id="calc-result" class="calc-status">
+                Gerekli Reklam: <span id="ads-progress">0/0</span>
             </div>
 
             <div class="input-group">
@@ -128,51 +107,27 @@
         </div>
     </section>
 
-    <section id="v-admin" class="view">
-        <h2 class="orbitron" style="color:var(--warning)">SYSTEM PANEL</h2>
-        <div class="action-box">
-            <small>FİYAT AYARI ($)</small>
-            <div class="input-group"><input type="number" id="adm-price-in" step="0.0001"></div>
-            <button class="btn-main" onclick="Admin.savePrice()">KAYDET</button>
-        </div>
-        <div id="adm-user-list"></div>
-    </section>
-</main>
+    </main>
 
 <nav>
     <div class="nav-item active" onclick="Nav.go('v-home', this)"><i>🎮</i><span>TAP</span></div>
-    <div class="nav-item" onclick="Nav.go('v-swap', this); App.prepSwap();"><i>🔄</i><span>TAKAS</span></div>
     <div class="nav-item" onclick="Nav.go('v-wallet', this)"><i>💼</i><span>CÜZDAN</span></div>
-    <div id="adm-tab" class="nav-item" style="display:none;" onclick="Nav.go('v-admin', this); Admin.load();"><i>🔑</i><span>ADM</span></div>
 </nav>
 
 <script>
-    const MASTER_ID = "8392479231";
     const firebaseConfig = { apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY", projectId: "pdfkaynak-51615", appId: "1:228512804576:web:a0bba02ca83b4fa7adea85" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const tg = window.Telegram.WebApp;
     let uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
 
-    let user = { bal: 0, usdt: 0, ads: 0, isBan: false, username: "", tasks: [] };
-    let globalPrice = 0.001;
-    let targetUid = null;
+    let user = { bal: 0, usdt: 0, ads: 0 };
 
     const App = {
         init: async () => {
             const d = await db.collection("users").doc(uid).get();
             if(d.exists) user = {...user, ...d.data()};
-            else { 
-                user.username = tg.initDataUnsafe?.user?.username || "Guest";
-                await db.collection("users").doc(uid).set(user);
-            }
-            if(user.isBan) document.getElementById('ban-overlay').style.display = 'flex';
-            if(uid === MASTER_ID) document.getElementById('adm-tab').style.display = 'flex';
-            
-            db.collection("settings").doc("global").onSnapshot(s => {
-                if(s.exists) globalPrice = s.data().coinPrice;
-                App.render();
-            });
+            App.render();
         },
         tap: () => {
             user.bal++;
@@ -191,32 +146,32 @@
         liveCalc: () => {
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
             const box = document.getElementById('calc-result');
-            const span = document.getElementById('needed-ads-val');
+            const progress = document.getElementById('ads-progress');
+            
             if(!isNaN(amt) && amt > 0) {
+                // 0.10$ -> 170 reklam kuralı
                 const needed = Math.ceil((amt / 0.10) * 170);
-                span.innerText = needed.toLocaleString();
+                progress.innerText = `${user.ads}/${needed}`;
                 box.style.display = 'block';
-                span.style.color = (user.ads >= needed) ? 'var(--p-green)' : 'var(--error)';
-            } else { box.style.display = 'none'; }
-        },
-        prepSwap: () => {
-            let gain = user.bal * globalPrice;
-            document.getElementById('sw-out-spy').innerText = user.bal.toLocaleString();
-            document.getElementById('sw-in-usdt').innerText = "$" + gain.toFixed(2);
-            document.getElementById('sw-preview').innerText = "$" + gain.toFixed(2);
-        },
-        processSwap: () => {
-            if(user.bal <= 0) return;
-            user.usdt += (user.bal * globalPrice);
-            user.bal = 0;
-            db.collection("users").doc(uid).update(user);
-            App.render(); App.prepSwap();
+                
+                if(user.ads >= needed) {
+                    box.classList.add('ready');
+                } else {
+                    box.classList.remove('ready');
+                }
+            } else {
+                box.style.display = 'none';
+            }
         },
         withdraw: () => {
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
             const needed = Math.ceil((amt / 0.10) * 170);
-            if(amt < 1.00 || user.ads < needed) return tg.showAlert("Yetersiz bakiye veya reklam!");
-            tg.showAlert("Talebiniz gönderildi!");
+            
+            if(isNaN(amt) || amt < 1.00) return tg.showAlert("Minimum çekim 1.00 USDT!");
+            if(user.ads < needed) return tg.showAlert("Yetersiz reklam izlendi!");
+            if(amt > user.usdt) return tg.showAlert("Yetersiz bakiye!");
+            
+            tg.showAlert("Talep başarıyla alındı! ✅");
         },
         render: () => {
             document.getElementById('u-bal').innerText = user.bal.toLocaleString();
@@ -225,46 +180,6 @@
             document.getElementById('u-ads-count').innerText = user.ads.toLocaleString();
             App.liveCalc();
         }
-    };
-
-    const Admin = {
-        load: async () => {
-            const s = await db.collection("users").get();
-            let html = "";
-            s.forEach(d => {
-                const u = d.data();
-                html += `
-                <div style="background:var(--bg-card); padding:15px; margin-bottom:10px; border-radius:15px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;" onclick="Admin.view('${d.id}')">
-                    <b>@${u.username || 'Gizli'}</b>
-                    <span style="color:var(--p-green); font-weight:800;">$${(u.usdt || 0).toFixed(2)}</span>
-                </div>`;
-            });
-            document.getElementById('adm-user-list').innerHTML = html;
-        },
-        view: async (id) => {
-            targetUid = id;
-            const d = await db.collection("users").doc(id).get();
-            const u = d.data();
-            const g = (u.tasks && u.tasks.length > 0) ? u.tasks.join(", ") : "Yok";
-            document.getElementById('m-user-tag').innerText = "@" + (u.username || "Bilinmiyor");
-            document.getElementById('m-stats').innerHTML = `
-                <div class="stat-card"><small>USDT</small><b style="color:var(--p-green)">$${(u.usdt || 0).toFixed(2)}</b></div>
-                <div class="stat-card"><small>SPYDER</small><b>${(u.bal || 0).toLocaleString()}</b></div>
-                <div class="stat-card" style="grid-column: span 2;"><small>ADS</small><b>${u.ads || 0} REKLAM</b></div>
-                <div class="stat-card" style="grid-column: span 2; text-align:left; padding:10px;"><small>GÖREVLER</small><div style="font-size:10px; color:#ccc;">${g}</div></div>
-            `;
-            document.getElementById('m-ban-btn').innerText = u.isBan ? "UNBAN" : "BAN";
-            document.getElementById('admin-modal').style.display = 'flex';
-        },
-        execBan: async () => {
-            const d = await db.collection("users").doc(targetUid).get();
-            await db.collection("users").doc(targetUid).update({ isBan: !d.data().isBan });
-            Admin.close(); Admin.load();
-        },
-        savePrice: () => {
-            db.collection("settings").doc("global").set({ coinPrice: parseFloat(document.getElementById('adm-price-in').value) });
-        },
-        close: () => document.getElementById('admin-modal').style.display = 'none'
     };
 
     const Nav = { go: (id, el) => {
