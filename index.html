@@ -3,10 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emoji Clicker - Kazanç</title>
+    <title>Spider Clicker - Kazanç</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-database-compat.js"></script>
+    
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
+
     <style>
         body {
+            background: linear-gradient(135deg, #2e004f 0%, #000000 100%);
+            color: #ffeb3b;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
@@ -14,125 +21,141 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f2f5;
-        }
-        .container {
+            overflow: hidden;
             text-align: center;
-            background: white;
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
-        #emoji-btn {
-            font-size: 80px;
-            cursor: pointer;
-            transition: transform 0.1s;
-            user-select: none;
-            display: inline-block;
+
+        #stats {
+            margin-bottom: 20px;
+            background: rgba(255, 235, 59, 0.1);
+            padding: 15px 30px;
+            border-radius: 15px;
+            border: 2px solid #ffeb3b;
+            box-shadow: 0 0 15px #9c27b0;
         }
-        #emoji-btn:active {
-            transform: scale(0.9);
-        }
-        .stats {
-            margin-top: 20px;
-        }
-        .balance {
-            font-size: 24px;
-            color: #2ecc71;
+
+        #balance {
+            font-size: 2rem;
             font-weight: bold;
+            display: block;
         }
-        .clicks {
-            color: #666;
-            margin-bottom: 10px;
+
+        #click-count {
+            color: #d1c4e9;
+            font-size: 0.9rem;
+        }
+
+        #spider {
+            font-size: 100px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s;
+            filter: drop-shadow(0 0 10px #ffeb3b);
+        }
+
+        #spider:active {
+            transform: scale(0.8);
+        }
+
+        .container {
+            position: relative;
+        }
+
+        /* Basit bir yüzen animasyon */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="clicks">Tıklama: <span id="click-count">0</span></div>
-    <div class="balance">Bakiye: <span id="balance-amount">0.00000</span>$</div>
-    <hr>
-    <div id="emoji-btn">💰</div>
-    <p>Her 10 tıklamada bir reklam çıkar!</p>
-</div>
+    <div id="stats">
+        <span id="balance">$0.00000</span>
+        <div id="click-count">Toplam Tıklama: 0</div>
+    </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <div class="container floating">
+        <div id="spider">🕷️</div>
+    </div>
 
-  // TODO: Burayı kendi Firebase bilgilerinizle değiştirin!
-  const firebaseConfig = {
-    apiKey: "BURAYA_API_KEY",
-    authDomain: "PROJE_ID.firebaseapp.com",
-    projectId: "PROJE_ID",
-    storageBucket: "PROJE_ID.appspot.com",
-    messagingSenderId: "ID",
-    appId: "APP_ID"
-  };
+    <p style="color: #9c27b0; margin-top: 20px;">Her 10 tıklamada bir ödüllü reklam!</p>
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    <script>
+        // --- FIREBASE AYARLARI ---
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_ID",
+            appId: "YOUR_APP_ID"
+        };
+        // Firebase Başlat (Bilgileri doldurduğunda aktif et)
+        // firebase.initializeApp(firebaseConfig);
+        // const database = firebase.database();
 
-  // Değişkenler
-  let clicks = 0;
-  let balance = 0.0;
-  const userId = "user_123"; // Basitlik için sabit ID, normalde Auth ile alınır
+        let totalClicks = 0;
+        let currentBalance = 0.0;
+        const increment = 0.00001;
 
-  const clickEl = document.getElementById('click-count');
-  const balanceEl = document.getElementById('balance-amount');
-  const emojiBtn = document.getElementById('emoji-btn');
+        const spider = document.getElementById('spider');
+        const balanceDisplay = document.getElementById('balance');
+        const clickDisplay = document.getElementById('click-count');
 
-  // Firebase'den verileri yükle
-  async function loadData() {
-    const docRef = doc(db, "users", userId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        const data = docSnap.data();
-        clicks = data.clicks || 0;
-        balance = data.balance || 0;
-        updateUI();
-    }
-  }
+        spider.addEventListener('click', () => {
+            // Tıklama işlemlerini yap
+            totalClicks++;
+            currentBalance += increment;
 
-  // Verileri Firebase'e kaydet
-  async function saveData() {
-    await setDoc(doc(db, "users", userId), {
-        clicks: clicks,
-        balance: balance
-    }, { merge: true });
-  }
+            // Ekranı güncelle
+            updateUI();
 
-  function updateUI() {
-    clickEl.innerText = clicks;
-    balanceEl.innerText = balance.toFixed(5);
-  }
+            // Her 10 tıklamada reklam göster
+            if (totalClicks % 10 === 0) {
+                showRewardAd();
+            }
+        });
 
-  function showAd() {
-    window.showAdexora()
-      .then(() => {
-          console.log("Reklam başarıyla izlendi.");
-          // Reklam sonrası ödül vermek istersen buraya ekleyebilirsin
-      })
-      .catch(e => {
-          console.error("Reklam yüklenemedi:", e);
-      });
-  }
+        function updateUI() {
+            balanceDisplay.innerText = `$${currentBalance.toFixed(5)}`;
+            clickDisplay.innerText = `Toplam Tıklama: ${totalClicks}`;
+        }
 
-  emojiBtn.addEventListener('click', () => {
-    clicks++;
-    balance += 0.00001;
-    
-    updateUI();
-    saveData(); // Her tıklamada kaydeder (Gelişmiş versiyonlarda debouncing yapılır)
+        function showRewardAd() {
+            console.log("Reklam yükleniyor...");
+            
+            if (typeof window.showAdexora === 'function') {
+                window.showAdexora()
+                .then(() => {
+                    // Reklam başarıyla izlendi
+                    console.log("Reklam başarıyla tamamlandı.");
+                    // İstersen buraya ek ödül mantığı ekleyebilirsin
+                    saveToFirebase();
+                })
+                .catch(e => {
+                    console.error("Reklam hatası:", e);
+                });
+            } else {
+                console.log("Reklam scripti henüz yüklenmedi veya engellendi.");
+            }
+        }
 
-    if (clicks % 10 === 0) {
-        showAd();
-    }
-  });
-
-  loadData();
-</script>
-
+        function saveToFirebase() {
+            // Firebase veritabanına kayıt fonksiyonu örneği
+            /*
+            database.ref('users/user1').set({
+                balance: currentBalance,
+                clicks: totalClicks
+            });
+            */
+        }
+    </script>
 </body>
 </html>
