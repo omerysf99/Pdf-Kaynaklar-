@@ -11,90 +11,45 @@
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
+        * { box-sizing: border-box; }
         body {
-            background: radial-gradient(circle, #2e004f 0%, #000 100%);
+            background: #1a002e;
             color: #ffeb3b;
-            font-family: 'Arial Black', sans-serif;
+            font-family: Arial, sans-serif;
             margin: 0;
-            height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            height: 100vh;
             text-align: center;
-            overflow: hidden;
-            user-select: none;
         }
 
-        #balance {
-            font-size: 50px;
-            margin: 10px 0;
-            text-shadow: 0 0 20px #9c27b0;
+        #balance { font-size: 48px; font-weight: bold; margin: 10px 0; color: #ffeb3b; }
+
+        .energy-bar-bg {
+            width: 280px; height: 25px; background: #333;
+            border: 2px solid #ffeb3b; border-radius: 15px;
+            position: relative; margin-bottom: 20px; overflow: hidden;
         }
 
-        .energy-container {
-            width: 300px;
-            height: 30px;
-            background: #222;
-            border: 3px solid #ffeb3b;
-            border-radius: 20px;
-            position: relative;
-            margin-bottom: 20px;
-            box-shadow: 0 0 10px #9c27b0;
-        }
+        #energy-fill { height: 100%; width: 100%; background: #ffeb3b; transition: width 0.1s; }
+        #energy-text { position: absolute; width: 100%; top: 3px; left: 0; color: #000; font-weight: bold; font-size: 14px; }
 
-        #energy-fill {
-            height: 100%;
-            width: 100%;
-            background: #ffeb3b;
-            transition: width 0.2s ease;
-        }
-
-        #energy-text {
-            position: absolute;
-            width: 100%;
-            top: 4px;
-            left: 0;
-            color: #000;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        #spider {
-            font-size: 160px;
-            cursor: pointer;
-            transition: transform 0.1s;
-            filter: drop-shadow(0 0 15px #ffeb3b);
-        }
-
-        #spider:active { transform: scale(0.85); }
-        .disabled { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
+        #spider { font-size: 150px; cursor: pointer; user-select: none; }
+        #spider:active { transform: scale(0.9); }
+        .disabled { opacity: 0.3; pointer-events: none; }
 
         .refill-btn {
-            background: #ffeb3b;
-            color: #2e004f;
-            border: none;
-            padding: 18px 35px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border-radius: 15px;
-            cursor: pointer;
-            margin-top: 30px;
-            box-shadow: 0 6px #9c27b0;
+            background: #ffeb3b; color: #1a002e; border: none;
+            padding: 15px 30px; font-size: 18px; font-weight: bold;
+            border-radius: 10px; cursor: pointer; margin-top: 20px;
         }
 
-        .refill-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px #9c27b0;
-        }
-
-        #log {
-            font-size: 12px;
-            margin-top: 20px;
-            color: #9c27b0;
-            background: rgba(0,0,0,0.5);
-            padding: 5px 15px;
-            border-radius: 10px;
+        #error-log {
+            margin-top: 20px; font-size: 11px; color: #ff5555;
+            background: rgba(0,0,0,0.5); padding: 8px; border-radius: 5px;
+            max-width: 90%; word-wrap: break-word;
         }
     </style>
 </head>
@@ -102,19 +57,20 @@
 
     <div id="balance">$0.00000</div>
 
-    <div class="energy-container">
+    <div class="energy-bar-bg">
         <div id="energy-fill"></div>
         <div id="energy-text">1000 / 1000</div>
     </div>
 
     <div id="spider">🕷️</div>
 
-    <button class="refill-btn" onclick="refillEnergy()">ENERJİ DOLDUR (AD)</button>
+    <button class="refill-btn" onclick="refill()">ENERJİ DOLDUR (AD)</button>
 
-    <div id="log">Firebase Bağlanıyor...</div>
+    <div id="error-log">Durum: Sistem başlatılıyor...</div>
 
     <script>
-        // --- SENİN ÖZEL CONFIG BİLGİLERİN ---
+        const log = document.getElementById('error-log');
+
         const firebaseConfig = {
             apiKey: "AIzaSyDfy6QdIZ0BthEHTmxkw-NAja3B9bFFd8U",
             authDomain: "spydercoin-94f7b.firebaseapp.com",
@@ -125,48 +81,49 @@
             appId: "1:218267568158:web:832728845ba0f42202060f"
         };
 
-        // Firebase Başlat
+        // Firebase'i Başlat
         try {
             firebase.initializeApp(firebaseConfig);
-            var db = firebase.database();
-            document.getElementById('log').innerText = "Bağlantı Başarılı!";
+            var database = firebase.database();
+            log.innerText = "Firebase Bağlantısı Hazır.";
+            log.style.color = "#44ff44";
         } catch (e) {
-            document.getElementById('log').innerText = "Bağlantı Hatası: URL'yi Kontrol Et!";
+            log.innerText = "Firebase Hatası: " + e.message;
         }
 
-        let money = 0.0;
+        let money = 0;
         let energy = 1000;
-        let localClicks = 0;
+        let tık = 0;
 
-        // Sayfa Açıldığında Veri Çek
-        db.ref('players/user1').on('value', (snapshot) => {
-            if (snapshot.exists()) {
-                const data = snapshot.val();
+        // Veriyi Çek (User1 klasörü üzerinden)
+        database.ref('players/user1').on('value', (snap) => {
+            if(snap.exists()) {
+                const data = snap.val();
                 money = data.money || 0;
                 energy = data.energy || 1000;
                 updateUI();
             }
+        }, (error) => {
+            log.innerText = "ERİŞİM ENGELLENDİ: Firebase Rules ayarını yapmamışsın!";
+            log.style.color = "#ff5555";
         });
 
-        // Örümcek Tık
-        document.getElementById('spider').onclick = function() {
-            if (energy > 0) {
+        // Tıklama
+        document.getElementById('spider').onclick = () => {
+            if(energy > 0) {
                 money += 0.00001;
                 energy--;
-                localClicks++;
-                
+                tık++;
                 updateUI();
                 save();
 
-                // Her 10 tıkta reklam
-                if (localClicks % 10 === 0) {
-                    if (window.showAdexora) window.showAdexora().catch(e => {});
+                if(tık % 10 === 0 && window.showAdexora) {
+                    window.showAdexora().catch(e => {});
                 }
             }
         };
 
-        // Enerji Doldurma ve Link
-        function refillEnergy() {
+        function refill() {
             window.open("https://adexora.my.id/dl/QFm5mnRYbJV", "_blank");
             energy = 1000;
             updateUI();
@@ -176,16 +133,18 @@
         function updateUI() {
             document.getElementById('balance').innerText = "$" + money.toFixed(5);
             document.getElementById('energy-text').innerText = energy + " / 1000";
-            document.getElementById('energy-fill').style.width = (energy / 10) + "%";
+            document.getElementById('energy-fill').style.width = (energy/10) + "%";
             
-            if (energy <= 0) document.getElementById('spider').classList.add('disabled');
+            if(energy <= 0) document.getElementById('spider').classList.add('disabled');
             else document.getElementById('spider').classList.remove('disabled');
         }
 
         function save() {
-            db.ref('players/user1').set({
+            database.ref('players/user1').set({
                 money: money,
                 energy: energy
+            }).catch(e => {
+                log.innerText = "Kaydetme Hatası: " + e.message;
             });
         }
     </script>
