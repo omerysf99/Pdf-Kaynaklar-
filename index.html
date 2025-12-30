@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpyderCoin - Wallet</title>
+    <title>SpyderCoin - Tap to Earn</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -11,71 +11,78 @@
 
     <style>
         body {
-            background: #1a002e;
+            background: radial-gradient(circle, #2e004f 0%, #000 100%);
             color: #ffeb3b; font-family: 'Arial Black', sans-serif;
-            margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; text-align: center;
+            margin: 0; height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center; overflow: hidden;
         }
 
-        /* Cüzdan Paneli - Görseline Uygun Tasarım */
-        #wallet-panel {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: #2e004f; padding: 30px; border: 4px solid #ffeb3b; border-radius: 25px;
-            width: 360px; box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        /* Üst Panel */
+        .top-bar { position: absolute; top: 20px; width: 90%; display: flex; justify-content: space-between; align-items: center; }
+        #balance { font-size: 40px; text-shadow: 0 0 20px #9c27b0; }
+
+        /* Enerji Barı */
+        .energy-container { width: 280px; height: 25px; background: #222; border: 3px solid #ffeb3b; border-radius: 20px; position: relative; margin: 15px 0; }
+        #energy-fill { height: 100%; width: 100%; background: #ffeb3b; transition: 0.1s; }
+        #energy-text { position: absolute; width: 100%; top: 3px; left: 0; color: #000; font-size: 14px; font-weight: bold; }
+
+        /* Ana Tıklama Alanı (Tap to Earn) */
+        #spider { font-size: 180px; cursor: pointer; transition: transform 0.1s; user-select: none; margin: 20px 0; }
+        #spider:active { transform: scale(0.9); }
+        .disabled { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
+
+        /* Butonlar */
+        .btn { background: #ffeb3b; color: #2e004f; border: none; padding: 15px 30px; font-size: 18px; font-weight: bold; border-radius: 15px; cursor: pointer; box-shadow: 0 5px #9c27b0; }
+        .btn:active { transform: translateY(3px); box-shadow: 0 2px #9c27b0; }
+        .btn-wallet { background: #9c27b0; color: white; padding: 10px 20px; font-size: 14px; }
+
+        /* Cüzdan Paneli (Modal) */
+        #wallet-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 1000; align-items: center; justify-content: center;
         }
-
-        h2 { margin: 0 0 15px 0; font-size: 28px; letter-spacing: 2px; }
-        .info-text { font-size: 14px; margin: 5px 0; color: #ffeb3b; }
-        .limit-text { font-size: 12px; margin-bottom: 20px; color: #ffeb3b; opacity: 0.9; }
-
-        input {
-            width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px;
-            border: none; font-size: 18px; font-weight: bold; background: #eef4ff;
+        .wallet-card {
+            background: #2e004f; padding: 30px; border: 4px solid #ffeb3b; border-radius: 25px; width: 350px;
         }
-
-        #calc-result {
-            background: rgba(255, 235, 59, 0.1); padding: 10px; border-radius: 10px;
-            font-size: 13px; margin: 10px 0; color: #00ff00; font-weight: bold;
-            display: none; /* Başta gizli */
-        }
-
-        .btn-row { display: flex; gap: 15px; width: 100%; margin-top: 15px; }
-
-        .btn-send {
-            background: #ffeb3b; color: #1a002e; border: none; padding: 18px;
-            font-size: 16px; font-weight: bold; border-radius: 15px; cursor: pointer; flex: 2;
-        }
-
-        .btn-close {
-            background: #ff0000; color: white; border: none; padding: 18px;
-            font-size: 16px; font-weight: bold; border-radius: 15px; cursor: pointer; flex: 1;
-        }
-
-        button:active { transform: scale(0.95); }
+        .wallet-card input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; text-align: center; }
+        #calc-info { background: #1a002e; color: #00ff00; padding: 10px; border-radius: 10px; font-size: 13px; margin: 10px 0; display: none; border: 1px solid #00ff00; }
+        .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-    <div id="wallet-panel">
-        <h2>USDT ÇEKİM</h2>
-        
-        <div class="info-text">Minimum Çekim: 0.50$</div>
-        <div class="limit-text">(Her 0.50$ için 750 reklam şartı vardır)</div>
+    <div class="top-bar">
+        <div id="balance">$0.00000</div>
+        <button class="btn btn-wallet" onclick="openWallet()">👛 CÜZDAN</button>
+    </div>
 
-        <input type="number" id="withdraw-amount" placeholder="1" oninput="calculateAds(this.value)">
-        
-        <div id="calc-result">Gereken Reklam: 0</div>
+    <div class="energy-container">
+        <div id="energy-fill"></div>
+        <div id="energy-text">1000 / 1000</div>
+    </div>
 
-        <input type="text" id="wallet-address" placeholder="Cüzdan Adresi">
+    <div id="spider">🕷️</div>
+    <p style="font-size: 14px; color: #d1c4e9;">Kazanmak için Örümceğe Tıkla!</p>
 
-        <div class="btn-row">
-            <button class="btn-send" onclick="requestWithdraw()">TALEBİ GÖNDER</button>
-            <button class="btn-close" onclick="alert('Kapatıldı')">KAPAT</button>
+    <button class="btn" onclick="refill()">ENERJİ DOLDUR (AD)</button>
+
+    <div id="wallet-modal">
+        <div class="wallet-card">
+            <h2 style="margin-top:0">USDT ÇEKİM</h2>
+            <p style="font-size: 12px;">Min Çekim: 0.50$ (0.50$ = 750 Reklam)</p>
+            
+            <input type="number" id="w-amount" placeholder="Miktar (USDT)" oninput="autoCalc(this.value)">
+            <div id="calc-info">Zorunlu Reklam Sayısı: 0</div>
+            <input type="text" id="w-address" placeholder="TRC20 Cüzdan Adresi">
+
+            <div class="modal-btns">
+                <button class="btn" style="flex:2" onclick="sendRequest()">TALEBİ GÖNDER</button>
+                <button class="btn" style="flex:1; background:red; color:white;" onclick="closeWallet()">KAPAT</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Senin Config Bilgilerin
         const firebaseConfig = {
             apiKey: "AIzaSyDfy6QdIZ0BthEHTmxkw-NAja3B9bFFd8U",
             authDomain: "spydercoin-94f7b.firebaseapp.com",
@@ -88,38 +95,79 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // OTOMATİK HESAPLAMA FONKSİYONU
-        function calculateAds(val) {
-            const resultBox = document.getElementById('calc-result');
-            const amount = parseFloat(val);
+        let money = 0;
+        let energy = 1000;
+        let adsWatched = 0;
 
-            if (amount > 0) {
-                // Formül: (Miktar / 0.50) * 750
-                const needed = (amount / 0.50) * 750;
-                resultBox.style.display = "block";
-                resultBox.innerText = "Zorunlu Reklam Sayısı: " + Math.ceil(needed);
-            } else {
-                resultBox.style.display = "none";
+        // Veri Senkronizasyonu
+        db.collection("players").doc("user1").onSnapshot(doc => {
+            if(doc.exists){
+                const d = doc.data();
+                money = d.money || 0;
+                energy = d.energy || 1000;
+                adsWatched = d.adsWatched || 0;
+                updateUI();
             }
+        });
+
+        // Tap To Earn Mekanizması
+        document.getElementById('spider').onclick = () => {
+            if(energy > 0) {
+                money += 0.00001;
+                energy--;
+                updateUI();
+                save();
+            }
+        };
+
+        function refill() {
+            window.open("https://adexora.my.id/dl/QFm5mnRYbJV", "_blank");
+            energy = 1000;
+            adsWatched++;
+            save();
+            if(window.showAdexora) window.showAdexora().catch(e=>{});
         }
 
-        function requestWithdraw() {
-            const amount = parseFloat(document.getElementById('withdraw-amount').value);
-            const address = document.getElementById('wallet-address').value;
+        // Cüzdan Fonksiyonları
+        function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; }
+        function closeWallet() { document.getElementById('wallet-modal').style.display = 'none'; }
+        
+        function autoCalc(val) {
+            const info = document.getElementById('calc-info');
+            if(val > 0) {
+                const count = Math.ceil((val / 0.50) * 750);
+                info.innerText = "Zorunlu Reklam Sayısı: " + count;
+                info.style.display = "block";
+            } else { info.style.display = "none"; }
+        }
+
+        function sendRequest() {
+            const amt = parseFloat(document.getElementById('w-amount').value);
+            const addr = document.getElementById('w-address').value;
+            const needed = (amt / 0.50) * 750;
+
+            if(amt < 0.50) return alert("Minimum 0.50 USDT!");
+            if(money < amt) return alert("Bakiye Yetersiz!");
+            if(adsWatched < needed) return alert(`Hata: Bu miktar için ${Math.ceil(needed)} reklam izlemelisiniz!`);
             
-            if (!amount || amount < 0.50) {
-                alert("Lütfen en az 0.50 USDT giriniz!");
-                return;
-            }
+            db.collection("withdrawals").add({
+                user: "user1", amount: amt, address: addr, date: new Date(), status: "beklemede"
+            }).then(() => {
+                alert("Talebiniz başarıyla gönderildi!");
+                closeWallet();
+            });
+        }
 
-            if (!address || address.length < 10) {
-                alert("Lütfen geçerli bir cüzdan adresi giriniz!");
-                return;
-            }
+        function updateUI() {
+            document.getElementById('balance').innerText = "$" + money.toFixed(5);
+            document.getElementById('energy-text').innerText = energy + " / 1000";
+            document.getElementById('energy-fill').style.width = (energy/10) + "%";
+            if(energy <= 0) document.getElementById('spider').classList.add('disabled');
+            else document.getElementById('spider').classList.remove('disabled');
+        }
 
-            // Burada Firebase'den kullanıcının izlediği reklam sayısını kontrol edip
-            // talebi kaydedecek kodu çalıştırabilirsin.
-            alert("Talep kontrol ediliyor...");
+        function save() {
+            db.collection("players").doc("user1").set({ money, energy, adsWatched }, {merge:true});
         }
     </script>
 </body>
