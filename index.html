@@ -2,261 +2,191 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spyder Network | Quantum OS v22</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spyder Network V800</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
     <style>
-        /* --- SUPREME DESIGN SYSTEM --- */
-        :root {
-            --p-purple: #a855f7; --p-glow: rgba(168, 85, 247, 0.6);
-            --bg-base: #000000; --bg-card: #08080a;
-            --border: rgba(255, 255, 255, 0.04); --text-main: #ffffff;
-            --text-dim: #64748b; --success: #10b981; --error: #ff4757;
-            --warning: #ffa502; --surface: #0f172a;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg-base); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-
-        /* --- LAYOUT --- */
-        #viewport { flex: 1; overflow-y: auto; padding: 20px 20px 140px 20px; }
-        .view { display: none; flex-direction: column; animation: slideIn 0.4s ease-out; }
+        :root { --p: #a855f7; --bg: #000; --c: #0a0a0c; --b: rgba(255,255,255,0.05); --s: #10b981; --e: #ef4444; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; }
+        
+        #stage { height: 100vh; overflow-y: auto; padding: 20px 20px 120px; }
+        .view { display: none; flex-direction: column; }
         .view.active { display: flex; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card { background: var(--c); border: 1px solid var(--b); border-radius: 24px; padding: 20px; margin-bottom: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat { background: #111; padding: 15px; border-radius: 18px; text-align: center; border: 1px solid var(--b); }
+        .stat b { display: block; font-family: 'Orbitron'; font-size: 18px; margin-top: 5px; }
 
-        /* --- COMPONENTS --- */
-        .glass-module { background: var(--bg-card); border: 1px solid var(--border); border-radius: 30px; padding: 25px; margin-bottom: 20px; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 18px; border-radius: 22px; text-align: center; }
-        .stat-card b { display: block; font-size: 18px; font-family: 'Orbitron'; margin-top: 5px; }
+        .trigger { width: 200px; height: 200px; background: radial-gradient(circle, #c084fc, #7e22ce); border-radius: 50%; margin: 40px auto; display: flex; align-items: center; justify-content: center; font-size: 80px; cursor: pointer; box-shadow: 0 0 50px rgba(168,85,247,0.4); transition: 0.1s; }
+        .trigger:active { transform: scale(0.9); }
 
-        /* --- POWER CORE --- */
-        .main-trigger {
-            width: 220px; height: 220px; background: radial-gradient(circle, #c084fc 0%, #7e22ce 100%);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 90px; cursor: pointer; transition: 0.1s; margin: 40px auto;
-            box-shadow: 0 0 80px var(--p-glow); border: 8px solid rgba(255,255,255,0.05);
-        }
-        .main-trigger:active { transform: scale(0.92); }
+        .btn { width: 100%; padding: 15px; border-radius: 15px; border: none; font-weight: 800; cursor: pointer; transition: 0.2s; background: var(--p); color: #fff; }
+        .btn-s { background: var(--s); } .btn-e { background: var(--e); }
+        
+        nav { position: fixed; bottom: 0; width: 100%; height: 85px; background: rgba(5,5,5,0.95); border-top: 1px solid var(--b); display: flex; justify-content: space-around; align-items: center; padding-bottom: 10px; }
+        .tab { color: #444; display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: 800; }
+        .tab.active { color: var(--p); }
 
-        /* --- TASKS & REF --- */
-        .task-box { background: #0f172a; border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-action { background: var(--p-purple); color: #fff; border: none; padding: 12px 20px; border-radius: 15px; font-weight: 800; cursor: pointer; transition: 0.2s; }
-        .btn-action:active { transform: scale(0.95); }
-
-        /* --- ADMIN MODAL --- */
-        .intel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px); }
-        .intel-window { background: #050505; border: 2px solid var(--p-purple); width: 100%; max-width: 450px; border-radius: 40px; padding: 30px; }
-        .finance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
-        .fin-btn { padding: 12px; border-radius: 12px; border: none; font-weight: 800; font-size: 11px; cursor: pointer; color: #fff; }
-        .input-fin { width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 10px; }
-
-        /* --- NAVIGATION --- */
-        nav { position: fixed; bottom: 0; width: 100%; height: 90px; background: rgba(0,0,0,0.9); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: 10px; }
-        .nav-link { color: var(--text-dim); display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 9px; font-weight: 800; cursor: pointer; }
-        .nav-link.active { color: var(--p-purple); }
-        .nav-link i { font-size: 22px; font-style: normal; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
+        .modal-in { background: #050505; border: 2px solid var(--p); border-radius: 30px; padding: 25px; width: 100%; max-width: 400px; }
+        input { width: 100%; padding: 12px; background: #111; border: 1px solid #222; color: #fff; border-radius: 10px; margin: 10px 0; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div id="intel-modal" class="intel-overlay">
-        <div class="intel-window">
-            <h2 id="int-name" class="orbitron" style="text-align:center; color:var(--p-purple);">FINANCE_CONTROL</h2>
-            <div class="stat-grid" style="margin-top:20px;">
-                <div class="stat-card"><small>Spyder</small><b id="int-bal">0</b></div>
-                <div class="stat-card"><small>USDT</small><b id="int-usdt" style="color:var(--success)">$0</b></div>
+<div id="intel-modal" class="modal">
+    <div class="modal-in">
+        <h2 id="m-name" class="orbitron" style="text-align:center">ADMIN_OS</h2>
+        <div class="grid" style="margin-top:15px">
+            <div class="stat"><small>Spyder</small><b id="m-bal">0</b></div>
+            <div class="stat"><small>USDT</small><b id="m-usdt">0</b></div>
+        </div>
+        <input type="number" id="m-amt" placeholder="Miktar">
+        <div class="grid">
+            <button onclick="Admin.mod('bal','add')" class="btn btn-s">S. EKLE</button>
+            <button onclick="Admin.mod('bal','sub')" class="btn btn-e">S. SİL</button>
+            <button onclick="Admin.mod('usdt','add')" class="btn btn-s">U. EKLE</button>
+            <button onclick="Admin.mod('usdt','sub')" class="btn btn-e">U. SİL</button>
+        </div>
+        <button onclick="Admin.close()" class="btn" style="background:#222; margin-top:10px">KAPAT</button>
+    </div>
+</div>
+
+<div id="stage">
+    <section id="v-1" class="view active">
+        <div class="grid">
+            <div class="stat"><small>SPYDER</small><b id="u-bal">0</b></div>
+            <div class="stat"><small>USDT</small><b id="u-usdt" style="color:var(--s)">$0.00</b></div>
+        </div>
+        <div class="trigger" onclick="App.tap()">🕷️</div>
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:900;margin-bottom:8px">
+                <span>ENERGY</span><span id="u-nrg-t">1000/1000</span>
             </div>
-            
-            <input type="number" id="fin-amount" class="input-fin" placeholder="Miktar Giriniz">
-            
-            <div class="finance-grid">
-                <button onclick="Admin.manage('bal', 'add')" class="fin-btn" style="background:var(--success)">SPYDER EKLE</button>
-                <button onclick="Admin.manage('bal', 'sub')" class="fin-btn" style="background:var(--error)">SPYDER SİL</button>
-                <button onclick="Admin.manage('usdt', 'add')" class="fin-btn" style="background:var(--success)">USDT EKLE</button>
-                <button onclick="Admin.manage('usdt', 'sub')" class="fin-btn" style="background:var(--error)">USDT SİL</button>
-                <button onclick="Admin.action('archive')" class="fin-btn" style="background:#334155; grid-column: span 2;">ARŞİVLE / ÇIKAR</button>
-                <button onclick="Admin.close()" class="fin-btn" style="background:#111; grid-column: span 2;">PENCEREYİ KAPAT</button>
+            <div style="height:8px;background:#000;border-radius:4px;overflow:hidden;border:1px solid var(--b)">
+                <div id="u-nrg-b" style="width:100%;height:100%;background:var(--p)"></div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <main id="viewport">
-        <section id="v-mine" class="view active">
-            <div class="stat-grid">
-                <div class="stat-card"><small class="dim">SPYDER</small><b id="u-bal">0</b></div>
-                <div class="stat-card"><small class="dim">DOLLAR</small><b id="u-usdt" style="color:var(--success)">$0.00</b></div>
-            </div>
-            <div class="main-trigger" onclick="Core.tap(event)">🕷️</div>
-            <div class="glass-module">
-                <div style="display:flex; justify-content:space-between; font-size:10px; font-weight:900; margin-bottom:10px;">
-                    <span class="orbitron">CORE_ENERGY</span>
-                    <span id="u-nrg-txt">1000/1000</span>
-                </div>
-                <div style="height:10px; background:#000; border-radius:10px; overflow:hidden;">
-                    <div id="u-nrg-bar" style="width:100%; height:100%; background:var(--p-purple);"></div>
-                </div>
-            </div>
-        </section>
+    <section id="v-2" class="view">
+        <h2 class="orbitron">GÖREVLER</h2>
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+            <div><b>Telegram</b><br><small style="color:var(--p)">+50K Spyder</small></div>
+            <button onclick="App.task('t1',50000)" class="btn" style="width:auto;padding:8px 15px">YAP</button>
+        </div>
+    </section>
 
-        <section id="v-task" class="view">
-            <h2 class="orbitron">MISSIONS</h2>
-            <div class="task-box">
-                <div><b>Kanal Takibi</b><br><span style="color:var(--p-purple)">+100,000 SPYDER</span></div>
-                <button class="btn-action" onclick="Core.doTask('t1', 100000)">KATIL</button>
-            </div>
-            <div class="task-box">
-                <div><b>Günlük Bonus</b><br><span style="color:var(--p-purple)">+10,000 SPYDER</span></div>
-                <button class="btn-action" onclick="Core.doTask('t2', 10000)">AL</button>
-            </div>
-        </section>
+    <section id="v-3" class="view">
+        <h2 class="orbitron">REFERANS</h2>
+        <div class="card" style="text-align:center">
+            <p>Her davet 25K Spyder</p>
+            <div id="ref-l" class="stat" style="margin:15px 0; font-size:10px; word-break:break-all">...</div>
+            <button onclick="App.copy()" class="btn">KOPYALA</button>
+        </div>
+    </section>
 
-        <section id="v-ref" class="view">
-            <h2 class="orbitron">NETWORK</h2>
-            <div class="glass-module" style="text-align:center;">
-                <p class="dim">Her davet: 25.000 Spyder</p>
-                <div id="ref-link" style="background:#000; padding:15px; border-radius:15px; margin:20px 0; font-family:monospace; font-size:11px; color:var(--p-purple);">...</div>
-                <button class="btn-action" style="width:100%" onclick="Core.copyRef()">LİNKİ KOPYALA</button>
-            </div>
-        </section>
+    <section id="v-4" class="view">
+        <h2 class="orbitron" style="color:var(--p)">ADMİN</h2>
+        <div id="adm-l" style="margin-top:15px"></div>
+    </section>
+</div>
 
-        <section id="v-admin" class="view">
-            <h2 class="orbitron" style="color:var(--warning)">OS_CORE</h2>
-            <div class="stat-grid" style="margin:20px 0;">
-                <div class="stat-card"><small>TOPLAM ÜYE</small><b id="adm-count">0</b></div>
-                <button class="btn-action" onclick="Admin.setTab('archive')">ARŞİVİ GÖR</button>
-            </div>
-            <div id="adm-list"></div>
-        </section>
-    </main>
+<nav>
+    <div class="tab active" onclick="Nav.go('v-1',this)"><i>🎮</i><span>OYNA</span></div>
+    <div class="tab" onclick="Nav.go('v-2',this)"><i>📡</i><span>GÖREV</span></div>
+    <div class="tab" onclick="Nav.go('v-3',this)"><i>👥</i><span>REF</span></div>
+    <div id="a-btn" class="tab" style="display:none" onclick="Nav.go('v-4',this);Admin.init()"><i>🔑</i><span>ADM</span></div>
+</nav>
 
-    <nav>
-        <div class="nav-link active" onclick="Nav.go('v-mine', this)"><i>🎮</i><span>OYNA</span></div>
-        <div class="nav-link" onclick="Nav.go('v-task', this)"><i>📡</i><span>GÖREV</span></div>
-        <div class="nav-link" onclick="Nav.go('v-ref', this)"><i>👥</i><span>REF</span></div>
-        <div id="adm-btn" class="nav-link" style="display:none;" onclick="Nav.go('v-admin', this); Admin.boot();"><i>🔑</i><span>ADM</span></div>
-    </nav>
+<script>
+const ADMIN = "8392479231";
+const cfg = {
+    apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY",
+    projectId: "pdfkaynak-51615",
+    appId: "1:228512804576:web:a0bba02ca83b4fa7adea85"
+};
+firebase.initializeApp(cfg);
+const db = firebase.firestore();
+const tg = window.Telegram.WebApp;
+let user = { bal:0, usdt:0, nrg:1000, tasks:[] };
+let uid = tg.initDataUnsafe?.user?.id?.toString() || "dev";
 
-    <script>
-        /* --- CONFIG --- */
-        const ADMIN_ID = "8392479231";
-        const FIRE_CONF = {
-            apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY",
-            authDomain: "pdfkaynak-51615.firebaseapp.com",
-            projectId: "pdfkaynak-51615",
-            appId: "1:228512804576:web:a0bba02ca83b4fa7adea85"
-        };
-        firebase.initializeApp(FIRE_CONF);
-        const db = firebase.firestore();
-        const tg = window.Telegram.WebApp;
+const App = {
+    init: async () => {
+        const d = await db.collection("users").doc(uid).get();
+        if(d.exists) user = {...user, ...d.data()};
+        if(uid === ADMIN) document.getElementById('a-btn').style.display='flex';
+        document.getElementById('ref-l').innerText = `https://t.me/Bot?start=${uid}`;
+        setInterval(() => { if(user.nrg < 1000) { user.nrg = Math.min(1000, user.nrg+15); UI(); }}, 3000);
+        UI();
+    },
+    tap: () => {
+        if(user.nrg < 2) return;
+        user.bal++; user.nrg -= 2; UI();
+        if(user.bal % 30 === 0) App.save();
+    },
+    save: () => db.collection("users").doc(uid).set({...user, name: tg.initDataUnsafe?.user?.first_name || "User", last: Date.now()}, {merge:true}),
+    task: (id, r) => {
+        if(user.tasks.includes(id)) return;
+        user.bal += r; user.tasks.push(id); App.save(); UI(); tg.showAlert("Ödül Alındı!");
+    },
+    copy: () => {
+        const t = document.createElement("textarea"); t.value = document.getElementById('ref-l').innerText;
+        document.body.appendChild(t); t.select(); document.execCommand("copy"); document.body.removeChild(t);
+        tg.showAlert("Kopyalandı!");
+    }
+};
 
-        let user = { bal:0, usdt:0, nrg:1000, tasks:[], isArchived:false };
-        let uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
-        let state = { allUsers: [], currentTab: 'active' };
+const Admin = {
+    users: [],
+    init: async () => {
+        const s = await db.collection("users").get();
+        Admin.users = []; s.forEach(d => Admin.users.push({id:d.id, ...d.data()}));
+        const l = document.getElementById('adm-l'); l.innerHTML = "";
+        Admin.users.forEach(u => {
+            l.innerHTML += `<div class="card" style="display:flex;justify-content:space-between" onclick="Admin.open('${u.id}')">
+                <span>${u.name}</span><b>${u.bal.toLocaleString()}</b>
+            </div>`;
+        });
+    },
+    open: (id) => {
+        Admin.sel = Admin.users.find(x => x.id === id);
+        document.getElementById('m-name').innerText = Admin.sel.name;
+        document.getElementById('m-bal').innerText = Admin.sel.bal.toLocaleString();
+        document.getElementById('m-usdt').innerText = Admin.sel.usdt;
+        document.getElementById('intel-modal').style.display = 'flex';
+    },
+    mod: async (type, mode) => {
+        const val = parseFloat(document.getElementById('m-amt').value) || 0;
+        const final = mode === 'add' ? val : -val;
+        await db.collection("users").doc(Admin.sel.id).update({ [type]: firebase.firestore.FieldValue.increment(final) });
+        Admin.close(); Admin.init(); tg.showAlert("İşlem Başarılı");
+    },
+    close: () => document.getElementById('intel-modal').style.display='none'
+};
 
-        /* --- CORE LOGIC --- */
-        const Core = {
-            init: async () => {
-                const doc = await db.collection("users").doc(uid).get();
-                if(doc.exists) user = { ...user, ...doc.data() };
-                else await Core.save();
-                
-                if(uid === ADMIN_ID) document.getElementById('adm-btn').style.display='flex';
-                document.getElementById('ref-link').innerText = `https://t.me/SpyderBot?start=${uid}`;
-                
-                setInterval(() => { if(user.nrg < 1000) { user.nrg = Math.min(1000, user.nrg + 10); UI.refresh(); }}, 3000);
-                UI.refresh();
-            },
-            tap: (e) => {
-                if(user.nrg < 2) return;
-                user.bal += 1; user.nrg -= 2; UI.refresh();
-                if(user.bal % 25 === 0) Core.save();
-            },
-            save: async () => {
-                await db.collection("users").doc(uid).set({
-                    ...user, name: tg.initDataUnsafe?.user?.first_name || "Agent", lastActive: Date.now()
-                }, {merge:true});
-            },
-            doTask: async (id, r) => {
-                if(user.tasks.includes(id)) return tg.showAlert("Tamamlandı!");
-                user.bal += r; user.tasks.push(id); await Core.save(); UI.refresh();
-                tg.showAlert("Ödül Eklendi!");
-            },
-            copyRef: () => {
-                const link = document.getElementById('ref-link').innerText;
-                const el = document.createElement('textarea'); el.value = link;
-                document.body.appendChild(el); el.select(); document.execCommand('copy');
-                document.body.removeChild(el); tg.showAlert("Link Kopyalandı!");
-            }
-        };
+const Nav = {
+    go: (id, el) => {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(id).classList.add('active'); el.classList.add('active');
+    }
+};
 
-        /* --- ADMIN LOGIC --- */
-        const Admin = {
-            boot: async () => {
-                const snap = await db.collection("users").get();
-                state.allUsers = [];
-                snap.forEach(d => state.allUsers.push({id: d.id, ...d.data()}));
-                document.getElementById('adm-count').innerText = snap.size;
-                Admin.render();
-            },
-            setTab: (t) => { state.currentTab = (state.currentTab === 'active' && t === 'archive') ? 'archive' : 'active'; Admin.render(); },
-            render: () => {
-                const list = document.getElementById('adm-list'); list.innerHTML = "";
-                let filtered = state.allUsers.filter(u => state.currentTab === 'archive' ? u.isArchived : !u.isArchived);
-                filtered.forEach(u => {
-                    list.innerHTML += `<div class="task-box" onclick="Admin.open('${u.id}')">
-                        <div><b>${u.name}</b><br><small>$${(u.usdt||0).toFixed(2)}</small></div>
-                        <div class="orbitron" style="color:var(--p-purple)">${u.bal.toLocaleString()}</div>
-                    </div>`;
-                });
-            },
-            open: (id) => {
-                Admin.sel = state.allUsers.find(x => x.id === id);
-                document.getElementById('int-name').innerText = Admin.sel.name;
-                document.getElementById('int-bal').innerText = Admin.sel.bal.toLocaleString();
-                document.getElementById('int-usdt').innerText = "$" + (Admin.sel.usdt||0).toFixed(2);
-                document.getElementById('intel-modal').style.display = 'flex';
-            },
-            manage: async (type, mode) => {
-                const amt = parseFloat(document.getElementById('fin-amount').value) || 0;
-                const final = mode === 'add' ? amt : -amt;
-                await db.collection("users").doc(Admin.sel.id).update({ [type]: firebase.firestore.FieldValue.increment(final) });
-                tg.showAlert("İşlem Tamam!"); Admin.close(); Admin.boot();
-            },
-            action: async (type) => {
-                if(type === 'archive') {
-                    await db.collection("users").doc(Admin.sel.id).update({ isArchived: !Admin.sel.isArchived });
-                    Admin.close(); Admin.boot();
-                }
-            },
-            close: () => document.getElementById('intel-modal').style.display = 'none'
-        };
+function UI() {
+    document.getElementById('u-bal').innerText = user.bal.toLocaleString();
+    document.getElementById('u-usdt').innerText = "$" + user.usdt.toFixed(2);
+    document.getElementById('u-nrg-t').innerText = `${user.nrg}/1000`;
+    document.getElementById('u-nrg-b').style.width = (user.nrg/10) + "%";
+}
 
-        /* --- UI --- */
-        const Nav = {
-            go: (id, el) => {
-                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-                document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-                document.getElementById(id).classList.add('active'); el.classList.add('active');
-            }
-        };
-
-        const UI = {
-            refresh: () => {
-                document.getElementById('u-bal').innerText = user.bal.toLocaleString();
-                document.getElementById('u-usdt').innerText = "$" + user.usdt.toFixed(2);
-                document.getElementById('u-nrg-txt').innerText = `${user.nrg}/1000`;
-                document.getElementById('u-nrg-bar').style.width = (user.nrg / 10) + "%";
-            }
-        };
-
-        Core.init();
-    </script>
+App.init();
+</script>
 </body>
 </html>
