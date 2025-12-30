@@ -3,165 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpyderCoin - Ultra Tap</title>
+    <title>SpyderCoin - Professional Web App</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
-        :root { --purple: #5c4eb1; --red: #ff2d2d; --dark: #080808; }
+        :root { --purple: #5c4eb1; --red: #ff2d2d; --dark: #080808; --gray: #1a1a1a; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--dark); color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none; }
         
+        /* Sekme Sistemi */
         .tab-content { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
         .active-tab { display: flex; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-        /* Bakiye Paneli */
-        .card-main { background: rgba(255, 255, 255, 0.02); border: 2px solid var(--red); border-radius: 30px; padding: 25px; width: 85%; max-width: 380px; box-shadow: 0 0 20px rgba(255, 45, 45, 0.1); margin-top: 10px; }
-        .bal-val { font-size: 42px; font-weight: bold; color: var(--red); letter-spacing: -1px; }
+        /* Bakiye Kartı */
+        .card-main { background: rgba(255, 255, 255, 0.03); border: 1.5px solid var(--red); border-radius: 25px; padding: 20px; width: 85%; max-width: 360px; box-shadow: 0 0 25px rgba(255, 45, 45, 0.15); margin-bottom: 20px; }
+        .bal-val { font-size: 40px; font-weight: 800; color: var(--red); text-shadow: 0 0 10px rgba(255, 45, 45, 0.3); }
 
         /* Mor Daire ve Örümcek */
-        .spider-wrapper { position: relative; margin: 40px 0; }
+        .spider-area { position: relative; width: 220px; height: 220px; margin: 20px 0; }
         .spider-circle { 
-            width: 220px; height: 220px; 
-            background: radial-gradient(circle, #5b4db0 0%, #3a2e8f 100%); 
+            width: 100%; height: 100%; 
+            background: radial-gradient(circle, #6c5ce7 0%, #302475 100%); 
             border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; border: 3px solid rgba(255,255,255,0.1); 
-            box-shadow: 0 0 50px rgba(91, 77, 176, 0.6); 
-            transition: transform 0.1s; position: relative; z-index: 10; 
+            cursor: pointer; border: 4px solid rgba(255,255,255,0.1); 
+            box-shadow: 0 0 50px rgba(108, 92, 231, 0.5); 
+            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; z-index: 10; 
         }
-        .spider-circle:active { transform: scale(0.95); }
-        .spider-circle span { font-size: 110px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5)); }
+        .spider-circle:active { transform: scale(0.92); }
+        .spider-circle span { font-size: 110px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6)); }
 
-        /* Ağ Animasyonu Efekti */
-        .web-effect {
-            position: absolute;
-            pointer-events: none;
-            background: rgba(255, 255, 255, 0.8);
-            width: 3px;
-            height: 150px;
-            transform-origin: bottom center;
-            z-index: 5;
-            animation: webShoot 0.4s ease-out forwards;
-        }
-
-        @keyframes webShoot {
-            0% { transform: scaleY(0) rotate(var(--deg)); opacity: 1; }
-            100% { transform: scaleY(1.2) translateY(-140px) rotate(var(--deg)); opacity: 0; }
-        }
+        /* Web Animasyonu */
+        .web-spike { position: absolute; pointer-events: none; background: rgba(255, 255, 255, 0.9); width: 3px; height: 140px; transform-origin: bottom center; z-index: 5; animation: shootOut 0.45s ease-out forwards; }
+        @keyframes shootOut { 0% { transform: translate(-50%, -50%) scaleY(0) rotate(var(--deg)); opacity: 1; } 100% { transform: translate(-50%, -150%) scaleY(1.3) rotate(var(--deg)); opacity: 0; } }
 
         /* Navigasyon */
-        .nav-bar { background: #0c0c0c; display: flex; border-top: 1px solid #1a1a1a; padding: 12px 0; }
-        .nav-item { flex: 1; text-align: center; color: #555; font-size: 13px; cursor: pointer; }
+        .nav-bar { background: #0c0c0c; display: flex; border-top: 1px solid #222; padding: 10px 0; }
+        .nav-item { flex: 1; text-align: center; color: #666; font-size: 12px; cursor: pointer; transition: 0.3s; }
         .nav-item.active { color: var(--red); font-weight: bold; }
+        .nav-item i { font-size: 20px; display: block; margin-bottom: 3px; }
 
-        input { width: 90%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid #222; background: #000; color: white; }
-        button { width: 90%; padding: 15px; border: none; border-radius: 12px; background: var(--red); color: white; font-weight: bold; cursor: pointer; }
-        .ref-box { background: #000; padding: 15px; border-radius: 12px; border: 1px dashed #444; font-size: 12px; color: #00ff00; word-break: break-all; margin: 15px 0; width: 85%; }
-        .ad-info { color: #ffcc00; font-size: 14px; margin-top: 5px; font-weight: bold; }
+        /* Formlar */
+        input { width: 90%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #333; background: #000; color: white; outline: none; text-align: center; }
+        button { width: 90%; padding: 15px; border: none; border-radius: 12px; background: var(--red); color: white; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(255, 45, 45, 0.3); }
+        button:disabled { background: #222; color: #555; box-shadow: none; cursor: not-allowed; }
+        .info-box { background: #000; padding: 15px; border-radius: 12px; border: 1px dashed #444; font-size: 11px; color: #00ff00; word-break: break-all; margin: 10px 0; width: 85%; }
+        .ad-calc { color: #f1c40f; font-size: 13px; margin: 5px 0 15px 0; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="tab-kazan" class="tab-content active-tab">
         <div class="card-main">
-            <small style="color: #888;">TOPLAM BAKİYE</small>
-            <div class="bal-val">$<span id="bal-text">0.000000</span></div>
+            <small style="color: #888; letter-spacing: 1.5px;">GÜNCEL BAKİYE</small>
+            <div class="bal-val">$<span id="bal-txt">0.000000</span></div>
         </div>
 
-        <div class="spider-wrapper">
-            <div class="spider-circle" id="spidey-btn">
+        <div class="spider-area">
+            <div class="spider-circle" id="tap-btn">
                 <span>🕷️</span>
             </div>
         </div>
 
-        <p style="color: #aaa;">Reklama: <b id="ad-step" style="color: white;">10</b> Tık Kaldı</p>
+        <p style="color: #666;">Reklama: <b id="ad-rem" style="color: #fff;">10</b> Tık Kaldı</p>
     </div>
 
     <div id="tab-ref" class="tab-content">
-        <h2>Referans</h2>
-        <div class="ref-box" id="ref-url">Link oluşturuluyor...</div>
-        <button onclick="copyRef()">KOPYALA</button>
+        <h2>Referans Ağı</h2>
+        <div class="card-main">
+            <p>Arkadaşlarını davet et, kazancını katla!</p>
+            <div class="info-box" id="ref-link-display">...</div>
+            <button onclick="copyRef()">LINKI KOPYALA</button>
+            <p style="margin-top:15px; font-size:14px;">Toplam Davet: <b id="ref-total" style="color:var(--red)">0</b></p>
+        </div>
     </div>
 
     <div id="tab-cüzdan" class="tab-content">
-        <h2>Cüzdan</h2>
-        <input type="number" id="w-amt" placeholder="Çekilecek Tutar ($)" step="0.01" oninput="calcAd()">
-        <div id="ad-needed" class="ad-info"></div>
-        <input type="text" id="w-adr" placeholder="USDT TRC20 Adresi">
-        <button id="w-btn" onclick="withdraw()" disabled>Minimum $0.50</button>
+        <h2>Para Çekme</h2>
+        <div class="card-main">
+            <input type="number" id="withdraw-amt" placeholder="Miktar (Örn: 0.01)" step="0.01" oninput="updateAdCalc()">
+            <div id="ad-needed-msg" class="ad-calc"></div>
+            <input type="text" id="withdraw-adr" placeholder="USDT TRC20 Cüzdan Adresiniz">
+            <button id="withdraw-btn" onclick="processWithdraw()" disabled>Minimum $0.50</button>
+        </div>
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item active" onclick="setTab('kazan', this)">Kazan</div>
-        <div class="nav-item" onclick="setTab('ref', this)">Ref</div>
-        <div class="nav-item" onclick="setTab('cüzdan', this)">Cüzdan</div>
+        <div class="nav-item active" onclick="switchTab('kazan', this)">🕸️<br>Kazan</div>
+        <div class="nav-item" onclick="switchTab('ref', this)">👥<br>Referans</div>
+        <div class="nav-item" onclick="switchTab('cüzdan', this)">💳<br>Cüzdan</div>
     </div>
 
     <script>
-        // Firebase Config - Kendi bilgilerinizi buraya girin
+        // --- CONFIG ---
         const firebaseConfig = { apiKey: "...", databaseURL: "...", projectId: "...", appId: "..." };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let uID = localStorage.getItem('spy_uid') || 'U' + Math.floor(100000 + Math.random() * 900000);
-        localStorage.setItem('spy_uid', uID);
-        document.getElementById('ref-url').innerText = "https://t.me/SpyderNetworkBot?start=" + uID;
+        let uid = localStorage.getItem('spy_uid') || 'U' + Math.floor(100000 + Math.random() * 899999);
+        localStorage.setItem('spy_uid', uid);
 
-        let bakiye = 0;
-        let tık = 0;
+        const myFullLink = "https://t.me/SpyderNetworkBot?start=" + uid;
+        document.getElementById('ref-link-display').innerText = myFullLink;
 
-        db.ref('users/' + uID).on('value', s => {
-            if (s.exists()) {
-                bakiye = s.val().balance || 0;
-                document.getElementById('bal-text').innerText = bakiye.toFixed(6);
-                document.getElementById('w-btn').disabled = bakiye < 0.50;
-                if(bakiye >= 0.50) document.getElementById('w-btn').innerText = "Ödeme Al";
+        let userBalance = 0;
+        let localClicks = 0;
+
+        // VERİ DİNLEME
+        db.ref('users/' + uid).on('value', snap => {
+            if (snap.exists()) {
+                userBalance = snap.val().balance || 0;
+                document.getElementById('bal-txt').innerText = userBalance.toFixed(6);
+                document.getElementById('ref-total').innerText = snap.val().refs || 0;
+                
+                const wBtn = document.getElementById('withdraw-btn');
+                wBtn.disabled = userBalance < 0.50;
+                if(userBalance >= 0.50) wBtn.innerText = "Ödeme Talebi Oluştur";
             } else {
-                db.ref('users/' + uID).set({ balance: 0 });
+                db.ref('users/' + uid).set({ balance: 0, refs: 0 });
             }
         });
 
-        // Örümcek Tıklama Olayı
-        document.getElementById('spidey-btn').addEventListener('click', (e) => {
-            tık++;
-            createWebAnimation();
+        // TIKLAMA & ANİMASYON
+        document.getElementById('tap-btn').addEventListener('click', (e) => {
+            localClicks++;
+            triggerWebAnimation();
             
-            let limit = 10 + (Math.floor(bakiye / 0.01) * 15);
-            document.getElementById('ad-step').innerText = Math.max(0, limit - tık);
+            let limit = 10 + (Math.floor(userBalance / 0.01) * 15);
+            document.getElementById('ad-rem').innerText = Math.max(0, limit - localClicks);
 
-            if (tık >= limit) {
-                tık = 0;
-                if (window.showAdexora) window.showAdexora().then(() => reward()); else reward();
-            } else { reward(); }
+            if (localClicks >= limit) {
+                localClicks = 0;
+                if (window.showAdexora) window.showAdexora().then(() => doReward()); else doReward();
+            } else { doReward(); }
         });
 
-        function createWebAnimation() {
-            const wrapper = document.querySelector('.spider-wrapper');
-            for(let i=0; i<8; i++) { // 8 yöne ağ fırlat
+        function triggerWebAnimation() {
+            const area = document.querySelector('.spider-area');
+            for(let i=0; i<8; i++) {
                 const web = document.createElement('div');
-                web.className = 'web-effect';
+                web.className = 'web-spike';
                 web.style.left = '50%';
                 web.style.top = '50%';
-                web.style.setProperty('--deg', `${i * 45 + Math.random() * 15}deg`);
-                wrapper.appendChild(web);
-                setTimeout(() => web.remove(), 400);
+                web.style.setProperty('--deg', `${i * 45}deg`);
+                area.appendChild(web);
+                setTimeout(() => web.remove(), 450);
             }
         }
 
-        function reward() {
-            // TIKLAMA BAŞI 0.00001 USDT
-            db.ref('users/' + uID + '/balance').transaction(b => (b || 0) + 0.00001);
+        function doReward() {
+            // Tıklama başı 0.00001 USDT
+            db.ref('users/' + uid + '/balance').transaction(b => (b || 0) + 0.00001);
         }
 
-        function calcAd() {
-            const amt = parseFloat(document.getElementById('w-amt').value);
-            const info = document.getElementById('ad-needed');
-            if (amt > 0) info.innerText = "Gerekli Reklam Sayısı: " + Math.ceil((amt / 0.01) * 20);
-            else info.innerText = "";
+        // CÜZDAN FONKSİYONLARI
+        function updateAdCalc() {
+            const val = parseFloat(document.getElementById('withdraw-amt').value);
+            const msg = document.getElementById('ad-needed-msg');
+            if(val > 0) {
+                msg.innerText = "Gerekli Reklam Sayısı: " + Math.ceil((val / 0.01) * 20);
+            } else { msg.innerText = ""; }
         }
 
-        function setTab(name, el) {
+        function switchTab(name, el) {
             document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active-tab'));
             document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
             document.getElementById('tab-' + name).classList.add('active-tab');
@@ -169,17 +174,17 @@
         }
 
         function copyRef() {
-            navigator.clipboard.writeText(document.getElementById('ref-url').innerText);
-            alert("Kopyalandı!");
+            navigator.clipboard.writeText(myFullLink);
+            alert("Referans linkin başarıyla kopyalandı!");
         }
 
-        function withdraw() {
-            const amt = parseFloat(document.getElementById('w-amt').value);
-            const adr = document.getElementById('w-adr').value;
-            if (amt > bakiye || adr.length < 10) return alert("Hata!");
-            db.ref('withdrawals').push({ uid: uID, amount: amt, address: adr, date: Date.now() });
-            db.ref('users/' + uID + '/balance').transaction(b => b - amt);
-            alert("Talep iletildi!");
+        function processWithdraw() {
+            const amt = parseFloat(document.getElementById('withdraw-amt').value);
+            const adr = document.getElementById('withdraw-adr').value;
+            if (amt > userBalance || adr.length < 8) return alert("Hatalı bakiye veya adres!");
+            db.ref('payout_requests').push({ uid: uid, amount: amt, wallet: adr, status: "pending", timestamp: Date.now() });
+            db.ref('users/' + uid + '/balance').transaction(b => b - amt);
+            alert("Ödeme talebiniz sıraya alındı.");
         }
     </script>
 </body>
