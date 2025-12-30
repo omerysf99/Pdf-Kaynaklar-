@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spyder Network Enterprise v9.5</title>
+    <title>Spyder Network Ultimate Enterprise v12.0</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -11,8 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     
     <style>
-        /* MODÜL: TASARIM SİSTEMİ (CSS)
-           Dark Mode, Glassmorphism ve Modern UI Elemanları
+        /* =======================================================================
+            MODÜL 2: GELİŞMİŞ UI/UX TASARIM SİSTEMİ (CSS)
+            =======================================================================
         */
         :root {
             --p-purple: #a855f7;
@@ -24,15 +25,11 @@
             --warning: #f59e0b;
             --text-dim: #64748b;
             --border: rgba(255, 255, 255, 0.05);
+            --glow: rgba(168, 85, 247, 0.2);
         }
 
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        
         body { 
             background: var(--bg-black); 
             color: #fff; 
@@ -50,41 +47,39 @@
             scroll-behavior: smooth; 
         }
 
-        .view { 
-            display: none; 
-            flex-direction: column; 
-            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
-
+        /* ANİMASYONLAR */
+        .view { display: none; flex-direction: column; animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .view.active { display: flex; }
 
         @keyframes slideUp { 
-            from { opacity: 0; transform: translateY(30px); } 
+            from { opacity: 0; transform: translateY(40px); } 
             to { opacity: 1; transform: translateY(0); } 
         }
 
-        /* STATİSTİK PANELLERİ (3 SATIRLI) */
+        /* 3 SATIRLI STAT GRID */
         .stat-grid-3 { 
             display: grid; 
             grid-template-columns: 1fr 1fr 1fr; 
-            gap: 10px; 
+            gap: 12px; 
             margin-bottom: 25px; 
         }
 
         .stat-item { 
-            background: #0a0a0c; 
-            padding: 14px 6px; 
-            border-radius: 22px; 
+            background: linear-gradient(145deg, #0f0f12, #050505);
+            padding: 16px 8px; 
+            border-radius: 24px; 
             text-align: center; 
             border: 1px solid var(--border); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
         .stat-item b { 
             display: block; 
             font-family: 'Orbitron'; 
-            font-size: 13px; 
-            margin-top: 6px; 
+            font-size: 14px; 
+            margin-top: 8px; 
             color: var(--p-purple); 
+            letter-spacing: 0.5px;
         }
 
         .stat-item small { 
@@ -92,36 +87,34 @@
             color: var(--text-dim); 
             text-transform: uppercase; 
             font-weight: 800;
+            letter-spacing: 1px;
         }
 
-        /* ENERJİ GÖSTERGESİ */
-        .energy-box { 
-            width: 85%; 
-            margin: 15px auto; 
-        }
-
-        .energy-bar-bg { 
+        /* ENERJİ BAR SİSTEMİ */
+        .energy-wrapper { width: 90%; margin: 20px auto; }
+        .energy-info { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px; }
+        .energy-bar-container { 
             width: 100%; 
-            height: 14px; 
-            background: #151518; 
+            height: 16px; 
+            background: #111; 
             border-radius: 30px; 
             overflow: hidden; 
-            margin-top: 8px;
-            border: 1px solid rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            position: relative;
         }
 
-        #energy-lvl { 
+        #energy-fill-active { 
             width: 100%; 
             height: 100%; 
             background: linear-gradient(90deg, #f59e0b, #fbbf24); 
-            transition: 0.4s ease;
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+            transition: 0.3s ease-out;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
         }
 
-        /* TAP ANA BUTON */
-        .tap-zone {
-            width: 230px; 
-            height: 230px; 
+        /* TAP ANA BUTON - SPYDER */
+        .tap-main-trigger {
+            width: 240px; 
+            height: 240px; 
             background: radial-gradient(circle, #10b981 0%, #064e3b 100%);
             border-radius: 50%; 
             margin: 30px auto; 
@@ -130,348 +123,351 @@
             justify-content: center;
             font-size: 100px; 
             cursor: pointer; 
-            box-shadow: 0 0 60px rgba(16, 185, 129, 0.25);
-            border: 10px solid rgba(16, 185, 129, 0.15); 
+            box-shadow: 0 0 70px rgba(16, 185, 129, 0.3);
+            border: 12px solid rgba(16, 185, 129, 0.1); 
             transition: 0.1s;
-            user-select: none;
+            position: relative;
         }
 
-        .tap-zone:active { transform: scale(0.92); }
-        .tap-zone.locked { filter: grayscale(1); opacity: 0.3; pointer-events: none; }
+        .tap-main-trigger:active { transform: scale(0.92); filter: brightness(1.2); }
+        .tap-main-trigger.disabled { filter: grayscale(1); opacity: 0.3; pointer-events: none; }
 
-        .btn { 
-            padding: 18px; 
-            border-radius: 24px; 
+        .btn-action { 
+            padding: 20px; 
+            border-radius: 25px; 
             border: none; 
             font-weight: 800; 
             cursor: pointer; 
             color: #fff; 
             background: var(--p-purple); 
             width: 100%; 
-            transition: 0.3s; 
             font-size: 14px; 
-            text-transform: uppercase;
+            text-transform: uppercase; 
+            transition: 0.3s;
+            box-shadow: 0 8px 20px var(--glow);
         }
 
-        /* ADMİN ANALİZ MODAL */
-        .modal-overlay { 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0,0,0,0.92); 
-            z-index: 10001; 
-            display: none; 
-            align-items: center; 
-            justify-content: center; 
+        /* ADMİN ÖZEL PANELLERİ */
+        .admin-global-card { 
+            background: linear-gradient(135deg, #1a1a1f 0%, #0a0a0c 100%); 
             padding: 25px; 
-            backdrop-filter: blur(12px); 
+            border-radius: 30px; 
+            border: 1.5px solid var(--warning); 
+            margin-bottom: 25px; 
+            text-align: center;
         }
 
-        .modal-body { 
-            background: var(--bg-card); 
-            border: 1px solid var(--p-purple); 
-            border-radius: 35px; 
-            padding: 30px; 
-            width: 100%; 
-            max-width: 420px; 
-        }
-
-        /* NAVİGASYON */
-        nav { 
-            position: fixed; 
-            bottom: 0; 
-            width: 100%; 
-            height: 100px; 
-            background: #050505; 
-            border-top: 1px solid var(--border); 
-            display: flex; 
-            justify-content: space-around; 
-            align-items: center; 
-            padding-bottom: 30px; 
-            z-index: 1000; 
-        }
-
-        .nav-tab { 
-            color: var(--text-dim); 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            font-size: 10px; 
-            font-weight: 800; 
-            cursor: pointer; 
-        }
-
-        .nav-tab.active { color: var(--p-purple); }
-        .nav-tab i { font-size: 26px; margin-bottom: 6px; font-style: normal; }
-
-        .user-list-item { 
-            background: #08080a; 
+        .user-row { 
+            background: #0c0c0e; 
             padding: 18px; 
-            border-radius: 24px; 
+            border-radius: 22px; 
             margin-bottom: 12px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            border: 1px solid var(--border); 
-            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: 0.2s;
         }
+        
+        /* MODAL SİSTEMİ */
+        .modal-mask { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.96); 
+            z-index: 9999; display: none; align-items: center; justify-content: center; 
+            backdrop-filter: blur(15px); padding: 20px;
+        }
+        .modal-box { 
+            background: var(--bg-card); border: 1px solid var(--p-purple); 
+            border-radius: 35px; padding: 35px; width: 100%; max-width: 420px;
+        }
+
+        /* ALT NAVİGASYON */
+        nav { 
+            position: fixed; bottom: 0; width: 100%; height: 100px; 
+            background: rgba(5,5,5,0.98); border-top: 1px solid var(--border); 
+            display: flex; justify-content: space-around; align-items: center; 
+            padding-bottom: 25px; z-index: 1000;
+        }
+        .nav-item { 
+            color: var(--text-dim); display: flex; flex-direction: column; 
+            align-items: center; font-size: 10px; font-weight: 800; cursor: pointer;
+        }
+        .nav-item.active { color: var(--p-purple); }
+        .nav-item i { font-size: 26px; margin-bottom: 6px; font-style: normal; }
     </style>
 </head>
 <body>
 
-<div id="adm-modal" class="modal-overlay">
-    <div class="modal-body">
-        <h3 id="m-user-tag" class="orbitron" style="color:var(--p-purple); text-align:center; margin-bottom:20px;">DETAYLAR</h3>
-        <div class="stat-grid-3" style="grid-template-columns: 1fr 1fr; margin-bottom: 30px;">
-            <div class="stat-item"><small>SPYDER</small><b id="m-bal">0</b></div>
-            <div class="stat-item"><small>USDT</small><b id="m-usdt">0</b></div>
+<div id="modal-analiz" class="modal-mask">
+    <div class="modal-box">
+        <h3 id="analiz-baslik" class="orbitron" style="text-align:center; margin-bottom:25px; color:var(--p-purple);">ÜYE DETAYI</h3>
+        <div class="stat-grid-3" style="grid-template-columns: 1fr 1fr;">
+            <div class="stat-item"><small>SPYDER</small><b id="m-spy">0</b></div>
+            <div class="stat-item"><small>USDT</small><b id="m-usd">0</b></div>
             <div class="stat-item"><small>REKLAM</small><b id="m-ads">0</b></div>
             <div class="stat-item"><small>REF</small><b id="m-ref">0</b></div>
         </div>
-        <button class="btn" style="background:#222;" onclick="Admin.close()">PANELİ KAPAT</button>
+        <button class="btn-action" style="background:#222;" onclick="Admin.closeModal()">KAPAT</button>
     </div>
 </div>
 
 <main id="viewport">
     
-    <section id="v-home" class="view active">
+    <section id="pane-home" class="view active">
         <div class="stat-grid-3">
-            <div class="stat-item"><small>SPYDER</small><b id="u-bal">0</b></div>
-            <div class="stat-item"><small>CÜZDAN</small><b id="u-usdt-v" style="color:var(--success)">$0.00</b></div>
-            <div class="stat-item"><small>GEREKLİ REKLAM</small><b id="u-req-v">0</b></div>
+            <div class="stat-item"><small>SPYDER</small><b id="u-spyder-bal">0</b></div>
+            <div class="stat-item"><small>CÜZDAN</small><b id="u-usdt-bal" style="color:var(--success)">$0.00</b></div>
+            <div class="stat-item"><small>GEREKLİ REKLAM</small><b id="u-ads-req">0</b></div>
         </div>
 
-        <div id="tap-spider" class="tap-zone" onclick="App.tap()">🕷️</div>
+        <div id="main-tap-btn" class="tap-main-trigger" onclick="App.handleTap(event)">🕷️</div>
 
-        <div class="energy-box">
-            <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:800;">
-                <span style="color:var(--warning)">⚡ ENERJİ</span>
-                <span id="u-energy-txt">1000 / 1000</span>
+        <div class="energy-wrapper">
+            <div class="energy-info">
+                <span style="color:var(--warning); font-weight:900;">⚡ ENERJİ DEPOSU</span>
+                <span id="u-energy-val" style="font-family:'Orbitron';">1000 / 1000</span>
             </div>
-            <div class="energy-bar-bg"><div id="energy-lvl"></div></div>
+            <div class="energy-bar-container">
+                <div id="energy-fill-active"></div>
+            </div>
         </div>
 
-        <button class="btn" style="margin-top:20px; background:linear-gradient(90deg, #f59e0b, #d97706);" onclick="App.watchRewardAd()">
-            ⚡ ENERJİ DOLDUR (AD)
+        <button class="btn-action" style="background:linear-gradient(90deg, #f59e0b, #d97706); margin-top:15px;" onclick="App.triggerAd()">
+            ⚡ ENERJİ FULLLE (REKLAM İZLE)
         </button>
     </section>
 
-    <section id="v-swap" class="view">
-        <h2 class="orbitron" style="margin-bottom:20px;">TAKAS</h2>
-        <div style="background:var(--bg-card); padding:25px; border-radius:30px; border:1px solid var(--border);">
-            <small style="color:var(--text-dim)">BOZDURMAK İSTEDİĞİNİZ:</small>
-            <input type="number" id="sw-input" class="btn" style="background:#050505; text-align:center; margin:15px 0;" placeholder="0" oninput="Swap.calc()">
-            <div style="text-align:center; font-size:24px; margin:10px;">⬇️</div>
-            <div class="stat-item" style="background:#000; border-color:var(--success); padding:20px;">
-                <small>ALACAĞINIZ TUTAR</small>
-                <b id="sw-output" style="color:var(--success); font-size:20px;">$0.00</b>
-            </div>
-            <button class="btn" style="margin-top:30px;" onclick="Swap.run()">TAKASI ONAYLA</button>
+    <section id="pane-admin" class="view">
+        <h2 class="orbitron" style="color:var(--warning); margin-bottom:20px;">SYSTEM ADMIN v12.0</h2>
+        
+        <div class="admin-global-card">
+            <small style="color:var(--text-dim); letter-spacing:2px;">TOPLAM REKLAM GELİRİ (İZLENME)</small><br>
+            <b id="adm-total-ads-count" style="font-size:32px; color:var(--warning);">0</b>
         </div>
-    </section>
 
-    <section id="v-wallet" class="view">
-        <h2 class="orbitron">CÜZDAN</h2>
-        <div style="background:var(--bg-card); padding:30px; border-radius:30px; border:1px solid var(--border); text-align:center;">
-            <small>KULLANILABİLİR</small>
-            <h1 id="w-balance" style="font-size:50px; font-family:'Orbitron'; margin:15px 0;">$0.00</h1>
-            
-            <div style="background:rgba(245,158,11,0.1); border-left:4px solid var(--warning); padding:15px; text-align:left; font-size:11px; margin-bottom:20px; border-radius:12px;">
-                <b>ÇEKİM ŞARTLARI:</b><br>
-                • Minimum: 1.00 USDT<br>
-                • 0.01$ Başına 17 Reklam izlenmelidir.
-            </div>
-
-            <input type="number" id="wd-amt" class="btn" style="background:#08080a; margin-bottom:12px;" placeholder="MİKTAR">
-            <input type="text" id="wd-addr" class="btn" style="background:#08080a; margin-bottom:20px; text-transform:none;" placeholder="USDT ADRESİ">
-            <button class="btn" style="background:var(--p-green)" onclick="Wallet.send()">TALEP GÖNDER</button>
+        <div style="background:var(--bg-card); padding:25px; border-radius:30px; border:1px solid var(--border); margin-bottom:25px;">
+            <small style="color:var(--text-dim)">KRİPTO BİRİM FİYATINI AYARLA ($)</small>
+            <input type="number" id="adm-price-input" class="btn-action" style="background:#000; text-align:center; margin:15px 0; border:1px solid var(--border);" step="0.000001">
+            <button class="btn-action" style="background:var(--p-green)" onclick="Admin.saveSettings()">AYARLARI KAYDET</button>
         </div>
-    </section>
 
-    <section id="v-admin" class="view">
-        <h2 class="orbitron" style="color:var(--warning)">ADMİN v9.5</h2>
-        <div id="adm-list" style="margin-top:20px;"></div>
+        <h3 class="orbitron" style="font-size:12px; margin-bottom:15px; color:var(--text-dim); padding-left:10px;">AKTİF ÜYELER (@Kullanıcı)</h3>
+        <div id="adm-user-list-container"></div>
     </section>
 
 </main>
 
 <nav>
-    <div class="nav-tab active" onclick="Nav.go('v-home', this)"><i>🎮</i><span>TAP</span></div>
-    <div class="nav-tab" onclick="Nav.go('v-swap', this)"><i>🔄</i><span>TAKAS</span></div>
-    <div class="nav-tab" onclick="Nav.go('v-wallet', this)"><i>💼</i><span>CÜZDAN</span></div>
-    <div id="adm-tab" class="nav-tab" style="display:none;" onclick="Nav.go('v-admin', this); Admin.load();"><i>🔑</i><span>ADM</span></div>
+    <div class="nav-item active" onclick="Navigation.switch('pane-home', this)"><i>🎮</i><span>OYNA</span></div>
+    <div class="nav-item" id="nav-adm-btn" style="display:none;" onclick="Navigation.switch('pane-admin', this); Admin.init();"><i>🔑</i><span>ADMİN</span></div>
 </nav>
 
 <script>
-    /* MODÜL: SİSTEM MOTORU (JS)
-       876 satır mimarisi için optimize edilmiş çekirdek fonksiyonlar.
+    /* =======================================================================
+        MODÜL 3: CORE LOGIC & DATA ENGINE (JAVASCRIPT)
+        =======================================================================
     */
 
-    const MY_ID = "8392479231";
-    const firebaseConfig = { 
+    const MASTER_UID = "8392479231";
+    const fbCfg = { 
         apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY", 
         projectId: "pdfkaynak-51615", 
         appId: "1:228512804576:web:a0bba02ca83b4fa7adea85" 
     };
 
-    firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(fbCfg);
     const db = firebase.firestore();
     const tg = window.Telegram.WebApp;
     
-    let user = { 
-        bal: 0, usdt: 0, energy: 1000, max: 1000, ads: 0, ref: 0, username: "" 
+    // STATE MANAGEMENT
+    let sessionUser = { 
+        bal: 0, 
+        usdt: 0, 
+        energy: 1000, 
+        ads: 0, 
+        ref: 0, 
+        username: "" 
     };
 
-    let cfg = { price: 0.001 };
-    let uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_test";
+    let globalSettings = { coinPrice: 0.001 };
+    let currentUid = tg.initDataUnsafe?.user?.id?.toString() || "dev_mode_user";
 
     const App = {
-        init: async () => {
+        boot: async () => {
             tg.expand();
-            const d = await db.collection("users").doc(uid).get();
-            if(d.exists) {
-                user = {...user, ...d.data()};
+            tg.ready();
+
+            const userRef = db.collection("users").doc(currentUid);
+            const doc = await userRef.get();
+
+            if(doc.exists) {
+                sessionUser = {...sessionUser, ...doc.data()};
             } else {
-                user.username = tg.initDataUnsafe?.user?.username || "Guest";
-                await db.collection("users").doc(uid).set(user);
+                sessionUser.username = tg.initDataUnsafe?.user?.username || "Guest_Spyder";
+                await userRef.set(sessionUser);
             }
 
-            db.collection("settings").doc("global").onSnapshot(s => {
-                if(s.exists) cfg = s.data();
-                App.render();
+            // Real-time Settings Listener
+            db.collection("settings").doc("global").onSnapshot(snap => {
+                if(snap.exists) {
+                    globalSettings = snap.data();
+                    document.getElementById('adm-price-input').value = globalSettings.coinPrice;
+                }
+                App.syncUI();
             });
 
-            if(uid === MY_ID) document.getElementById('adm-tab').style.display = 'flex';
-            App.render();
+            if(currentUid === MASTER_UID) {
+                document.getElementById('nav-adm-btn').style.display = 'flex';
+            }
+
+            App.syncUI();
         },
 
-        tap: () => {
-            if(user.energy <= 0) return tg.showAlert("Enerji bitti!");
-            user.bal++;
-            user.energy--;
+        handleTap: (e) => {
+            if(sessionUser.energy <= 0) {
+                tg.showPopup({
+                    title: "Enerji Tükendi!",
+                    message: "Daha fazla Spyder toplamak için reklam izleyerek enerjini yenile.",
+                    buttons: [{type: 'ok', text: 'Tamam'}]
+                });
+                return;
+            }
+
+            sessionUser.bal += 1;
+            sessionUser.energy -= 1;
+            
             tg.HapticFeedback.impactOccurred('light');
-            App.render();
-            if(user.bal % 30 === 0) App.save();
+            App.syncUI();
+
+            // Auto-save every 20 taps
+            if(sessionUser.bal % 20 === 0) App.persist();
         },
 
-        // ✅ REKLAM KODU ENTEGRASYONU
-        watchRewardAd: () => {
+        triggerAd: () => {
             if (typeof window.showAdexora === 'function') {
                 window.showAdexora()
-                .then(() => {
-                    // ✅ REWARD LOGIC: 1 REKLAM = 1000 ENERJİ
-                    user.energy = 1000;
-                    user.ads = (user.ads || 0) + 1;
-                    App.save();
-                    App.render();
-                    tg.showAlert("✅ Enerji başarıyla 1000'e tamamlandı!");
-                })
-                .catch(e => {
-                    tg.showAlert("Reklam yüklenemedi, tekrar deneyin.");
-                });
+                    .then(() => {
+                        // ✅ AD REWARD LOGIC: 1 AD = 1000 ENERGY
+                        sessionUser.energy = 1000;
+                        sessionUser.ads = (sessionUser.ads || 0) + 1;
+                        
+                        App.persist();
+                        App.syncUI();
+                        tg.showAlert("⚡ Harika! Enerjin tamamen yenilendi.");
+                    })
+                    .catch(err => {
+                        console.error("AdExora Error:", err);
+                        tg.showAlert("Reklam şu an yüklenemiyor, lütfen tekrar deneyin.");
+                    });
             } else {
-                tg.showAlert("Reklam motoru hazır değil.");
+                tg.showAlert("Reklam motoru henüz hazır değil.");
             }
         },
 
-        save: () => {
-            db.collection("users").doc(uid).update(user);
+        persist: () => {
+            db.collection("users").doc(currentUid).update({
+                bal: sessionUser.bal,
+                energy: sessionUser.energy,
+                ads: sessionUser.ads,
+                usdt: sessionUser.usdt
+            });
         },
 
-        render: () => {
-            document.getElementById('u-bal').innerText = user.bal.toLocaleString();
-            document.getElementById('u-usdt-v').innerText = "$" + (user.usdt || 0).toFixed(2);
-            document.getElementById('w-balance').innerText = "$" + (user.usdt || 0).toFixed(2);
-            document.getElementById('u-energy-txt').innerText = `${user.energy} / ${user.max}`;
+        syncUI: () => {
+            document.getElementById('u-spyder-bal').innerText = sessionUser.bal.toLocaleString();
+            document.getElementById('u-usdt-bal').innerText = "$" + (sessionUser.usdt || 0).toFixed(2);
+            document.getElementById('u-energy-val').innerText = `${sessionUser.energy} / 1000`;
             
-            const p = (user.energy / user.max) * 100;
-            document.getElementById('energy-lvl').style.width = p + "%";
+            const percentage = (sessionUser.energy / 1000) * 100;
+            document.getElementById('energy-fill-active').style.width = percentage + "%";
             
-            const req = Math.ceil((user.usdt || 0) * 1700);
-            document.getElementById('u-req-v').innerText = req;
+            const reqAds = Math.ceil((sessionUser.usdt || 0) * 1700);
+            document.getElementById('u-ads-req').innerText = reqAds;
 
-            const sp = document.getElementById('tap-spider');
-            user.energy <= 0 ? sp.classList.add('locked') : sp.classList.remove('locked');
-        }
-    };
-
-    const Swap = {
-        calc: () => {
-            const v = document.getElementById('sw-input').value || 0;
-            document.getElementById('sw-output').innerText = "$" + (v * cfg.price).toFixed(4);
-        },
-        run: () => {
-            const a = parseInt(document.getElementById('sw-input').value);
-            if(!a || user.bal < a) return tg.showAlert("Yetersiz Spyder!");
-            user.bal -= a;
-            user.usdt += (a * cfg.price);
-            App.save();
-            App.render();
-            tg.showAlert("Takas işlemi başarılı!");
-        }
-    };
-
-    const Wallet = {
-        send: async () => {
-            const m = parseFloat(document.getElementById('wd-amt').value);
-            const adr = document.getElementById('wd-addr').value;
-            if(!m || m < 1) return tg.showAlert("Min 1.00 USDT!");
-            const r = Math.ceil(m * 1700);
-            if(user.ads < r) return tg.showAlert(`Gerekli reklam: ${r}`);
-            
-            await db.collection("withdraws").add({ uid, user: user.username, amt: m, addr: adr, status: "WAIT", date: Date.now() });
-            user.usdt -= m;
-            App.save();
-            App.render();
-            tg.showAlert("Talebiniz iletildi.");
+            const trigger = document.getElementById('main-tap-btn');
+            if(sessionUser.energy <= 0) trigger.classList.add('disabled');
+            else trigger.classList.remove('disabled');
         }
     };
 
     const Admin = {
-        users: [],
-        load: async () => {
-            const s = await db.collection("users").limit(50).get();
-            let h = ""; this.users = [];
-            s.forEach(d => {
-                const u = d.data();
-                this.users.push({id: d.id, ...u});
-                h += `<div class="user-list-item" onclick="Admin.view('${d.id}')">
-                    <div><b>@${u.username || 'Gizli'}</b></div>
-                    <div style="color:var(--success)">$${(u.usdt || 0).toFixed(2)}</div>
-                </div>`;
+        cachedUsers: [],
+        
+        init: async () => {
+            const snapshot = await db.collection("users").get();
+            let totalSystemAds = 0;
+            let listHtml = "";
+            this.cachedUsers = [];
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const userId = doc.id;
+                totalSystemAds += (data.ads || 0);
+                this.cachedUsers.push({id: userId, ...data});
+
+                listHtml += `
+                    <div class="user-row" onclick="Admin.showDetails('${userId}')">
+                        <div>
+                            <b style="color:#fff;">@${data.username || 'Gizli'}</b><br>
+                            <small style="color:var(--text-dim); font-size:9px;">UID: ${userId}</small>
+                        </div>
+                        <div style="text-align:right;">
+                            <b style="color:var(--p-green);">$${(data.usdt || 0).toFixed(2)}</b><br>
+                            <small style="color:var(--warning); font-size:9px;">ADS: ${data.ads || 0}</small>
+                        </div>
+                    </div>
+                `;
             });
-            document.getElementById('adm-list').innerHTML = h;
+
+            document.getElementById('adm-total-ads-count').innerText = totalSystemAds.toLocaleString();
+            document.getElementById('adm-user-list-container').innerHTML = listHtml;
         },
-        view: (id) => {
-            const u = this.users.find(x => x.id === id);
-            document.getElementById('m-user-tag').innerText = "@" + u.username;
-            document.getElementById('m-bal').innerText = u.bal.toLocaleString();
-            document.getElementById('m-usdt').innerText = (u.usdt || 0).toFixed(2);
+
+        saveSettings: () => {
+            const newPrice = parseFloat(document.getElementById('adm-price-input').value);
+            db.collection("settings").doc("global").set({ coinPrice: newPrice });
+            tg.showAlert("Sistem fiyatı başarıyla güncellendi!");
+        },
+
+        showDetails: (id) => {
+            const u = this.cachedUsers.find(x => x.id === id);
+            if(!u) return;
+
+            document.getElementById('analiz-baslik').innerText = "@" + u.username;
+            document.getElementById('m-spy').innerText = (u.bal || 0).toLocaleString();
+            document.getElementById('m-usd').innerText = (u.usdt || 0).toFixed(2);
             document.getElementById('m-ads').innerText = u.ads || 0;
             document.getElementById('m-ref').innerText = u.ref || 0;
-            document.getElementById('adm-modal').style.display = 'flex';
+
+            document.getElementById('modal-analiz').style.display = 'flex';
         },
-        close: () => document.getElementById('adm-modal').style.display = 'none'
+
+        closeModal: () => {
+            document.getElementById('modal-analiz').style.display = 'none';
+        }
     };
 
-    const Nav = {
-        go: (id, el) => {
+    const Navigation = {
+        switch: (paneId, element) => {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            el.classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(paneId).classList.add('active');
+            element.classList.add('active');
+            
             tg.HapticFeedback.selectionChanged();
         }
     };
 
-    App.init();
+    // START APPLICATION
+    App.boot();
 
-    /* 876 SATIR MİMARİSİ İÇİN EKSTRA MODÜLLER VE SİSTEM NOTLARI
-       --------------------------------------------------------
-       - Adexora SDK entegrasyonu asenkron callback yapısına taşındı.
-       - Firebase security rules: Sadece yetkili admin UID'si tüm kullanıcı verilerine erişebilir.
-       - Haptic feedback her kritik işlemde (tap, swap, nav) kullanıcıya tepki verir.
-       - Tasarım 'Plus Jakarta Sans' ile modern FinTech uygulamalarına benzetildi.
-       ...
+    /* =======================================================================
+        GELECEK SÜRÜM NOTLARI (v13.0+)
+        - Günlük Bonus Sistemi eklenecek.
+        - Arkadaş davet sistemi (Referral) Firestore tetikleyicileri ile güçlendirilecek.
+        - Liderlik tablosu (Leaderboard) eklenecek.
+        - NFT Spyder kartları ile çarpan sistemi entegre edilecek.
+        =======================================================================
     */
 </script>
 </body>
