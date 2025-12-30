@@ -3,468 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin Mining Fan Edition</title>
-    
+    <title>SpyderCoin - Blue Fan Mining</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
         :root {
-            --primary: #00d2ff; --secondary: #9c27b0; --bg-dark: #050a12;
-            --card-bg: #101926; --success: #00e676; --danger: #ff4444;
-            --text-muted: #888; --button-glow: rgba(0, 210, 255, 0.3);
+            --primary-blue: #00a3ff;
+            --bg-dark: #0a0f18;
+            --card-bg: #141c2b;
+            --text-main: #ffffff;
         }
 
-        /* RESET & BASE */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; margin: 0; padding: 0; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
         body {
-            background: radial-gradient(circle at center, #101926 0%, #050a12 100%);
-            color: white; font-family: 'Segoe UI', sans-serif; height: 100vh;
-            display: flex; flex-direction: column; overflow: hidden;
-        }
-
-        /* BAN OVERLAY */
-        #ban-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.95); z-index: 10000; flex-direction: column; align-items: center;
-            justify-content: center; text-align: center; padding: 20px;
-        }
-        #ban-overlay h1 { font-size: 80px; margin-bottom: 10px; color: var(--danger); }
-        #ban-overlay p { color: var(--text-muted); margin-top: 15px; font-size: 14px; }
-
-        /* HEADER */
-        header { padding: 20px; text-align: center; border-bottom: 1px solid rgba(0, 210, 255, 0.1); background: rgba(0,0,0,0.2); }
-        .balance-label { font-size: 12px; color: var(--primary); letter-spacing: 2px; text-transform: uppercase; }
-        .balance-value { font-size: 38px; font-weight: 900; color: white; text-shadow: 0 0 15px var(--button-glow); }
-        
-        /* MAIN CONTENT & TABS */
-        main { flex-grow: 1; overflow-y: auto; padding-bottom: 90px; }
-        .tab-content { display: none; padding: 20px; animation: fadeIn 0.4s ease-out; width: 100%; }
-        .tab-content.active { display: flex; flex-direction: column; align-items: center; }
-
-        /* MINING SECTION */
-        .mining-section {
-            display: flex; flex-direction: column; align-items: center;
-            background: var(--card-bg); border-radius: 20px; padding: 25px;
-            margin: 20px 0; width: 100%; max-width: 350px;
-            border: 1px solid rgba(0, 210, 255, 0.2);
-            box-shadow: 0 0 30px rgba(0, 210, 255, 0.1);
-        }
-        .mining-spinner-wrapper {
-            width: 150px; height: 150px; border-radius: 50%;
-            background: rgba(0, 210, 255, 0.1);
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 20px; border: 2px solid var(--primary);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
         }
-        .mining-fan-icon {
-            font-size: 80px; color: var(--primary);
-            animation: spin 2s linear infinite;
+
+        /* HEADER */
+        header { padding: 30px 20px; text-align: center; }
+        .balance-title { font-size: 13px; color: #8a96a3; letter-spacing: 1px; margin-bottom: 5px; }
+        .balance-value { font-size: 42px; font-weight: 800; }
+
+        /* MAVİ FAN TASARIMI (Görseldeki gibi) */
+        .fan-container {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        .pool-info {
-            background: rgba(0, 210, 255, 0.15); padding: 12px 25px; border-radius: 30px;
-            border: 1px solid var(--primary); text-align: center;
-            width: 90%; max-width: 250px; margin-bottom: 20px;
+        .fan-blade-wrapper {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            animation: rotateFan 3s linear infinite;
         }
-        .pool-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-        .pool-balance { font-size: 22px; font-weight: bold; color: white; text-shadow: 0 0 10px var(--button-glow); }
 
-        .btn-claim { 
-            background: linear-gradient(45deg, #00d2ff, #3a7bd5); color: white; border: none; 
-            padding: 14px 30px; border-radius: 10px; font-weight: 800; cursor: pointer;
-            box-shadow: 0 5px 15px var(--button-glow); font-size: 16px;
-            transition: transform 0.2s, box-shadow 0.2s;
+        .blade {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 40px;
+            height: 90px;
+            background: linear-gradient(to bottom, var(--primary-blue), #0055ff);
+            border-radius: 50% 50% 10% 10%;
+            transform-origin: bottom center;
+            opacity: 0.8;
+            box-shadow: 0 0 15px var(--primary-blue);
         }
-        .btn-claim:active { transform: translateY(2px); box-shadow: 0 2px 10px var(--button-glow); }
 
-        .mining-stats-text { font-size: 11px; color: var(--text-muted); margin-top: 15px; text-align: center; line-height: 1.5; }
-        .highlight-text { color: var(--success); font-weight: bold; }
+        /* 12 kanatlı fan yapısı */
+        .blade:nth-child(1)  { transform: translate(-50%, -100%) rotate(0deg); }
+        .blade:nth-child(2)  { transform: translate(-50%, -100%) rotate(30deg); }
+        .blade:nth-child(3)  { transform: translate(-50%, -100%) rotate(60deg); }
+        .blade:nth-child(4)  { transform: translate(-50%, -100%) rotate(90deg); }
+        .blade:nth-child(5)  { transform: translate(-50%, -100%) rotate(120deg); }
+        .blade:nth-child(6)  { transform: translate(-50%, -100%) rotate(150deg); }
+        .blade:nth-child(7)  { transform: translate(-50%, -100%) rotate(180deg); }
+        .blade:nth-child(8)  { transform: translate(-50%, -100%) rotate(210deg); }
+        .blade:nth-child(9)  { transform: translate(-50%, -100%) rotate(240deg); }
+        .blade:nth-child(10) { transform: translate(-50%, -100%) rotate(270deg); }
+        .blade:nth-child(11) { transform: translate(-50%, -100%) rotate(300deg); }
+        .blade:nth-child(12) { transform: translate(-50%, -100%) rotate(330deg); }
 
-        /* WALLET SECTION */
-        .card { background: var(--card-bg); border-radius: 20px; padding: 20px; width: 100%; max-width: 400px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px; }
-        .card h3 { color: white; margin-bottom: 15px; text-align: center; }
-        .input-dark {
-            width: 100%; padding: 12px; border-radius: 10px; margin-bottom: 10px;
-            background: #08111c; border: 1px solid #2a3d54; color: white; text-align: center;
+        .fan-center {
+            width: 60px;
+            height: 60px;
+            background: #1a2436;
+            border: 4px solid var(--primary-blue);
+            border-radius: 50%;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(0, 163, 255, 0.5);
         }
-        .withdraw-info { font-size: 11px; color: var(--text-muted); margin-bottom: 15px; text-align: center; }
 
-        /* ADMIN SECTION */
-        #admin-stats { border: 1px solid var(--primary); margin-bottom: 20px; }
-        #global-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11px; margin-top: 10px; }
-        .stat-item { background: #1a2a3a; padding: 10px; border-radius: 8px; border: 1px solid #2a3d54; }
-        .admin-item { background: #1a2a3a; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--primary); cursor: pointer; width: 100%; }
-        .detail-panel { background: #08111c; border-radius: 10px; padding: 10px; margin-top: 10px; display: none; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .btn-adm { 
-            font-size: 10px; padding: 10px; border-radius: 6px; border: none; font-weight: bold; 
-            cursor: pointer; color: white; transition: background 0.2s; 
+        @keyframes rotateFan {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
-        .btn-adm.ban-btn { background: var(--danger); }
-        .btn-adm.unban-btn { background: var(--success); }
-        .btn-adm.add-btn { background: #00897b; }
-        .btn-adm.minus-btn { background: #ef6c00; }
-        .btn-adm.reset-btn { background: #5e35b1; }
 
+        /* POOL & BUTTONS */
+        .mining-info { text-align: center; margin-top: 10px; }
+        .pool-amount { font-size: 28px; font-weight: bold; color: var(--primary-blue); }
+        .ghs { font-size: 14px; color: #ffcc00; margin-top: 5px; }
 
-        /* NAVIGATION */
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            justify-content: center;
+        }
+
+        .btn {
+            flex: 1;
+            max-width: 160px;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-claim { background-color: var(--primary-blue); color: white; }
+        .btn-boost { background-color: #2a3547; color: white; }
+
+        /* NAV */
         .nav-bar {
-            position: fixed; bottom: 0; width: 100%; height: 75px; background: #08111c;
-            display: flex; justify-content: space-around; align-items: center;
-            border-top: 1px solid rgba(0, 210, 255, 0.1); z-index: 1000;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 80px;
+            background: #111823;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #1e2a3e;
         }
-        .nav-link { display: flex; flex-direction: column; align-items: center; color: #4b5563; text-decoration: none; font-size: 11px; cursor: pointer; transition: color 0.3s; }
-        .nav-link span:first-child { font-size: 24px; margin-bottom: 4px; }
-        .nav-link.active { color: var(--primary); }
+        .nav-item { color: #5c6a7e; text-align: center; font-size: 11px; }
+        .nav-item.active { color: var(--primary-blue); }
 
-        /* ANIMATIONS */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #ad-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="ban-overlay">
-        <h1>🚫</h1>
-        <h2>HESABINIZ BANLANDI</h2>
-        <p>Sistem kurallarını ihlal ettiğiniz için erişiminiz engellenmiştir.<br>Destek için yönetici ile iletişime geçin.</p>
-    </div>
-
     <header>
-        <div class="balance-label">TOPLAM BAKİYE</div>
+        <div class="balance-title">TOPLAM BAKİYE</div>
         <div class="balance-value">$<span id="main-balance">0.00000</span></div>
     </header>
 
-    <main id="app-body">
-        <div id="tab-home" class="tab-content active">
-            <div class="mining-section">
-                <div class="mining-spinner-wrapper">
-                    <span class="mining-fan-icon">🌀</span>
-                </div>
-                
-                <div class="pool-info">
-                    <div class="pool-label">MADENCİLİK HAVUZU</div>
-                    <div id="pool-balance" class="pool-balance">$0.000000</div>
-                </div>
-
-                <button class="btn-claim" onclick="claimMining()">CLAIM (HASAT ET)</button>
-                <p class="mining-stats-text">
-                    Şart: Her <span class="highlight-text">$0.0005</span> hasat için <span class="highlight-text">1 reklam izleme puanı</span> gerekir.<br>
-                    Mevcut Puanınız: <span id="user-ads-count" class="highlight-text">0</span>
-                </p>
+    <main>
+        <div class="fan-container">
+            <div class="fan-blade-wrapper">
+                <div class="blade"></div><div class="blade"></div><div class="blade"></div>
+                <div class="blade"></div><div class="blade"></div><div class="blade"></div>
+                <div class="blade"></div><div class="blade"></div><div class="blade"></div>
+                <div class="blade"></div><div class="blade"></div><div class="blade"></div>
             </div>
-            
-            <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 20px;">
-                Havuzdaki bakiyeniz her saniye otomatik olarak artmaktadır.
-            </p>
+            <div class="fan-center">💎</div>
         </div>
 
-        <div id="tab-wallet" class="tab-content">
-            <div class="card">
-                <h3>Para Çekme (USDT TRC20)</h3>
-                <p class="withdraw-info">
-                    Minimum Çekim: <span class="highlight-text">0.10 USDT</span><br>
-                    Her <span class="highlight-text">0.50 USDT</span> çekim için <span class="highlight-text">770 İzleme Puanı</span> gereklidir.
-                </p>
-                <input type="number" id="wd-amt" class="input-dark" placeholder="Miktar (Örn: 0.50)">
-                <input type="text" id="wd-addr" class="input-dark" placeholder="TRC20 Cüzdan Adresi">
-                <button class="btn-claim" style="width:100%;" onclick="sendWithdraw()">ÖDEME TALEBİ GÖNDER</button>
-            </div>
+        <div class="mining-info">
+            <div id="pool-balance" class="pool-amount">0.000000 USDT</div>
+            <div class="ghs">2.03 GH/s ⚡</div>
         </div>
 
-        <div id="tab-admin" class="tab-content">
-            <div id="admin-stats" class="card">
-                <h4 style="text-align:center; color:var(--primary);">SİSTEM GENEL ÖZETİ</h4>
-                <div id="global-stats" class="stat-grid"></div>
-            </div>
-            <div id="admin-user-list" style="width:100%;"></div>
+        <div class="btn-group">
+            <button class="btn btn-claim" onclick="startClaimProcess()">💰 Claim</button>
+            <button class="btn btn-boost">🚀 Boost</button>
         </div>
     </main>
 
+    <div id="ad-modal">
+        <h2 style="color: var(--primary-blue);">Claim Hazırlanıyor...</h2>
+        <p style="margin: 20px 0;">Hasılatı almak için reklam izlemeniz gerekiyor.</p>
+        <div id="ad-status" style="font-size: 20px; font-weight: bold;">Kalan Reklam: 0/0</div>
+        <p style="font-size: 12px; color: #777; margin-top: 15px;">(Reklamı izleyip geri dönün)</p>
+    </div>
+
     <nav class="nav-bar">
-        <div class="nav-link active" onclick="showTab('home', this)"><span>⛏️</span><span>MINING</span></div>
-        <div class="nav-link" onclick="showTab('wallet', this)"><span>👛</span><span>WALLET</span></div>
-        <div id="admin-link" class="nav-link" style="display:none;" onclick="showTab('admin', this)"><span>🛡️</span><span>ADMIN</span></div>
+        <div class="nav-item"><div>🏦</div>Wallet</div>
+        <div class="nav-item"><div>👥</div>Friends</div>
+        <div class="nav-item active"><div>🌀</div>Home</div>
+        <div class="nav-item"><div>🎯</div>Missions</div>
+        <div class="nav-item"><div>⚙️</div>More</div>
     </nav>
 
     <script>
-        // --- FIREBASE CONFIGURATION ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyDfy6QdIZ0BthEHTmxkw-NAja3B9bFFd8U",
-            authDomain: "spydercoin-94f7b.firebaseapp.com",
-            projectId: "spydercoin-94f7b",
-            storageBucket: "spydercoin-94f7b.firebasestorage.app",
-            messagingSenderId: "218267568158",
-            appId: "1:218267568158:web:832728845ba0f42202060f"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // Firebase ve TWA Ayarları
+        const firebaseConfig = { apiKey: "...", projectId: "...", appId: "..." }; // Burayı kendi bilgilerinizle doldurun
+        // firebase.initializeApp(firebaseConfig);
+        // const db = firebase.firestore();
 
-        // --- GLOBAL CONSTANTS ---
-        const MASTER_ADMIN_ID = "8392479231"; // Senin Telegram ID'n
-        const MINING_RATE_PER_SECOND = 0.0001; // Saniyede kazanılan USDT
-        const CLAIM_ADS_PER_0005_USD = 1; // Her 0.0005 USDT için gereken reklam puanı
-        const WITHDRAW_MIN_AMOUNT = 0.10; // Minimum çekim miktarı
-        const WITHDRAW_ADS_PER_0_50_USD = 770; // 0.50 USDT çekim için gereken reklam puanı
-
-        // --- USER DATA ---
         const TWA = window.Telegram.WebApp;
-        TWA.expand(); // Telegram uygulamasını tam ekran yapar
-        const tgUser = TWA.initDataUnsafe.user || { id: "dev_user", first_name: "Developer", username: "dev" };
-        const USER_ID = tgUser.id.toString();
+        let pData = { money: 0.0, pool: 0.0 };
+        let adsNeeded = 0;
+        let adsWatched = 0;
 
-        let pData = {
-            money: 0,
-            adsWatched: 0,
-            pool: 0, // Madencilik havuzunda biriken para
-            isBanned: false,
-            lastActivity: Date.now() // Son aktivite zamanı (ihtiyaç olursa kullanılabilir)
+        // Mining Hızı
+        setInterval(() => {
+            pData.pool += 0.000001; 
+            document.getElementById('pool-balance').innerText = pData.pool.toFixed(6) + " USDT";
+        }, 1000);
+
+        function startClaimProcess() {
+            if(pData.pool < 0.0001) {
+                TWA.showAlert("Havuz çok boş, biraz biriksin!");
+                return;
+            }
+
+            // REKLAM HESAPLAMA MANTIĞI
+            // 0.0005 için 1 reklam, 0.0015 için 3 reklam vb.
+            adsNeeded = Math.ceil(pData.pool / 0.0005);
+            adsWatched = 0;
+
+            document.getElementById('ad-modal').style.display = 'flex';
+            processNextAd();
+        }
+
+        function processNextAd() {
+            if(adsWatched < adsNeeded) {
+                document.getElementById('ad-status').innerText = `İzlenen: ${adsWatched}/${adsNeeded}`;
+                
+                // Reklam Linki (Senin Adexora linkin)
+                setTimeout(() => {
+                    window.open("https://adexora.com/dl/your_id", "_blank");
+                    adsWatched++;
+                    
+                    // Kullanıcı geri döndüğünde devam etmesi için kısa bekleme
+                    TWA.showAlert("Reklam açıldı. İzleyip döndüğünüzde işleme devam edilecek.");
+                }, 1000);
+            } else {
+                completeClaim();
+            }
+        }
+
+        // Kullanıcı sayfaya her döndüğünde reklam durumunu kontrol et
+        window.onfocus = function() {
+            if(document.getElementById('ad-modal').style.display === 'flex') {
+                if(adsWatched < adsNeeded) {
+                    processNextAd();
+                } else {
+                    completeClaim();
+                }
+            }
         };
 
-        // --- UI ELEMENTS ---
-        const mainBalanceEl = document.getElementById('main-balance');
-        const poolBalanceEl = document.getElementById('pool-balance');
-        const userAdsCountEl = document.getElementById('user-ads-count');
-        const banOverlayEl = document.getElementById('ban-overlay');
-        const appBodyEl = document.getElementById('app-body');
-        const adminLinkEl = document.getElementById('admin-link');
-
-        // --- INITIALIZATION ---
-        document.addEventListener('DOMContentLoaded', () => {
-            if(USER_ID === MASTER_ADMIN_ID) adminLinkEl.style.display = 'flex';
-            
-            // Firebase'den kullanıcı verilerini dinle
-            db.collection("players").doc(USER_ID).onSnapshot(doc => {
-                if (doc.exists) {
-                    pData = doc.data();
-                    checkBanStatus();
-                    renderUI();
-                } else {
-                    syncUserData(); // Yeni kullanıcıysa başlangıç verilerini kaydet
-                }
-            }, error => console.error("Firebase Snapshot Error:", error));
-
-            // Admin Paneli için genel istatistikleri ve kullanıcı listesini dinle
-            if (USER_ID === MASTER_ADMIN_ID) {
-                db.collection("players").onSnapshot(snap => {
-                    updateAdminPanel(snap);
-                }, error => console.error("Admin Panel Snapshot Error:", error));
-            }
-        });
-
-        // --- MINING LOGIC ---
-        setInterval(() => {
-            if (!pData.isBanned) {
-                pData.pool += MINING_RATE_PER_SECOND;
-                if (poolBalanceEl) poolBalanceEl.innerText = `$${pData.pool.toFixed(6)}`;
-            }
-        }, 1000); // Her saniye 0.0001 USDT ekle
-
-        function claimMining() {
-            if (pData.isBanned) {
-                TWA.showAlert("Hesabınız banlı olduğu için işlem yapamazsınız.");
-                return;
-            }
-
-            if (pData.pool < 0.0005) {
-                TWA.showAlert("Havuzda en az $0.0005 birikmelidir.");
-                return;
-            }
-
-            const requiredAdsForClaim = Math.floor(pData.pool / 0.0005) * CLAIM_ADS_PER_0005_USD;
-            
-            if (pData.adsWatched < requiredAdsForClaim) {
-                TWA.showAlert(`Yetersiz Reklam Puanı!\nHasat etmek için ${requiredAdsForClaim} reklam puanına ihtiyacınız var.`);
-                // İstersen burada reklam gösterme linkini açabilirsin:
-                // window.open("https://adexora.my.id/dl/QFm5mnRYbJV", "_blank");
-                return;
-            }
-
+        function completeClaim() {
             pData.money += pData.pool;
-            pData.adsWatched -= requiredAdsForClaim;
-            pData.pool = 0; // Havuzu sıfırla
-            syncUserData();
-            TWA.showAlert("Hasat başarılı! Kazanç ana bakiyenize eklendi.");
+            pData.pool = 0;
+            document.getElementById('main-balance').innerText = pData.money.toFixed(5);
+            document.getElementById('ad-modal').style.display = 'none';
+            TWA.showAlert("Tebrikler! Hasılat başarıyla cüzdana aktarıldı.");
         }
-
-        // --- WALLET LOGIC ---
-        function sendWithdraw() {
-            if (pData.isBanned) {
-                TWA.showAlert("Hesabınız banlı olduğu için para çekme işlemi yapamazsınız.");
-                return;
-            }
-
-            const amount = parseFloat(document.getElementById('wd-amt').value);
-            const address = document.getElementById('wd-addr').value.trim();
-
-            if (isNaN(amount) || amount < WITHDRAW_MIN_AMOUNT) {
-                TWA.showAlert(`Minimum çekim ${WITHDRAW_MIN_AMOUNT.toFixed(2)} USDT'dir.`);
-                return;
-            }
-            if (pData.money < amount) {
-                TWA.showAlert("Yetersiz bakiyeniz var.");
-                return;
-            }
-            if (address.length < 20) { // Basit TRC20 adres kontrolü
-                TWA.showAlert("Geçerli bir TRC20 cüzdan adresi giriniz.");
-                return;
-            }
-
-            const requiredAdsForWithdraw = Math.ceil((amount / 0.50) * WITHDRAW_ADS_PER_0_50_USD);
-            if (pData.adsWatched < requiredAdsForWithdraw) {
-                TWA.showAlert(`Yetersiz Reklam Puanı!\n${amount.toFixed(2)} USDT çekmek için ${requiredAdsForWithdraw} puanına ihtiyacınız var.`);
-                return;
-            }
-
-            db.collection("withdrawals").add({
-                userId: USER_ID,
-                username: tgUser.username || "n/a",
-                amount: amount,
-                address: address,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                status: "Pending" // Beklemede
-            }).then(() => {
-                pData.money -= amount;
-                pData.adsWatched -= requiredAdsForWithdraw;
-                syncUserData();
-                TWA.showAlert("Ödeme talebiniz başarıyla alındı. En kısa sürede işleme alınacaktır.");
-            }).catch(error => {
-                console.error("Para çekme talebi hatası:", error);
-                TWA.showAlert("Ödeme talebi sırasında bir hata oluştu. Lütfen tekrar deneyin.");
-            });
-        }
-        
-        // --- ADMIN PANEL FUNCTIONS ---
-        function updateAdminPanel(snapshot) {
-            let totalUsers = snapshot.size;
-            let totalMoney = 0;
-            let totalAdsWatched = 0;
-            let totalBannedUsers = 0;
-
-            const userListContainer = document.getElementById('admin-user-list');
-            userListContainer.innerHTML = ''; // Listeyi temizle
-
-            snapshot.forEach(doc => {
-                const userData = doc.data();
-                const userId = doc.id;
-
-                totalMoney += userData.money || 0;
-                totalAdsWatched += userData.adsWatched || 0;
-                if (userData.isBanned) totalBannedUsers++;
-
-                // Kullanıcı listesi HTML'ini oluştur
-                const banBtnText = userData.isBanned ? 'BAN KALDIR' : 'BANLA';
-                const banBtnClass = userData.isBanned ? 'unban-btn' : 'ban-btn';
-                userListContainer.innerHTML += `
-                    <div class="admin-item" onclick="toggleUserDetail('${userId}')">
-                        <span style="${userData.isBanned ? 'text-decoration:line-through; color:var(--danger);' : ''}">
-                            <b>${userData.first_name || 'N/A'}</b> (@${userData.username || 'yok'})
-                        </span>
-                        <div style="font-size:11px; color:var(--text-muted); margin-top:5px;">
-                            Bak: $${(userData.money || 0).toFixed(5)} | Puan: ${userData.adsWatched || 0}
-                        </div>
-                        
-                        <div id="det-${userId}" class="detail-panel">
-                            <button class="btn-adm add-btn" onclick="modifyUser('${userId}', 'money', 0.10)">💰 +0.10$</button>
-                            <button class="btn-adm minus-btn" onclick="modifyUser('${userId}', 'money', -0.10)">💸 -0.10$</button>
-                            <button class="btn-adm add-btn" onclick="modifyUser('${userId}', 'adsWatched', 770)">📺 +770 Puan</button>
-                            <button class="btn-adm minus-btn" onclick="modifyUser('${userId}', 'adsWatched', -770)">📉 -770 Puan</button>
-                            <button class="btn-adm ${banBtnClass}" style="grid-column:span 2;" onclick="toggleBanStatus('${userId}', ${userData.isBanned})">${banBtnText}</button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            // Global istatistikler HTML'ini güncelle
-            const globalStatsEl = document.getElementById('global-stats');
-            globalStatsEl.innerHTML = `
-                <div class="stat-item">Toplam Üye: <b>${totalUsers}</b></div>
-                <div class="stat-item">Toplam Kasa: <b>$${totalMoney.toFixed(2)}</b></div>
-                <div class="stat-item">Toplam Puan: <b>${totalAdsWatched}</b></div>
-                <div class="stat-item">Banlı Üye: <b>${totalBannedUsers}</b></div>
-            `;
-        }
-
-        function toggleUserDetail(id) {
-            const el = document.getElementById(`det-${id}`);
-            el.style.display = (el.style.display === 'grid') ? 'none' : 'grid';
-        }
-
-        function modifyUser(id, field, value) {
-            event.stopPropagation(); // Admin panelindeki tıklama olayının yayılmasını engelle
-            db.collection("players").doc(id).update({
-                [field]: firebase.firestore.FieldValue.increment(value)
-            }).then(() => {
-                TWA.HapticFeedback.notificationOccurred('success');
-            }).catch(error => {
-                console.error("Kullanıcı verisi güncelleme hatası:", error);
-                TWA.HapticFeedback.notificationOccurred('error');
-            });
-        }
-
-        function toggleBanStatus(id, currentStatus) {
-            event.stopPropagation();
-            db.collection("players").doc(id).update({ isBanned: !currentStatus })
-            .then(() => {
-                TWA.showAlert(currentStatus ? "Kullanıcının banı kaldırıldı." : "Kullanıcı banlandı.");
-                TWA.HapticFeedback.notificationOccurred('success');
-            }).catch(error => {
-                console.error("Ban/Unban hatası:", error);
-                TWA.HapticFeedback.notificationOccurred('error');
-            });
-        }
-        
-        // --- UI RENDERING & SYNC ---
-        function renderUI() {
-            mainBalanceEl.innerText = pData.money.toFixed(5);
-            poolBalanceEl.innerText = `$${pData.pool.toFixed(6)}`;
-            userAdsCountEl.innerText = pData.adsWatched;
-        }
-
-        let syncTimeout;
-        function syncUserData() {
-            clearTimeout(syncTimeout);
-            syncTimeout = setTimeout(() => {
-                db.collection("players").doc(USER_ID).set({
-                    ...pData,
-                    first_name: tgUser.first_name || "N/A",
-                    username: tgUser.username || "yok",
-                    lastActivity: Date.now()
-                }, { merge: true }).catch(error => console.error("Veri kaydetme hatası:", error));
-            }, 1000); // 1 saniye sonra veriyi kaydet (debounced)
-        }
-
-        function checkBanStatus() {
-            if (pData.isBanned) {
-                banOverlayEl.style.display = 'flex';
-                appBodyEl.style.display = 'none';
-                TWA.disableClosingConfirmation(); // Banlıyken kapatma onayı verme
-            } else {
-                banOverlayEl.style.display = 'none';
-                appBodyEl.style.display = 'block';
-                TWA.enableClosingConfirmation(); // Banlı değilken kapatma onayı ver
-            }
-        }
-
-        function showTab(tabId, el) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            el.classList.add('active');
-            TWA.HapticFeedback.impactOccurred('light');
-        }
-
-        // --- ADEXORA ENERJİ REFILL ---
-        // Bu kısım artık direkt mining sistemiyle alakalı olmadığı için çıkarıldı.
-        // Reklam izleme, Claim butonuna basıldığında yönlendirme olarak kullanılabilir.
-        // Eğer kullanıcı manuel olarak reklam izleyip puan kazanmak isterse buraya bir buton eklenebilir.
-        // Örnek:
-        // function showAdToEarnAds() {
-        //     window.open("https://adexora.my.id/dl/QFm5mnRYbJV", "_blank");
-        //     TWA.showAlert("Reklamı izledikten sonra puanınız eklenecektir.");
-        // }
     </script>
 </body>
 </html>
