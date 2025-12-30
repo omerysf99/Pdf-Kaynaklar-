@@ -3,409 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SPYDER NETWORK | ENTERPRISE OS V800</title>
+    <title>SPYDER OS v2.0 | ANALYTICS & CONTROL</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* ========================================================
-           CSS ARCHITECTURE - SPYDER DESIGN SYSTEM (SDS)
-           Satır sayısını ve tasarımı besleyen detaylı stil katmanı
-           ========================================================
-        */
+        /* --- PRO-LEVEL DESIGN SYSTEM --- */
         :root {
             --p-purple: #a855f7; 
-            --p-purple-dim: rgba(168, 85, 247, 0.1);
-            --p-purple-glow: rgba(168, 85, 247, 0.4);
+            --p-glow: rgba(168, 85, 247, 0.4);
             --bg-black: #000000;
-            --bg-card: #0a0a0c;
-            --bg-surface: #0f172a;
-            --text-white: #ffffff;
-            --text-gray: #64748b;
-            --text-dim: #475569;
+            --bg-card: #0c0c0e;
             --success: #10b981;
             --error: #ef4444;
             --warning: #f59e0b;
-            --border-light: rgba(255, 255, 255, 0.05);
-            --border-heavy: rgba(255, 255, 255, 0.1);
-            --safe-top: env(safe-area-inset-top);
-            --safe-bottom: env(safe-area-inset-bottom);
+            --text-dim: #64748b;
+            --border: rgba(255, 255, 255, 0.04);
         }
 
-        /* RESET & BASE */
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-black); color: var(--text-white); font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg-black); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; overflow: hidden; }
 
-        /* LAYOUT COMPONENTS */
-        #main-container { flex: 1; overflow-y: auto; padding: 20px 20px calc(120px + var(--safe-bottom)); scroll-behavior: smooth; }
-        .view-section { display: none; flex-direction: column; animation: viewFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-        .view-section.active { display: flex; }
-        @keyframes viewFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* SCROLLABLE VIEWPORT */
+        #viewport { height: 100vh; overflow-y: auto; padding: 20px 20px 120px; scroll-behavior: smooth; }
+        .view { display: none; flex-direction: column; animation: slideUp 0.4s ease; }
+        .view.active { display: flex; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ADVANCED CARD SYSTEM */
-        .glass-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 28px; padding: 24px; margin-bottom: 20px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
-        .glass-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, transparent, rgba(255,255,255,0.02)); pointer-events: none; }
+        /* ADVANCED ADMIN COMPONENTS */
+        .glass-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 28px; padding: 22px; margin-bottom: 16px; position: relative; }
+        .user-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid var(--border); transition: 0.2s; cursor: pointer; }
+        .user-row:last-child { border-bottom: none; }
+        .user-row:active { background: rgba(255,255,255,0.02); }
         
-        .stat-box { background: rgba(255,255,255,0.02); border: 1px solid var(--border-light); padding: 18px; border-radius: 20px; text-align: center; }
-        .stat-box small { color: var(--text-gray); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-box b { display: block; font-family: 'Orbitron'; font-size: 18px; margin-top: 6px; color: var(--text-white); }
+        .user-info b { display: block; font-size: 14px; color: #fff; }
+        .user-info span { font-size: 11px; color: var(--p-purple); font-family: 'JetBrains Mono'; }
+        .user-stats { text-align: right; }
+        .user-stats .val { font-family: 'Orbitron'; font-size: 14px; color: var(--p-purple); }
+        .user-stats .sub { font-size: 10px; color: var(--success); font-weight: 800; }
 
-        /* THE CORE TRIGGER (SPYDER) */
-        .click-engine { display: flex; flex-direction: column; align-items: center; margin: 40px 0; }
-        .spider-trigger { width: 230px; height: 230px; background: radial-gradient(circle, #c084fc 0%, #7e22ce 100%); border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; font-size: 100px; cursor: pointer; transition: 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 0 60px var(--p-purple-glow); border: 8px solid rgba(255,255,255,0.03); }
-        .spider-trigger:active { transform: scale(0.94); }
-        .spider-trigger::after { content: ''; position: absolute; inset: -15px; border: 2px dashed var(--p-purple-glow); border-radius: 50%; animation: rotateCenter 20s linear infinite; }
-        @keyframes rotateCenter { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        /* ANALYTICS BADGES */
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 900; text-transform: uppercase; margin-top: 5px; display: inline-block; }
+        .badge-active { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .badge-risk { background: rgba(239, 68, 68, 0.1); color: var(--error); }
 
-        /* BUTTONS & FORMS */
-        .action-btn { width: 100%; padding: 18px; border-radius: 20px; border: none; font-weight: 800; font-size: 14px; cursor: pointer; transition: 0.3s; background: var(--p-purple); color: #fff; box-shadow: 0 10px 20px -5px var(--p-purple-glow); }
-        .action-btn:active { transform: scale(0.96); box-shadow: 0 5px 10px -5px var(--p-purple-glow); }
-        .btn-success { background: var(--success); box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3); }
-        .btn-error { background: var(--error); box-shadow: 0 10px 20px -5px rgba(239, 68, 68, 0.3); }
+        /* MODAL SYSTEM */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(15px); }
+        .modal-content { background: #08080a; border: 1px solid var(--p-purple); border-radius: 35px; padding: 30px; width: 100%; max-width: 450px; }
         
-        .input-control { width: 100%; padding: 16px; background: #000; border: 1px solid var(--border-heavy); color: #fff; border-radius: 16px; margin: 12px 0; text-align: center; font-family: 'JetBrains Mono'; font-size: 18px; }
+        .input-box { width: 100%; padding: 15px; background: #000; border: 1px solid #222; color: #fff; border-radius: 15px; margin: 15px 0; text-align: center; font-family: 'JetBrains Mono'; font-size: 20px; }
+        .btn { padding: 15px; border-radius: 18px; border: none; font-weight: 800; cursor: pointer; transition: 0.2s; color: #fff; font-size: 12px; }
+        .btn-add { background: var(--success); } .btn-rem { background: var(--error); }
 
-        /* NAVIGATION ARCHITECTURE */
-        nav { position: fixed; bottom: 0; width: 100%; height: 95px; background: rgba(5,5,5,0.98); border-top: 1px solid var(--border-light); display: flex; justify-content: space-around; align-items: center; padding-bottom: var(--safe-bottom); z-index: 1000; backdrop-filter: blur(20px); }
-        .nav-item { color: var(--text-dim); display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: 0.3s; text-decoration: none; }
-        .nav-item.active { color: var(--p-purple); }
-        .nav-item i { font-size: 26px; font-style: normal; }
-        .nav-item span { font-size: 10px; font-weight: 800; letter-spacing: 0.5px; }
-
-        /* ADMIN INTELLIGENCE MODAL */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 24px; backdrop-filter: blur(15px); }
-        .modal-body { background: #08080a; border: 1px solid var(--p-purple); border-radius: 40px; padding: 35px; width: 100%; max-width: 450px; position: relative; box-shadow: 0 0 100px var(--p-purple-dim); }
-        .modal-body h2 { text-align: center; margin-bottom: 25px; font-size: 22px; }
+        /* NAV */
+        nav { position: fixed; bottom: 0; width: 100%; height: 90px; background: rgba(0,0,0,0.9); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: 15px; }
+        .tab { color: var(--text-dim); display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: 800; }
+        .tab.active { color: var(--p-purple); }
     </style>
 </head>
 <body>
 
-<div id="admin-modal" class="modal-overlay">
-    <div class="modal-body">
-        <h2 id="adm-name" class="orbitron" style="color:var(--p-purple)">USER_DOSSIER</h2>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:20px;">
-            <div class="stat-box"><small>Spyder</small><b id="adm-bal">0</b></div>
-            <div class="stat-box"><small>USDT</small><b id="adm-usdt" style="color:var(--success)">$0</b></div>
+<div id="adm-modal" class="modal">
+    <div class="modal-content">
+        <div style="text-align:center; margin-bottom:20px;">
+            <h2 id="det-name" class="orbitron" style="color:var(--p-purple)">USERNAME</h2>
+            <span id="det-username" style="color:var(--text-dim); font-size:12px;">@username</span>
         </div>
         
-        <input type="number" id="adm-amount" class="input-control" placeholder="0.00">
-        
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-            <button onclick="AdminEngine.updateAsset('bal','add')" class="action-btn btn-success">S. EKLE</button>
-            <button onclick="AdminEngine.updateAsset('bal','sub')" class="action-btn btn-error">S. SİL</button>
-            <button onclick="AdminEngine.updateAsset('usdt','add')" class="action-btn btn-success">U. EKLE</button>
-            <button onclick="AdminEngine.updateAsset('usdt','sub')" class="action-btn btn-error">U. SİL</button>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div class="glass-card" style="padding:15px; text-align:center; margin:0;">
+                <small style="font-size:9px; color:var(--text-dim)">SPYDER</small>
+                <b id="det-bal" style="display:block; font-family:'Orbitron';">0</b>
+            </div>
+            <div class="glass-card" style="padding:15px; text-align:center; margin:0;">
+                <small style="font-size:9px; color:var(--text-dim)">USDT</small>
+                <b id="det-usdt" style="display:block; font-family:'Orbitron'; color:var(--success)">$0</b>
+            </div>
         </div>
-        <button onclick="AdminEngine.closeModal()" class="action-btn" style="background:#1e1e1e; margin-top:12px; box-shadow:none;">PENCEREYİ KAPAT</button>
+
+        <input type="number" id="amt-input" class="input-box" placeholder="MİKTAR GİR">
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <button onclick="Admin.action('bal','add')" class="btn btn-add">SPYDER EKLE</button>
+            <button onclick="Admin.action('bal','sub')" class="btn btn-rem">SPYDER SİL</button>
+            <button onclick="Admin.action('usdt','add')" class="btn btn-add">USDT EKLE</button>
+            <button onclick="Admin.action('usdt','sub')" class="btn btn-rem">USDT SİL</button>
+        </div>
+        <button onclick="Admin.close()" class="btn" style="width:100%; margin-top:10px; background:#111">PENCEREYİ KAPAT</button>
     </div>
 </div>
 
-<main id="main-container">
-    <section id="view-game" class="view-section active">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-            <div class="stat-box"><small>TOTAL SPYDER</small><b id="ui-bal">0</b></div>
-            <div class="stat-box"><small>USDT BALANCE</small><b id="ui-usdt" style="color:var(--success)">$0.00</b></div>
+<div id="viewport">
+    <section id="v-mine" class="view active">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:30px;">
+            <div class="glass-card" style="text-align:center"><small style="color:var(--text-dim)">SPYDER</small><b id="u-bal" style="display:block; font-family:'Orbitron'; font-size:20px;">0</b></div>
+            <div class="glass-card" style="text-align:center"><small style="color:var(--text-dim)">WALLET</small><b id="u-usdt" style="display:block; font-family:'Orbitron'; font-size:20px; color:var(--success)">$0</b></div>
         </div>
-        
-        <div class="click-engine">
-            <div class="spider-trigger" onclick="GameEngine.handleTap(event)">🕷️</div>
-        </div>
-
-        <div class="glass-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <span class="orbitron" style="font-size:12px; color:var(--text-gray);">CORE_ENERGY_RESERVE</span>
-                <span id="ui-nrg-text" style="font-family:'JetBrains Mono'; font-weight:800; font-size:14px;">1000/1000</span>
-            </div>
-            <div style="height:14px; background:rgba(0,0,0,0.5); border-radius:10px; padding:2px; border:1px solid var(--border-light);">
-                <div id="ui-nrg-bar" style="height:100%; width:100%; background:linear-gradient(90deg, var(--p-purple), #d8b4fe); border-radius:10px; box-shadow: 0 0 15px var(--p-purple-glow); transition: width 0.3s ease;"></div>
-            </div>
-        </div>
+        <div style="height:250px; width:250px; background:radial-gradient(circle, var(--p-purple), #000); border-radius:50%; margin: 20px auto; display:flex; align-items:center; justify-content:center; font-size:80px; box-shadow: 0 0 50px var(--p-glow); cursor:pointer;" onclick="Core.tap()">🕷️</div>
     </section>
 
-    <section id="view-ref" class="view-section">
-        <h2 class="orbitron" style="margin-bottom:25px;">NETWORK_GRID</h2>
-        <div class="glass-card" style="text-align:center;">
-            <div style="font-size:50px; margin-bottom:15px;">🔗</div>
-            <h3 style="margin-bottom:10px;">Referans Sistemi</h3>
-            <p style="color:var(--text-gray); font-size:14px; margin-bottom:25px;">Davet ettiğin her üye için cüzdanına anında <b>25.000 Spyder</b> eklenir.</p>
-            <div id="ui-ref-link" class="stat-box" style="margin-bottom:20px; font-size:11px; word-break:break-all; color:var(--p-purple); border-style:dashed;">Yükleniyor...</div>
-            <button onclick="GameEngine.copyRef()" class="action-btn">DAVET LİNKİNİ KOPYALA</button>
-        </div>
-    </section>
-
-    <section id="view-tasks" class="view-section">
-        <h2 class="orbitron" style="margin-bottom:25px;">MISSIONS_LOG</h2>
-        <div id="task-container">
-            <div class="glass-card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div><b style="font-size:16px;">Spyder Telegram</b><br><small style="color:var(--p-purple); font-weight:700;">+100,000 SPYDER</small></div>
-                <button class="action-btn" style="width:auto; padding:10px 25px;" onclick="GameEngine.executeTask('tg_task', 100000)">KATIL</button>
+    <section id="v-admin" class="view">
+        <h2 class="orbitron" style="margin-bottom:20px; color:var(--warning)">SYSTEM_INTELLIGENCE</h2>
+        <div id="user-list-container" class="glass-card" style="padding:0; overflow:hidden;">
             </div>
-            <div class="glass-card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div><b style="font-size:16px;">X Follower</b><br><small style="color:var(--p-purple); font-weight:700;">+50,000 SPYDER</small></div>
-                <button class="action-btn" style="width:auto; padding:10px 25px;" onclick="GameEngine.executeTask('x_task', 50000)">TAKİP ET</button>
-            </div>
-        </div>
     </section>
-
-    <section id="view-admin" class="view-section">
-        <h2 class="orbitron" style="color:var(--warning); margin-bottom:25px;">CENTRAL_INTELLIGENCE</h2>
-        <div style="margin-bottom:20px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <div class="stat-box"><small>SİSTEM ÜYESİ</small><b id="ui-adm-count">0</b></div>
-            <div class="stat-box"><small>TOPLAM REKLAM</small><b id="ui-adm-ads">0</b></div>
-        </div>
-        <div id="ui-admin-list"></div>
-    </section>
-</main>
+</div>
 
 <nav>
-    <div class="nav-item active" onclick="Navigation.switch('view-game', this)"><i>🎮</i><span>OYNA</span></div>
-    <div class="nav-item" onclick="Navigation.switch('view-tasks', this)"><i>📡</i><span>GÖREV</span></div>
-    <div class="nav-item" onclick="Navigation.switch('view-ref', this)"><i>👥</i><span>NETWORK</span></div>
-    <div id="nav-admin-btn" class="nav-item" style="display:none;" onclick="Navigation.switch('view-admin', this); AdminEngine.loadUsers();"><i>🔑</i><span>OS_CORE</span></div>
+    <div class="tab active" onclick="Nav.go('v-mine', this)"><i>🎮</i><span>MINE</span></div>
+    <div id="adm-tab" class="tab" style="display:none" onclick="Nav.go('v-admin', this); Admin.boot()"><i>🔑</i><span>CORE</span></div>
 </nav>
 
 <script>
-    /* ========================================================
-       JAVASCRIPT CORE - SPYDER OS V800
-       Fiziksel satır sayısını ve güvenliği artıran ana motor
-       ========================================================
-    */
-    
-    // 1. SYSTEM CONFIGURATION & INITIALIZATION
-    const SYS_ADMIN_ID = "8392479231";
-    const FIREBASE_CONFIG = {
-        apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY",
-        projectId: "pdfkaynak-51615",
-        appId: "1:228512804576:web:a0bba02ca83b4fa7adea85"
-    };
+    /* --- CONFIG & CORE --- */
+    const ADMIN_ID = "8392479231";
+    const firebaseConfig = { apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY", projectId: "pdfkaynak-51615", appId: "1:228512804576:web:a0bba02ca83b4fa7adea85" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const tg = window.Telegram.WebApp;
 
-    firebase.initializeApp(FIREBASE_CONFIG);
-    const database = firebase.firestore();
-    const tgApp = window.Telegram.WebApp;
-    tgApp.expand();
+    let user = { bal:0, usdt:0, nrg:1000 };
+    let uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
+    let username = tg.initDataUnsafe?.user?.username || "unknown";
 
-    // 2. USER STATE MANAGEMENT
-    let UserState = {
-        bal: 0,
-        usdt: 0,
-        nrg: 1000,
-        tasks: [],
-        id: tgApp.initDataUnsafe?.user?.id?.toString() || "dev_user_test",
-        name: tgApp.initDataUnsafe?.user?.first_name || "Agent_X"
-    };
-
-    // 3. GAME ENGINE - CORE LOGIC
-    const GameEngine = {
-        async init() {
-            console.log("[SYS] Initializing Spyder Engine...");
-            const userRef = database.collection("users").doc(UserState.id);
-            const doc = await userRef.get();
-
-            if (doc.exists) {
-                UserState = { ...UserState, ...doc.data() };
-                console.log("[SYS] User data synced.");
-            } else {
-                console.log("[SYS] New user detected. Creating profile...");
-                await this.persist();
-            }
-
-            this.setupAdminAccess();
-            this.startEnergyLoop();
-            this.updateUI();
-            
-            document.getElementById('ui-ref-link').innerText = `https://t.me/SpyderBot?start=${UserState.id}`;
+    const Core = {
+        init: async () => {
+            const doc = await db.collection("users").doc(uid).get();
+            if(doc.exists) user = {...user, ...doc.data()};
+            if(uid === ADMIN_ID) document.getElementById('adm-tab').style.display='flex';
+            Core.save(); Core.ui();
         },
-
-        setupAdminAccess() {
-            if (UserState.id === SYS_ADMIN_ID) {
-                document.getElementById('nav-admin-btn').style.display = 'flex';
-                console.warn("[SYS] Admin privileges granted.");
-            }
-        },
-
-        handleTap(e) {
-            if (UserState.nrg < 2) {
-                tgApp.HapticFeedback.notificationOccurred('warning');
-                return;
-            }
-            
-            UserState.bal += 1;
-            UserState.nrg -= 2;
-            this.updateUI();
-            
-            // Auto-save every 25 taps to optimize DB calls
-            if (UserState.bal % 25 === 0) this.persist();
-            tgApp.HapticFeedback.impactOccurred('light');
-        },
-
-        async persist() {
-            try {
-                await database.collection("users").doc(UserState.id).set({
-                    ...UserState,
-                    lastActive: Date.now()
-                }, { merge: true });
-            } catch (err) {
-                console.error("[ERR] Sync failed:", err);
-            }
-        },
-
-        startEnergyLoop() {
-            setInterval(() => {
-                if (UserState.nrg < 1000) {
-                    UserState.nrg = Math.min(1000, UserState.nrg + 12);
-                    this.updateUI();
-                }
-            }, 3500);
-        },
-
-        executeTask(taskId, reward) {
-            if (UserState.tasks.includes(taskId)) {
-                tgApp.showAlert("Bu görevi daha önce tamamladınız.");
-                return;
-            }
-            
-            // Simulation of task validation
-            tgApp.showConfirm("Görevi doğrulamak için platforma gidilsin mi?", (ok) => {
-                if(ok) {
-                    window.open('https://t.me/SpyderNetwork');
-                    setTimeout(async () => {
-                        UserState.bal += reward;
-                        UserState.tasks.push(taskId);
-                        await this.persist();
-                        this.updateUI();
-                        tgApp.showAlert(`Tebrikler! ${reward.toLocaleString()} Spyder kazandınız.`);
-                    }, 2000);
-                }
-            });
-        },
-
-        copyRef() {
-            const link = document.getElementById('ui-ref-link').innerText;
-            const el = document.createElement('textarea');
-            el.value = link;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            tgApp.showAlert("Referans linkiniz kopyalandı!");
-        },
-
-        updateUI() {
-            document.getElementById('ui-bal').innerText = UserState.bal.toLocaleString();
-            document.getElementById('ui-usdt').innerText = "$" + (UserState.usdt || 0).toFixed(2);
-            document.getElementById('ui-nrg-text').innerText = `${UserState.nrg}/1000`;
-            document.getElementById('ui-nrg-bar').style.width = (UserState.nrg / 10) + "%";
+        tap: () => { user.bal += 1; Core.ui(); if(user.bal % 50 === 0) Core.save(); },
+        save: () => db.collection("users").doc(uid).set({...user, name: tg.initDataUnsafe?.user?.first_name || "Agent", username: username, last: Date.now()}, {merge:true}),
+        ui: () => {
+            document.getElementById('u-bal').innerText = user.bal.toLocaleString();
+            document.getElementById('u-usdt').innerText = "$" + (user.usdt || 0).toFixed(2);
         }
     };
 
-    // 4. ADMIN INTELLIGENCE ENGINE
-    const AdminEngine = {
-        userCache: [],
-        selectedUser: null,
-
-        async loadUsers() {
-            const container = document.getElementById('ui-admin-list');
-            container.innerHTML = "<p style='text-align:center; padding:20px;'>Veriler çekiliyor...</p>";
-            
-            const snap = await database.collection("users").get();
-            this.userCache = [];
+    /* --- ADVANCED ADMIN ENGINE --- */
+    const Admin = {
+        users: [],
+        selected: null,
+        boot: async () => {
+            const snap = await db.collection("users").get();
+            Admin.users = [];
+            const container = document.getElementById('user-list-container');
             container.innerHTML = "";
             
             snap.forEach(doc => {
-                const u = { id: doc.id, ...doc.data() };
-                this.userCache.push(u);
+                const u = {id: doc.id, ...doc.data()};
+                Admin.users.push(u);
                 
-                const card = document.createElement('div');
-                card.className = "glass-card";
-                card.style.display = "flex";
-                card.style.justifyContent = "space-between";
-                card.style.alignItems = "center";
-                card.style.padding = "15px 20px";
-                card.onclick = () => this.openModal(u.id);
-                
-                card.innerHTML = `
-                    <div>
-                        <b style="font-size:14px;">${u.name || u.id}</b><br>
-                        <small style="color:var(--text-gray); font-size:10px;">ID: ${u.id}</small>
-                    </div>
-                    <div style="text-align:right">
-                        <b style="color:var(--p-purple); font-size:14px;">${(u.bal || 0).toLocaleString()}</b><br>
-                        <small style="color:var(--success); font-size:10px;">$${(u.usdt || 0).toFixed(2)}</small>
-                    </div>
-                `;
-                container.appendChild(card);
+                // Detaylı Analiz Satırı
+                container.innerHTML += `
+                    <div class="user-row" onclick="Admin.open('${u.id}')">
+                        <div class="user-info">
+                            <b>${u.name || 'İsimsiz'}</b>
+                            <span>@${u.username || 'username_yok'}</span>
+                            <div class="badge ${u.bal > 1000000 ? 'badge-risk' : 'badge-active'}">
+                                ${u.bal > 1000000 ? 'YÜKSEK HACİM' : 'AKTİF ÜYE'}
+                            </div>
+                        </div>
+                        <div class="user-stats">
+                            <div class="val">${(u.bal || 0).toLocaleString()} S.</div>
+                            <div class="sub">$${(u.usdt || 0).toFixed(2)}</div>
+                        </div>
+                    </div>`;
             });
-
-            document.getElementById('ui-adm-count').innerText = snap.size;
         },
-
-        openModal(uid) {
-            this.selectedUser = this.userCache.find(x => x.id === uid);
-            document.getElementById('adm-name').innerText = (this.selectedUser.name || uid).toUpperCase();
-            document.getElementById('adm-bal').innerText = this.selectedUser.bal.toLocaleString();
-            document.getElementById('adm-usdt').innerText = "$" + (this.selectedUser.usdt || 0).toFixed(2);
-            document.getElementById('admin-modal').style.display = "flex";
+        open: (id) => {
+            Admin.selected = Admin.users.find(x => x.id === id);
+            document.getElementById('det-name').innerText = Admin.selected.name;
+            document.getElementById('det-username').innerText = "@" + (Admin.selected.username || "yok");
+            document.getElementById('det-bal').innerText = Admin.selected.bal.toLocaleString();
+            document.getElementById('det-usdt').innerText = "$" + (Admin.selected.usdt || 0).toFixed(2);
+            document.getElementById('adm-modal').style.display = 'flex';
         },
-
-        async updateAsset(type, mode) {
-            const amount = parseFloat(document.getElementById('adm-amount').value);
-            if (!amount || amount <= 0) return tgApp.showAlert("Geçerli bir miktar girin!");
-            
-            const change = mode === 'add' ? amount : -amount;
-            
-            try {
-                await database.collection("users").doc(this.selectedId || this.selectedUser.id).update({
-                    [type]: firebase.firestore.FieldValue.increment(change)
-                });
-                
-                tgApp.showAlert("İşlem başarıyla tamamlandı.");
-                this.closeModal();
-                this.loadUsers();
-            } catch (e) {
-                tgApp.showAlert("Hata oluştu: " + e.message);
-            }
+        action: async (type, mode) => {
+            const val = parseFloat(document.getElementById('amt-input').value) || 0;
+            const finalVal = mode === 'add' ? val : -val;
+            await db.collection("users").doc(Admin.selected.id).update({
+                [type]: firebase.firestore.FieldValue.increment(finalVal)
+            });
+            tg.showAlert("İşlem Başarılı!");
+            Admin.close(); Admin.boot();
         },
+        close: () => document.getElementById('adm-modal').style.display = 'none'
+    };
 
-        closeModal() {
-            document.getElementById('admin-modal').style.display = "none";
+    const Nav = {
+        go: (id, el) => {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active'); el.classList.add('active');
         }
     };
 
-    // 5. NAVIGATION SYSTEM
-    const Navigation = {
-        switch(viewId, element) {
-            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            
-            document.getElementById(viewId).classList.add('active');
-            element.classList.add('active');
-            
-            tgApp.HapticFeedback.impactOccurred('medium');
-        }
-    };
-
-    // 6. BOOTSTRAP
-    window.onload = () => GameEngine.init();
-
-    /* ========================================================
-       EXTENDED LOGGING & SECURITY (For 800+ Lines Coverage)
-       Sistemin arka planda çalıştırdığı güvenlik protokolleri
-       ========================================================
-    */
-    const SecurityLayer = {
-        lastClick: 0,
-        detectSpam() {
-            const now = Date.now();
-            if (now - this.lastClick < 50) { // 50ms altı tıklamaları reddet
-                return true;
-            }
-            this.lastClick = now;
-            return false;
-        }
-    };
+    Core.init();
 </script>
 </body>
 </html>
