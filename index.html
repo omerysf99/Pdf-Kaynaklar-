@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin Pro - Wallet & Tasks</title>
+    <title>SpyderCoin Pro - Admin Edition</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -18,7 +18,6 @@
             --card-bg: #1a002e;
             --success: #00e676;
             --blue: #0088cc;
-            --danger: #ff4444;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; }
@@ -35,39 +34,29 @@
         .tab-content { display: none; padding: 20px; animation: fadeIn 0.3s ease; width: 100%; }
         .tab-content.active { display: flex; flex-direction: column; align-items: center; }
 
-        /* Oyun Alanı */
         .game-card { position: relative; width: 250px; height: 250px; background: rgba(156, 39, 176, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 25px 0; border: 2px solid rgba(156, 39, 176, 0.3); }
         #spider-main { font-size: 120px; cursor: pointer; transition: transform 0.05s; z-index: 10; }
         #spider-main:active { transform: scale(0.85); }
         .floating-text { position: absolute; color: var(--primary); font-weight: bold; pointer-events: none; animation: floatUp 0.8s forwards; }
 
-        /* Enerji Barı */
         .energy-section { width: 90%; max-width: 350px; margin-bottom: 15px; }
         .energy-bar-bg { width: 100%; height: 14px; background: #222; border-radius: 10px; border: 1px solid var(--primary); overflow: hidden; }
         #energy-fill { width: 100%; height: 100%; background: var(--primary); transition: width 0.2s; }
 
-        /* Kartlar */
-        .card {
-            background: var(--card-bg); border-radius: 20px; padding: 20px; width: 100%; max-width: 400px;
-            border: 1px solid rgba(255,255,255,0.1); text-align: center; margin-bottom: 20px;
-        }
-
-        .input-dark {
-            width: 100%; padding: 14px; border-radius: 12px; margin-bottom: 10px;
-            background: #000; color: white; border: 1px solid #333; text-align: center;
-        }
-
+        .card { background: var(--card-bg); border-radius: 20px; padding: 20px; width: 100%; max-width: 400px; border: 1px solid rgba(255,255,255,0.1); text-align: center; margin-bottom: 20px; }
+        .input-dark { width: 100%; padding: 14px; border-radius: 12px; margin-bottom: 10px; background: #000; color: white; border: 1px solid #333; text-align: center; }
         .btn-action { background: var(--primary); color: black; border: none; padding: 15px; border-radius: 12px; font-weight: 800; width: 100%; cursor: pointer; }
         .btn-task { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; }
-        .btn-task.done { background: #333; color: #777; cursor: default; }
 
-        /* Navigasyon */
         .nav-bar { position: fixed; bottom: 0; width: 100%; height: 75px; background: #050505; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); }
         .nav-link { display: flex; flex-direction: column; align-items: center; color: #555; text-decoration: none; font-size: 11px; cursor: pointer; }
         .nav-link.active { color: var(--primary); }
 
-        /* Admin */
-        .admin-item { background: #111; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--secondary); font-size: 11px; text-align: left; }
+        /* Admin Tasarımı */
+        .admin-stat-header { display: flex; justify-content: space-around; background: #111; padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid var(--secondary); }
+        .admin-item { background: #111; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--secondary); font-size: 12px; text-align: left; }
+        .admin-item b { color: var(--primary); }
+        .admin-item .izleme-sayi { color: var(--success); font-weight: bold; }
 
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -77,7 +66,7 @@
 
     <header>
         <div class="balance-container">$<span id="main-balance">0.00000</span></div>
-        <div id="display-name" style="font-size: 12px; color: #888;">SpyderCoin Loading...</div>
+        <div id="display-name" style="font-size: 12px; color: #888;">Yükleniyor...</div>
     </header>
 
     <main>
@@ -97,31 +86,35 @@
                 <div style="font-size: 40px;">📢</div>
                 <h3>Telegram Kanalı</h3>
                 <p style="color: var(--success); font-weight: bold; font-size: 20px;">+0.01$</p>
-                <p style="font-size: 12px; color: #aaa; margin-bottom: 15px;">Kanalımıza katıl ve anında bakiye kazan!</p>
                 <button class="btn-task" id="task-tg" onclick="completeTask('tg', 'https://t.me/SpyderCommunity', 0.01)">KANALA KATIL</button>
             </div>
         </div>
 
         <div id="tab-wallet" class="tab-content">
             <div class="card">
-                <h3 style="color: var(--primary);">Para Çekme (USDT)</h3>
-                <div style="margin: 15px 0;">
-                    <small style="color: #aaa;">Biriken Reklam Puanı</small>
-                    <div id="ads-count-display" style="font-size: 28px; font-weight: bold; color: var(--primary);">0</div>
+                <h3>Para Çekme (USDT)</h3>
+                <div style="margin: 10px 0;">
+                    <small>İzleme Sayısı:</small>
+                    <div id="ads-count-display" style="font-size: 24px; font-weight: bold; color: var(--primary);">0</div>
                 </div>
-                <input type="number" id="withdraw-amount" class="input-dark" placeholder="Miktar (Örn: 0.5)">
-                <input type="text" id="withdraw-addr" class="input-dark" placeholder="TRC20 Cüzdan Adresi">
-                <div style="font-size: 11px; color: #888; margin-bottom: 15px;">
-                    Şart: Her 0.5$ çekim için 750 Reklam/Puan gerekir.
-                </div>
-                <button class="btn-action" onclick="requestWithdraw()">ÇEKİM TALEBİ GÖNDER</button>
+                <input type="number" id="withdraw-amount" class="input-dark" placeholder="Miktar">
+                <input type="text" id="withdraw-addr" class="input-dark" placeholder="TRC20 Adresi">
+                <button class="btn-action" onclick="requestWithdraw()">TALEBİ GÖNDER</button>
             </div>
         </div>
 
         <div id="tab-admin" class="tab-content">
-            <div class="card" style="background: #000; border-color: var(--secondary);">
-                <h3 style="color: var(--secondary);">🛡️ Canlı Yönetim</h3>
-                <div id="adm-player-list" style="max-height: 400px; overflow-y: auto;"></div>
+            <div style="width:100%; max-width:450px;">
+                <h3 style="color: var(--secondary); text-align: center;">🛡️ YÖNETİM PANELİ</h3>
+                
+                <div class="admin-stat-header">
+                    <div style="text-align:center;">
+                        <small>GENEL TOPLAM İZLEME</small><br>
+                        <span id="adm-total-ads-global" style="font-size:20px; color:var(--primary); font-weight:bold;">0</span>
+                    </div>
+                </div>
+
+                <div id="adm-player-list"></div>
             </div>
         </div>
     </main>
@@ -149,7 +142,7 @@
         const db = firebase.firestore();
 
         const adminId = "8392479231";
-        const user = tg.initDataUnsafe.user || { id: "test_user", first_name: "Misafir", username: "guest" };
+        const user = tg.initDataUnsafe.user || { id: "test_id", first_name: "Misafir", username: "guest" };
         const UID = user.id.toString();
 
         let localData = { money: 0, energy: 1000, adsWatched: 0, completedTasks: [] };
@@ -158,21 +151,31 @@
         document.getElementById('display-name').innerText = `${user.first_name} (@${user.username || 'yok'})`;
         if(UID === adminId) document.getElementById('admin-nav-link').style.display = 'flex';
 
-        // Listen Data
         db.collection("players").doc(UID).onSnapshot(doc => {
             if(doc.exists) { localData = doc.data(); renderUI(); }
             else { save(); }
         });
 
-        // Admin Snapshot
+        // Admin Panel Mantığı
         if(UID === adminId) {
             db.collection("players").onSnapshot(snap => {
                 const list = document.getElementById('adm-player-list');
+                let globalAds = 0;
                 list.innerHTML = "";
+                
                 snap.forEach(d => {
                     const p = d.data();
-                    list.innerHTML += `<div class="admin-item"><b>${p.first_name}</b> (@${p.username})<br>Para: $${(p.money || 0).toFixed(4)} | Puan: ${p.adsWatched || 0}</div>`;
+                    const pAds = p.adsWatched || 0;
+                    globalAds += pAds;
+                    
+                    list.innerHTML += `
+                        <div class="admin-item">
+                            <b>${p.first_name}</b> (@${p.username || 'yok'})<br>
+                            Bakiye: <span style="color:var(--primary)">$${(p.money || 0).toFixed(5)}</span><br>
+                            Kişisel Toplam İzleme: <span class="izleme-sayi">${pAds}</span>
+                        </div>`;
                 });
+                document.getElementById('adm-total-ads-global').innerText = globalAds.toLocaleString();
             });
         }
 
@@ -180,11 +183,9 @@
             if(localData.energy <= 0) return;
             tg.HapticFeedback.impactOccurred('light');
             createFloatingText(e);
-
             localData.money += 0.0001;
             localData.energy -= 1;
             tapCount++;
-
             if(tapCount >= 10) {
                 tapCount = 0;
                 localData.adsWatched += 1;
@@ -206,9 +207,9 @@
             setTimeout(() => {
                 if(!localData.completedTasks) localData.completedTasks = [];
                 localData.completedTasks.push(taskId);
-                localData.money += reward; // 0.01$ ekle
+                localData.money += reward;
                 save();
-                tg.showAlert(`Görev Tamamlandı! +${reward}$ bakiye eklendi.`);
+                tg.showAlert(`Görev Tamamlandı! +${reward}$ eklendi.`);
             }, 6000);
         }
 
@@ -216,26 +217,17 @@
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
             const addr = document.getElementById('withdraw-addr').value;
             const needed = Math.ceil((amt / 0.5) * 750);
-
-            if(amt < 0.1) return tg.showAlert("Minimum çekim 0.1$");
-            if(localData.money < amt) return tg.showAlert("Yetersiz bakiye!");
-            if(localData.adsWatched < needed) return tg.showAlert(`Bu miktar için ${needed} puanın olmalı!`);
-            if(addr.length < 10) return tg.showAlert("Geçerli bir TRC20 adresi gir!");
-
-            db.collection("withdrawals").add({
-                uid: UID, user: user.username, amount: amt, address: addr, date: new Date()
-            }).then(() => {
-                localData.money -= amt;
-                localData.adsWatched -= needed;
-                save();
-                tg.showAlert("Talep alındı! 24 saat içinde gönderilecektir.");
-            });
+            if(amt >= 0.1 && localData.money >= amt && localData.adsWatched >= needed) {
+                db.collection("withdrawals").add({ uid: UID, user: user.username, amount: amt, address: addr, date: new Date() });
+                localData.money -= amt; localData.adsWatched -= (needed / 2); // İzleme sayısını tamamen sıfırlama, bir kısmını düş
+                save(); tg.showAlert("Talep başarılı!");
+            } else { tg.showAlert("Yetersiz bakiye veya izleme!"); }
         }
 
         function handleAdRefill() {
             window.open("https://adexora.my.id/dl/QFm5mnRYbJV", "_blank");
             localData.energy = 1000; localData.adsWatched += 1;
-            save(); tg.showAlert("Enerji dolduruldu! +1 Puan.");
+            save();
         }
 
         function renderUI() {
@@ -246,14 +238,12 @@
             
             if(localData.completedTasks && localData.completedTasks.includes('tg')) {
                 const b = document.getElementById('task-tg');
-                if(b) { b.innerText = "TAMAMLANDI ✅"; b.classList.add('done'); b.onclick = null; }
+                if(b) { b.innerText = "TAMAMLANDI ✅"; b.style.opacity = "0.5"; b.onclick = null; }
             }
         }
 
         function save() { 
-            db.collection("players").doc(UID).set({
-                ...localData, first_name: user.first_name, username: user.username || "yok"
-            }, {merge: true}); 
+            db.collection("players").doc(UID).set({ ...localData, first_name: user.first_name, username: user.username || "yok" }, {merge: true}); 
         }
 
         function showTab(tabId, el) {
