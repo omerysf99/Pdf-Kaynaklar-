@@ -3,222 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spyder Network Master v28.0</title>
+    <title>Spyder Pro v30.0</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --p-purple: #a855f7; --p-green: #10b981; --bg-black: #000000; --bg-card: #0c0c0e;
-            --success: #10b981; --error: #ef4444; --warning: #f59e0b; --text-dim: #64748b;
-            --border: rgba(255, 255, 255, 0.12);
+            --p-purple: #8b5cf6;
+            --p-green: #10b981;
+            --bg-white: #ffffff;
+            --text-main: #111827;
+            --text-sub: #6b7280;
+            --border: #e5e7eb;
+            --input-bg: #f9fafb;
         }
 
+        /* Temel Sıfırlama */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg-black); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        #viewport { flex: 1; overflow-y: auto; padding: 20px 20px 140px; }
-        
-        .view { display: none; flex-direction: column; animation: fadeIn 0.3s ease; }
-        .view.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* GÖRSEL DÜZELTME: Input Kutuları (image_2ea943.png) */
-        .input-box {
-            background: #0a0a0c;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 18px;
-            margin: 12px 0;
-            width: 100%;
+        body { 
+            background: var(--bg-white); 
+            color: var(--text-main); 
+            font-family: 'Inter', sans-serif; 
+            height: 100vh; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
         }
-        .input-box input {
-            background: transparent;
-            border: none;
-            color: #fff;
+
+        #viewport { flex: 1; overflow-y: auto; padding: 24px; padding-bottom: 120px; }
+
+        /* Başlıklar */
+        h1 { font-family: 'Orbitron', sans-serif; font-size: 22px; margin-bottom: 24px; text-align: center; color: var(--text-main); }
+
+        /* Görünümler (Views) */
+        .view { display: none; animation: fadeIn 0.4s ease; }
+        .view.active { display: flex; flex-direction: column; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Giriş Alanları (Input Fix) */
+        .field-group { margin-bottom: 20px; }
+        .field-label { font-size: 12px; font-weight: 700; color: var(--text-sub); margin-bottom: 8px; display: block; text-transform: uppercase; }
+        
+        .input-control {
+            background: var(--input-bg);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
             width: 100%;
             font-size: 16px;
-            font-weight: 700;
-            font-family: inherit;
+            font-weight: 600;
+            color: var(--text-main);
+            transition: 0.2s;
         }
+        .input-control:focus { border-color: var(--p-purple); background: #fff; outline: none; }
 
-        /* GÖRSEL DÜZELTME: Reklam Durum Çubuğu (image_2f1e00.png) */
-        .ads-status-container {
+        /* Reklam Durum Göstergesi */
+        .status-box {
+            padding: 16px;
+            border-radius: 16px;
             text-align: center;
             font-weight: 800;
             font-size: 14px;
-            padding: 15px;
-            border-radius: 18px;
-            margin: 8px 0;
-            border: 1px solid var(--border);
+            margin-bottom: 20px;
             display: none;
-            transition: 0.3s;
+            border: 2px solid transparent;
         }
-        .ads-status-container.ready { border-color: var(--p-green); color: var(--p-green); background: rgba(16, 185, 129, 0.1); }
-        .ads-status-container.not-ready { border-color: var(--warning); color: var(--warning); background: rgba(245, 158, 11, 0.05); }
+        .status-ok { background: #ecfdf5; color: var(--p-green); border-color: #d1fae5; }
+        .status-wait { background: #fffbeb; color: #d97706; border-color: #fef3c7; }
 
-        /* ALT NAVİGASYON (image_2dd768.png) */
-        nav { 
-            position: fixed; bottom: 0; width: 100%; height: 95px; 
-            background: rgba(0,0,0,0.96); backdrop-filter: blur(10px);
-            border-top: 1px solid var(--border); display: flex; 
-            justify-content: space-around; align-items: center; padding-bottom: 25px; z-index: 1000;
+        /* Butonlar */
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border-radius: 16px;
+            border: none;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-transform: uppercase;
         }
-        .nav-item { color: var(--text-dim); display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: 800; }
+        .btn-primary { background: var(--p-purple); color: #fff; }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-success { background: var(--p-green); color: #fff; }
+
+        /* Alt Navigasyon */
+        nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 90px;
+            background: #fff;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: 20px;
+            z-index: 1000;
+        }
+        .nav-item { color: var(--text-sub); display: flex; flex-direction: column; align-items: center; font-size: 11px; font-weight: 700; cursor: pointer; }
         .nav-item.active { color: var(--p-purple); }
-        .nav-item i { font-size: 24px; margin-bottom: 5px; font-style: normal; }
+        .nav-item i { font-size: 24px; margin-bottom: 4px; font-style: normal; }
 
-        /* BUTONLAR */
-        .btn-action { width: 100%; padding: 20px; border-radius: 22px; border: none; font-weight: 800; color: #fff; background: var(--p-purple); cursor: pointer; text-transform: uppercase; }
-        .btn-green { background: var(--p-green); }
-
-        /* MODAL (image_2dcf71.png) */
-        .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-box { background: var(--bg-card); border: 2px solid var(--p-purple); border-radius: 35px; width: 100%; max-width: 350px; padding: 30px; text-align: center; }
+        /* Admin Üye Listesi & Modal */
+        .user-card { background: var(--input-bg); padding: 16px; border-radius: 14px; margin-bottom: 10px; display: flex; justify-content: space-between; border: 1px solid var(--border); }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+        .modal-content { background: #fff; border-radius: 24px; padding: 24px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
-<div id="uModal" class="modal-bg" onclick="UI.closeModal()">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <h2 id="m-user" class="orbitron" style="color:var(--p-purple); margin-bottom:20px;">@User</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-            <div style="background:#151518; padding:15px; border-radius:18px; border:1px solid var(--border);"><small style="color:var(--text-dim)">SPY</small><br><b id="m-bal">0</b></div>
-            <div style="background:#151518; padding:15px; border-radius:18px; border:1px solid var(--border);"><small style="color:var(--text-dim)">ADS</small><br><b id="m-ads">0</b></div>
+<div id="adminModal" class="modal" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h2 id="m-user" class="orbitron" style="margin-bottom:15px;">@User</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+            <div style="background:#f3f4f6; padding:12px; border-radius:12px;"><small>SPY</small><br><b id="m-spy">0</b></div>
+            <div style="background:#f3f4f6; padding:12px; border-radius:12px;"><small>ADS</small><br><b id="m-ads">0</b></div>
         </div>
-        <button class="btn-action" style="background:var(--error); margin-bottom:10px;" onclick="Admin.banUser()">KULLANICIYI BANLA</button>
-        <button class="btn-action" style="background:#222;" onclick="UI.closeModal()">KAPAT</button>
+        <button class="btn btn-primary" style="background:#ef4444; margin-bottom:10px;" onclick="Admin.ban()">BANLA / KALDIR</button>
+        <button class="btn btn-primary" style="background:#6b7280;" onclick="UI.closeModal()">KAPAT</button>
     </div>
 </div>
 
 <main id="viewport">
+    
     <section id="v-swap" class="view">
-        <h1 class="orbitron">TAKAS</h1>
-        <div style="background:var(--bg-card); padding:25px; border-radius:30px; border:1px solid var(--border);">
-            <p style="text-align:center; color:var(--text-dim); margin-bottom:15px;">Kaç Spyder çevirmek istiyorsun?</p>
-            <div class="input-box">
-                <input type="number" id="sw-input" placeholder="Miktar giriniz..." oninput="App.calcSwap()">
-            </div>
-            <div style="text-align:center; margin:20px 0;">
-                <small style="color:var(--text-dim)">KAZANILACAK TUTAR</small>
-                <h2 id="sw-res" class="orbitron" style="font-size:45px; color:var(--p-purple);">$0.00</h2>
-            </div>
-            <button class="btn-action" onclick="App.doSwap()">TÜMÜNÜ USDT'YE ÇEVİR</button>
+        <h1>TAKAS SİSTEMİ</h1>
+        <div class="field-group">
+            <label class="field-label">Kaç Spyder çevireceksiniz?</label>
+            <input type="number" id="sw-input" class="input-control" placeholder="Miktar girin..." oninput="App.updateSwap()">
         </div>
+        <div style="text-align:center; margin:30px 0;">
+            <p style="color:var(--text-sub); font-size:14px; font-weight:600;">TAHMİNİ KAZANÇ</p>
+            <h2 id="sw-preview" style="font-size:48px; font-weight:900; color:var(--p-purple);">$0.00</h2>
+        </div>
+        <button class="btn btn-primary" onclick="App.confirmSwap()">USDT'YE DÖNÜŞTÜR</button>
     </section>
 
     <section id="v-wallet" class="view active">
-        <h1 class="orbitron">CÜZDAN</h1>
-        <div style="text-align:center; padding:40px 0;">
-            <small style="color:var(--text-dim)">KULLANILABİLİR BAKİYE</small>
-            <h1 id="w-total" style="font-size:65px; font-weight:900;">$0.00</h1>
+        <h1>CÜZDANINIZ</h1>
+        <div style="text-align:center; padding:30px 0;">
+            <p style="color:var(--text-sub); font-size:14px; font-weight:700;">TOPLAM BAKİYE</p>
+            <h2 id="w-balance" style="font-size:56px; font-weight:900;">$0.00</h2>
         </div>
 
-        <div class="input-box">
-            <input type="number" id="wd-amt" placeholder="ÇEKİLECEK TUTAR" oninput="App.checkStatus()">
+        <div class="field-group">
+            <label class="field-label">Çekilecek Tutar (USDT)</label>
+            <input type="number" id="wd-amt" class="input-control" placeholder="0.00" oninput="App.checkStatus()">
         </div>
 
-        <div id="ads-badge" class="ads-status-container">
-            REKLAM DURUMU: <span id="ads-text">0 / 0</span>
+        <div id="status-badge" class="status-box">
+            REKLAM DURUMU: <span id="status-txt">0 / 0</span>
         </div>
 
-        <div class="input-box">
-            <input type="text" id="wd-addr" placeholder="USDT ADRESİ">
+        <div class="field-group">
+            <label class="field-label">Cüzdan Adresiniz</label>
+            <input type="text" id="wd-addr" class="input-control" placeholder="Cüzdan adresi giriniz...">
         </div>
 
-        <button class="btn-action btn-green" onclick="App.withdraw()">ÇEKİM TALEBİ GÖNDER</button>
+        <button class="btn btn-success" onclick="App.processWithdraw()">ÇEKİM TALEBİ GÖNDER</button>
     </section>
 
     <section id="v-admin" class="view">
-        <h1 class="orbitron" style="color:var(--warning)">PANEL</h1>
+        <h1>ADM PANEL</h1>
         <div id="user-list"></div>
     </section>
+
 </main>
 
 <nav>
-    <div class="nav-item" onclick="Nav.go('v-swap', this)"><i>🔄</i><span>TAKAS</span></div>
-    <div class="nav-item active" onclick="Nav.go('v-wallet', this)"><i>💼</i><span>CÜZDAN</span></div>
-    <div class="nav-item" onclick="Nav.go('v-admin', this); Admin.load();"><i>🔑</i><span>ADM</span></div>
+    <div class="nav-item" onclick="UI.nav('v-swap', this)"><i>🔄</i><span>TAKAS</span></div>
+    <div class="nav-item active" onclick="UI.nav('v-wallet', this)"><i>💼</i><span>CÜZDAN</span></div>
+    <div class="nav-item" onclick="UI.nav('v-admin', this); Admin.load();"><i>🔑</i><span>ADM</span></div>
 </nav>
 
 <script>
+    // Konfigürasyon ve Değişkenler
     const firebaseConfig = { apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY", projectId: "pdfkaynak-51615", appId: "1:228512804576:web:a0bba02ca83b4fa7adea85" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const tg = window.Telegram.WebApp;
 
-    let user = { bal: 10000, usdt: 1.36, ads: 50 }; // Test verisi
+    let user = { bal: 5000, usdt: 1.36, ads: 50 }; // Örnek Veri
     let price = 0.00012;
 
     const App = {
-        calcSwap: () => {
+        updateSwap: () => {
             const val = document.getElementById('sw-input').value;
-            document.getElementById('sw-res').innerText = "$" + ((val / 1000) * price).toFixed(4);
+            document.getElementById('sw-preview').innerText = "$" + ((val / 1000) * price).toFixed(4);
         },
-        doSwap: () => {
+        confirmSwap: () => {
             const val = parseInt(document.getElementById('sw-input').value);
-            if(val > user.bal) return tg.showAlert("Yetersiz Spyder!");
+            if(!val || val > user.bal) return tg.showAlert("Yetersiz Spyder miktarı!");
             user.usdt += (val / 1000) * price;
             user.bal -= val;
-            tg.showAlert("Takas işlemi başarıyla tamamlandı!");
-            document.getElementById('w-total').innerText = "$" + user.usdt.toFixed(2);
+            tg.showAlert("Başarıyla çevrildi!");
+            App.syncUI();
         },
         checkStatus: () => {
             const amt = parseFloat(document.getElementById('wd-amt').value);
-            const badge = document.getElementById('ads-badge');
+            const badge = document.getElementById('status-badge');
             if(amt > 0) {
                 const req = Math.ceil((amt / 0.10) * 170);
-                document.getElementById('ads-text').innerText = `${user.ads} / ${req}`;
+                document.getElementById('status-txt').innerText = `${user.ads} / ${req}`;
                 badge.style.display = 'block';
-                badge.className = user.ads >= req ? "ads-status-container ready" : "ads-status-container not-ready";
+                badge.className = user.ads >= req ? "status-box status-ok" : "status-box status-wait";
             } else badge.style.display = 'none';
         },
-        withdraw: () => {
+        processWithdraw: () => {
             const amt = parseFloat(document.getElementById('wd-amt').value);
             const req = Math.ceil((amt / 0.10) * 170);
-            if(user.ads < req) return tg.showAlert("Reklam sayınız yetersiz!");
+            if(user.ads < req) return tg.showAlert("Gerekli reklam sayısına ulaşılmadı!");
             
             tg.showPopup({
-                title: 'Talep Alındı',
-                message: 'Ödemeniz bekleniyor, 24 saat içerisinde cüzdanınıza yatırılacaktır.',
+                title: 'İşlem Başarılı',
+                message: 'Ödeme talebiniz onay sırasına alındı. 24 saat içerisinde cüzdanınıza aktarılacaktır.',
                 buttons: [{type: 'ok', text: 'Tamam', color: '#10b981'}]
             });
+        },
+        syncUI: () => {
+            document.getElementById('w-balance').innerText = "$" + user.usdt.toFixed(2);
         }
     };
 
     const Admin = {
         load: async () => {
-            const s = await db.collection("users").get();
-            let h = "";
-            s.forEach(d => {
+            const snap = await db.collection("users").get();
+            let html = "";
+            snap.forEach(d => {
                 const u = d.data();
-                h += `<div style="background:var(--bg-card); padding:18px; border-radius:20px; border:1px solid var(--border); margin-bottom:10px; display:flex; justify-content:space-between;" onclick="Admin.open('${d.id}')">
+                html += `<div class="user-card" onclick="Admin.open('${d.id}')">
                     <b>@${u.username || 'user'}</b> <span>$${(u.usdt||0).toFixed(2)}</span>
                 </div>`;
             });
-            document.getElementById('user-list').innerHTML = h;
+            document.getElementById('user-list').innerHTML = html;
         },
         open: async (id) => {
             const d = (await db.collection("users").doc(id).get()).data();
             document.getElementById('m-user').innerText = "@" + (d.username || 'user');
-            document.getElementById('m-bal').innerText = d.bal || 0;
+            document.getElementById('m-spy').innerText = d.bal || 0;
             document.getElementById('m-ads').innerText = d.ads || 0;
-            document.getElementById('uModal').style.display = 'flex';
+            document.getElementById('adminModal').style.display = 'flex';
         }
     };
 
-    const Nav = { go: (id, el) => {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(id).classList.add('active'); el.classList.add('active');
-    }};
+    const UI = {
+        nav: (id, el) => {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active'); el.classList.add('active');
+        },
+        closeModal: () => document.getElementById('adminModal').style.display = 'none'
+    };
 
-    const UI = { closeModal: () => document.getElementById('uModal').style.display = 'none' };
-    document.getElementById('w-total').innerText = "$" + user.usdt.toFixed(2);
+    App.syncUI();
 </script>
 </body>
 </html>
