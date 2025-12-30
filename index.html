@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpyderCoin - Clicker</title>
+    <title>SpyderCoin v1.0</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -12,53 +12,109 @@
 
     <style>
         body {
-            background: radial-gradient(circle, #2e004f 0%, #000 100%);
+            background-color: #1a002e; /* Koyu Mor */
+            color: #ffeb3b; /* Parlak Sarı */
+            font-family: 'Arial Black', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        #balance {
+            font-size: 45px;
+            margin: 10px 0;
             color: #ffeb3b;
-            font-family: 'Arial', sans-serif;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; margin: 0; text-align: center; user-select: none;
+            text-shadow: 0 0 10px #9c27b0;
         }
 
-        #balance { font-size: 3.5rem; font-weight: bold; text-shadow: 0 0 20px #9c27b0; margin-bottom: 10px; }
-
-        .energy-box { width: 280px; margin: 15px 0; }
-        #energy-bar-bg { width: 100%; height: 25px; background: #1a1a1a; border: 2px solid #ffeb3b; border-radius: 15px; overflow: hidden; position: relative; }
-        #energy-fill { height: 100%; width: 100%; background: #ffeb3b; transition: width 0.2s; }
-        #energy-text { position: absolute; width: 100%; top: 4px; left: 0; font-size: 14px; color: #000; font-weight: bold; }
-
-        #spider { font-size: 150px; cursor: pointer; transition: transform 0.1s; filter: drop-shadow(0 0 15px #ffeb3b); margin: 20px 0; }
-        #spider:active { transform: scale(0.9); }
-        .disabled { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
-
-        .btn-refill {
-            background: #ffeb3b; color: #2e004f; border: none; padding: 18px 35px;
-            font-size: 1.1rem; font-weight: bold; border-radius: 12px; cursor: pointer;
-            box-shadow: 0 6px #9c27b0; transition: 0.2s;
+        .energy-wrapper {
+            width: 300px;
+            height: 30px;
+            background: #222;
+            border: 3px solid #ffeb3b;
+            border-radius: 20px;
+            position: relative;
+            margin-bottom: 20px;
         }
-        .btn-refill:active { box-shadow: 0 0; transform: translateY(6px); }
-        
-        #debug-status { font-size: 12px; margin-top: 20px; color: #9c27b0; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; }
+
+        #energy-bar {
+            height: 100%;
+            width: 100%;
+            background: #ffeb3b;
+            transition: width 0.1s;
+        }
+
+        #energy-text {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            color: #000;
+            line-height: 30px;
+            font-size: 16px;
+        }
+
+        #spider {
+            font-size: 150px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s ease;
+        }
+
+        #spider:active {
+            transform: scale(0.8);
+        }
+
+        .disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .refill-btn {
+            background: #9c27b0;
+            color: #fff;
+            border: 2px solid #ffeb3b;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 15px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .refill-btn:active {
+            transform: scale(0.95);
+        }
+
+        #info {
+            font-size: 12px;
+            margin-top: 15px;
+            color: #d1c4e9;
+        }
     </style>
 </head>
 <body>
 
     <div id="balance">$0.00000</div>
 
-    <div class="energy-box">
-        <div id="energy-bar-bg">
-            <div id="energy-fill"></div>
-            <div id="energy-text">1000 / 1000</div>
-        </div>
+    <div class="energy-wrapper">
+        <div id="energy-bar"></div>
+        <div id="energy-text">1000 / 1000</div>
     </div>
 
     <div id="spider">🕷️</div>
 
-    <button class="btn-refill" onclick="fullEnergy()">ENERJİ DOLDUR (REKLAM)</button>
-    
-    <div id="debug-status">Firebase Durumu: Bekleniyor...</div>
+    <button class="refill-btn" onclick="fullEnergy()">ENERJİ DOLDUR (REKLAM)</button>
+
+    <div id="info">Bağlantı: <span id="status">Bekleniyor...</span></div>
 
     <script>
-        // 1. Senin Config Bilgilerin
+        // Senin Config Bilgilerin
         const firebaseConfig = {
             apiKey: "AIzaSyDfy6QdIZ0BthEHTmxkw-NAja3B9bFFd8U",
             authDomain: "spydercoin-94f7b.firebaseapp.com",
@@ -69,219 +125,75 @@
             appId: "1:218267568158:web:832728845ba0f42202060f"
         };
 
-        // 2. Firebase Başlatma ve Hata Kontrolü
-        try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            document.getElementById('debug-status').innerText = "Firebase: Bağlantı Kuruldu";
-        } catch (e) {
-            document.getElementById('debug-status').innerText = "Firebase Hata: " + e.message;
-        }
-
+        // Başlat
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        let money = 0.0;
-        let energy = 1000;
-        let clicks = 0;
 
-        // 3. Verileri Firebase'den Çek (Otomatik Senkronizasyon)
-        db.ref('players/test_user').on('value', (snapshot) => {
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                money = data.balance || 0;
+        let money = 0;
+        let energy = 1000;
+        let clickCount = 0;
+
+        // Ekrana bağla
+        const balanceDisplay = document.getElementById('balance');
+        const energyBar = document.getElementById('energy-bar');
+        const energyText = document.getElementById('energy-text');
+        const spider = document.getElementById('spider');
+        const statusText = document.getElementById('status');
+
+        // Firebase'den Veri Çek
+        db.ref('players/user1').on('value', (snap) => {
+            if (snap.exists()) {
+                const data = snap.val();
+                money = data.money || 0;
                 energy = data.energy || 1000;
+                updateUI();
+                statusText.innerText = "Bulut Aktif";
+            } else {
+                statusText.innerText = "Yeni Hesap";
                 updateUI();
             }
         }, (error) => {
-            document.getElementById('debug-status').innerText = "Veri Çekme Hatası: " + error.message;
+            statusText.innerText = "Hata: Rules Açık mı?";
         });
 
-        // 4. Tıklama Fonksiyonu
-        document.getElementById('spider').onclick = function() {
+        // Tıklama Olayı
+        spider.onclick = () => {
             if (energy > 0) {
                 money += 0.00001;
                 energy -= 1;
-                clicks++;
+                clickCount++;
                 
                 updateUI();
-                saveData();
+                save();
 
-                // Her 10 tıkta Adexora reklamı
-                if (clicks % 10 === 0) {
-                    if (window.showAdexora) {
-                        window.showAdexora().catch(e => console.log("Reklam Hatası"));
-                    }
+                // 10 tıkta bir reklam
+                if (clickCount % 10 === 0) {
+                    if (window.showAdexora) window.showAdexora().catch(e => {});
                 }
             }
         };
 
-        // 5. Enerji Doldurma ve Reklam Linki
+        // Enerji Doldurma (Buton)
         function fullEnergy() {
             window.open("https://adexora.my.id/dl/QFm5mnRYbJV", "_blank");
             energy = 1000;
             updateUI();
-            saveData();
+            save();
         }
 
         function updateUI() {
-            document.getElementById('balance').innerText = "$" + money.toFixed(5);
-            document.getElementById('energy-text').innerText = energy + " / 1000";
-            document.getElementById('energy-fill').style.width = (energy / 10) + "%";
+            balanceDisplay.innerText = "$" + money.toFixed(5);
+            energyText.innerText = energy + " / 1000";
+            energyBar.style.width = (energy / 10) + "%";
             
-            if (energy <= 0) document.getElementById('spider').classList.add('disabled');
-            else document.getElementById('spider').classList.remove('disabled');
+            if (energy <= 0) spider.classList.add('disabled');
+            else spider.classList.remove('disabled');
         }
 
-        function saveData() {
-            db.ref('players/test_user').update({
-                balance: money,
+        function save() {
+            db.ref('players/user1').set({
+                money: money,
                 energy: energy
-            }).catch(e => {
-                document.getElementById('debug-status').innerText = "Kaydetme Hatası: " + e.message;
-            });
-        }
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpyderCoin - Clicker</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
-    <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
-
-    <style>
-        body {
-            background: radial-gradient(circle, #2e004f 0%, #000 100%);
-            color: #ffeb3b;
-            font-family: 'Arial', sans-serif;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; margin: 0; text-align: center; user-select: none;
-        }
-
-        #balance { font-size: 3.5rem; font-weight: bold; text-shadow: 0 0 20px #9c27b0; margin-bottom: 10px; }
-
-        .energy-box { width: 280px; margin: 15px 0; }
-        #energy-bar-bg { width: 100%; height: 25px; background: #1a1a1a; border: 2px solid #ffeb3b; border-radius: 15px; overflow: hidden; position: relative; }
-        #energy-fill { height: 100%; width: 100%; background: #ffeb3b; transition: width 0.2s; }
-        #energy-text { position: absolute; width: 100%; top: 4px; left: 0; font-size: 14px; color: #000; font-weight: bold; }
-
-        #spider { font-size: 150px; cursor: pointer; transition: transform 0.1s; filter: drop-shadow(0 0 15px #ffeb3b); margin: 20px 0; }
-        #spider:active { transform: scale(0.9); }
-        .disabled { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
-
-        .btn-refill {
-            background: #ffeb3b; color: #2e004f; border: none; padding: 18px 35px;
-            font-size: 1.1rem; font-weight: bold; border-radius: 12px; cursor: pointer;
-            box-shadow: 0 6px #9c27b0; transition: 0.2s;
-        }
-        .btn-refill:active { box-shadow: 0 0; transform: translateY(6px); }
-        
-        #debug-status { font-size: 12px; margin-top: 20px; color: #9c27b0; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; }
-    </style>
-</head>
-<body>
-
-    <div id="balance">$0.00000</div>
-
-    <div class="energy-box">
-        <div id="energy-bar-bg">
-            <div id="energy-fill"></div>
-            <div id="energy-text">1000 / 1000</div>
-        </div>
-    </div>
-
-    <div id="spider">🕷️</div>
-
-    <button class="btn-refill" onclick="fullEnergy()">ENERJİ DOLDUR (REKLAM)</button>
-    
-    <div id="debug-status">Firebase Durumu: Bekleniyor...</div>
-
-    <script>
-        // 1. Senin Config Bilgilerin
-        const firebaseConfig = {
-            apiKey: "AIzaSyDfy6QdIZ0BthEHTmxkw-NAja3B9bFFd8U",
-            authDomain: "spydercoin-94f7b.firebaseapp.com",
-            projectId: "spydercoin-94f7b",
-            databaseURL: "https://spydercoin-94f7b-default-rtdb.firebaseio.com",
-            storageBucket: "spydercoin-94f7b.firebasestorage.app",
-            messagingSenderId: "218267568158",
-            appId: "1:218267568158:web:832728845ba0f42202060f"
-        };
-
-        // 2. Firebase Başlatma ve Hata Kontrolü
-        try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            document.getElementById('debug-status').innerText = "Firebase: Bağlantı Kuruldu";
-        } catch (e) {
-            document.getElementById('debug-status').innerText = "Firebase Hata: " + e.message;
-        }
-
-        const db = firebase.database();
-        let money = 0.0;
-        let energy = 1000;
-        let clicks = 0;
-
-        // 3. Verileri Firebase'den Çek (Otomatik Senkronizasyon)
-        db.ref('players/test_user').on('value', (snapshot) => {
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                money = data.balance || 0;
-                energy = data.energy || 1000;
-                updateUI();
-            }
-        }, (error) => {
-            document.getElementById('debug-status').innerText = "Veri Çekme Hatası: " + error.message;
-        });
-
-        // 4. Tıklama Fonksiyonu
-        document.getElementById('spider').onclick = function() {
-            if (energy > 0) {
-                money += 0.00001;
-                energy -= 1;
-                clicks++;
-                
-                updateUI();
-                saveData();
-
-                // Her 10 tıkta Adexora reklamı
-                if (clicks % 10 === 0) {
-                    if (window.showAdexora) {
-                        window.showAdexora().catch(e => console.log("Reklam Hatası"));
-                    }
-                }
-            }
-        };
-
-        // 5. Enerji Doldurma ve Reklam Linki
-        function fullEnergy() {
-            window.open("https://adexora.my.id/dl/QFm5mnRYbJV", "_blank");
-            energy = 1000;
-            updateUI();
-            saveData();
-        }
-
-        function updateUI() {
-            document.getElementById('balance').innerText = "$" + money.toFixed(5);
-            document.getElementById('energy-text').innerText = energy + " / 1000";
-            document.getElementById('energy-fill').style.width = (energy / 10) + "%";
-            
-            if (energy <= 0) document.getElementById('spider').classList.add('disabled');
-            else document.getElementById('spider').classList.remove('disabled');
-        }
-
-        function saveData() {
-            db.ref('players/test_user').update({
-                balance: money,
-                energy: energy
-            }).catch(e => {
-                document.getElementById('debug-status').innerText = "Kaydetme Hatası: " + e.message;
             });
         }
     </script>
