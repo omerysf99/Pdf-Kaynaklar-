@@ -3,166 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emoji Cash Pro</title>
+    <title>Spider-Cash Clicker</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
-        :root { --primary: #6c5ce7; --secondary: #00b894; --bg: #f4f7f6; }
-        body { font-family: sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .tab-content { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .active-tab { display: flex; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 90%; max-width: 350px; text-align: center; }
-        #emoji { font-size: 100px; cursor: pointer; user-select: none; transition: 0.1s; margin: 20px 0; }
-        #emoji:active { transform: scale(0.9); }
-        .nav-bar { background: white; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #ddd; }
-        .nav-item { cursor: pointer; text-align: center; font-size: 12px; color: #888; }
-        .nav-item.active { color: var(--primary); font-weight: bold; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 8px; background: var(--primary); color: white; cursor: pointer; font-weight: bold; }
-        button:disabled { background: #ccc; }
-        .info-box { font-size: 14px; margin-top: 10px; color: #555; }
+        :root {
+            --spidey-red: #e62117;
+            --spidey-blue: #001d4a;
+            --spidey-dark: #1a1a1a;
+            --text-light: #ffffff;
+            --accent: #ff0000;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            background-color: var(--spidey-dark);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sekme İçerikleri */
+        .tab-content {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: radial-gradient(circle at center, #2c3e50 0%, #000000 100%);
+        }
+
+        .active-tab { display: flex; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Örümcek Butonu */
+        #emoji {
+            font-size: 130px;
+            cursor: pointer;
+            transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            user-select: none;
+            filter: drop-shadow(0 0 15px var(--spidey-red));
+            margin-bottom: 20px;
+        }
+        #emoji:active { transform: scale(0.8) rotate(10deg); filter: drop-shadow(0 0 30px var(--spidey-red)); }
+
+        /* Kart Yapısı */
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            width: 85%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .balance-title { font-size: 12px; letter-spacing: 2px; color: #aaa; margin-bottom: 5px; }
+        .balance-value { font-size: 36px; color: var(--spidey-red); font-weight: 900; text-shadow: 0 0 10px rgba(230, 33, 23, 0.5); }
+
+        /* Form Elemanları */
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: none;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            outline: none;
+        }
+        input:focus { border: 1px solid var(--spidey-red); }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(45deg, var(--spidey-red), #8b0000);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(230, 33, 23, 0.3);
+        }
+        button:disabled { background: #444; color: #888; box-shadow: none; cursor: not-allowed; }
+
+        /* Navigasyon */
+        .nav-bar {
+            background: var(--spidey-blue);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-top: 2px solid var(--spidey-red);
+        }
+        .nav-item { cursor: pointer; text-align: center; color: #888; flex: 1; transition: 0.3s; }
+        .nav-item.active { color: var(--spidey-red); transform: translateY(-5px); }
+        .nav-item span { font-size: 24px; }
+
+        .info-text { font-size: 13px; color: #ccc; margin-top: 15px; }
     </style>
 </head>
 <body>
 
     <div id="tab-earn" class="tab-content active-tab">
         <div class="card">
-            <small>MEVCUT BAKİYE</small>
-            <div style="font-size: 32px; color: var(--secondary); font-weight: bold;">$<span id="earn-balance">0.00000</span></div>
+            <div class="balance-title">TOPLANAN GÜÇ (BAKİYE)</div>
+            <div class="balance-value">$<span id="earn-balance">0.00000</span></div>
         </div>
-        <div id="emoji">💰</div>
-        <div class="info-box">
-            Reklama kalan: <b id="ad-counter">10</b> tıklama<br>
-            <small>(Her $0.01 için reklam zorluğu +15 artar)</small>
+        
+        <div id="emoji">🕷️</div>
+
+        <div class="info-text">
+            Ağ fırlatılmasına: <b id="ad-counter" style="color:var(--spidey-red)">10</b> tık kaldı<br>
+            <small>Daha çok güç, daha çok zorluk getirir!</small>
         </div>
     </div>
 
     <div id="tab-wallet" class="tab-content">
-        <h2>Ödeme Talebi</h2>
         <div class="card">
-            <p>Min. Çekim: <b>$0.50</b></p>
-            <input type="number" id="withdraw-amount" placeholder="Kaç USDT alacaksınız?">
-            <input type="text" id="wallet-address" placeholder="USDT (TRC20) Adresiniz">
-            <button id="withdraw-btn" onclick="sendWithdrawal()" disabled>Ödeme İsteğini Gönder</button>
-            <p id="error-msg" style="color:red; font-size:12px; margin-top:10px;"></p>
+            <h2 style="margin-top:0">Ödeme İste</h2>
+            <p style="font-size:14px">Minimum Çekim: <b>$0.50</b></p>
+            
+            <input type="number" id="with-amount" placeholder="Kaç USDT alacaksın?">
+            <input type="text" id="with-address" placeholder="USDT (TRC20) Adresin">
+            
+            <button id="withdraw-btn" onclick="requestWithdraw()" disabled>Ödemeyi Başlat</button>
+            <p id="error-log" style="font-size:12px; color: #ff4757; margin-top:10px;"></p>
         </div>
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item active" onclick="showTab('earn', this)"><span>💰</span><br>Kazan</div>
-        <div class="nav-item" onclick="showTab('wallet', this)"><span>💳</span><br>Cüzdan</div>
+        <div class="nav-item active" onclick="switchTab('earn', this)">
+            <span>🕸️</span><br><small>Kazan</small>
+        </div>
+        <div class="nav-item" onclick="switchTab('wallet', this)">
+            <span>💼</span><br><small>Cüzdan</small>
+        </div>
     </div>
 
     <script>
-        // --- FIREBASE CONFIG ---
+        // --- FIREBASE KURULUMU ---
         const firebaseConfig = {
-            apiKey: "API_KEY",
-            authDomain: "PROJE.firebaseapp.com",
-            databaseURL: "https://PROJE.firebaseio.com",
-            projectId: "PROJE",
-            storageBucket: "PROJE.appspot.com",
+            apiKey: "SENIN_API_KEY",
+            authDomain: "SENIN_PROJE.firebaseapp.com",
+            databaseURL: "https://SENIN_PROJE-default-rtdb.firebaseio.com",
+            projectId: "SENIN_PROJE",
+            storageBucket: "SENIN_PROJE.appspot.com",
             appId: "APP_ID"
         };
+        
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        const userId = "user_test_123"; // Burayı kullanıcıya özel ID yapabilirsin
+        const db = firebase.database();
+        const userId = "spidey_fan_1"; // Gerçek projede login olan kullanıcı ID'si gelir
 
-        let balance = 0;
-        let adStep = 0;
+        let currentBalance = 0;
+        let localClicks = 0;
 
-        function getRequiredClicks() {
-            // Temel 10 tıklama + (her 0.01$ için +15 tıklama)
-            let difficulty = Math.floor(balance / 0.01) * 15;
+        // Dinamik Zorluk Hesaplama
+        function getReqClicks() {
+            let difficulty = Math.floor(currentBalance / 0.01) * 15;
             return 10 + difficulty;
         }
 
-        function showTab(tabName, element) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('tab-' + tabName).classList.add('active-tab');
-            element.classList.add('active');
-            checkWithdrawalStatus();
+        // Sekme Değiştirme
+        function switchTab(t, el) {
+            document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active-tab'));
+            document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+            document.getElementById('tab-'+t).classList.add('active-tab');
+            el.classList.add('active');
+            updateUI();
         }
 
+        // Tıklama İşlemi
         document.getElementById('emoji').addEventListener('click', () => {
-            adStep++;
-            let required = getRequiredClicks();
-            
-            if (adStep >= required) {
-                adStep = 0;
-                showAd();
+            localClicks++;
+            const target = getReqClicks();
+
+            if (localClicks >= target) {
+                localClicks = 0;
+                handleAd();
             } else {
-                updateReward();
+                giveReward();
             }
-            document.getElementById('ad-counter').innerText = required - adStep;
         });
 
-        function showAd() {
-            if (typeof window.showAdexora === 'function') {
-                window.showAdexora().then(() => updateReward()).catch(() => updateReward());
+        function handleAd() {
+            if (window.showAdexora) {
+                window.showAdexora().then(() => giveReward()).catch(() => giveReward());
             } else {
-                updateReward();
+                giveReward(); // Reklam yüklenmezse yine de ödül ver
             }
         }
 
-        function updateReward() {
-            balance += 0.00001;
-            database.ref('users/' + userId).update({ balance: balance });
-            renderUI();
+        function giveReward() {
+            currentBalance += 0.00001;
+            db.ref('users/' + userId).update({ balance: currentBalance });
+            updateUI();
         }
 
-        function renderUI() {
-            document.getElementById('earn-balance').innerText = balance.toFixed(5);
-            document.getElementById('ad-counter').innerText = getRequiredClicks() - adStep;
-            checkWithdrawalStatus();
-        }
+        function updateUI() {
+            const displayBal = currentBalance.toFixed(5);
+            document.getElementById('earn-balance').innerText = displayBal;
+            document.getElementById('ad-counter').innerText = getReqClicks() - localClicks;
 
-        function checkWithdrawalStatus() {
+            // Cüzdan kontrolü
             const btn = document.getElementById('withdraw-btn');
-            const msg = document.getElementById('error-msg');
-            if (balance >= 0.50) {
+            const err = document.getElementById('error-log');
+            if (currentBalance >= 0.50) {
                 btn.disabled = false;
-                msg.innerText = "";
+                err.innerText = "Güç tam! Ödeme alabilirsin.";
+                err.style.color = "#2ecc71";
             } else {
                 btn.disabled = true;
-                msg.innerText = "Yetersiz bakiye (Min $0.50)";
+                err.innerText = "Yetersiz Güç (En az $0.50 olmalı)";
+                err.style.color = "#ff4757";
             }
         }
 
-        function sendWithdrawal() {
-            const amount = document.getElementById('withdraw-amount').value;
-            const address = document.getElementById('wallet-address').value;
+        function requestWithdraw() {
+            const amt = document.getElementById('with-amount').value;
+            const adr = document.getElementById('with-address').value;
 
-            if (amount > balance) {
-                alert("Bakiyenizden fazla çekemezsiniz!");
-                return;
+            if (amt <= currentBalance && adr.length > 5) {
+                db.ref('payouts').push({
+                    uid: userId,
+                    amount: amt,
+                    wallet: adr,
+                    status: "beklemede",
+                    time: Date.now()
+                }).then(() => {
+                    alert("Ağ başarıyla fırlatıldı! Ödeme talebiniz alındı.");
+                    currentBalance -= amt;
+                    db.ref('users/' + userId).update({ balance: currentBalance });
+                    updateUI();
+                });
+            } else {
+                alert("Lütfen bilgileri doğru giriniz!");
             }
-            if (address.length < 10) {
-                alert("Geçerli bir USDT adresi giriniz!");
-                return;
-            }
-
-            // Firebase'e ödeme talebi gönder
-            database.ref('withdrawals').push({
-                userId: userId,
-                amount: amount,
-                address: address,
-                status: "pending",
-                date: Date.now()
-            }).then(() => {
-                alert("Talep alındı! Bakiyeniz kontrol edildikten sonra gönderilecektir.");
-                // Bakiyeyi düş (İsteğe bağlı)
-                balance -= amount;
-                database.ref('users/' + userId).update({ balance: balance });
-                renderUI();
-            });
         }
 
-        // Firebase Veri Dinleme
-        database.ref('users/' + userId).on('value', (s) => {
-            if(s.val()) { balance = s.val().balance || 0; renderUI(); }
+        // Veri Çekme
+        db.ref('users/' + userId).on('value', (s) => {
+            if(s.val()) { currentBalance = s.val().balance || 0; updateUI(); }
         });
     </script>
 </body>
