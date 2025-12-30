@@ -3,121 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spyder Network | Mega Ecosystem</title>
+    <title>Spyder Network | Tap to Earn</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --p-purple: #a855f7; 
+            --p-glow: rgba(168, 85, 247, 0.4);
             --bg-black: #000000;
             --bg-card: #0c0c0e;
             --success: #10b981;
-            --warning: #f59e0b;
             --text-dim: #64748b;
-            --border: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.05);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg-black); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
         #viewport { flex: 1; overflow-y: auto; padding: 20px 20px 140px; }
-        .view { display: none; flex-direction: column; animation: fadeIn 0.3s ease; }
+        .view { display: none; flex-direction: column; animation: slideUp 0.3s ease; }
         .view.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .glass-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 20px; margin-bottom: 15px; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-item { background: #111; padding: 12px; border-radius: 18px; text-align: center; border: 1px solid var(--border); }
-        .stat-item b { display: block; font-family: 'Orbitron'; color: var(--p-purple); }
+        /* TAP TO EARN UI */
+        .tap-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 20px; }
+        .tap-balance { font-family: 'Orbitron'; font-size: 42px; margin-bottom: 5px; text-shadow: 0 0 20px var(--p-glow); }
+        .tap-circle { 
+            width: 260px; height: 260px; 
+            background: radial-gradient(circle, #c084fc 0%, #7e22ce 100%); 
+            border-radius: 50%; margin: 30px auto; 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 0 50px var(--p-glow);
+            transition: transform 0.1s;
+            cursor: pointer;
+            border: 10px solid rgba(255,255,255,0.05);
+        }
+        .tap-circle:active { transform: scale(0.95); }
+        .tap-circle img { width: 160px; pointer-events: none; }
 
-        .btn { padding: 15px; border-radius: 16px; border: none; font-weight: 800; cursor: pointer; color: #fff; background: var(--p-purple); width: 100%; font-size: 13px; }
-        .input-pro { width: 100%; padding: 15px; background: #000; border: 1px solid #222; color: #fff; border-radius: 14px; margin: 10px 0; text-align: center; font-family: 'JetBrains Mono'; }
+        /* MINING SOON UI */
+        .soon-card { 
+            height: 300px; border: 2px dashed #222; 
+            border-radius: 30px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; text-align: center;
+            background: rgba(255,255,255,0.01);
+        }
+        .soon-badge { background: var(--warning); color: #000; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 12px; margin-bottom: 10px; }
 
-        /* Mining Animasyonu */
-        .mining-core { width: 150px; height: 150px; border: 4px dashed var(--p-purple); border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; animation: rotate 10s linear infinite; }
-        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-        nav { position: fixed; bottom: 0; width: 100%; height: 85px; background: #050505; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: 15px; z-index: 100; }
-        .tab { color: var(--text-dim); display: flex; flex-direction: column; align-items: center; font-size: 9px; font-weight: 800; }
+        /* NAVIGATION */
+        nav { position: fixed; bottom: 0; width: 100%; height: 90px; background: #050505; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: 15px; z-index: 100; }
+        .tab { color: var(--text-dim); display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: 800; }
         .tab.active { color: var(--p-purple); }
-        .tab i { font-size: 20px; margin-bottom: 4px; font-style: normal; }
+        .tab i { font-size: 22px; margin-bottom: 4px; font-style: normal; }
+
+        .glass-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 25px; padding: 20px; margin-bottom: 15px; }
+        .btn { padding: 16px; border-radius: 18px; border: none; font-weight: 800; background: var(--p-purple); color: #fff; width: 100%; }
+        .input-pro { width: 100%; padding: 16px; background: #000; border: 1px solid #222; color: #fff; border-radius: 16px; margin: 10px 0; text-align: center; }
     </style>
 </head>
 <body>
 
 <main id="viewport">
-    <section id="v-mine" class="view active">
-        <h2 class="orbitron">MINING CORE</h2>
-        <div class="mining-core"><span style="font-size:40px; animation: pulse 2s infinite;">⚡</span></div>
-        <div class="glass-card" style="text-align:center;">
-            <small>SAATLİK KAZANÇ</small>
-            <h2 id="m-rate" style="color:var(--success)">+500 SPYDER</h2>
-            <div id="m-timer" style="font-family:'JetBrains Mono'; margin:10px 0;">00:00:00</div>
-            <button id="m-btn" class="btn" onclick="Mining.start()">MADENCİLİĞİ BAŞLAT</button>
+    <section id="v-home" class="view active">
+        <div class="tap-container">
+            <small style="color:var(--text-dim); font-weight:800; letter-spacing:2px;">SPYDER BALANCE</small>
+            <div id="u-bal" class="tap-balance">0</div>
+            
+            <div class="tap-circle" onclick="Core.tap(event)">
+                <span style="font-size: 100px;">🕷️</span>
+            </div>
+            
+            <div style="width:100%; display:flex; justify-content:space-between; color:var(--text-dim); font-weight:800;">
+                <span>⚡ 1000 / 1000</span>
+                <span id="u-usdt" style="color:var(--success)">$0.00</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="v-mining" class="view">
+        <h2 class="orbitron" style="margin-bottom:20px;">MINING</h2>
+        <div class="soon-card">
+            <div class="soon-badge">YAKINDA GELECEK</div>
+            <h3 style="font-size:24px;">Cloud Mining</h3>
+            <p style="color:var(--text-dim); padding: 0 40px; margin-top:10px;">Spyder Cloud Mining altyapısı hazırlanıyor. Pasif kazanç çok yakında aktif olacak!</p>
+            <div style="margin-top:30px; font-size:40px; opacity:0.3;">⛏️</div>
         </div>
     </section>
 
     <section id="v-swap" class="view">
         <h2 class="orbitron">SWAP</h2>
         <div class="glass-card">
-            <input type="number" id="s-input" class="input-pro" placeholder="Spyder Miktarı" oninput="Swap.calc()">
-            <div style="text-align:center; margin:5px;">⬇️</div>
-            <div class="stat-item">
-                <small>ALACAĞINIZ TUTAR</small>
-                <b id="s-res">$0.00</b>
+            <input type="number" id="sw-in" class="input-pro" placeholder="Spyder Miktarı" oninput="Swap.calc()">
+            <div style="text-align:center; margin:10px;">⬇️</div>
+            <div class="glass-card" style="background:#000; margin:0; text-align:center;">
+                <small>TAHMİNİ TUTAR</small>
+                <h3 id="sw-out" style="color:var(--success)">$0.00</h3>
             </div>
-            <button class="btn" style="margin-top:15px;" onclick="Swap.execute()">HEMEN TAKAS ET</button>
-        </div>
-    </section>
-
-    <section id="v-tasks" class="view">
-        <h2 class="orbitron">GÖREVLER</h2>
-        <div class="glass-card" style="display:flex; justify-content:space-between; align-items:center;">
-            <div><b>YouTube Abone Ol</b><br><small style="color:var(--p-purple)">+50,000 SPYDER</small></div>
-            <button class="btn" style="width:auto; padding:8px 15px;" onclick="Tasks.do('yt')">YAP</button>
-        </div>
-        <div class="glass-card" style="display:flex; justify-content:space-between; align-items:center;">
-            <div><b>Reklam İzle</b><br><small style="color:var(--p-purple)">+10,000 SPYDER</small></div>
-            <button class="btn" style="width:auto; padding:8px 15px;" onclick="Tasks.ad()">İZLE</button>
-        </div>
-    </section>
-
-    <section id="v-refs" class="view">
-        <h2 class="orbitron">REFERANS</h2>
-        <div class="glass-card" style="text-align:center;">
-            <p>Her davet için <b>25,000 Spyder</b> kazanın!</p>
-            <input type="text" id="ref-link" class="input-pro" readonly value="https://t.me/Spyder_Bot?start=123">
-            <button class="btn" onclick="Refs.copy()">LİNKİ KOPYALA</button>
-            <div class="stat-grid" style="margin-top:15px;">
-                <div class="stat-item"><small>DAVETLER</small><b id="ref-count">0</b></div>
-                <div class="stat-item"><small>KAZANÇ</small><b id="ref-earn">0</b></div>
-            </div>
+            <button class="btn" style="margin-top:20px;" onclick="Swap.execute()">DÖNÜŞTÜR</button>
         </div>
     </section>
 
     <section id="v-wallet" class="view">
-        <h2 class="orbitron">CÜZDAN</h2>
+        <h2 class="orbitron">WALLET</h2>
         <div class="glass-card" style="text-align:center;">
-            <small>BAKİYE</small>
-            <h1 id="w-spy" style="font-size:32px;">0</h1>
-            <h2 id="w-usdt" style="color:var(--success)">$0.00</h2>
-            <br>
-            <input type="number" id="wd-amt" class="input-pro" placeholder="Çekilecek USDT">
+            <small>TOPLAM USDT</small>
+            <h1 id="w-usdt" style="font-size:40px; margin:10px 0;">$0.00</h1>
+            <div style="background:rgba(255,255,255,0.02); padding:15px; border-radius:20px; text-align:left; font-size:12px; margin-bottom:15px;">
+                <b>Kurallar:</b><br>
+                • Min çekim 1 USDT<br>
+                • Her 0.01$ için 17 reklam izlenmelidir.
+            </div>
+            <input type="number" id="wd-amount" class="input-pro" placeholder="Miktar">
             <input type="text" id="wd-addr" class="input-pro" placeholder="USDT Adresi">
-            <button class="btn btn-success" onclick="Core.withdraw()">ÇEKİM TALEBİ VER</button>
+            <button class="btn" style="background:var(--success)" onclick="Core.withdraw()">ÇEKİM TALEBİ GÖNDER</button>
         </div>
     </section>
 </main>
 
 <nav>
-    <div class="tab active" onclick="Nav.go('v-mine', this)"><i>⛏️</i><span>MINING</span></div>
+    <div class="tab active" onclick="Nav.go('v-home', this)"><i>🎮</i><span>TAP</span></div>
+    <div class="tab" onclick="Nav.go('v-mining', this)"><i>⛏️</i><span>MINING</span></div>
     <div class="tab" onclick="Nav.go('v-swap', this)"><i>🔄</i><span>TAKAS</span></div>
-    <div class="tab" onclick="Nav.go('v-tasks', this)"><i>📡</i><span>GÖREV</span></div>
-    <div class="tab" onclick="Nav.go('v-refs', this)"><i>👥</i><span>REF</span></div>
     <div class="tab" onclick="Nav.go('v-wallet', this)"><i>💼</i><span>CÜZDAN</span></div>
 </nav>
 
@@ -126,86 +136,56 @@
     firebase.initializeApp(cfg);
     const db = firebase.firestore();
     const tg = window.Telegram.WebApp;
+    tg.expand();
 
-    let user = { bal:0, usdt:0, ads:0, refCount:0, mEnd:0 };
-    let uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
+    let user = { bal: 0, usdt: 0, ads: 0 };
+    let uid = tg.initDataUnsafe?.user?.id?.toString() || "dev";
 
     const Core = {
         init: async () => {
-            const doc = await db.collection("users").doc(uid).get();
-            if(doc.exists) user = {...user, ...doc.data()};
+            const d = await db.collection("users").doc(uid).get();
+            if(d.exists) user = {...user, ...d.data()};
             Core.ui();
-            Mining.check();
+        },
+        tap: (e) => {
+            user.bal += 1;
+            Core.ui();
+            tg.HapticFeedback.impactOccurred('medium');
+            
+            // Dokunma efekti (Opsiyonel görsel artı)
+            const plus = document.createElement('div');
+            plus.innerText = "+1";
+            plus.style.position = 'absolute';
+            plus.style.left = e.pageX + 'px';
+            plus.style.top = e.pageY + 'px';
+            plus.style.color = 'var(--p-purple)';
+            plus.style.fontWeight = '900';
+            plus.style.animation = 'fadeOut 0.5s forwards';
+            document.body.appendChild(plus);
+            setTimeout(() => plus.remove(), 500);
+
+            if(user.bal % 25 === 0) Core.save();
         },
         save: () => db.collection("users").doc(uid).set(user, {merge:true}),
         ui: () => {
-            document.getElementById('w-spy').innerText = user.bal.toLocaleString();
-            document.getElementById('w-usdt').innerText = "$" + (user.usdt || 0).toFixed(2);
-            document.getElementById('ref-count').innerText = user.refCount || 0;
-            document.getElementById('ref-earn').innerText = (user.refCount * 25000).toLocaleString();
-        },
-        withdraw: () => {
-            const amt = parseFloat(document.getElementById('wd-amt').value);
-            if(amt < 1) return tg.showAlert("Min 1$");
-            tg.showAlert("Talep alındı.");
-        }
-    };
-
-    const Mining = {
-        start: () => {
-            if(Date.now() < user.mEnd) return;
-            user.mEnd = Date.now() + (4 * 60 * 60 * 1000); // 4 Saat
-            Core.save(); Mining.check();
-        },
-        check: () => {
-            const btn = document.getElementById('m-btn');
-            const timer = document.getElementById('m-timer');
-            
-            const run = setInterval(() => {
-                const diff = user.mEnd - Date.now();
-                if(diff <= 0) {
-                    clearInterval(run);
-                    btn.innerText = "KAZANCI TOPLA";
-                    timer.innerText = "00:00:00";
-                    btn.onclick = () => {
-                        user.bal += 2000; user.mEnd = 0;
-                        Core.save(); Core.ui(); Mining.check();
-                        btn.onclick = () => Mining.start();
-                    };
-                } else {
-                    const h = Math.floor(diff/3600000);
-                    const m = Math.floor((diff%3600000)/60000);
-                    const s = Math.floor((diff%60000)/1000);
-                    timer.innerText = `${h}:${m}:${s}`;
-                    btn.innerText = "KAZILIYOR...";
-                }
-            }, 1000);
+            document.getElementById('u-bal').innerText = user.bal.toLocaleString();
+            document.getElementById('u-usdt').innerText = "$" + (user.usdt || 0).toFixed(2);
+            document.querySelectorAll('#w-usdt').forEach(el => el.innerText = "$" + (user.usdt || 0).toFixed(2));
         }
     };
 
     const Swap = {
         calc: () => {
-            const val = document.getElementById('s-input').value;
-            document.getElementById('s-res').innerText = "$" + (val / 1000000).toFixed(2);
+            const val = document.getElementById('sw-in').value || 0;
+            document.getElementById('sw-out').innerText = "$" + (val / 1000000).toFixed(2);
         },
         execute: () => {
-            const val = parseFloat(document.getElementById('s-input').value);
-            if(user.bal < val) return tg.showAlert("Yetersiz!");
-            user.bal -= val; user.usdt += (val / 1000000);
-            Core.save(); Core.ui(); tg.showAlert("Başarılı!");
-        }
-    };
-
-    const Tasks = {
-        ad: () => { user.ads++; user.bal += 10000; Core.save(); Core.ui(); tg.showAlert("+10.000 Spyder"); },
-        do: (id) => { user.bal += 50000; Core.save(); Core.ui(); tg.showAlert("Tamamlandı!"); }
-    };
-
-    const Refs = {
-        copy: () => {
-            const link = `https://t.me/Spyder_Bot?start=${uid}`;
-            navigator.clipboard.writeText(link);
-            tg.showAlert("Link kopyalandı!");
+            const val = parseFloat(document.getElementById('sw-in').value);
+            if(user.bal < val || val <= 0) return tg.showAlert("Bakiye yetersiz!");
+            user.bal -= val;
+            user.usdt += (val / 1000000);
+            Core.save(); Core.ui();
+            tg.showAlert("Başarıyla takas edildi!");
         }
     };
 
@@ -219,5 +199,13 @@
 
     Core.init();
 </script>
+
+<style>
+@keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-50px); }
+}
+</style>
+
 </body>
 </html>
