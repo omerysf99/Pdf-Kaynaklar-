@@ -3,124 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spyder Network | Tap to Earn</title>
+    <title>Spyder Network Pro | All-in-One Ecosystem</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
+        /* CSS ROOT & CORE STYLES */
         :root {
             --p-purple: #a855f7; 
             --p-glow: rgba(168, 85, 247, 0.4);
             --bg-black: #000000;
             --bg-card: #0c0c0e;
             --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
             --text-dim: #64748b;
             --border: rgba(255, 255, 255, 0.05);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { background: var(--bg-black); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        #viewport { flex: 1; overflow-y: auto; padding: 20px 20px 140px; }
-        .view { display: none; flex-direction: column; animation: slideUp 0.3s ease; }
+        #viewport { flex: 1; overflow-y: auto; padding: 20px 20px 140px; scroll-behavior: smooth; }
+        .view { display: none; flex-direction: column; animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .view.active { display: flex; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* TAP TO EARN UI */
-        .tap-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 20px; }
-        .tap-balance { font-family: 'Orbitron'; font-size: 42px; margin-bottom: 5px; text-shadow: 0 0 20px var(--p-glow); }
+        /* UI COMPONENTS */
+        .glass-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 28px; padding: 22px; margin-bottom: 16px; position: relative; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        .stat-item { background: #0a0a0c; padding: 15px; border-radius: 20px; text-align: center; border: 1px solid var(--border); }
+        .stat-item small { color: var(--text-dim); font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-item b { display: block; font-family: 'Orbitron'; font-size: 16px; margin-top: 4px; color: var(--p-purple); }
+
+        .btn { padding: 18px; border-radius: 20px; border: none; font-weight: 800; cursor: pointer; transition: 0.3s all; color: #fff; font-size: 14px; background: var(--p-purple); width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        .btn:active { transform: scale(0.96); }
+        
+        .input-pro { width: 100%; padding: 18px; background: #050505; border: 1px solid #1a1a1a; color: #fff; border-radius: 18px; margin: 10px 0; text-align: center; font-family: 'JetBrains Mono'; font-size: 16px; transition: 0.3s; }
+        .input-pro:focus { border-color: var(--p-purple); box-shadow: 0 0 15px rgba(168, 85, 247, 0.1); }
+
+        /* TAP TO EARN STYLES */
         .tap-circle { 
             width: 260px; height: 260px; 
             background: radial-gradient(circle, #c084fc 0%, #7e22ce 100%); 
-            border-radius: 50%; margin: 30px auto; 
+            border-radius: 50%; margin: 40px auto; 
             display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 0 50px var(--p-glow);
-            transition: transform 0.1s;
-            cursor: pointer;
-            border: 10px solid rgba(255,255,255,0.05);
+            box-shadow: 0 0 60px var(--p-glow);
+            border: 8px solid rgba(255,255,255,0.03);
+            cursor: pointer; position: relative;
         }
-        .tap-circle:active { transform: scale(0.95); }
-        .tap-circle img { width: 160px; pointer-events: none; }
 
-        /* MINING SOON UI */
-        .soon-card { 
-            height: 300px; border: 2px dashed #222; 
-            border-radius: 30px; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; text-align: center;
-            background: rgba(255,255,255,0.01);
-        }
-        .soon-badge { background: var(--warning); color: #000; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 12px; margin-bottom: 10px; }
+        /* NAVIGATION BAR */
+        nav { position: fixed; bottom: 0; width: 100%; height: 95px; background: rgba(5,5,5,0.98); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: 20px; z-index: 1000; backdrop-filter: blur(20px); }
+        .tab { color: var(--text-dim); display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: 800; cursor: pointer; transition: 0.3s; }
+        .tab.active { color: var(--p-purple); transform: translateY(-5px); }
+        .tab i { font-size: 24px; margin-bottom: 4px; font-style: normal; }
 
-        /* NAVIGATION */
-        nav { position: fixed; bottom: 0; width: 100%; height: 90px; background: #050505; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: 15px; z-index: 100; }
-        .tab { color: var(--text-dim); display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: 800; }
-        .tab.active { color: var(--p-purple); }
-        .tab i { font-size: 22px; margin-bottom: 4px; font-style: normal; }
+        /* ADMIN MODAL */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(15px); }
+        .modal-content { background: #08080a; border: 1px solid var(--p-purple); border-radius: 35px; padding: 30px; width: 100%; max-width: 450px; position: relative; max-height: 85vh; overflow-y: auto; }
 
-        .glass-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 25px; padding: 20px; margin-bottom: 15px; }
-        .btn { padding: 16px; border-radius: 18px; border: none; font-weight: 800; background: var(--p-purple); color: #fff; width: 100%; }
-        .input-pro { width: 100%; padding: 16px; background: #000; border: 1px solid #222; color: #fff; border-radius: 16px; margin: 10px 0; text-align: center; }
+        .analysis-box { background: rgba(255, 255, 255, 0.02); border-left: 4px solid var(--p-purple); padding: 15px; border-radius: 15px; margin: 15px 0; font-size: 12px; line-height: 1.6; }
+        
+        .floating-text { position: absolute; color: white; font-weight: 900; pointer-events: none; animation: floatUp 0.8s ease-out forwards; font-family: 'Orbitron'; z-index: 100; }
+        @keyframes floatUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-100px); opacity: 0; } }
     </style>
 </head>
 <body>
 
+<div id="adm-modal" class="modal">
+    <div class="modal-content">
+        <h2 id="det-name" class="orbitron" style="text-align:center; color:var(--p-purple);">USER</h2>
+        <div id="det-analysis" class="analysis-box"></div>
+        <input type="number" id="amt-input" class="input-pro" placeholder="MİKTAR GİR">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <button onclick="Admin.mod('bal','add')" class="btn" style="background:var(--success)">S. EKLE</button>
+            <button onclick="Admin.mod('bal','sub')" class="btn" style="background:var(--error)">S. SİL</button>
+            <button onclick="Admin.mod('usdt','add')" class="btn" style="background:var(--success)">U. EKLE</button>
+            <button onclick="Admin.mod('usdt','sub')" class="btn" style="background:var(--error)">U. SİL</button>
+        </div>
+        <button onclick="Admin.close()" class="btn" style="background:#222; margin-top:15px;">KAPAT</button>
+    </div>
+</div>
+
 <main id="viewport">
     <section id="v-home" class="view active">
-        <div class="tap-container">
-            <small style="color:var(--text-dim); font-weight:800; letter-spacing:2px;">SPYDER BALANCE</small>
-            <div id="u-bal" class="tap-balance">0</div>
-            
-            <div class="tap-circle" onclick="Core.tap(event)">
-                <span style="font-size: 100px;">🕷️</span>
-            </div>
-            
-            <div style="width:100%; display:flex; justify-content:space-between; color:var(--text-dim); font-weight:800;">
-                <span>⚡ 1000 / 1000</span>
-                <span id="u-usdt" style="color:var(--success)">$0.00</span>
-            </div>
+        <div class="stat-grid">
+            <div class="stat-item"><small>SPYDER BAL</small><b id="u-bal">0</b></div>
+            <div class="stat-item"><small>USDT BAL</small><b id="u-usdt" style="color:var(--success)">$0.00</b></div>
+        </div>
+        <div class="tap-circle" onclick="Core.tap(event)">
+            <span style="font-size:110px;">🕷️</span>
+        </div>
+        <div style="text-align:center; margin-top:20px;">
+            <p style="color:var(--text-dim); font-weight:800; letter-spacing:1px;">TAP TO EARN</p>
         </div>
     </section>
 
     <section id="v-mining" class="view">
         <h2 class="orbitron" style="margin-bottom:20px;">MINING</h2>
-        <div class="soon-card">
-            <div class="soon-badge">YAKINDA GELECEK</div>
-            <h3 style="font-size:24px;">Cloud Mining</h3>
-            <p style="color:var(--text-dim); padding: 0 40px; margin-top:10px;">Spyder Cloud Mining altyapısı hazırlanıyor. Pasif kazanç çok yakında aktif olacak!</p>
-            <div style="margin-top:30px; font-size:40px; opacity:0.3;">⛏️</div>
+        <div class="glass-card" style="height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+            <div style="background:var(--warning); color:#000; padding:6px 15px; border-radius:20px; font-weight:900; font-size:11px; margin-bottom:15px;">YAKINDA GELECEK</div>
+            <h3 style="font-size:26px;">Spyder Mining</h3>
+            <p style="color:var(--text-dim); padding:0 30px; margin-top:15px;">Gelişmiş bulut madenciliği sistemi altyapısı hazırlanıyor. Beklemede kalın!</p>
+            <div style="font-size:50px; margin-top:30px; opacity:0.2; animation: rotate 10s linear infinite;">⚙️</div>
         </div>
     </section>
 
     <section id="v-swap" class="view">
-        <h2 class="orbitron">SWAP</h2>
+        <h2 class="orbitron" style="margin-bottom:20px;">SWAP</h2>
         <div class="glass-card">
-            <input type="number" id="sw-in" class="input-pro" placeholder="Spyder Miktarı" oninput="Swap.calc()">
-            <div style="text-align:center; margin:10px;">⬇️</div>
-            <div class="glass-card" style="background:#000; margin:0; text-align:center;">
-                <small>TAHMİNİ TUTAR</small>
-                <h3 id="sw-out" style="color:var(--success)">$0.00</h3>
+            <small style="color:var(--text-dim); font-weight:800;">DÖNÜŞTÜRÜLECEK SPYDER</small>
+            <input type="number" id="sw-in" class="input-pro" placeholder="Miktar Gir" oninput="Swap.calc()">
+            <div style="text-align:center; font-size:24px; margin:10px 0;">⬇️</div>
+            <div class="stat-item" style="background:#000;">
+                <small>TAHMİNİ KAZANÇ</small>
+                <b id="sw-out" style="color:var(--success)">$0.00</b>
             </div>
-            <button class="btn" style="margin-top:20px;" onclick="Swap.execute()">DÖNÜŞTÜR</button>
+            <button class="btn" style="margin-top:25px;" onclick="Swap.execute()">HEMEN TAKAS ET</button>
+        </div>
+    </section>
+
+    <section id="v-tasks" class="view">
+        <h2 class="orbitron" style="margin-bottom:20px;">GÖREVLER</h2>
+        <div class="glass-card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div><b>YouTube Kanalına Abone Ol</b><br><small style="color:var(--p-purple)">+15,000 SPYDER</small></div>
+            <button class="btn" style="width:auto; padding:10px 20px;" onclick="Tasks.done(15000)">YAP</button>
+        </div>
+        <div class="glass-card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div><b>Reklam İzle</b><br><small style="color:var(--p-purple)">+10,000 SPYDER</small></div>
+            <button class="btn" style="width:auto; padding:10px 20px;" onclick="Tasks.ad()">İZLE</button>
         </div>
     </section>
 
     <section id="v-wallet" class="view">
-        <h2 class="orbitron">WALLET</h2>
+        <h2 class="orbitron" style="margin-bottom:20px;">WALLET</h2>
         <div class="glass-card" style="text-align:center;">
-            <small>TOPLAM USDT</small>
-            <h1 id="w-usdt" style="font-size:40px; margin:10px 0;">$0.00</h1>
-            <div style="background:rgba(255,255,255,0.02); padding:15px; border-radius:20px; text-align:left; font-size:12px; margin-bottom:15px;">
-                <b>Kurallar:</b><br>
-                • Min çekim 1 USDT<br>
-                • Her 0.01$ için 17 reklam izlenmelidir.
+            <small style="color:var(--text-dim); font-weight:800;">TOPLAM USDT</small>
+            <h1 id="w-total-display" style="font-size:42px; font-family:'Orbitron'; margin:15px 0;">$0.00</h1>
+            
+            <div class="stat-grid">
+                <div class="stat-item"><b>REFS</b><br><small id="w-refs">0</small></div>
+                <div class="stat-item"><b>ADS</b><br><small id="w-ads-count">0</small></div>
             </div>
-            <input type="number" id="wd-amount" class="input-pro" placeholder="Miktar">
-            <input type="text" id="wd-addr" class="input-pro" placeholder="USDT Adresi">
-            <button class="btn" style="background:var(--success)" onclick="Core.withdraw()">ÇEKİM TALEBİ GÖNDER</button>
+
+            <div class="analysis-box" style="text-align:left; border-left-color: var(--warning); margin-bottom:15px;">
+                <b>⚠️ ÖDEME KURALLARI:</b><br>
+                • Minimum Çekim: 1.00 USDT<br>
+                • Her 0.01$ için 17 reklam kuralı<br>
+                <hr style="opacity:0.1; margin:8px 0;">
+                <p id="req-ads-status" style="font-weight:800; color:var(--p-purple);">Gerekli Reklam: 0</p>
+            </div>
+
+            <input type="number" id="wd-amount" class="input-pro" placeholder="Çekilecek Tutar ($)" step="0.01" oninput="WalletSystem.sync()">
+            <input type="text" id="wd-address" class="input-pro" placeholder="USDT (TON/TRC20) Adresi">
+
+            <button id="withdraw-btn" class="btn" style="background:var(--error); margin-top:15px;" onclick="WalletSystem.process()">
+                ÇEKİM TALEBİ GÖNDER
+            </button>
         </div>
+    </section>
+
+    <section id="v-admin" class="view">
+        <h2 class="orbitron" style="color:var(--warning); margin-bottom:20px;">ADM_PANEL</h2>
+        <div id="adm-list-container"></div>
     </section>
 </main>
 
@@ -128,52 +177,113 @@
     <div class="tab active" onclick="Nav.go('v-home', this)"><i>🎮</i><span>TAP</span></div>
     <div class="tab" onclick="Nav.go('v-mining', this)"><i>⛏️</i><span>MINING</span></div>
     <div class="tab" onclick="Nav.go('v-swap', this)"><i>🔄</i><span>TAKAS</span></div>
+    <div class="tab" onclick="Nav.go('v-tasks', this)"><i>📡</i><span>GÖREV</span></div>
     <div class="tab" onclick="Nav.go('v-wallet', this)"><i>💼</i><span>CÜZDAN</span></div>
+    <div id="adm-tab-btn" class="tab" style="display:none;" onclick="Nav.go('v-admin', this); Admin.boot();"><i>🔑</i><span>ADM</span></div>
 </nav>
 
 <script>
-    const cfg = { apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY", projectId: "pdfkaynak-51615", appId: "1:228512804576:web:a0bba02ca83b4fa7adea85" };
-    firebase.initializeApp(cfg);
+    /* --- CONFIG & FIREBASE --- */
+    const ADMIN_ID = "8392479231";
+    const firebaseConfig = { apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY", projectId: "pdfkaynak-51615", appId: "1:228512804576:web:a0bba02ca83b4fa7adea85" };
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    let user = { bal: 0, usdt: 0, ads: 0 };
-    let uid = tg.initDataUnsafe?.user?.id?.toString() || "dev";
+    /* --- GLOBAL STATE --- */
+    let user = { bal:0, usdt:0, ads:0, refCount:0, lastRequest: null };
+    let uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_test_id";
+    let uname = tg.initDataUnsafe?.user?.username || "no_user";
 
+    /* --- CORE ENGINE --- */
     const Core = {
         init: async () => {
-            const d = await db.collection("users").doc(uid).get();
-            if(d.exists) user = {...user, ...d.data()};
+            const doc = await db.collection("users").doc(uid).get();
+            if(doc.exists) user = {...user, ...doc.data()};
+            if(uid === ADMIN_ID) document.getElementById('adm-tab-btn').style.display = 'flex';
             Core.ui();
+            Core.save();
         },
         tap: (e) => {
             user.bal += 1;
             Core.ui();
             tg.HapticFeedback.impactOccurred('medium');
             
-            // Dokunma efekti (Opsiyonel görsel artı)
-            const plus = document.createElement('div');
-            plus.innerText = "+1";
-            plus.style.position = 'absolute';
-            plus.style.left = e.pageX + 'px';
-            plus.style.top = e.pageY + 'px';
-            plus.style.color = 'var(--p-purple)';
-            plus.style.fontWeight = '900';
-            plus.style.animation = 'fadeOut 0.5s forwards';
-            document.body.appendChild(plus);
-            setTimeout(() => plus.remove(), 500);
+            // Floating Effect
+            const f = document.createElement('div');
+            f.className = 'floating-text';
+            f.innerText = '+1';
+            f.style.left = e.pageX + 'px';
+            f.style.top = (e.pageY - 20) + 'px';
+            document.body.appendChild(f);
+            setTimeout(() => f.remove(), 800);
 
-            if(user.bal % 25 === 0) Core.save();
+            if(user.bal % 50 === 0) Core.save();
         },
-        save: () => db.collection("users").doc(uid).set(user, {merge:true}),
+        save: () => db.collection("users").doc(uid).set({...user, lastSeen: Date.now(), name: tg.initDataUnsafe?.user?.first_name || "Agent"}, {merge:true}),
         ui: () => {
             document.getElementById('u-bal').innerText = user.bal.toLocaleString();
             document.getElementById('u-usdt').innerText = "$" + (user.usdt || 0).toFixed(2);
-            document.querySelectorAll('#w-usdt').forEach(el => el.innerText = "$" + (user.usdt || 0).toFixed(2));
+            document.getElementById('w-total-display').innerText = "$" + (user.usdt || 0).toFixed(2);
+            document.getElementById('w-ads-count').innerText = user.ads || 0;
+            document.getElementById('w-refs').innerText = user.refCount || 0;
+            WalletSystem.sync();
         }
     };
 
+    /* --- WALLET SYSTEM (DEMANDED LOGIC) --- */
+    const WalletSystem = {
+        sync: () => {
+            const amt = parseFloat(document.getElementById('wd-amount').value) || 0;
+            const btn = document.getElementById('withdraw-btn');
+            const statusText = document.getElementById('req-ads-status');
+            
+            // Formula: (Amount / 0.01) * 17
+            const requiredAds = Math.ceil((amt / 0.01) * 17);
+            const userAds = user.ads || 0;
+            
+            statusText.innerText = `Gerekli Reklam: ${requiredAds} (Sizde: ${userAds})`;
+
+            // UI Color Logic
+            if (amt >= 1.0 && user.usdt >= amt && userAds >= requiredAds) {
+                btn.style.backgroundColor = "var(--success)"; 
+                btn.innerText = "ÇEKİM TALEBİ GÖNDER";
+            } else {
+                btn.style.backgroundColor = "var(--error)"; 
+                if (amt < 1.0) btn.innerText = "MİN. 1.00 USDT GEREKLİ";
+                else if (user.usdt < amt) btn.innerText = "YETERSİZ BAKİYE";
+                else btn.innerText = "REKLAM YETERSİZ";
+            }
+        },
+        process: async () => {
+            const amt = parseFloat(document.getElementById('wd-amount').value) || 0;
+            const addr = document.getElementById('wd-address').value;
+            const requiredAds = Math.ceil((amt / 0.01) * 17);
+            const userAds = user.ads || 0;
+
+            if (amt < 1.0) return tg.showAlert("Hata: Minimum çekim tutarı 1.00 USDT'dir.");
+            if (user.usdt < amt) return tg.showAlert("Yetersiz bakiye!");
+            if (userAds < requiredAds) {
+                const missing = requiredAds - userAds;
+                return tg.showAlert(`Ödeme Alamazsınız!\n\nBu miktar için toplam ${requiredAds} reklam izlemiş olmanız gerekiyor.\nEksik reklam: ${missing}`);
+            }
+            if (!addr || addr.length < 10) return tg.showAlert("Geçersiz cüzdan adresi!");
+
+            // Logic: Deduct balance and record
+            user.usdt -= amt;
+            const req = { amount: amt, address: addr, date: Date.now(), status: "PENDING", ads: userAds };
+            user.lastRequest = req;
+            
+            await db.collection("withdraws").add({ uid, uname, ...req });
+            Core.save(); Core.ui();
+            tg.showAlert("Talebiniz başarıyla alındı. Bakiyeniz güncellendi.");
+            document.getElementById('wd-amount').value = "";
+            document.getElementById('wd-address').value = "";
+        }
+    };
+
+    /* --- OTHER MODULES --- */
     const Swap = {
         calc: () => {
             const val = document.getElementById('sw-in').value || 0;
@@ -182,11 +292,55 @@
         execute: () => {
             const val = parseFloat(document.getElementById('sw-in').value);
             if(user.bal < val || val <= 0) return tg.showAlert("Bakiye yetersiz!");
-            user.bal -= val;
-            user.usdt += (val / 1000000);
-            Core.save(); Core.ui();
-            tg.showAlert("Başarıyla takas edildi!");
+            user.bal -= val; user.usdt += (val / 1000000);
+            Core.save(); Core.ui(); tg.showAlert("Takas başarılı!");
         }
+    };
+
+    const Tasks = {
+        ad: () => { user.ads++; user.bal += 10000; Core.save(); Core.ui(); tg.showAlert("+10.000 Spyder & +1 Reklam"); },
+        done: (reward) => { user.bal += reward; Core.save(); Core.ui(); tg.showAlert("Görev başarıyla tamamlandı!"); }
+    };
+
+    /* --- ADMIN MODULE --- */
+    const Admin = {
+        users: [],
+        boot: async () => {
+            const snap = await db.collection("users").get();
+            Admin.users = [];
+            let html = "";
+            snap.forEach(doc => {
+                const u = {id: doc.id, ...doc.data()};
+                Admin.users.push(u);
+                html += `
+                <div class="glass-card" style="padding:15px; display:flex; justify-content:space-between;" onclick="Admin.open('${u.id}')">
+                    <div><b>${u.name || 'User'}</b><br><small>@${u.username}</small></div>
+                    <div style="text-align:right"><b>${(u.bal||0).toLocaleString()}</b><br><small style="color:var(--success)">$${(u.usdt||0).toFixed(2)}</small></div>
+                </div>`;
+            });
+            document.getElementById('adm-list-container').innerHTML = html;
+        },
+        open: (id) => {
+            Admin.selected = Admin.users.find(x => x.id === id);
+            const req = Admin.selected.lastRequest;
+            document.getElementById('det-name').innerText = Admin.selected.name || "User";
+            document.getElementById('det-analysis').innerHTML = `
+                <b>📉 ANALİZ:</b><br>
+                • İzlenen Reklam: ${Admin.selected.ads || 0}<br>
+                • Mevcut Bakiye: $${(Admin.selected.usdt || 0).toFixed(2)}<br><br>
+                <b>📩 SON TALEP:</b><br>
+                • Tutar: ${req ? '$' + req.amount : 'Yok'}<br>
+                • Adres: <span style="font-size:10px;">${req ? req.address : 'Yok'}</span>
+            `;
+            document.getElementById('adm-modal').style.display = 'flex';
+        },
+        mod: async (type, mode) => {
+            const val = parseFloat(document.getElementById('amt-input').value) || 0;
+            const final = mode === 'add' ? val : -val;
+            await db.collection("users").doc(Admin.selected.id).update({ [type]: firebase.firestore.FieldValue.increment(final) });
+            tg.showAlert("Güncellendi"); Admin.close(); Admin.boot();
+        },
+        close: () => document.getElementById('adm-modal').style.display = 'none'
     };
 
     const Nav = {
@@ -197,15 +351,8 @@
         }
     };
 
+    // INIT
     Core.init();
 </script>
-
-<style>
-@keyframes fadeOut {
-    from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(-50px); }
-}
-</style>
-
 </body>
 </html>
