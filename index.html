@@ -3,108 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Ultimate Admin v10</title>
+    <title>SpyderCoin Ultimate - 444 Edition</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
-        :root { --primary: #ffeb3b; --secondary: #9c27b0; --bg-dark: #0a0014; --card-bg: #1a002e; --success: #00e676; --blue: #0088cc; --danger: #ff4444; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; }
-        body { background: radial-gradient(circle at center, #1a002e 0%, #000 100%); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* BAN EKRANI */
-        #ban-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        #ban-overlay h1 { color: var(--danger); font-size: 50px; margin: 0; }
-        #ban-overlay p { font-size: 18px; color: #888; }
+        :root {
+            --primary: #ffeb3b;
+            --secondary: #9c27b0;
+            --bg-dark: #0a0014;
+            --card-bg: #1a002e;
+            --success: #00e676;
+            --blue: #0088cc;
+            --danger: #ff4444;
+            --text-muted: #888;
+        }
 
-        header { padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 235, 59, 0.1); }
-        .balance-container { font-size: 38px; font-weight: 900; color: var(--primary); }
-        
-        main { flex-grow: 1; overflow-y: auto; padding-bottom: 90px; }
-        .tab-content { display: none; padding: 20px; animation: fadeIn 0.3s ease; width: 100%; }
+        /* RESET & BASE */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; margin: 0; padding: 0; }
+        body {
+            background: radial-gradient(circle at center, #1a002e 0%, #000 100%);
+            color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* BAN OVERLAY */
+        #ban-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 10000; flex-direction: column; align-items: center;
+            justify-content: center; text-align: center; padding: 20px;
+        }
+        #ban-overlay h1 { font-size: 80px; margin-bottom: 10px; }
+        #ban-overlay h2 { color: var(--danger); font-size: 32px; font-weight: 900; }
+        #ban-overlay p { color: #555; margin-top: 15px; font-size: 14px; }
+
+        /* HEADER */
+        header { padding: 25px 20px; text-align: center; border-bottom: 1px solid rgba(255, 235, 59, 0.1); background: rgba(0,0,0,0.2); }
+        .balance-container { font-size: 44px; font-weight: 900; color: var(--primary); text-shadow: 0 0 20px rgba(255, 235, 59, 0.4); }
+        #display-name { font-size: 12px; color: var(--text-muted); margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* MAIN CONTENT */
+        main { flex-grow: 1; overflow-y: auto; padding-bottom: 100px; position: relative; }
+        .tab-content { display: none; padding: 20px; animation: slideUp 0.4s ease-out; width: 100%; }
         .tab-content.active { display: flex; flex-direction: column; align-items: center; }
 
-        .card { background: var(--card-bg); border-radius: 20px; padding: 20px; width: 100%; max-width: 400px; border: 1px solid rgba(255,255,255,0.1); text-align: center; margin-bottom: 15px; }
-        .btn-action { background: var(--primary); color: black; border: none; padding: 14px; border-radius: 12px; font-weight: 800; width: 100%; cursor: pointer; }
+        /* GAME STYLES */
+        .energy-box { width: 100%; max-width: 340px; margin-bottom: 20px; }
+        .energy-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; font-weight: bold; color: var(--primary); }
+        .energy-bar { width: 100%; height: 12px; background: #222; border-radius: 20px; border: 1px solid rgba(255,235,59,0.3); overflow: hidden; }
+        #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ffd600, #ffeb3b); transition: width 0.3s; }
         
-        /* ADMIN PANEL */
-        .admin-item { background: #111; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--secondary); cursor: pointer; }
-        .detail-panel { background: #000; border-radius: 10px; padding: 10px; margin-top: 10px; display: none; grid-template-columns: 1fr 1fr; gap: 6px; }
-        .btn-adm { font-size: 9px; padding: 10px 5px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
-        
-        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 70px; background: #050505; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); }
-        .nav-link { display: flex; flex-direction: column; align-items: center; color: #555; text-decoration: none; font-size: 10px; cursor: pointer; }
+        .spider-wrapper {
+            width: 260px; height: 260px; background: rgba(156, 39, 176, 0.05);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin: 30px 0; border: 3px solid rgba(156, 39, 176, 0.2);
+            box-shadow: 0 0 40px rgba(156, 39, 176, 0.1);
+        }
+        #spider-main { font-size: 120px; cursor: pointer; transition: transform 0.05s; }
+        #spider-main:active { transform: scale(0.9); }
+
+        /* CARDS & FORMS */
+        .card { background: var(--card-bg); border-radius: 24px; padding: 24px; width: 100%; max-width: 400px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 20px; }
+        .card h3 { margin-bottom: 15px; font-size: 20px; }
+        .input-dark {
+            width: 100%; padding: 15px; border-radius: 14px; margin-bottom: 12px;
+            background: #050505; color: white; border: 1px solid #222; text-align: center; font-size: 15px;
+        }
+        .btn-action {
+            background: var(--primary); color: black; border: none; padding: 16px;
+            border-radius: 14px; font-weight: 900; width: 100%; cursor: pointer;
+            font-size: 16px; transition: 0.3s; box-shadow: 0 4px 15px rgba(255, 235, 59, 0.2);
+        }
+        .btn-action:active { transform: scale(0.98); opacity: 0.9; }
+
+        /* WALLET RULES */
+        .rules-box { text-align: left; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 16px; margin: 15px 0; border: 1px solid #333; }
+        .rule-item { font-size: 12px; color: #aaa; margin-bottom: 8px; display: flex; align-items: center; }
+        .rule-item span { color: var(--primary); margin-right: 10px; font-weight: bold; }
+
+        /* ADMIN LIST */
+        .admin-item {
+            background: #111; padding: 15px; border-radius: 14px; margin-bottom: 12px;
+            border-left: 5px solid var(--secondary); cursor: pointer; width: 100%;
+        }
+        .admin-item b { font-size: 16px; }
+        .detail-panel {
+            background: #000; border-radius: 12px; padding: 12px; margin-top: 12px;
+            display: none; grid-template-columns: 1fr 1fr; gap: 8px; border: 1px dashed #444;
+        }
+        .btn-adm {
+            font-size: 10px; padding: 10px; border-radius: 8px; border: none;
+            font-weight: bold; cursor: pointer; color: white; text-transform: uppercase;
+        }
+
+        /* NAVIGATION */
+        .nav-bar {
+            position: fixed; bottom: 0; width: 100%; height: 80px;
+            background: #050505; display: flex; justify-content: space-around;
+            align-items: center; border-top: 1px solid rgba(255,255,255,0.05); z-index: 1000;
+        }
+        .nav-link { display: flex; flex-direction: column; align-items: center; color: #444; text-decoration: none; font-size: 11px; cursor: pointer; transition: 0.3s; }
+        .nav-link span:first-child { font-size: 24px; margin-bottom: 4px; }
         .nav-link.active { color: var(--primary); }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ANIMATIONS */
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .floating-text { position: absolute; color: var(--primary); font-weight: bold; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 100; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
     </style>
 </head>
 <body>
 
     <div id="ban-overlay">
         <h1>🚫</h1>
-        <h1>BANLANDIN</h1>
-        <p>Hesabınız kurallara aykırı faaliyetler<br>nedeniyle askıya alınmıştır.</p>
+        <h2>HESABINIZ BANLANDI</h2>
+        <p>Sistem güvenliği nedeniyle erişiminiz kısıtlanmıştır.<br>Hatalı bir işlem olduğunu düşünüyorsanız yönetici ile iletişime geçin.</p>
     </div>
 
     <header>
         <div class="balance-container">$<span id="main-balance">0.00000</span></div>
-        <div id="display-name" style="font-size: 11px; color: #888;">Yükleniyor...</div>
+        <div id="display-name">Veriler Alınıyor...</div>
     </header>
 
-    <main id="app-content">
+    <main id="app-body">
+        
         <div id="tab-game" class="tab-content active">
-            <div style="width: 90%; max-width: 350px; margin-bottom: 15px;">
-                <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
-                    <span>⚡ ENERJİ</span><span id="energy-val">1000/1000</span>
+            <div class="energy-box">
+                <div class="energy-header">
+                    <span>⚡ MEVCUT ENERJİ</span>
+                    <span id="energy-val">1000 / 1000</span>
                 </div>
-                <div style="width:100%; height:10px; background:#222; border-radius:10px; border:1px solid var(--primary); overflow:hidden;">
-                    <div id="energy-fill" style="width:100%; height:100%; background:var(--primary); transition:width 0.2s;"></div>
-                </div>
+                <div class="energy-bar"><div id="energy-fill"></div></div>
             </div>
-            <div style="width:230px; height:230px; background:rgba(156,39,176,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:20px 0; border:2px solid rgba(156,39,176,0.3);">
-                <div id="spider-main" style="font-size:110px; cursor:pointer;" onclick="processTap(event)">🕷️</div>
+
+            <div class="spider-wrapper">
+                <div id="spider-main" onclick="handleSpiderTap(event)">🕷️</div>
             </div>
-            <button class="btn-action" onclick="handleAdRefill()" style="max-width:280px;">⚡ ENERJİ FULLLE (İZLE)</button>
+
+            <div style="width:100%; max-width:300px;">
+                <button class="btn-action" onclick="refillEnergyAd()">⚡ ENERJİ TAZELE (İZLE)</button>
+                <p style="text-align:center; font-size:11px; color:#555; margin-top:10px;">Her tık bakiye ve izleme kazandırır.</p>
+            </div>
         </div>
 
         <div id="tab-tasks" class="tab-content">
-            <div class="card" style="border-color: var(--blue);">
-                <div style="font-size: 30px;">📢</div>
-                <h3>Telegram Kanalı</h3>
-                <p style="color: var(--success); font-weight: bold; font-size: 18px;">+0.01$</p>
-                <button class="btn-action" style="background:var(--blue); color:white;" id="task-tg" onclick="completeTask('tg', 'https://t.me/SpyderCommunity', 0.01)">KANALA KATIL</button>
+            <h2 style="margin-bottom:20px; color:var(--primary);">Görev Merkezi</h2>
+            <div class="card" style="border-top: 4px solid var(--blue);">
+                <div style="font-size: 40px; margin-bottom:10px;">📢</div>
+                <h3>Resmi Kanalımıza Katıl</h3>
+                <p style="color:var(--success); font-weight:bold; font-size:22px; margin-bottom:15px;">+0.01$</p>
+                <button id="task-btn-tg" class="btn-action" style="background:var(--blue); color:white;" onclick="doTelegramTask()">KANALA GİT</button>
             </div>
+            <p style="font-size:12px; color:#555;">Yeni görevler yakında eklenecektir.</p>
         </div>
 
         <div id="tab-wallet" class="tab-content">
             <div class="card">
-                <h3>Çekim Talebi</h3>
-                <small>Toplam İzleme: <b id="ads-count-display">0</b></small>
-                <input type="number" id="withdraw-amount" style="width:100%; padding:12px; margin:10px 0; background:#000; border:1px solid #333; color:white; border-radius:10px;" placeholder="Miktar (USDT)">
-                <input type="text" id="withdraw-addr" style="width:100%; padding:12px; margin-bottom:10px; background:#000; border:1px solid #333; color:white; border-radius:10px;" placeholder="TRC20 Adresi">
-                <button class="btn-action" onclick="requestWithdraw()">GÖNDER</button>
+                <h3 style="color:var(--primary);">Bakiye Çekim (USDT)</h3>
+                
+                <div style="background:#000; padding:15px; border-radius:18px; margin-bottom:15px;">
+                    <small style="color:#666; font-weight:bold;">TOPLAM İZLEME PUANI</small>
+                    <div id="wallet-ads-display" style="font-size:32px; color:var(--success); font-weight:900;">0</div>
+                </div>
+
+                <div class="rules-box">
+                    <div class="rule-item"><span>•</span> Minimum çekim tutarı 0.10 USDT.</div>
+                    <div class="rule-item"><span>•</span> Her 0.50$ için 770 izleme puanı gerekir.</div>
+                    <div class="rule-item"><span>•</span> Ödemeler sadece TRC20 ağı ile yapılır.</div>
+                    <div class="rule-item"><span>•</span> İşlemler 24 saat içinde onaylanır.</div>
+                </div>
+
+                <input type="number" id="wd-amount" class="input-dark" placeholder="Miktar (Örn: 0.50)">
+                <input type="text" id="wd-address" class="input-dark" placeholder="TRC20 Cüzdan Adresi">
+                
+                <button class="btn-action" onclick="submitWithdrawRequest()">ÖDEME TALEBİ OLUŞTUR</button>
             </div>
         </div>
 
         <div id="tab-admin" class="tab-content">
-            <div style="width:100%; max-width:450px;">
-                <h3 style="color: var(--secondary); text-align: center;">🛡️ YÖNETİM MERKEZİ</h3>
-                <div id="adm-player-list"></div>
-            </div>
+            <h2 style="color:var(--secondary); margin-bottom:20px;">🛡️ Sistem Yönetimi</h2>
+            <div id="admin-user-list" style="width:100%; max-width:450px;">
+                </div>
         </div>
+
     </main>
 
     <nav class="nav-bar">
-        <div class="nav-link active" onclick="showTab('game', this)"><span>🎮</span><span>OYUN</span></div>
-        <div class="nav-link" onclick="showTab('tasks', this)"><span>📋</span><span>GÖREVLER</span></div>
-        <div class="nav-link" onclick="showTab('wallet', this)"><span>👛</span><span>CÜZDAN</span></div>
-        <div id="admin-nav-link" class="nav-link" style="display:none;" onclick="showTab('admin', this)"><span>🛡️</span><span>ADMİN</span></div>
+        <div class="nav-link active" onclick="switchTab('game', this)"><span>🎮</span><span>OYUN</span></div>
+        <div class="nav-link" onclick="switchTab('tasks', this)"><span>📋</span><span>GÖREVLER</span></div>
+        <div class="nav-link" onclick="switchTab('wallet', this)"><span>👛</span><span>CÜZDAN</span></div>
+        <div id="admin-link" class="nav-link" style="display:none;" onclick="switchTab('admin', this)"><span>🛡️</span><span>ADMİN</span></div>
     </nav>
 
     <script>
-        const tg = window.Telegram.WebApp;
+        /* CONFIGURATION */
+        const TWA = window.Telegram.WebApp;
+        TWA.expand();
+
         const firebaseConfig = {
             apiKey: "AIzaSyDfy6QdIZ0BthEHTmxkw-NAja3B9bFFd8U",
             authDomain: "spydercoin-94f7b.firebaseapp.com",
@@ -115,132 +213,239 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const adminId = "8392479231";
-        const user = tg.initDataUnsafe.user || { id: "dev_user", first_name: "Admin", username: "dev" };
-        const UID = user.id.toString();
 
-        let localData = { money: 0, energy: 1000, adsWatched: 0, completedTasks: [], isBanned: false };
-        let tapCount = 0;
+        /* PLAYER DATA */
+        const MASTER_ADMIN = "8392479231";
+        const tgUser = TWA.initDataUnsafe.user || { id: "dev_mode", first_name: "Geliştirici", username: "dev" };
+        const USER_ID = tgUser.id.toString();
 
-        document.getElementById('display-name').innerText = `${user.first_name} (@${user.username || 'yok'})`;
-        if(UID === adminId) document.getElementById('admin-nav-link').style.display = 'flex';
+        let pData = {
+            money: 0,
+            energy: 1000,
+            adsWatched: 0,
+            completedTasks: [],
+            isBanned: false,
+            lastUpdate: Date.now()
+        };
 
-        // Ban ve Veri Kontrolü
-        db.collection("players").doc(UID).onSnapshot(doc => { 
-            if(doc.exists) { 
-                localData = doc.data(); 
-                if(localData.isBanned) {
-                    document.getElementById('ban-overlay').style.display = 'flex';
-                    document.getElementById('app-content').style.display = 'none';
-                }
-                renderUI(); 
-            } 
-        });
+        let tCount = 0;
 
-        // --- GENİŞLETİLMİŞ ADMIN PANELİ ---
-        if(UID === adminId) {
-            db.collection("players").onSnapshot(snap => {
-                const list = document.getElementById('adm-player-list');
-                list.innerHTML = "";
-                snap.forEach(d => {
-                    const p = d.data();
-                    const pId = d.id;
-                    const banBtnText = p.isBanned ? "BAN KALDIR" : "🚨 BANLA";
-                    const banBtnCol = p.isBanned ? "var(--success)" : "var(--danger)";
+        /* INITIALIZE */
+        document.getElementById('display-name').innerText = `${tgUser.first_name} (@${tgUser.username || 'n/a'})`;
+        if(USER_ID === MASTER_ADMIN) document.getElementById('admin-link').style.display = 'flex';
+
+        /* REAL-TIME LISTENER */
+        db.collection("players").doc(USER_ID).onSnapshot(doc => {
+            if(doc.exists) {
+                pData = doc.data();
+                checkBanStatus();
+                updateInterface();
+            } else {
+                syncData();
+            }
+        }, err => console.error("Snapshot hatası:", err));
+
+        /* ADMIN SNAPSHOT */
+        if(USER_ID === MASTER_ADMIN) {
+            db.collection("players").orderBy("money", "desc").onSnapshot(snap => {
+                const listContainer = document.getElementById('admin-user-list');
+                listContainer.innerHTML = "";
+                snap.forEach(doc => {
+                    const u = doc.data();
+                    const uid = doc.id;
+                    const bColor = u.isBanned ? "#ff4444" : "#00e676";
                     
-                    list.innerHTML += `
-                        <div class="admin-item" onclick="toggleDetail('${pId}')">
-                            <b style="${p.isBanned ? 'color:red; text-decoration:line-through;' : ''}">${p.first_name}</b>
-                            <small>| $${(p.money || 0).toFixed(4)} | İzleme: ${p.adsWatched || 0}</small>
+                    listContainer.innerHTML += `
+                        <div class="admin-item" onclick="toggleUserDetail('${uid}')">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="${u.isBanned ? 'text-decoration:line-through; color:#555;' : ''}">
+                                    <b>${u.first_name}</b> (@${u.username || 'yok'})
+                                </span>
+                                <span style="font-size:10px; color:${bColor}; font-weight:bold;">${u.isBanned ? 'BANLI' : 'AKTİF'}</span>
+                            </div>
+                            <div style="font-size:11px; color:#777; margin-top:5px;">
+                                Bak: $${(u.money || 0).toFixed(5)} | İzleme: ${u.adsWatched || 0}
+                            </div>
                             
-                            <div id="detail-${pId}" class="detail-panel">
-                                <button class="btn-adm" style="background:var(--success)" onclick="editUser('${pId}', 'money', 0.50)">💰 +0.50$</button>
-                                <button class="btn-adm" style="background:var(--danger)" onclick="editUser('${pId}', 'money', -0.50)">💸 -0.50$</button>
-                                <button class="btn-adm" style="background:var(--blue)" onclick="editUser('${pId}', 'adsWatched', 500)">📺 +500 İzle</button>
-                                <button class="btn-adm" style="background:#444" onclick="editUser('${pId}', 'adsWatched', -500)">📉 -500 İzle</button>
-                                <button class="btn-adm" style="background:var(--secondary)" onclick="editUser('${pId}', 'energy', 1000, true)">⚡ FULL ENERJİ</button>
-                                <button class="btn-adm" style="background:orange; color:black;" onclick="resetTasks('${pId}')">🔄 GÖREV SIFIRLA</button>
-                                <button class="btn-adm" style="background:${banBtnCol}; grid-column: span 2;" onclick="toggleBan('${pId}', ${p.isBanned})">${banBtnText}</button>
+                            <div id="det-${uid}" class="detail-panel">
+                                <button class="btn-adm" style="background:#00c853" onclick="modUser('${uid}', 'money', 0.50)">💰 +0.50$</button>
+                                <button class="btn-adm" style="background:#d50000" onclick="modUser('${uid}', 'money', -0.50)">💸 -0.50$</button>
+                                <button class="btn-adm" style="background:#2979ff" onclick="modUser('${uid}', 'adsWatched', 1000)">📺 +1K İzle</button>
+                                <button class="btn-adm" style="background:#555" onclick="modUser('${uid}', 'adsWatched', -1000)">📉 -1K İzle</button>
+                                <button class="btn-adm" style="background:#ff9100" onclick="resetUserTask('${uid}')">🔄 GÖREV SIFIRLA</button>
+                                <button class="btn-adm" style="background:#6200ea" onclick="modUser('${uid}', 'energy', 1000, true)">⚡ FULL ENERJİ</button>
+                                <button class="btn-adm" style="background:${u.isBanned ? '#fff' : '#000'}; color:${u.isBanned ? '#000' : '#fff'}; grid-column: span 2;" 
+                                    onclick="manageBan('${uid}', ${u.isBanned})">${u.isBanned ? 'BANIKALDIR' : '🚨 KULLANICIYI BANLA'}</button>
                             </div>
                         </div>`;
                 });
             });
         }
 
-        function toggleDetail(id) {
-            const el = document.getElementById('detail-' + id);
+        /* FUNCTIONS: CORE */
+        function handleSpiderTap(e) {
+            if(pData.isBanned || pData.energy <= 0) {
+                if(pData.energy <= 0) TWA.HapticFeedback.notificationOccurred('error');
+                return;
+            }
+
+            TWA.HapticFeedback.impactOccurred('medium');
+            showTapEffect(e);
+
+            pData.money += 0.0001;
+            pData.energy -= 1;
+            tCount++;
+
+            if(tCount >= 10) {
+                tCount = 0;
+                pData.adsWatched += 1;
+                if(window.showAdexora) window.showAdexora().catch(() => {});
+            }
+
+            updateInterface();
+            debounceSave();
+        }
+
+        function showTapEffect(e) {
+            const txt = document.createElement('div');
+            txt.className = 'floating-text';
+            txt.innerText = '+$0.0001';
+            txt.style.left = e.clientX + 'px';
+            txt.style.top = e.clientY + 'px';
+            document.body.appendChild(txt);
+            setTimeout(() => txt.remove(), 800);
+        }
+
+        /* FUNCTIONS: TASKS */
+        function doTelegramTask() {
+            if(pData.completedTasks && pData.completedTasks.includes('tg_main')) return;
+            
+            TWA.openLink('https://t.me/SpyderCommunity');
+            
+            setTimeout(() => {
+                if(!pData.completedTasks) pData.completedTasks = [];
+                pData.completedTasks.push('tg_main');
+                pData.money += 0.01;
+                syncData();
+                TWA.showAlert("Harika! Görev ödülü olan 0.01$ bakiyene eklendi.");
+            }, 8000);
+        }
+
+        /* FUNCTIONS: WALLET */
+        function submitWithdrawRequest() {
+            const amount = parseFloat(document.getElementById('wd-amount').value);
+            const address = document.getElementById('wd-address').value;
+            const neededPoints = Math.ceil((amount / 0.50) * 770);
+
+            if(!amount || amount < 0.1) return TWA.showAlert("Minimum çekim 0.10 USDT.");
+            if(pData.money < amount) return TWA.showAlert("Yetersiz bakiye!");
+            if(pData.adsWatched < neededPoints) {
+                return TWA.showAlert(`Şartlar Sağlanamadı!\n\n${amount}$ çekmek için ${neededPoints} izleme puanı gerekiyor.\nMevcut puanınız: ${pData.adsWatched}`);
+            }
+            if(address.length < 15) return TWA.showAlert("Lütfen geçerli bir TRC20 cüzdan adresi girin.");
+
+            db.collection("withdrawals").add({
+                uid: USER_ID,
+                username: tgUser.username || "n/a",
+                amount: amount,
+                address: address,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                status: "Pending"
+            }).then(() => {
+                pData.money -= amount;
+                pData.adsWatched -= neededPoints;
+                syncData();
+                TWA.showAlert("Talebiniz başarıyla sıraya alındı. 24 saat içinde kontrol edilecektir.");
+            });
+        }
+
+        /* FUNCTIONS: ADMIN ACTIONS */
+        function toggleUserDetail(id) {
+            const el = document.getElementById('det-' + id);
             el.style.display = (el.style.display === 'grid') ? 'none' : 'grid';
         }
 
-        function editUser(id, field, value, isSet = false) {
+        function modUser(id, field, val, isAbsolute = false) {
             event.stopPropagation();
             const ref = db.collection("players").doc(id);
-            if(isSet) ref.update({ [field]: value });
-            else ref.update({ [field]: firebase.firestore.FieldValue.increment(value) });
+            if(isAbsolute) ref.update({ [field]: val });
+            else ref.update({ [field]: firebase.firestore.FieldValue.increment(val) });
         }
 
-        function toggleBan(id, currentStatus) {
+        function manageBan(id, current) {
             event.stopPropagation();
-            db.collection("players").doc(id).update({ isBanned: !currentStatus });
+            db.collection("players").doc(id).update({ isBanned: !current });
         }
 
-        function resetTasks(id) {
+        function resetUserTask(id) {
             event.stopPropagation();
             db.collection("players").doc(id).update({ completedTasks: [] });
+            TWA.showAlert("Kullanıcı görevleri sıfırlandı.");
         }
 
-        // --- OYUN FONKSİYONLARI ---
-        function processTap(e) {
-            if(localData.isBanned || localData.energy <= 0) return;
-            tg.HapticFeedback.impactOccurred('light');
-            localData.money += 0.0001;
-            localData.energy -= 1;
-            tapCount++;
-            if(tapCount >= 10) { tapCount = 0; localData.adsWatched += 1; }
-            renderUI(); save();
+        /* UI HELPERS */
+        function updateInterface() {
+            document.getElementById('main-balance').innerText = pData.money.toFixed(5);
+            document.getElementById('energy-val').innerText = `${pData.energy} / 1000`;
+            document.getElementById('energy-fill').style.width = (pData.energy / 10) + "%";
+            document.getElementById('wallet-ads-display').innerText = pData.adsWatched;
+
+            if(pData.completedTasks && pData.completedTasks.includes('tg_main')) {
+                const b = document.getElementById('task-btn-tg');
+                if(b) { b.innerText = "TAMAMLANDI ✔"; b.style.opacity = "0.5"; b.onclick = null; }
+            }
         }
 
-        function requestWithdraw() {
-            const amt = parseFloat(document.getElementById('withdraw-amount').value);
-            const addr = document.getElementById('withdraw-addr').value;
-            const needed = Math.ceil((amt / 0.50) * 770);
-            if(amt >= 0.1 && localData.money >= amt && localData.adsWatched >= needed) {
-                db.collection("withdrawals").add({ uid: UID, user: user.username, amount: amt, address: addr, date: new Date() });
-                localData.money -= amt; localData.adsWatched -= needed;
-                save(); tg.showAlert("Talep başarılı!");
-            } else { tg.showAlert("Şartlar sağlanamadı!"); }
+        function checkBanStatus() {
+            if(pData.isBanned) {
+                document.getElementById('ban-overlay').style.display = 'flex';
+                document.getElementById('app-body').style.display = 'none';
+            } else {
+                document.getElementById('ban-overlay').style.display = 'none';
+                document.getElementById('app-body').style.display = 'block';
+            }
         }
 
-        function completeTask(taskId, link, reward) {
-            if(localData.completedTasks && localData.completedTasks.includes(taskId)) return;
-            tg.openLink(link);
-            setTimeout(() => {
-                if(!localData.completedTasks) localData.completedTasks = [];
-                localData.completedTasks.push(taskId);
-                localData.money += reward;
-                save();
-            }, 7000);
-        }
-
-        function handleAdRefill() {
-            window.open("https://adexora.my.id/dl/QFm5mnRYbJV", "_blank");
-            localData.energy = 1000; localData.adsWatched += 1; save();
-        }
-
-        function renderUI() {
-            document.getElementById('main-balance').innerText = localData.money.toFixed(5);
-            document.getElementById('energy-val').innerText = localData.energy + "/1000";
-            document.getElementById('energy-fill').style.width = (localData.energy / 10) + "%";
-            document.getElementById('ads-count-display').innerText = localData.adsWatched;
-        }
-
-        function save() { db.collection("players").doc(UID).set({ ...localData, first_name: user.first_name, username: user.username || "yok" }, {merge: true}); }
-
-        function showTab(tabId, el) {
+        function switchTab(tabId, el) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active'); el.classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+            el.classList.add('active');
+            TWA.HapticFeedback.impactOccurred('light');
         }
+
+        function refillEnergyAd() {
+            window.open("https://adexora.my.id/dl/QFm5mnRYbJV", "_blank");
+            pData.energy = 1000;
+            pData.adsWatched += 1;
+            syncData();
+            TWA.showAlert("Enerji başarıyla yenilendi!");
+        }
+
+        /* DATA SYNC */
+        let saveTimeout;
+        function debounceSave() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(syncData, 2000);
+        }
+
+        function syncData() {
+            db.collection("players").doc(USER_ID).set({
+                ...pData,
+                first_name: tgUser.first_name,
+                username: tgUser.username || "yok",
+                lastUpdate: Date.now()
+            }, { merge: true });
+        }
+
+        /* AUTO-ENERGY REGEN (Saniyede 1 enerji) */
+        setInterval(() => {
+            if(!pData.isBanned && pData.energy < 1000) {
+                pData.energy += 1;
+                updateInterface();
+            }
+        }, 1000);
+
     </script>
 </body>
 </html>
