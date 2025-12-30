@@ -3,6 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SpyderCoin Mining Pro</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
+
+    <style>
+        :root {
+            --primary: #00d2ff; --secondary: #9c27b0; --bg-dark: #050a12;
+            --card-bg: #101926; --success: #00e676; --danger: #ff4444;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
+        body {
+            background: radial-gradient(circle at center, #101926 0%, #050a12 100%);
+            color: white; font-family: 'Segoe UI', sans-serif; height: 100vh;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        #ban-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 10000; flex-direction: column; align-items: center;
+            justify-content: center; text-align: center;
+        }
+
+        header { padding: 20px; text-align: center; border-bottom: 1px solid rgba(0, 210, 255, 0.1); }
+        .balance-label { font-size: 12px; color: var(--primary); letter-spacing: 2px; }
+        .balance-value { font-size: 38px; font-weight: 900; color: white; text-shadow: 0 0 15px rgba(0, 210, 255, 0.3); }
+        
+        main { flex-grow: 1; overflow-y: auto; padding-bottom: 90px; }
+        .tab-content { display: none; padding: 20px; animation: fadeIn 0.3s ease; width: 100%; }
+        .tab-content.active { display: flex; flex-direction: column; align-items: center; }
+
+        /* MINING ANIMATION */
+        .mining-container { margin: 30px 0; position: relative; }
+        .mining-spinner {
+            width: 200px; height: 200px;
+            background: url('https://cdn-icons-png.flaticon.com/512/3637/3637492.png'); /* Mavi Pervane İkonu */
+            background-size: contain;
+            animation: spin 3s linear infinite;
+            filter: drop-shadow(0 0 20px var(--primary));
+        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .pool-box {
+            background: rgba(0, 210, 255, 0.1); padding: 15px 30px; border-radius: 50px;
+            border: 1px solid var(--primary); margin-top: 20px; text-align: center;
+        }
+
+        .card { background: var(--card-bg); border-radius: 20px; padding: 20px; width: 100%; max-width: 400px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px; }
+        .btn-claim { 
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5); color: white; border: none; 
+            padding: 15px 40px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.3);
+        }
+
+        /* ADMIN */
+        .admin-item { background: #111; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--primary); cursor: pointer; width: 100%; }
+        .detail-panel { background: #000; border-radius: 10px; padding: 10px; margin-top: 10px; display: none; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn-adm { font-size: 10px; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: white; }
+
+        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 75px; background: #080f1a; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); }
+        .nav-link { display: flex; flex-direction: column; align-items: center; color: #4b5563; text-decoration: none; font-size: 11px; cursor: pointer; }
+        .nav-link.active { color: var(--primary); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div id="ban-overlay"><h1>🚫 ERİŞİM ENGELİ</h1><p>Hesabınız dondurulmuştur.</p></div>
+
+    <header>
+        <div class="balance-label">TOPLAM BAKİYE</div>
+        <div class="balance-value">$<span id="main-balance">0.00000</span></div>
+    </header>
+
+    <main id="app-body">
+        <div id="tab-home" class="tab-content active">
+            <div class="mining-container">
+                <div class="mining-spinner"></div>
+            </div>
+            
+            <div class="pool-box">
+                <small style="color: #888;">MADENCİLİK HAVUZU</small>
+                <div id="pool-balance" style="font-size: 24px; font-weight: bold; color: var(--primary);">$0.000000</div>
+            </div>
+
+            <button class="btn-claim" onclick="claimMining()">CLAIM (HASAT ET)</button>
+            <p style="font-size: 11px; color: #555; margin-top: 15px; text-align: center;">
+                Şart: Her 0.0005$ hasat için 1 reklam izleme puanı gerekir.<br>
+                Mevcut Puanınız: <span id="user-ads-count" style="color:var(--success)">0</span>
+            </p>
+        </div>
+
+        <div id="tab-wallet" class="tab-content">
+            <div class="card">
+                <h3>Para Çekme (USDT TRC20)</h3>
+                <p style="font-size:12px; color:#aaa; margin:10px 0;">Min: 0.10$ | 0.50$ başına 770 puan.</p>
+                <input type="number" id="wd-amt" style="width:100%; padding:12px; margin-bottom:10px; background:#000; border:1px solid #333; color:white; border-radius:10px;" placeholder="Miktar">
+                <input type="text" id="wd-addr" style="width:100%; padding:12px; margin-bottom:15px; background:#000; border:1px solid #333; color:white; border-radius:10px;" placeholder="Cüzdan Adresi">
+                <button class="btn-claim" style="width:100%; margin:0;" onclick="sendWithdraw()">ÖDEME TALEBİ</button>
+            </div>
+        </div>
+
+        <div id="tab-admin" class="tab-content">
+            <div id="admin-stats" class="card" style="border:1px solid var(--primary);">
+                <h4 style="color:var(--primary); text-align:center;">SİSTEM ÖZETİ</h4>
+                <div id="global-stats" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:11px; margin-top:10px;"></div>
+            </div>
+            <div id="admin-user-list" style="width:100%;"></div>
+        </div>
+    </main>
+
+    <nav class="nav-bar">
+        <div class="nav-link active" onclick="showTab('home', this)"><span>⛏️</span><span>MINING</span></div>
+        <div class="nav-link" onclick="showTab('wallet', this)"><span>👛</span><span>WALLET</span></div>
+        <div id="admin-link" class="nav-link" style="display:none;" onclick="showTab('admin', this)"><span>🛡️</span><span>ADMIN</span></div>
+    </nav>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDfy6QdIZ0BthEHTmxkw-NAja3B9bFFd8U", authDomain: "spydercoin-94f7b.firebaseapp.com",
+            projectId: "spydercoin-94f7b", storageBucket: "spydercoin-94f7b.firebasestorage.app",
+            messagingSenderId: "218267568158", appId: "1:218267568158:web:832728845ba0f42202060f"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const MASTER = "8392479231";
+        const user = window.Telegram.WebApp.initDataUnsafe.user || { id: "dev_user", first_name: "Test" };
+        const UID = user.id.toString();
+
+        let pData = { money: 0, adsWatched: 0, pool: 0, isBanned: false, lastUpdate: Date.now() };
+
+        if(UID === MASTER) document.getElementById('admin-link').style.display = 'flex';
+
+        // Veri Yükleme
+        db.collection("players").doc(UID).onSnapshot(doc => {
+            if(doc.exists) { 
+                pData = doc.data(); 
+                if(pData.isBanned) document.getElementById('ban-overlay').style.display = 'flex';
+                renderUI(); 
+            } else { sync(); }
+        });
+
+        // OTOMATİK MİNİNG DÖNGÜSÜ (Her Saniye)
+        setInterval(() => {
+            if(!pData.isBanned) {
+                pData.pool += 0.0001; // Saniyede 0.0001 USDT
+                document.getElementById('pool-balance').innerText = "$" + pData.pool.toFixed(6);
+            }
+        }, 1000);
+
+        function claimMining() {
+            const requiredAds = Math.floor(pData.pool / 0.0005);
+            
+            if (pData.pool < 0.0005) {
+                return window.Telegram.WebApp.showAlert("Hasat için havuzda en az $0.0005 birikmelidir.");
+            }
+
+            if (pData.adsWatched < requiredAds) {
+                window.Telegram.WebApp.showAlert(`Yetersiz Reklam Puanı!\nBu miktarı çekmek için ${requiredAds} reklam izlemelisiniz.\nReklam izlemek için enerji fulleme butonunu kullanın.`);
+                window.open("https://adexora.my.id/dl/QFm5mnRYbJV"); // Reklam linkine yönlendir
+                return;
+            }
+
+            // Başarılı Claim
+            pData.money += pData.pool;
+            pData.adsWatched -= requiredAds;
+            pData.pool = 0;
+            sync();
+            window.Telegram.WebApp.showAlert("Hasat Başarılı! Havuzdaki bakiye hesabınıza eklendi.");
+        }
+
+        // --- ADMIN SNAPSHOT ---
+        if(UID === MASTER) {
+            db.collection("players").onSnapshot(snap => {
+                let uCount = snap.size, uMoney = 0, uAds = 0;
+                let listHtml = "";
+                snap.forEach(d => {
+                    const u = d.data(); const id = d.id;
+                    uMoney += u.money; uAds += u.adsWatched;
+                    listHtml += `<div class="admin-item" onclick="toggleDet('${id}')">
+                        <b>${u.first_name}</b> | $${u.money.toFixed(4)} | Puan: ${u.adsWatched}
+                        <div id="det-${id}" class="detail-panel">
+                            <button class="btn-adm" style="background:var(--success)" onclick="edit('${id}','money',0.1)">💰 +0.1$</button>
+                            <button class="btn-adm" style="background:var(--danger)" onclick="edit('${id}','money',-0.1)">💸 -0.1$</button>
+                            <button class="btn-adm" style="background:var(--primary)" onclick="edit('${id}','adsWatched',10)">📺 +10 Puan</button>
+                            <button class="btn-adm" style="background:#555" onclick="edit('${id}','adsWatched',-10)">📉 -10 Puan</button>
+                            <button class="btn-adm" style="background:${u.isBanned?'#fff':'#000'};color:${u.isBanned?'#000':'#fff'};grid-column:span 2" onclick="toggleB('${id}',${u.isBanned})">${u.isBanned?'UNBAN':'BANLA'}</button>
+                        </div></div>`;
+                });
+                document.getElementById('global-stats').innerHTML = `<div>Üye: ${uCount}</div><div>Top. Para: $${uMoney.toFixed(2)}</div><div>Top. Puan: ${uAds}</div>`;
+                document.getElementById('admin-user-list').innerHTML = listHtml;
+            });
+        }
+
+        function sendWithdraw() {
+            const amt = parseFloat(document.getElementById('wd-amt').value);
+            const needed = Math.ceil((amt / 0.5) * 770);
+            if(amt >= 0.1 && pData.money >= amt && pData.adsWatched >= needed) {
+                db.collection("withdrawals").add({ uid: UID, amount: amt, addr: document.getElementById('wd-addr').value, date: new Date() });
+                pData.money -= amt; pData.adsWatched -= needed; sync();
+                window.Telegram.WebApp.showAlert("Talep başarıyla gönderildi!");
+            } else { window.Telegram.WebApp.showAlert("Şartlar sağlanamadı (Bakiye veya Puan yetersiz)."); }
+        }
+
+        function edit(id,f,v){ event.stopPropagation(); db.collection("players").doc(id).update({[f]:firebase.firestore.FieldValue.increment(v)}); }
+        function toggleB(id,s){ event.stopPropagation(); db.collection("players").doc(id).update({isBanned:!s}); }
+        function toggleDet(id){ const e=document.getElementById('det-'+id); e.style.display=e.style.display==='grid'?'none':'grid'; }
+        function renderUI(){ 
+            document.getElementById('main-balance').innerText = pData.money.toFixed(5);
+            document.getElementById('user-ads-count').innerText = pData.adsWatched;
+        }
+        function sync(){ db.collection("players").doc(UID).set({...pData, first_name: user.first_name}, {merge:true}); }
+        function showTab(t,el){ document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); document.getElementById('tab-'+t).classList.add('active'); }
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SpyderCoin Pro - 444 Admin Edition</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
