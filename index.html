@@ -3,89 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Tap & Earn</title>
+    <title>SpyderCoin - Sadece Kazan</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
         :root { --purple: #6c5ce7; --red: #ff2d2d; --dark: #080808; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--dark); color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none; }
-        
-        /* Bakiye Kartı */
-        .tab-content { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .active-tab { display: flex; animation: fadeIn 0.3s ease; }
-        
-        .card-main { background: rgba(255, 255, 255, 0.03); border: 2px solid var(--red); border-radius: 25px; padding: 20px; width: 85%; max-width: 360px; box-shadow: 0 0 20px rgba(255, 45, 45, 0.2); margin-bottom: 20px; text-align: center; }
-        .bal-val { font-size: 42px; font-weight: 800; color: var(--red); text-shadow: 0 0 10px rgba(255, 45, 45, 0.3); }
+        body { 
+            font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--dark); 
+            color: white; display: flex; flex-direction: column; height: 100vh; 
+            align-items: center; justify-content: center; overflow: hidden; user-select: none;
+        }
 
-        /* TAP ALANI VE ANİMASYON */
-        .spider-wrapper { position: relative; width: 220px; height: 220px; margin: 30px 0; }
+        /* Bakiye Paneli */
+        .card-main { 
+            background: linear-gradient(145deg, rgba(255, 45, 45, 0.1), rgba(0, 0, 0, 0.6));
+            border: 2px solid var(--red); border-radius: 30px; 
+            padding: 25px; width: 80%; max-width: 380px; text-align: center;
+            box-shadow: 0 10px 30px rgba(255, 45, 45, 0.2);
+            margin-bottom: 20px;
+        }
+        .bal-val { font-size: 48px; font-weight: 800; color: var(--red); text-shadow: 0 0 15px rgba(255, 45, 45, 0.4); }
+
+        /* Örümcek Alanı */
+        .spider-wrapper { position: relative; width: 240px; height: 240px; margin: 30px 0; }
         .spider-circle { 
             width: 100%; height: 100%; 
             background: radial-gradient(circle at 35% 35%, #6c5ce7 0%, #302475 100%); 
             border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; border: 4px solid rgba(255,255,255,0.1); 
-            box-shadow: 0 0 50px rgba(108, 92, 231, 0.5); 
+            cursor: pointer; border: 5px solid rgba(255,255,255,0.1); 
+            box-shadow: 0 0 60px rgba(108, 92, 231, 0.5); 
             transition: transform 0.05s ease-out; position: relative; z-index: 10; 
         }
         .spider-circle:active { transform: scale(0.92); }
-        .spider-circle span { font-size: 110px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); }
+        .spider-circle span { font-size: 120px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6)); }
 
-        /* Ağ Patlaması Efekti */
-        .web-spike { position: absolute; pointer-events: none; background: rgba(255, 255, 255, 0.9); width: 3px; height: 150px; transform-origin: bottom center; z-index: 5; animation: webShoot 0.4s ease-out forwards; }
+        /* Ağ Patlaması */
+        .web-spike { position: absolute; pointer-events: none; background: rgba(255, 255, 255, 0.9); width: 3px; height: 160px; transform-origin: bottom center; z-index: 5; animation: webShoot 0.4s ease-out forwards; }
         @keyframes webShoot { 0% { transform: translate(-50%, -50%) scaleY(0) rotate(var(--deg)); opacity: 1; } 100% { transform: translate(-50%, -150%) scaleY(1.4) rotate(var(--deg)); opacity: 0; } }
 
-        /* Sayı Animasyonu (+$0.00001 yazısı) */
-        .plus-one { position: absolute; color: white; font-weight: bold; font-size: 24px; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 20; }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
+        /* Tıklama Sayısı Yükselme */
+        .plus-val { position: absolute; color: white; font-weight: bold; font-size: 26px; pointer-events: none; animation: float 0.8s ease-out forwards; z-index: 20; text-shadow: 0 0 10px #000; }
+        @keyframes float { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
 
-        /* Navigasyon */
-        .nav-bar { background: #0c0c0c; display: flex; border-top: 1px solid #222; padding: 12px 0; }
-        .nav-item { flex: 1; text-align: center; color: #555; font-size: 12px; cursor: pointer; }
-        .nav-item.active { color: var(--red); font-weight: bold; }
-
-        input { width: 90%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #000; color: white; text-align: center; }
-        button { width: 90%; padding: 16px; border: none; border-radius: 12px; background: var(--red); color: white; font-weight: bold; cursor: pointer; }
-        .ad-calc { color: #f1c40f; font-size: 13px; margin: 10px 0; font-weight: bold; }
+        /* Sayaç ve Ref Bölümü */
+        .status-badge { background: rgba(255,255,255,0.05); padding: 12px 30px; border-radius: 50px; border: 1px solid #333; margin-top: 10px; }
+        .ref-section { margin-top: 40px; width: 80%; max-width: 380px; text-align: center; }
+        .ref-btn { background: #1a1a1a; color: #00ff00; border: 1px dashed #444; padding: 10px; border-radius: 10px; font-size: 12px; cursor: pointer; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     </style>
 </head>
 <body>
 
-    <div id="tab-kazan" class="tab-content active-tab">
-        <div class="card-main">
-            <small style="color: #888; letter-spacing: 2px;">BAKİYE</small>
-            <div class="bal-val">$<span id="bal-txt">0.000000</span></div>
-        </div>
+    <div class="card-main">
+        <small style="color: #888; letter-spacing: 2px;">TOPLAM KAZANÇ</small>
+        <div class="bal-val">$<span id="bal-txt">0.000000</span></div>
+        <small style="color: #666;">Tık Başı: $0.00001</small>
+    </div>
 
-        <div class="spider-wrapper" id="tap-area">
-            <div class="spider-circle" id="tap-btn">
-                <span>🕷️</span>
-            </div>
-        </div>
-
-        <div style="background: rgba(255,255,255,0.05); padding: 10px 25px; border-radius: 50px; border: 1px solid #333;">
-            <span style="color: #bbb;">Reklama:</span> 
-            <b id="ad-rem" style="color: #fff; font-size: 18px;">20</b> 
-            <span style="color: #bbb;">tık kaldı</span>
+    <div class="spider-wrapper" id="tap-zone">
+        <div class="spider-circle" id="tap-btn">
+            <span>🕷️</span>
         </div>
     </div>
 
-    <div id="tab-cüzdan" class="tab-content">
-        <h2>Para Çekme</h2>
-        <input type="number" id="w-amt" placeholder="Miktar ($)" step="0.01" oninput="calcAds()">
-        <div id="ad-info" class="ad-calc"></div>
-        <input type="text" id="w-adr" placeholder="USDT TRC20 Adresi">
-        <button id="w-btn" onclick="withdraw()" disabled>Minimum $0.50</button>
+    <div class="status-badge">
+        <span style="color: #bbb;">Reklam Kilidine:</span> 
+        <b id="ad-rem" style="color: #fff; font-size: 20px;">20</b> 
+        <span style="color: #bbb;">tık kaldı</span>
     </div>
 
-    <div class="nav-bar">
-        <div class="nav-item active" onclick="setTab('kazan', this)">🕸️ Kazan</div>
-        <div class="nav-item" onclick="setTab('cüzdan', this)">💳 Cüzdan</div>
+    <div class="ref-section">
+        <p style="font-size: 12px; color: #666; margin-bottom: 5px;">Referans Linkin (Kopyalamak için tıkla):</p>
+        <div class="ref-btn" id="ref-url" onclick="copyRef()">Yükleniyor...</div>
     </div>
 
     <script>
-        // --- FIREBASE AYARLARI ---
+        // --- FIREBASE YAPILANDIRMASI ---
         const firebaseConfig = { apiKey: "...", databaseURL: "...", projectId: "...", appId: "..." };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -93,34 +87,36 @@
         let uid = localStorage.getItem('spy_uid') || 'U' + Math.floor(Math.random() * 900000);
         localStorage.setItem('spy_uid', uid);
 
-        let userBal = 0;
-        let tıkSayısı = 0;
+        const myLink = "https://t.me/SpyderNetworkBot?start=" + uid;
+        document.getElementById('ref-url').innerText = myLink;
 
-        // Bakiye Takibi
+        let bakiye = 0;
+        let tıklar = 0;
+
+        // Bakiye Senkronizasyonu
         db.ref('users/' + uid).on('value', s => {
             if (s.exists()) {
-                userBal = s.val().balance || 0;
-                document.getElementById('bal-txt').innerText = userBal.toFixed(6);
-                document.getElementById('w-btn').disabled = userBal < 0.50;
+                bakiye = s.val().balance || 0;
+                document.getElementById('bal-txt').innerText = bakiye.toFixed(6);
             } else {
                 db.ref('users/' + uid).set({ balance: 0 });
             }
         });
 
-        // TIKLAMA OLAYI
+        // Tıklama Olayı
         document.getElementById('tap-btn').addEventListener('click', (e) => {
-            tıkSayısı++;
+            tıklar++;
             
-            // 1. Animasyonları Tetikle
+            // Efektler
             playWebEffect();
-            showFloatingText(e);
+            showPlusText(e);
 
-            // 2. Reklam Kontrolü (Her 20 Tıklama)
-            let kalan = 20 - tıkSayısı;
+            // Reklam Kontrolü
+            let kalan = 20 - tıklar;
             document.getElementById('ad-rem').innerText = kalan;
 
-            if (tıkSayısı >= 20) {
-                tıkSayısı = 0;
+            if (tıklar >= 20) {
+                tıklar = 0;
                 document.getElementById('ad-rem').innerText = "20";
                 if (window.showAdexora) {
                     window.showAdexora().then(() => addMoney());
@@ -132,46 +128,35 @@
             }
         });
 
-        // 8 Kollu Ağ Patlaması
         function playWebEffect() {
-            const area = document.getElementById('tap-area');
+            const zone = document.getElementById('tap-zone');
             for(let i=0; i<8; i++) {
-                const spike = document.createElement('div');
-                spike.className = 'web-spike';
-                spike.style.left = '50%'; spike.style.top = '50%';
-                spike.style.setProperty('--deg', `${i * 45}deg`);
-                area.appendChild(spike);
-                setTimeout(() => spike.remove(), 400);
+                const s = document.createElement('div');
+                s.className = 'web-spike';
+                s.style.left = '50%'; s.style.top = '50%';
+                s.style.setProperty('--deg', `${i * 45}deg`);
+                zone.appendChild(s);
+                setTimeout(() => s.remove(), 400);
             }
         }
 
-        // Uçan Sayı Efekti
-        function showFloatingText(e) {
-            const txt = document.createElement('div');
-            txt.className = 'plus-one';
-            txt.innerText = '+$0.00001';
-            txt.style.left = e.clientX + 'px';
-            txt.style.top = e.clientY + 'px';
-            document.body.appendChild(txt);
-            setTimeout(() => txt.remove(), 800);
+        function showPlusText(e) {
+            const p = document.createElement('div');
+            p.className = 'plus-val';
+            p.innerText = '+$0.00001';
+            p.style.left = e.clientX + 'px';
+            p.style.top = e.clientY + 'px';
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 800);
         }
 
         function addMoney() {
             db.ref('users/' + uid + '/balance').transaction(b => (b || 0) + 0.00001);
         }
 
-        function calcAds() {
-            const v = parseFloat(document.getElementById('w-amt').value);
-            const m = document.getElementById('ad-info');
-            if(v > 0) m.innerText = "Gerekli Reklam Sayısı: " + Math.ceil((v / 0.01) * 20);
-            else m.innerText = "";
-        }
-
-        function setTab(name, el) {
-            document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active-tab'));
-            document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-            document.getElementById('tab-' + name).classList.add('active-tab');
-            el.classList.add('active');
+        function copyRef() {
+            navigator.clipboard.writeText(myLink);
+            alert("Referans linkin kopyalandı!");
         }
     </script>
 </body>
