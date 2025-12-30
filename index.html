@@ -3,69 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Tap to Earn</title>
+    <title>SpyderCoin - Web App</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
         :root { --purple: #5c4eb1; --red: #ff2d2d; --dark: #080808; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--dark); color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none; }
         
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 0; background: var(--dark); color: white; 
-            display: flex; flex-direction: column; height: 100vh; 
-            overflow: hidden; user-select: none;
-        }
-
-        /* Sekme İçerikleri */
         .tab-content { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
         .active-tab { display: flex; animation: fadeIn 0.3s ease; }
 
-        /* Premium Bakiye Kartı */
-        .card-main {
-            background: linear-gradient(145deg, rgba(255, 45, 45, 0.08), rgba(0, 0, 0, 0.6));
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 45, 45, 0.4);
-            border-radius: 25px; padding: 25px; width: 85%; max-width: 380px;
-            box-shadow: 0 10px 40px rgba(255, 45, 45, 0.15);
-            margin-bottom: 20px;
-        }
-        .bal-val { font-size: 44px; font-weight: 800; color: var(--red); text-shadow: 0 0 15px rgba(255, 45, 45, 0.4); margin: 5px 0; }
+        /* Bakiye Kartı */
+        .card-main { background: rgba(255, 255, 255, 0.03); border: 2px solid var(--red); border-radius: 25px; padding: 25px; width: 85%; max-width: 380px; box-shadow: 0 0 25px rgba(255, 45, 45, 0.2); }
+        .bal-val { font-size: 44px; font-weight: 800; color: var(--red); text-shadow: 0 0 10px rgba(255, 45, 45, 0.4); }
 
-        /* Mor Daire ve Örümcek */
-        .spider-area { position: relative; width: 220px; height: 220px; margin: 30px 0; }
+        /* TAP TO EARN - Mor Daire */
+        .spider-wrapper { position: relative; margin: 40px 0; }
         .spider-circle { 
-            width: 100%; height: 100%; 
-            background: radial-gradient(circle at 35% 35%, #6c5ce7 0%, #302475 100%); 
+            width: 220px; height: 220px; 
+            background: radial-gradient(circle, #6c5ce7 0%, #302475 100%); 
             border-radius: 50%; display: flex; align-items: center; justify-content: center; 
             cursor: pointer; border: 4px solid rgba(255,255,255,0.1); 
-            box-shadow: 0 0 60px rgba(108, 92, 231, 0.5), inset 0 0 20px rgba(255,255,255,0.1);
-            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            position: relative; z-index: 10; 
+            box-shadow: 0 0 50px rgba(108, 92, 231, 0.5); 
+            transition: transform 0.1s cubic-bezier(0.1, 0.7, 1.0, 0.1); z-index: 10; position: relative;
         }
-        .spider-circle:active { transform: scale(0.92) rotate(3deg); filter: brightness(1.2); }
-        .spider-circle span { font-size: 110px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6)); }
+        .spider-circle:active { transform: scale(0.90); }
+        .spider-circle span { font-size: 110px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); }
 
-        /* Ağ Patlaması Animasyonu */
-        .web-spike { position: absolute; pointer-events: none; background: rgba(255, 255, 255, 0.9); width: 3px; height: 140px; transform-origin: bottom center; z-index: 5; animation: shootOut 0.45s ease-out forwards; }
-        @keyframes shootOut { 0% { transform: translate(-50%, -50%) scaleY(0) rotate(var(--deg)); opacity: 1; } 100% { transform: translate(-50%, -150%) scaleY(1.3) rotate(var(--deg)); opacity: 0; } }
+        /* Ağ Animasyonu */
+        .web-spike { position: absolute; pointer-events: none; background: rgba(255, 255, 255, 0.9); width: 3px; height: 140px; transform-origin: bottom center; z-index: 5; animation: shoot 0.45s ease-out forwards; }
+        @keyframes shoot { 0% { transform: translate(-50%, -50%) scaleY(0) rotate(var(--deg)); opacity: 1; } 100% { transform: translate(-50%, -150%) scaleY(1.3) rotate(var(--deg)); opacity: 0; } }
 
         /* Navigasyon */
         .nav-bar { background: #0c0c0c; display: flex; border-top: 1px solid #222; padding: 12px 0; }
-        .nav-item { flex: 1; text-align: center; color: #555; font-size: 12px; cursor: pointer; transition: 0.3s; }
+        .nav-item { flex: 1; text-align: center; color: #555; font-size: 13px; cursor: pointer; }
         .nav-item.active { color: var(--red); font-weight: bold; }
-        .nav-item span { font-size: 20px; display: block; margin-bottom: 4px; }
-
-        /* Alt Bilgi */
-        .status-badge { background: rgba(255,255,255,0.05); padding: 10px 25px; border-radius: 50px; border: 1px solid #333; margin-top: 15px; }
 
         /* Cüzdan & Ref */
-        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #000; color: white; outline: none; }
-        button { width: 90%; padding: 16px; border: none; border-radius: 12px; background: var(--red); color: white; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 45, 45, 0.3); }
-        button:disabled { background: #222; color: #555; box-shadow: none; cursor: not-allowed; }
-        .info-box { background: #000; padding: 15px; border-radius: 12px; border: 1px dashed #444; font-size: 11px; color: #00ff00; word-break: break-all; margin: 15px 0; width: 85%; }
-        .ad-calc { color: #f1c40f; font-size: 13px; margin: 5px 0 15px 0; font-weight: bold; }
+        input { width: 90%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #000; color: white; outline: none; }
+        button { width: 90%; padding: 15px; border: none; border-radius: 12px; background: var(--red); color: white; font-weight: bold; cursor: pointer; }
+        .ref-box { background: #000; padding: 15px; border-radius: 12px; border: 1px dashed #444; font-size: 11px; color: #00ff00; word-break: break-all; margin: 15px 0; width: 85%; }
+        .calc-text { color: #ffcc00; font-size: 13px; margin-bottom: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -74,47 +54,36 @@
         <div class="card-main">
             <small style="color: #888; letter-spacing: 2px;">TOPLAM BAKİYE</small>
             <div class="bal-val">$<span id="bal-txt">0.000000</span></div>
-            <small style="color: var(--red); opacity: 0.7;">Her tık +$0.00001</small>
         </div>
 
-        <div class="spider-area">
-            <div class="spider-circle" id="tap-btn">
+        <div class="spider-wrapper">
+            <div class="spider-circle" id="tap-earn-btn">
                 <span>🕷️</span>
             </div>
         </div>
 
-        <div class="status-badge">
-            <span style="color: #bbb;">Reklama:</span> 
-            <b id="ad-rem" style="color: #fff; font-size: 18px;">10</b> 
-            <span style="color: #bbb;">tık kaldı</span>
-        </div>
-        <p style="font-size: 11px; color: #444; margin-top: 15px;">@SpyderCoin_Bot</p>
+        <p style="color: #666;">Reklama: <b id="ad-step" style="color: white;">10</b> Tık Kaldı</p>
     </div>
 
     <div id="tab-ref" class="tab-content">
-        <h2>Referans Ağı</h2>
-        <div class="card-main">
-            <p>Davet ettiğin her arkadaşın için kazanç sağla!</p>
-            <div class="info-box" id="ref-display">...</div>
-            <button onclick="copyRef()">LINKI KOPYALA</button>
-            <p style="margin-top:20px;">Toplam Üyen: <b id="ref-count" style="color: var(--red);">0</b></p>
-        </div>
+        <h2>Davet Et Kazan</h2>
+        <div class="ref-box" id="ref-url">Link oluşturuluyor...</div>
+        <button onclick="copyRef()">KOPYALA</button>
+        <p>Referans Sayın: <b id="ref-count" style="color: var(--red);">0</b></p>
     </div>
 
     <div id="tab-cüzdan" class="tab-content">
         <h2>Cüzdan</h2>
-        <div class="card-main">
-            <input type="number" id="w-amt" placeholder="Çekim Miktarı ($)" step="0.01" oninput="updateAdInfo()">
-            <div id="ad-info" class="ad-calc"></div>
-            <input type="text" id="w-adr" placeholder="USDT TRC20 Adresi">
-            <button id="w-btn" onclick="sendRequest()" disabled>Minimum $0.50</button>
-        </div>
+        <input type="number" id="w-amt" placeholder="Çekim Miktarı ($)" step="0.01" oninput="calcAds()">
+        <div id="ad-info" class="calc-text"></div>
+        <input type="text" id="w-adr" placeholder="USDT TRC20 Cüzdan Adresi">
+        <button id="w-btn" onclick="sendW()" disabled>Minimum $0.50</button>
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item active" onclick="switchTab('kazan', this)"><span>🕸️</span>Kazan</div>
-        <div class="nav-item" onclick="switchTab('ref', this)"><span>👥</span>Ref</div>
-        <div class="nav-item" onclick="switchTab('cüzdan', this)"><span>💳</span>Cüzdan</div>
+        <div class="nav-item active" onclick="setTab('kazan', this)">🕸️ Kazan</div>
+        <div class="nav-item" onclick="setTab('ref', this)">👥 Ref</div>
+        <div class="nav-item" onclick="setTab('cüzdan', this)">💳 Cüzdan</div>
     </div>
 
     <script>
@@ -123,72 +92,65 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // KULLANICI AYARLARI
         let uid = localStorage.getItem('spy_uid') || 'U' + Math.floor(100000 + Math.random() * 900000);
         localStorage.setItem('spy_uid', uid);
+        document.getElementById('ref-url').innerText = "https://t.me/SpyderNetworkBot?start=" + uid;
 
-        const refLink = "https://t.me/SpyderNetworkBot?start=" + uid;
-        document.getElementById('ref-display').innerText = refLink;
+        let bakiye = 0;
+        let tıklar = 0;
 
-        let userBal = 0;
-        let tık = 0;
-
-        // VERİLERİ ANLIK TAKİP ET
+        // Bakiye Takibi
         db.ref('users/' + uid).on('value', s => {
             if (s.exists()) {
-                userBal = s.val().balance || 0;
-                document.getElementById('bal-txt').innerText = userBal.toFixed(6);
+                bakiye = s.val().balance || 0;
+                document.getElementById('bal-txt').innerText = bakiye.toFixed(6);
                 document.getElementById('ref-count').innerText = s.val().refs || 0;
-                
-                const b = document.getElementById('w-btn');
-                b.disabled = userBal < 0.50;
-                if(userBal >= 0.50) b.innerText = "Ödeme Talebi Gönder";
+                document.getElementById('w-btn').disabled = bakiye < 0.50;
+                if(bakiye >= 0.50) document.getElementById('w-btn').innerText = "Ödeme Al";
             } else {
                 db.ref('users/' + uid).set({ balance: 0, refs: 0 });
             }
         });
 
-        // TIKLAMA VE AĞ ANİMASYONU
-        document.getElementById('tap-btn').addEventListener('click', (e) => {
-            tık++;
-            playWebAnim();
+        // TAP TO EARN SİSTEMİ
+        document.getElementById('tap-earn-btn').addEventListener('click', (e) => {
+            tıklar++;
+            animateWeb();
             
-            let req = 10 + (Math.floor(userBal / 0.01) * 15);
-            document.getElementById('ad-rem').innerText = Math.max(0, req - tık);
+            let limit = 10 + (Math.floor(bakiye / 0.01) * 15);
+            document.getElementById('ad-step').innerText = Math.max(0, limit - tıklar);
 
-            if (tık >= req) {
-                tık = 0;
+            if (tıklar >= limit) {
+                tıklar = 0;
                 if (window.showAdexora) window.showAdexora().then(() => reward()); else reward();
-            } else {
-                reward();
-            }
+            } else { reward(); }
         });
 
-        function playWebAnim() {
-            const area = document.querySelector('.spider-area');
+        function animateWeb() {
+            const wrap = document.querySelector('.spider-wrapper');
             for(let i=0; i<8; i++) {
                 const w = document.createElement('div');
                 w.className = 'web-spike';
                 w.style.left = '50%'; w.style.top = '50%';
                 w.style.setProperty('--deg', `${i * 45}deg`);
-                area.appendChild(w);
+                wrap.appendChild(w);
                 setTimeout(() => w.remove(), 450);
             }
         }
 
         function reward() {
+            // Tıklama başı $0.00001
             db.ref('users/' + uid + '/balance').transaction(b => (b || 0) + 0.00001);
         }
 
-        // CÜZDAN HESAPLAMA
-        function updateAdInfo() {
+        function calcAds() {
             const v = parseFloat(document.getElementById('w-amt').value);
-            const m = document.getElementById('ad-info');
-            if(v > 0) m.innerText = "Gerekli Reklam Sayısı: " + Math.ceil((v / 0.01) * 20);
-            else m.innerText = "";
+            const info = document.getElementById('ad-info');
+            if(v > 0) info.innerText = "Gerekli Reklam Sayısı: " + Math.ceil((v / 0.01) * 20);
+            else info.innerText = "";
         }
 
-        function switchTab(name, el) {
+        function setTab(name, el) {
             document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active-tab'));
             document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
             document.getElementById('tab-' + name).classList.add('active-tab');
@@ -196,17 +158,17 @@
         }
 
         function copyRef() {
-            navigator.clipboard.writeText(refLink);
+            navigator.clipboard.writeText(document.getElementById('ref-url').innerText);
             alert("Referans linkin kopyalandı!");
         }
 
-        function sendRequest() {
-            const a = parseFloat(document.getElementById('w-amt').value);
-            const ad = document.getElementById('w-adr').value;
-            if (a > userBal || ad.length < 10) return alert("Hata: Bilgileri kontrol edin.");
-            db.ref('payouts').push({ uid: uid, amount: a, wallet: ad, date: Date.now() });
-            db.ref('users/' + uid + '/balance').transaction(b => b - a);
-            alert("Talep başarıyla gönderildi!");
+        function sendW() {
+            const amt = parseFloat(document.getElementById('w-amt').value);
+            const adr = document.getElementById('w-adr').value;
+            if (amt > bakiye || adr.length < 10) return alert("Hatalı çekim!");
+            db.ref('payouts').push({ uid: uid, amount: amt, wallet: adr, date: Date.now() });
+            db.ref('users/' + uid + '/balance').transaction(b => b - amt);
+            alert("Talep alındı!");
         }
     </script>
 </body>
