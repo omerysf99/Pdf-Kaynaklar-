@@ -3,472 +3,355 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spyder Network - Global Enterprise V15</title>
+    <title>Spyder Network - Enterprise OS Platinum Edition</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- PRO DESIGN SYSTEM --- */
+        /* --- SUPREME DESIGN SYSTEM V3 --- */
         :root {
-            --p-purple: #a855f7; --p-glow: rgba(168, 85, 247, 0.4);
-            --bg-base: #020203; --bg-card: rgba(15, 15, 22, 0.98);
-            --border: rgba(255, 255, 255, 0.08); --text-main: #f8fafc;
-            --text-dim: #94a3b8; --success: #10b981; --error: #f43f5e;
-            --warning: #fbbf24; --accent: #3b82f6;
+            --p-purple: #a855f7; --p-glow: rgba(168, 85, 247, 0.5);
+            --bg-base: #000000; --bg-card: #0a0a0c;
+            --border: rgba(255, 255, 255, 0.05); --text-main: #ffffff;
+            --text-dim: #64748b; --success: #10b981; --error: #ef4444;
+            --warning: #f59e0b; --accent: #6366f1; --surface: #111114;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg-base); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* --- ADVANCED UI COMPONENTS --- */
-        #app-viewport { flex: 1; overflow-y: auto; padding: 20px 20px 120px 20px; scroll-behavior: smooth; }
-        .view { display: none; flex-direction: column; animation: viewIn 0.4s cubic-bezier(0.23, 1, 0.32, 1); }
-        .view.active { display: flex; }
-        @keyframes viewIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        /* --- LAYOUT & CONTAINERS --- */
+        #main-stage { flex: 1; overflow-y: auto; padding: 20px 20px 120px 20px; }
+        .view { display: none; flex-direction: column; opacity: 0; transform: scale(0.98); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .view.active { display: flex; opacity: 1; transform: scale(1); }
 
-        .glass-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 30px; padding: 24px; margin-bottom: 20px; backdrop-filter: blur(20px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .stat-badge { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 8px 16px; border-radius: 100px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; }
+        /* --- HIGH-END UI ELEMENTS --- */
+        .glass-module { background: var(--bg-card); border: 1px solid var(--border); border-radius: 32px; padding: 24px; margin-bottom: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); position: relative; overflow: hidden; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .mini-stat { background: var(--surface); border: 1px solid var(--border); padding: 16px; border-radius: 20px; text-align: center; }
 
-        /* --- THE MIGHTY SPYDER BUTTON --- */
-        .engine-room { display: flex; flex-direction: column; align-items: center; margin: 30px 0; }
-        .main-node {
-            width: 260px; height: 260px; background: radial-gradient(circle, #c084fc 0%, #a855f7 70%);
+        /* --- THE LEGENDARY ENGINE --- */
+        .power-core { position: relative; display: flex; align-items: center; justify-content: center; margin: 40px 0; }
+        .node-main {
+            width: 240px; height: 240px; background: radial-gradient(circle at 30% 30%, #d8b4fe, #a855f7);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 110px; cursor: pointer; transition: 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 0 60px var(--p-glow), inset 0 0 20px rgba(255,255,255,0.2);
-            border: 8px solid rgba(255,255,255,0.05); user-select: none;
+            font-size: 100px; cursor: pointer; transition: 0.1s;
+            box-shadow: 0 0 80px var(--p-glow), inset 0 0 40px rgba(255,255,255,0.3);
+            border: 12px solid rgba(255,255,255,0.03); z-index: 2;
         }
-        .main-node:active { transform: scale(0.88) rotate(5deg); }
+        .node-main:active { transform: scale(0.92); filter: brightness(1.2); }
 
-        /* --- FORM & INTERACTION --- */
-        .btn-pro { width: 100%; padding: 18px; border-radius: 20px; border: none; background: var(--p-purple); color: #fff; font-weight: 800; font-size: 15px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-pro:active { transform: scale(0.96); filter: brightness(1.2); }
-        .btn-pro:disabled { background: #222; color: #555; cursor: not-allowed; }
-        input { width: 100%; padding: 16px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 16px; color: #fff; text-align: center; font-weight: 600; font-size: 16px; margin: 12px 0; transition: 0.3s; }
-        input:focus { border-color: var(--p-purple); box-shadow: 0 0 15px rgba(168,85,247,0.2); outline: none; }
-
-        /* --- ADMIN GOD MODAL --- */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 100000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(15px); }
-        .modal-box { background: #08080a; border: 2px solid var(--p-purple); width: 100%; max-width: 480px; border-radius: 40px; padding: 35px; max-height: 90vh; overflow-y: auto; }
-        .admin-log-item { font-family: 'JetBrains Mono'; font-size: 11px; padding: 8px; border-bottom: 1px solid #111; color: var(--text-dim); }
-
-        /* --- NAVIGATION --- */
-        nav { position: fixed; bottom: 0; width: 100%; height: 90px; background: rgba(5,5,7,0.98); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); z-index: 9999; }
-        .nav-link { color: var(--text-dim); display: flex; flex-direction: column; align-items: center; gap: 4px; transition: 0.3s; cursor: pointer; text-decoration: none; }
+        /* --- NAVIGATION ELITE --- */
+        nav { position: fixed; bottom: 0; width: 100%; height: 95px; background: rgba(5,5,5,0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: 10px; }
+        .nav-link { color: var(--text-dim); display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: 0.3s; }
         .nav-link.active { color: var(--p-purple); }
-        .nav-link i { font-size: 26px; font-style: normal; }
-        .nav-link span { font-size: 10px; font-weight: 800; letter-spacing: 0.5px; }
+        .nav-link i { font-size: 24px; font-style: normal; }
+        .nav-link span { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* --- UTILS --- */
-        .dim { color: var(--text-dim); }
-        .success { color: var(--success); }
-        .warning { color: var(--warning); }
-        .error { color: var(--error); }
-        .orbitron { font-family: 'Orbitron', sans-serif; }
+        /* --- ADMIN COMMAND CENTER STYLES --- */
+        .admin-dashboard { background: #000; padding: 15px; border-radius: 25px; border: 1px solid var(--warning); margin-bottom: 20px; }
+        .tab-panel { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-trigger { padding: 10px 20px; background: var(--surface); border-radius: 12px; color: var(--text-dim); border: none; font-weight: 800; font-size: 11px; white-space: nowrap; }
+        .tab-trigger.active { background: var(--p-purple); color: #fff; }
+
+        .user-pro-card { background: var(--surface); padding: 16px; border-radius: 22px; margin-bottom: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .badge-pro { font-size: 8px; padding: 3px 7px; border-radius: 5px; font-weight: 900; margin-left: 5px; }
+
+        /* --- MODAL GOD MODE --- */
+        .god-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 99999; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .god-window { background: #0d0d0f; border: 2px solid var(--p-purple); width: 100%; max-width: 500px; border-radius: 40px; padding: 30px; box-shadow: 0 0 100px rgba(168,85,247,0.2); }
+
+        .btn-elite { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p-purple); color: #fff; font-weight: 900; cursor: pointer; transition: 0.2s; }
+        .btn-elite:active { transform: scale(0.97); }
+
+        /* --- CHART STYLING --- */
+        canvas { max-height: 150px; margin: 15px 0; }
     </style>
 </head>
 <body>
 
-    <div id="scr-ban" style="display:none; position:fixed; inset:0; background:#000; z-index:999999; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px;">
-        <h1 class="orbitron error" style="font-size: 40px; margin-bottom: 20px;">ACCESS DENIED</h1>
-        <p class="dim">Siber güvenlik protokolleri nedeniyle hesabınız kalıcı olarak askıya alınmıştır.</p>
-        <div style="margin-top:40px; font-family:'JetBrains Mono'; font-size:12px; color:#333;">Error Code: USER_X_EXCLUSION_ACT</div>
-    </div>
-
-    <div id="modal-god" class="modal-overlay">
-        <div class="modal-box">
-            <h2 id="god-u-name" class="orbitron" style="color:var(--p-purple); text-align:center;">USER_PROFILE</h2>
-            <div id="god-u-details" style="margin:20px 0;"></div>
+    <div id="god-modal" class="god-overlay">
+        <div class="god-window">
+            <h2 id="g-name" class="orbitron" style="text-align:center; color:var(--p-purple);">CONTROL_NODE</h2>
+            <hr style="border:0; height:1px; background:var(--border); margin:20px 0;">
             
-            <div class="glass-panel" style="background:rgba(0,0,0,0.3); padding:15px;">
-                <label class="dim" style="font-size:11px;">HIZLI BAKİYE OPERASYONU</label>
-                <div style="display:flex; gap:10px;">
-                    <input type="number" id="god-amt" placeholder="Miktar" style="margin:0">
-                    <button onclick="Admin.adjBal(true)" class="btn-pro" style="width:60px; background:var(--success)">+</button>
-                    <button onclick="Admin.adjBal(false)" class="btn-pro" style="width:60px; background:var(--error)">-</button>
+            <div id="g-stats" class="stat-grid"></div>
+
+            <div style="background:rgba(0,0,0,0.5); padding:15px; border-radius:20px; border:1px solid var(--border);">
+                <small class="dim">MANUEL EKONOMİK MÜDAHALE</small>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <input type="number" id="g-amt" placeholder="Miktar" style="flex:1; background:#000; border:1px solid var(--border); color:#fff; border-radius:12px; padding:10px; text-align:center;">
+                    <button onclick="Admin.adj('bal', true)" class="btn-elite" style="width:60px; background:var(--success)">+</button>
+                    <button onclick="Admin.adj('bal', false)" class="btn-elite" style="width:60px; background:var(--error)">-</button>
                 </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px;">
-                <button onclick="Admin.toggleBan()" id="god-ban-btn" class="btn-pro" style="background:var(--error)">BANLA</button>
-                <button onclick="Admin.wipeUser()" class="btn-pro" style="background:#111; border:1px solid #444;">WIPE</button>
-                <button onclick="Admin.addUSDT(1)" class="btn-pro" style="background:var(--accent); grid-column: span 2;">+1.00$ TEST BAKİYESİ</button>
-                <button onclick="Admin.closeModal()" class="btn-pro" style="background:#222; grid-column: span 2;">MODALI KAPAT</button>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:20px;">
+                <button onclick="Admin.action('archive')" id="g-arc-btn" class="btn-elite" style="background:#334155;">ARŞİVLE</button>
+                <button onclick="Admin.action('ban')" id="g-ban-btn" class="btn-elite" style="background:var(--error);">BANLA</button>
+                <button onclick="Admin.action('wipe')" class="btn-elite" style="background:#000; border:1px solid #333; grid-column: span 2;">VERİLERİ SIFIRLA (WIPE)</button>
+                <button onclick="Admin.closeGod()" class="btn-elite" style="background:#222; grid-column: span 2;">PENCEREYİ KAPAT</button>
             </div>
         </div>
     </div>
 
-    <main id="app-viewport">
+    <main id="main-stage">
         <section id="v-mine" class="view active">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div class="stat-badge">💎 <span id="u-bal">0</span></div>
-                <div class="stat-badge" style="border-color:var(--success); color:var(--success);">💰 $<span id="u-usdt">0.00</span></div>
+            <div class="stat-grid">
+                <div class="mini-stat"><small class="dim">SPYDER</small><h2 id="u-bal" class="orbitron">0</h2></div>
+                <div class="mini-stat"><small class="dim">DOLLAR</small><h2 id="u-usdt" style="color:var(--success)">$0.00</h2></div>
             </div>
 
-            <div class="engine-room">
-                <div class="main-node" onclick="Core.tap(event)">🕷️</div>
-                <p class="orbitron dim" style="margin-top:20px; font-size:12px; letter-spacing:5px;">SPYDER NETWORK</p>
+            <div class="power-core">
+                <div class="node-main" onclick="Game.tap(event)">🕷️</div>
             </div>
 
-            <div class="glass-panel" style="margin-top:auto;">
-                <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:800; margin-bottom:10px;">
-                    <span class="dim">ÇEKİRDEK ENERJİSİ</span>
-                    <span id="u-nrg-txt">1000 / 1000</span>
+            <div class="glass-module" style="margin-top:auto">
+                <div style="display:flex; justify-content:space-between; font-size:10px; font-weight:900; margin-bottom:10px;">
+                    <span class="orbitron">ENERGY_RESERVE</span>
+                    <span id="u-nrg-txt">1000/1000</span>
                 </div>
-                <div style="height:14px; background:rgba(0,0,0,0.5); border-radius:20px; overflow:hidden; border:1px solid var(--border);">
-                    <div id="u-nrg-bar" style="height:100%; background:linear-gradient(90deg, var(--p-purple), #c084fc); width:100%; box-shadow: 0 0 20px var(--p-glow);"></div>
-                </div>
-            </div>
-        </section>
-
-        <section id="v-ref" class="view">
-            <h2 class="orbitron">NETWORK</h2>
-            <p class="dim" style="margin-bottom:20px;">Arkadaşlarını davet et, her birinden %10 kazanç sağla.</p>
-            
-            <div class="glass-panel" style="text-align:center;">
-                <small class="dim">SENİN DAVET LİNKİN</small>
-                <input type="text" id="ref-link" readonly value="https://t.me/Spyder_Bot?start=12345">
-                <button class="btn-pro" onclick="Core.copyRef()">LİNKİ KOPYALA</button>
-            </div>
-
-            <div class="glass-panel">
-                <h3>Yönlendirmelerin</h3>
-                <div id="ref-list" style="margin-top:15px;">
-                    <p class="dim" style="text-align:center; font-size:13px;">Henüz kimse yok...</p>
+                <div style="height:12px; background:#000; border-radius:10px; border:1px solid var(--border); overflow:hidden;">
+                    <div id="u-nrg-bar" style="width:100%; height:100%; background:var(--p-purple); box-shadow: 0 0 20px var(--p-purple);"></div>
                 </div>
             </div>
         </section>
 
         <section id="v-vault" class="view">
-            <h2 class="orbitron">VAULT SYSTEM</h2>
-            <div class="glass-panel">
-                <p class="dim" style="font-size:13px; text-align:center;">Global Kur: 100,000 Spyder = 1.00 USDT</p>
-                <input type="number" id="swap-in" value="100000" oninput="Core.syncSwap()">
-                <div style="text-align:center; font-size:24px; margin:5px;">⬇️</div>
-                <div class="glass-panel" style="background:rgba(16,185,129,0.05); border-color:var(--success); text-align:center;">
-                    <h2 class="success">$<span id="swap-out">1.00</span></h2>
+            <h2 class="orbitron">VAULT_SWAP</h2>
+            <div class="glass-module">
+                <p class="dim" style="text-align:center; font-size:11px; margin-bottom:20px;">100,000 SPYDER = 1.00 USDT</p>
+                <input type="number" id="swap-val" value="100000" style="width:100%; background:#000; border:1px solid var(--border); color:#fff; padding:20px; border-radius:20px; text-align:center; font-size:20px; font-weight:800;">
+                <div style="text-align:center; margin:15px; font-size:24px;">⬇️</div>
+                <div class="glass-module" style="background:rgba(16,185,129,0.05); border-color:var(--success); text-align:center;">
+                    <h1 style="color:var(--success)">$<span id="swap-out">1.00</span></h1>
                 </div>
-                <button class="btn-pro" onclick="Core.doSwap()">TAKASI ONAYLA</button>
-            </div>
-        </section>
-
-        <section id="v-wallet" class="view">
-            <h2 class="orbitron">WALLET CONTROL</h2>
-            <div class="glass-panel" style="text-align:center; background: radial-gradient(circle at top right, rgba(168,85,247,0.1), transparent);">
-                <small class="dim">KULLANILABİLİR BAKİYE</small>
-                <h1 style="font-size:48px; margin:10px 0;">$<span id="u-usdt-2">0.00</span></h1>
-            </div>
-
-            <div class="glass-panel">
-                <input type="number" id="wd-amt" placeholder="Çekim Miktarı ($)" oninput="Core.calcWd()">
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:13px;">
-                    <span class="dim">Gerekli Reklam Kotası:</span>
-                    <b id="wd-ads-status" class="warning">0 / 0</b>
-                </div>
-                <input type="text" id="wd-adr" placeholder="BEP20 / BSC Cüzdan Adresi">
-                <button class="btn-pro" onclick="Core.requestWd()">ÇEKİM TALEBİNİ İŞLE</button>
-                <p style="font-size:10px; margin-top:15px; text-align:center;" class="dim">Ödemeler manuel onaydan sonra 24 saat içinde gönderilir.</p>
+                <button class="btn-elite" onclick="Game.swap()">TAKASI BAŞLAT</button>
             </div>
         </section>
 
         <section id="v-admin" class="view">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 class="orbitron" style="color:var(--warning)">HQ_COMMAND</h2>
-                <div class="stat-badge" id="adm-online">0 ONLINE</div>
+                <h2 class="orbitron" style="color:var(--warning)">CENTRAL_OS</h2>
+                <button onclick="Admin.boot()" style="background:none; border:none; font-size:20px;">🔄</button>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:20px;">
-                <div class="glass-panel" style="padding:15px; text-align:center; margin:0;">
-                    <small class="dim">ÜYE</small><br><b id="adm-total-u">0</b>
+            <div class="admin-dashboard">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="mini-stat"><small class="dim">TOPLAM İZLEME</small><h3 id="adm-total-ads">0</h3></div>
+                    <div class="mini-stat"><small class="dim">TOPLAM ÖDENEN</small><h3 id="adm-total-paid" style="color:var(--success)">$0</h3></div>
                 </div>
-                <div class="glass-panel" style="padding:15px; text-align:center; margin:0;">
-                    <small class="dim">TALEP</small><br><b id="adm-total-p" class="warning">0</b>
-                </div>
-                <div class="glass-panel" style="padding:15px; text-align:center; margin:0;">
-                    <small class="dim">TOTAL $</small><br><b id="adm-total-s" class="success">0</b>
-                </div>
+                <canvas id="adminChart"></canvas>
             </div>
 
-            <div id="adm-withdrawals"></div>
-
-            <div class="search-box">
-                <input type="text" id="adm-search" placeholder="Üye ID veya İsim Ara..." oninput="Admin.search()">
+            <div class="tab-panel">
+                <button class="tab-trigger active" onclick="Admin.tab('active', this)">AKTİF ÜYELER</button>
+                <button class="tab-trigger" onclick="Admin.tab('archive', this)">ARŞİVLENMİŞ</button>
+                <button class="tab-trigger" onclick="Admin.tab('pending', this)">ÖDEME BEKLEYEN</button>
+                <button class="tab-trigger" onclick="Admin.tab('banned', this)">YASAKLI</button>
             </div>
 
-            <div id="adm-user-list" class="glass-panel" style="padding:0; overflow:hidden;"></div>
+            <div id="adm-content-area"></div>
         </section>
     </main>
 
     <nav>
         <div class="nav-link active" onclick="Nav.go('v-mine', this)"><i>🎮</i><span>MINE</span></div>
-        <div class="nav-link" onclick="Nav.go('v-ref', this)"><i>👥</i><span>NETWORK</span></div>
         <div class="nav-link" onclick="Nav.go('v-vault', this)"><i>🏛️</i><span>VAULT</span></div>
         <div class="nav-link" onclick="Nav.go('v-wallet', this)"><i>💰</i><span>WALLET</span></div>
-        <div id="adm-nav-btn" class="nav-link" style="display:none;" onclick="Nav.go('v-admin', this); Admin.boot();"><i>🔑</i><span>ADMIN</span></div>
+        <div id="adm-nav" class="nav-link" style="display:none;" onclick="Nav.go('v-admin', this); Admin.boot();"><i>🔑</i><span>OS_PANEL</span></div>
     </nav>
 
     <script>
-        /* --- CORE CONFIGURATION & DATABASE --- */
-        const VERSION = "15.0.4";
-        const ADMIN_ID = "8392479231";
-        const FIREBASE_CONFIG = {
+        /* --- GLOBAL CONFIGURATION --- */
+        const ADMIN_UID = "8392479231";
+        const FB_CONF = {
             apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY",
             authDomain: "pdfkaynak-51615.firebaseapp.com",
             projectId: "pdfkaynak-51615",
             appId: "1:228512804576:web:a0bba02ca83b4fa7adea85"
         };
-
-        firebase.initializeApp(FIREBASE_CONFIG);
+        firebase.initializeApp(FB_CONF);
         const db = firebase.firestore();
         const tg = window.Telegram.WebApp;
-        tg.expand();
 
-        // Global State
-        let state = {
-            user: {
-                bal: 0, nrg: 1000, usdt: 0, ads: 0, totalAds: 0, 
-                refBy: null, refCount: 0, isBanned: false, lastActive: Date.now()
-            },
-            uid: tg.initDataUnsafe?.user?.id?.toString() || "dev_user_1",
-            allUsers: [],
-            pendingPays: []
-        };
+        let user = { bal:0, usdt:0, nrg:1000, ads:0, totalAds:0, isBanned:false, isArchived:false };
+        let uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_test_99";
+        let state = { users: [], pays: [], currentTab: 'active', selectedUser: null };
 
-        /* --- CORE ENGINE --- */
-        const Core = {
-            boot: async () => {
-                const uRef = db.collection("users").doc(state.uid);
-                const doc = await uRef.get();
-
+        /* --- CORE GAME ENGINE --- */
+        const Game = {
+            init: async () => {
+                const doc = await db.collection("users").doc(uid).get();
                 if(doc.exists) {
-                    state.user = { ...state.user, ...doc.data() };
-                    if(state.user.isBanned) return document.getElementById('scr-ban').style.display='flex';
+                    user = { ...user, ...doc.data() };
                 } else {
-                    // New User Logic
-                    const startParam = tg.initDataUnsafe?.start_param;
-                    if(startParam && startParam !== state.uid) {
-                        state.user.refBy = startParam;
-                        await db.collection("users").doc(startParam).update({
-                            refCount: firebase.firestore.FieldValue.increment(1)
-                        });
-                    }
-                    await Core.save(true);
+                    await Game.save();
                 }
-
-                if(state.uid === ADMIN_ID) document.getElementById('adm-nav-btn').style.display='flex';
-                
-                Core.loops();
+                if(uid === ADMIN_UID) document.getElementById('adm-nav').style.display='flex';
                 UI.refresh();
+                Game.loops();
             },
-
             tap: (e) => {
-                if(state.user.nrg < 2) return tg.HapticFeedback.notificationOccurred('warning');
-                
-                state.user.bal += 1;
-                state.user.nrg -= 2;
-                
-                // Visual Effect
-                const x = e.clientX || e.touches[0].clientX;
-                const y = e.clientY || e.touches[0].clientY;
-                UI.createFloatingText(x, y, "+1");
-                
-                // Auto-save & Ad Logic
-                if(state.user.bal % 30 === 0) {
-                    Core.save();
-                    if(window.showAdexora) {
-                        window.showAdexora().then(() => {
-                            state.user.ads++; 
-                            state.user.totalAds++;
-                            UI.refresh();
-                        });
-                    }
-                }
+                if(user.nrg < 2 || user.isBanned) return;
+                user.bal += 1; user.nrg -= 2;
                 UI.refresh();
+                if(user.bal % 50 === 0) Game.save();
             },
-
-            save: async (force = false) => {
-                const payload = {
-                    ...state.user,
-                    name: tg.initDataUnsafe?.user?.first_name || "Guest User",
-                    username: tg.initDataUnsafe?.user?.username || "n/a",
+            save: async () => {
+                await db.collection("users").doc(uid).set({
+                    ...user, 
+                    name: tg.initDataUnsafe?.user?.first_name || "Guest",
                     lastActive: Date.now()
-                };
-                await db.collection("users").doc(state.uid).set(payload, { merge: true });
+                }, {merge:true});
             },
-
             loops: () => {
                 setInterval(() => {
-                    if(state.user.nrg < 1000) {
-                        state.user.nrg = Math.min(1000, state.user.nrg + 12);
-                        UI.refresh();
-                    }
-                }, 4000);
+                    if(user.nrg < 1000) { user.nrg = Math.min(1000, user.nrg + 10); UI.refresh(); }
+                }, 3000);
             },
-
-            doSwap: async () => {
-                const amt = parseInt(document.getElementById('swap-in').value);
-                if(state.user.bal < amt) return tg.showAlert("Yetersiz Spyder!");
-                
-                state.user.bal -= amt;
-                state.user.usdt += (amt * 0.00001);
-                
-                await Core.save(true);
+            swap: async () => {
+                const amt = parseInt(document.getElementById('swap-val').value);
+                if(user.bal < amt) return tg.showAlert("Bakiye Yetersiz!");
+                user.bal -= amt;
+                user.usdt += (amt * 0.00001);
+                await Game.save();
                 UI.refresh();
-                tg.showAlert("Varlık başarıyla dolara dönüştürüldü.");
-            },
-
-            requestWd: async () => {
-                const amt = parseFloat(document.getElementById('wd-amt').value);
-                const adr = document.getElementById('wd-adr').value;
-                const reqAds = Math.ceil(amt / 0.01) * 15;
-
-                if(state.user.usdt < amt) return tg.showAlert("Bakiye yetersiz!");
-                if(state.user.ads < reqAds) return tg.showAlert("Reklam kotanız yetersiz!");
-                if(adr.length < 10) return tg.showAlert("Geçerli bir cüzdan adresi girin!");
-
-                await db.collection("withdrawals").add({
-                    uid: state.uid, name: state.user.name,
-                    amount: amt, address: adr,
-                    status: "pending", createdAt: Date.now()
-                });
-
-                state.user.usdt -= amt;
-                state.user.ads = 0; // Kota sıfırlanır
-                await Core.save(true);
-                UI.refresh();
-                tg.showAlert("Talebiniz alındı. İncelendikten sonra onaylanacaktır.");
-            },
-
-            copyRef: () => {
-                const link = `https://t.me/Spyder_Bot?start=${state.uid}`;
-                const el = document.createElement('textarea');
-                el.value = link; document.body.appendChild(el);
-                el.select(); document.execCommand('copy');
-                document.body.removeChild(el);
-                tg.showAlert("Referans linki kopyalandı!");
+                tg.showAlert("Takas işlemi başarıyla tamamlandı!");
             }
         };
 
-        /* --- ADMIN ENGINE --- */
+        /* --- SUPREME ADMIN ENGINE --- */
         const Admin = {
             boot: async () => {
-                // Get Stats
                 const uSnap = await db.collection("users").get();
-                const pSnap = await db.collection("withdrawals").where("status","==","pending").get();
+                const pSnap = await db.collection("withdrawals").get();
                 
-                state.allUsers = [];
-                let totalS = 0;
+                state.users = []; state.pays = [];
+                let tAds = 0, tPaid = 0;
+
                 uSnap.forEach(d => {
                     const data = d.data();
-                    state.allUsers.push({ id: d.id, ...data });
-                    totalS += (data.usdt || 0);
+                    state.users.push({ id: d.id, ...data });
+                    tAds += (data.totalAds || 0);
                 });
 
-                document.getElementById('adm-total-u').innerText = uSnap.size;
-                document.getElementById('adm-total-p').innerText = pSnap.size;
-                document.getElementById('adm-total-s').innerText = totalS.toFixed(2);
-
-                // Render Payments
-                const pDiv = document.getElementById('adm-withdrawals');
-                pDiv.innerHTML = pSnap.empty ? "" : "<h4>BEKLEYEN ÖDEMELER</h4>";
-                pSnap.forEach(doc => {
-                    const d = doc.data();
-                    pDiv.innerHTML += `
-                        <div class="glass-panel" style="border-left:5px solid var(--warning); padding:15px;">
-                            <div style="display:flex; justify-content:space-between"><b>${d.name}</b> <b class="success">$${d.amount}</b></div>
-                            <code style="font-size:10px;">${d.address}</code><br>
-                            <button onclick="Admin.completePay('${doc.id}')" class="btn-pro" style="height:35px; margin-top:10px; font-size:11px; background:var(--success)">ÖDENDİ OLARAK İŞARETLE</button>
-                        </div>
-                    `;
+                pSnap.forEach(d => {
+                    const data = d.data();
+                    state.pays.push({ id: d.id, ...data });
+                    if(data.status === 'completed') tPaid += data.amount;
                 });
 
-                Admin.renderList(state.allUsers);
+                document.getElementById('adm-total-ads').innerText = tAds.toLocaleString();
+                document.getElementById('adm-total-paid').innerText = "$" + tPaid.toFixed(2);
+                
+                Admin.render();
+                Admin.drawChart(tAds, tPaid);
             },
+            tab: (t, el) => {
+                state.currentTab = t;
+                document.querySelectorAll('.tab-trigger').forEach(b => b.classList.remove('active'));
+                el.classList.add('active');
+                Admin.render();
+            },
+            render: () => {
+                const area = document.getElementById('adm-content-area');
+                area.innerHTML = "";
+                let list = [];
 
-            renderList: (users) => {
-                const list = document.getElementById('adm-user-list');
-                list.innerHTML = "";
-                users.slice(0, 50).forEach(u => {
-                    const row = document.createElement('div');
-                    row.style = "padding:15px; border-bottom:1px solid #111; display:flex; justify-content:space-between; align-items:center; cursor:pointer;";
-                    row.onclick = () => Admin.openModal(u);
-                    row.innerHTML = `
+                if(state.currentTab === 'active') list = state.users.filter(u => !u.isBanned && !u.isArchived);
+                if(state.currentTab === 'archive') list = state.users.filter(u => u.isArchived);
+                if(state.currentTab === 'banned') list = state.users.filter(u => u.isBanned);
+                
+                if(state.currentTab === 'pending') {
+                    state.pays.filter(p => p.status === 'pending').forEach(p => {
+                        area.innerHTML += `<div class="user-pro-card" style="border-left:4px solid var(--warning)">
+                            <div><b>${p.name}</b><br><small class="success">$${p.amount}</small></div>
+                            <button onclick="Admin.completePay('${p.id}')" class="btn-elite" style="width:auto; padding:8px 15px; font-size:10px;">ÖDENDİ</button>
+                        </div>`;
+                    });
+                    return;
+                }
+
+                list.forEach(u => {
+                    area.innerHTML += `<div class="user-pro-card" onclick="Admin.openGod('${u.id}')">
                         <div>
-                            <b>${u.name}</b> ${u.isBanned?'<small class="error">[B]</small>':''}<br>
-                            <small class="dim">$${(u.usdt||0).toFixed(2)} | Ads: ${u.totalAds||0}</small>
+                            <b>${u.name}</b> ${u.isArchived ? '<span class="badge-pro" style="background:#444">ARŞİV</span>':''}
+                            <br><small class="dim">Ads: ${u.totalAds||0} | $${(u.usdt||0).toFixed(2)}</small>
                         </div>
-                        <div class="orbitron" style="font-size:12px; color:var(--p-purple)">${(u.bal||0).toLocaleString()}</div>
-                    `;
-                    list.appendChild(row);
+                        <div class="orbitron" style="color:var(--p-purple)">${(u.bal||0).toLocaleString()}</div>
+                    </div>`;
                 });
             },
-
-            search: () => {
-                const q = document.getElementById('adm-search').value.toLowerCase();
-                const filtered = state.allUsers.filter(u => u.name.toLowerCase().includes(q) || u.id.includes(q));
-                Admin.renderList(filtered);
-            },
-
-            openModal: (u) => {
-                let curU = u;
-                state.selectedUid = u.id;
-                document.getElementById('god-u-name').innerText = u.name;
-                document.getElementById('god-u-details').innerHTML = `
-                    <p><b>UID:</b> ${u.id}</p>
-                    <p><b>Username:</b> @${u.username || 'yok'}</p>
-                    <p><b>Ref Sayısı:</b> ${u.refCount || 0}</p>
-                    <p><b>Son Görülme:</b> ${new Date(u.lastActive).toLocaleString('tr-TR')}</p>
+            openGod: (id) => {
+                const u = state.users.find(x => x.id === id);
+                state.selectedUser = u;
+                document.getElementById('g-name').innerText = u.name.toUpperCase();
+                document.getElementById('g-stats').innerHTML = `
+                    <div class="mini-stat"><small class="dim">SPYDER</small><br><b>${u.bal.toLocaleString()}</b></div>
+                    <div class="mini-stat"><small class="dim">REKLAM</small><br><b>${u.totalAds||0}</b></div>
+                    <div class="mini-stat" style="grid-column: span 2;"><small class="dim">CÜZDAN BAKİYESİ</small><br><b class="success">$${(u.usdt||0).toFixed(2)}</b></div>
                 `;
-                document.getElementById('god-amt').value = "";
-                document.getElementById('god-ban-btn').innerText = u.isBanned ? "BAN KALDIR" : "BANLA";
-                document.getElementById('god-ban-btn').style.background = u.isBanned ? "var(--success)" : "var(--error)";
-                document.getElementById('modal-god').style.display = 'flex';
+                document.getElementById('g-arc-btn').innerText = u.isArchived ? "ARŞİVDEN ÇIKAR" : "ARŞİVLE";
+                document.getElementById('g-ban-btn').innerText = u.isBanned ? "BANI KALDIR" : "BANLA";
+                document.getElementById('god-modal').style.display = 'flex';
             },
-
-            adjBal: async (isAdd) => {
-                const val = parseInt(document.getElementById('god-amt').value) || 0;
-                const change = isAdd ? val : -val;
-                await db.collection("users").doc(state.selectedUid).update({
-                    bal: firebase.firestore.FieldValue.increment(change)
+            adj: async (type, add) => {
+                const amt = parseInt(document.getElementById('g-amt').value) || 0;
+                const final = add ? amt : -amt;
+                await db.collection("users").doc(state.selectedUser.id).update({
+                    bal: firebase.firestore.FieldValue.increment(final)
                 });
-                Admin.closeModal(); Admin.boot();
-                tg.showAlert("Bakiye başarıyla güncellendi.");
+                Admin.closeGod(); Admin.boot();
             },
-
-            addUSDT: async (amt) => {
-                await db.collection("users").doc(state.selectedUid).update({
-                    usdt: firebase.firestore.FieldValue.increment(amt)
-                });
-                Admin.closeModal(); Admin.boot();
+            action: async (type) => {
+                let upd = {};
+                if(type === 'archive') upd = { isArchived: !state.selectedUser.isArchived };
+                if(type === 'ban') upd = { isBanned: !state.selectedUser.isBanned };
+                if(type === 'wipe') {
+                    if(!confirm("Tüm veriler sıfırlanacak. Emin misiniz?")) return;
+                    upd = { bal:0, usdt:0, ads:0, totalAds:0 };
+                }
+                await db.collection("users").doc(state.selectedUser.id).update(upd);
+                Admin.closeGod(); Admin.boot();
             },
-
-            toggleBan: async () => {
-                const u = state.allUsers.find(x => x.id === state.selectedUid);
-                await db.collection("users").doc(state.selectedUid).update({ isBanned: !u.isBanned });
-                Admin.closeModal(); Admin.boot();
-            },
-
-            wipeUser: async () => {
-                if(!confirm("Bu kullanıcının tüm verilerini sıfırlamak istiyor musunuz?")) return;
-                await db.collection("users").doc(state.selectedUid).update({
-                    bal: 0, usdt: 0, ads: 0, totalAds: 0, refCount: 0
-                });
-                Admin.closeModal(); Admin.boot();
-            },
-
-            completePay: async (pid) => {
-                await db.collection("withdrawals").doc(pid).update({ status: "completed" });
+            completePay: async (id) => {
+                await db.collection("withdrawals").doc(id).update({ status: 'completed' });
                 Admin.boot();
-                tg.showAlert("İşlem tamamlandı.");
             },
-
-            closeModal: () => document.getElementById('modal-god').style.display = 'none'
+            closeGod: () => document.getElementById('god-modal').style.display = 'none',
+            drawChart: (ads, paid) => {
+                const ctx = document.getElementById('adminChart').getContext('2d');
+                if(window.myChart) window.myChart.destroy();
+                window.myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
+                        datasets: [{
+                            label: 'İzlenme',
+                            data: [ads/10, ads/5, ads/2, ads/3, ads/1.5, ads/1.2, ads],
+                            borderColor: '#a855f7', tension: 0.4
+                        }]
+                    },
+                    options: { plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
+                });
+            }
         };
 
-        /* --- UI & NAV --- */
+        /* --- UI & NAVIGATION --- */
+        const UI = {
+            refresh: () => {
+                document.getElementById('u-bal').innerText = user.bal.toLocaleString();
+                document.getElementById('u-usdt').innerText = "$" + user.usdt.toFixed(2);
+                document.getElementById('u-nrg-txt').innerText = `${user.nrg}/1000`;
+                document.getElementById('u-nrg-bar').style.width = (user.nrg / 10) + "%";
+            }
+        };
+
         const Nav = {
             go: (id, el) => {
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -478,49 +361,7 @@
             }
         };
 
-        const UI = {
-            refresh: () => {
-                document.getElementById('u-bal').innerText = Math.floor(state.user.bal).toLocaleString();
-                document.getElementById('u-usdt').innerText = state.user.usdt.toFixed(2);
-                document.getElementById('u-usdt-2').innerText = state.user.usdt.toFixed(2);
-                document.getElementById('u-nrg-txt').innerText = `${state.user.nrg} / 1000`;
-                document.getElementById('u-nrg-bar').style.width = (state.user.nrg / 10) + "%";
-                UI.calcWd();
-            },
-
-            calcWd: () => {
-                const val = parseFloat(document.getElementById('wd-amt').value) || 0;
-                const req = Math.ceil(val / 0.01) * 15;
-                const el = document.getElementById('wd-ads-status');
-                el.innerText = `${state.user.ads} / ${req}`;
-                el.className = state.user.ads >= req ? "success" : "warning";
-            },
-
-            syncSwap: () => {
-                const val = document.getElementById('swap-in').value;
-                document.getElementById('swap-out').innerText = (val * 0.00001).toFixed(2);
-            },
-
-            createFloatingText: (x, y, text) => {
-                const el = document.createElement('div');
-                el.innerText = text;
-                el.style = `position:fixed; left:${x}px; top:${y}px; color:var(--p-purple); font-weight:800; font-size:20px; pointer-events:none; z-index:9999; animation: floatUp 0.8s forwards;`;
-                document.body.appendChild(el);
-                setTimeout(() => el.remove(), 800);
-            }
-        };
-
-        // Extra CSS for Animations
-        const style = document.createElement('style');
-        style.innerHTML = `
-            @keyframes floatUp { 0% { transform: translateY(0) opacity(1); } 100% { transform: translateY(-100px); opacity: 0; } }
-            .search-box input { background:#111; border-color:var(--p-purple); text-align:left; padding-left:20px; font-size:14px; }
-            h2, h3 { margin-bottom: 15px; }
-        `;
-        document.head.appendChild(style);
-
-        // START SYSTEM
-        Core.boot();
+        Game.init();
     </script>
 </body>
 </html>
