@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin - Official</title>
+    <title>SpyderCoin - Admin & Player</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -28,17 +28,13 @@
         .tab-content { 
             display: none; width: 100%; height: 65vh; 
             flex-direction: column; align-items: center; justify-content: center; 
-            padding: 20px;
+            padding: 20px; overflow-y: auto;
         }
         .active-tab { display: flex; }
 
-        /* Örümcek Emoji Tasarımı */
         #spider-emoji { 
-            font-size: 150px; 
-            cursor: pointer; 
-            transition: transform 0.1s; 
-            user-select: none;
-            filter: drop-shadow(0 0 15px #9c27b0);
+            font-size: 150px; cursor: pointer; transition: transform 0.1s; 
+            user-select: none; filter: drop-shadow(0 0 15px #9c27b0);
         }
         #spider-emoji:active { transform: scale(0.8); }
         
@@ -77,13 +73,16 @@
         }
         .nav-item { cursor: pointer; color: #777; font-size: 12px; display: flex; flex-direction: column; align-items: center; }
         .nav-item.active { color: var(--main-yellow); }
+
+        /* Admin List Style */
+        #withdrawal-list { text-align: left; font-size: 11px; max-height: 250px; overflow-y: auto; background: #000; padding: 10px; border-radius: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div id="balance">$0.00000</div>
-        <div id="user-info">@...</div>
+        <div id="user-info">Yükleniyor...</div>
     </div>
 
     <div id="tab-game" class="tab-content active-tab">
@@ -108,17 +107,28 @@
     <div id="tab-wallet" class="tab-content">
         <div class="wallet-card">
             <h2 style="margin:0">USDT ÇEKİM</h2>
-            
             <div class="ad-counter-box">
                 <div style="font-size: 12px; color: #aaa;">Toplam İzlenen Reklam</div>
                 <div id="total-ads-display" style="font-size: 20px; color: var(--main-yellow);">0</div>
                 <div style="font-size: 12px; color: #aaa; margin-top: 5px;">Gereken / Mevcut</div>
                 <div id="ads-requirement-status" style="font-size: 15px; color: #00ff00;">0 / 0</div>
             </div>
-
             <input type="number" id="w-amount" placeholder="Miktar (USDT)" oninput="autoCalc(this.value)">
             <input type="text" id="w-address" placeholder="TRC20 Cüzdan Adresi">
             <button class="btn" onclick="sendWithdraw()" style="margin-top:10px;">TALEBİ GÖNDER</button>
+        </div>
+    </div>
+
+    <div id="tab-admin" class="tab-content">
+        <div class="wallet-card" style="max-width: 500px;">
+            <h2>🕷️ Admin Panel</h2>
+            <div class="ad-counter-box" style="display: flex; justify-content: space-around; font-size: 11px;">
+                <div>Toplam Reklam<br><span id="admin-total-ads" style="color:var(--main-yellow); font-size:16px;">0</span></div>
+                <div>Toplam USDT<br><span id="admin-total-usdt" style="color:#00ff00; font-size:16px;">$0.00</span></div>
+            </div>
+            <h3 style="font-size:14px; margin-top:10px;">Ödeme Talepleri</h3>
+            <div id="withdrawal-list">Yükleniyor...</div>
+            <button class="btn" onclick="loadAdminStats()" style="margin-top:10px; padding:10px; font-size:12px;">VERİLERİ TAZELE</button>
         </div>
     </div>
 
@@ -126,12 +136,14 @@
         <div class="nav-item active" onclick="switchTab('game', this)"><span>🕷️</span>Oyun</div>
         <div class="nav-item" onclick="switchTab('tasks', this)"><span>📋</span>Görevler</div>
         <div class="nav-item" onclick="switchTab('wallet', this)"><span>👛</span>Cüzdan</div>
+        <div id="admin-nav" class="nav-item" style="display:none;" onclick="switchTab('admin', this)"><span>🛡️</span>Admin</div>
     </nav>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
         const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id.toString() : "test_user";
+        const adminId = "8392479231";
         document.getElementById('user-info').innerText = "@" + (tg.initDataUnsafe.user?.username || "misafir");
 
         const firebaseConfig = {
@@ -147,6 +159,11 @@
 
         let money = 0, energy = 1000, adsWatched = 0, tgDone = false, clickCount = 0;
 
+        // Admin Kontrolü
+        if (userId === adminId) {
+            document.getElementById('admin-nav').style.display = 'flex';
+        }
+
         db.collection("players").doc(userId).onSnapshot(doc => {
             if(doc.exists){
                 const d = doc.data();
@@ -156,28 +173,20 @@
             } else { save(); }
         });
 
-        // 10 TIKLAMADA BİR REKLAM VE SAYACA EKLEME
         function handleTap() {
             if(energy > 0) {
-                money += 0.00001;
-                energy--;
-                clickCount++;
-
+                money += 0.00001; energy--; clickCount++;
                 if(clickCount >= 10) {
-                    clickCount = 0;
-                    adsWatched++; // 10 tık reklamını sayaca ekle
+                    clickCount = 0; adsWatched++; 
                     if(window.showAdexora) window.showAdexora().catch(e=>{});
                 }
-                
                 updateUI(); save();
             }
         }
 
         function refill() {
             window.open("https://adexora.my.id/dl/QFm5mnRYbJV", "_blank");
-            energy = 1000; 
-            adsWatched++; // Enerji reklamını sayaca ekle
-            save();
+            energy = 1000; adsWatched++; save();
             if(window.showAdexora) window.showAdexora().catch(e=>{});
         }
 
@@ -196,7 +205,6 @@
                 statusBox.style.color = (adsWatched < needed) ? "#ff4444" : "#00ff00";
             } else {
                 statusBox.innerText = "0 / " + adsWatched;
-                statusBox.style.color = "#00ff00";
             }
         }
 
@@ -204,14 +212,36 @@
             const amt = parseFloat(document.getElementById('w-amount').value);
             const needed = Math.ceil((amt / 0.5) * 750);
             if (amt >= 0.5 && money >= amt && adsWatched >= needed) {
-                adsWatched -= needed;
-                money -= amt;
-                save();
+                adsWatched -= needed; money -= amt; save();
                 db.collection("withdrawals").add({ 
                     userId, amount: amt, address: document.getElementById('w-address').value, 
                     adsDeducted: needed, date: new Date() 
-                }).then(() => tg.showAlert("Talep İletildi! " + needed + " reklam düşüldü."));
-            } else { tg.showAlert("Şartlar sağlanmadı!"); }
+                }).then(() => tg.showAlert("Talep İletildi!"));
+            } else { tg.showAlert("Hata: Şartlar sağlanamadı!"); }
+        }
+
+        // ADMIN PANEL FONKSİYONU
+        async function loadAdminStats() {
+            if (userId !== adminId) return;
+            const playersSnap = await db.collection("players").get();
+            let tAds = 0, tUsdt = 0;
+            playersSnap.forEach(doc => {
+                tAds += (doc.data().adsWatched || 0);
+                tUsdt += (doc.data().money || 0);
+            });
+            document.getElementById('admin-total-ads').innerText = tAds.toLocaleString();
+            document.getElementById('admin-total-usdt').innerText = "$" + tUsdt.toFixed(2);
+
+            const wSnap = await db.collection("withdrawals").orderBy("date", "desc").limit(20).get();
+            const listDiv = document.getElementById('withdrawal-list');
+            listDiv.innerHTML = "";
+            wSnap.forEach(doc => {
+                const w = doc.data();
+                listDiv.innerHTML += `<div style="border-bottom:1px solid #333; padding:5px; margin-bottom:5px;">
+                    <b>UID:</b> ${w.userId} | <b>$${w.amount}</b><br>
+                    <b>Adres:</b> ${w.address}<br>
+                    <b>Harcanan Reklam:</b> ${w.adsDeducted}</div>`;
+            });
         }
 
         function updateUI() {
@@ -233,6 +263,7 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('tab-' + id).classList.add('active-tab');
             el.classList.add('active');
+            if(id === 'admin') loadAdminStats();
         }
     </script>
 </body>
