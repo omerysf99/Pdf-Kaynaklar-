@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spider Clicker v2</title>
+    <title>Spider Clicker Pro v3</title>
     
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
@@ -22,148 +23,183 @@
             height: 100vh;
             margin: 0;
             user-select: none;
-        }
-
-        #ui-container {
-            background: rgba(46, 0, 79, 0.8);
-            padding: 20px;
-            border-radius: 20px;
-            border: 3px solid #ffeb3b;
-            box-shadow: 0 0 20px #9c27b0;
-            text-align: center;
-            width: 300px;
-        }
-
-        #balance { font-size: 2.5rem; font-weight: bold; margin-bottom: 5px; color: #ffeb3b; }
-        #energy-bar-container {
-            width: 100%;
-            background: #444;
-            height: 20px;
-            border-radius: 10px;
-            margin: 15px 0;
-            border: 1px solid #ffeb3b;
             overflow: hidden;
+        }
+
+        #game-card {
+            background: rgba(46, 0, 79, 0.9);
+            padding: 25px;
+            border-radius: 30px;
+            border: 3px solid #ffeb3b;
+            box-shadow: 0 0 30px #9c27b0;
+            text-align: center;
+            width: 320px;
+        }
+
+        #balance { font-size: 2.8rem; font-weight: bold; color: #ffeb3b; text-shadow: 0 0 10px #fbc02d; }
+        
+        .energy-section { margin: 20px 0; }
+        #energy-bar-bg {
+            width: 100%;
+            background: #222;
+            height: 25px;
+            border-radius: 12px;
+            border: 2px solid #ffeb3b;
+            overflow: hidden;
+            position: relative;
         }
         #energy-fill {
             height: 100%;
             width: 100%;
             background: linear-gradient(90deg, #ffeb3b, #fbc02d);
-            transition: width 0.2s;
+            transition: width 0.3s ease;
         }
+        #energy-text { position: absolute; width: 100%; top: 3px; left: 0; font-size: 14px; color: #000; font-weight: bold; }
 
         #spider {
-            font-size: 120px;
+            font-size: 130px;
             cursor: pointer;
-            transition: transform 0.1s;
-            margin: 20px 0;
+            transition: transform 0.1s, filter 0.3s;
+            margin: 10px 0;
             display: inline-block;
         }
-        #spider:active { transform: scale(0.9); }
-        #spider.disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+        #spider:active { transform: scale(0.85); }
+        #spider.disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
 
         .btn-refill {
-            background: #9c27b0;
-            color: white;
+            background: #ffeb3b;
+            color: #2e004f;
             border: none;
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-weight: bold;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-weight: 1000;
+            font-size: 1rem;
             cursor: pointer;
-            box-shadow: 0 4px #6a1b9a;
+            box-shadow: 0 5px #9c27b0;
             transition: 0.2s;
+            width: 100%;
         }
-        .btn-refill:hover { background: #ab47bc; }
-        .btn-refill:active { box-shadow: 0 0; transform: translateY(4px); }
+        .btn-refill:active { box-shadow: 0 0; transform: translateY(5px); }
+        
+        #status-msg { font-size: 12px; margin-top: 10px; color: #d1c4e9; }
     </style>
 </head>
 <body>
 
-    <div id="ui-container">
+    <div id="game-card">
         <div id="balance">$0.00000</div>
         
-        <div id="energy-bar-container">
-            <div id="energy-fill"></div>
+        <div class="energy-section">
+            <div id="energy-bar-bg">
+                <div id="energy-fill"></div>
+                <div id="energy-text">1000 / 1000</div>
+            </div>
         </div>
-        <div id="energy-text">Enerji: 1000 / 1000</div>
 
         <div id="spider">🕷️</div>
 
-        <div style="margin-top: 20px;">
-            <button class="btn-refill" onclick="refillEnergy()">ENERJİ DOLDUR (AD)</button>
-        </div>
+        <button class="btn-refill" onclick="handleRefill()">ENERJİ DOLDUR (REKLAM)</button>
+        <div id="status-msg">Firebase Bağlanıyor...</div>
     </div>
 
     <script>
-        // --- AYARLAR ---
+        // 1. FIREBASE YAPILANDIRMASI (Kendi bilgilerini buraya gir)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Firebase Başlat
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Değişkenler
         let balance = 0.0;
         let energy = 1000;
         const maxEnergy = 1000;
-        let clickCount = 0;
+        let totalClicks = 0;
+        let userId = null;
 
-        // --- ELEMENTLER ---
-        const spiderEl = document.getElementById('spider');
-        const balanceEl = document.getElementById('balance');
-        const energyFillEl = document.getElementById('energy-fill');
-        const energyTextEl = document.getElementById('energy-text');
+        // Anonim Giriş Yap (Verileri kaydetmek için auth şart)
+        auth.signInAnonymously().catch(e => console.error("Auth Hatası:", e));
 
-        // --- TIKLAMA MANTIĞI ---
-        spiderEl.addEventListener('click', () => {
-            if (energy > 0) {
-                // Kazanç ve Enerji Azaltma
-                energy--;
-                balance += 0.00001;
-                clickCount++;
-
-                updateUI();
-
-                // Her 10 tıklamada bir otomatik reklam (İsteğe bağlı)
-                if (clickCount % 10 === 0) {
-                    triggerAutoAd();
-                }
-            } else {
-                alert("Enerjin bitti! Lütfen doldur.");
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                userId = user.uid;
+                document.getElementById('status-msg').innerText = "Bulut Kaydı Aktif";
+                loadData();
             }
         });
 
-        // --- ENERJİ DOLDURMA VE REKLAM LİNKİ ---
-        function refillEnergy() {
-            // Belirttiğin linke yönlendirme/açma
+        // Tıklama Olayı
+        const spiderEl = document.getElementById('spider');
+        spiderEl.addEventListener('click', () => {
+            if (energy > 0) {
+                energy--;
+                balance += 0.00001;
+                totalClicks++;
+
+                updateUI();
+                
+                // Her 10 tıkta Adexora reklamı
+                if (totalClicks % 10 === 0) {
+                    if(window.showAdexora) window.showAdexora().catch(e => {});
+                }
+                
+                // Veriyi kaydet (Her tıkta veya belirli aralıklarla)
+                saveData();
+            }
+        });
+
+        // Enerji Doldurma Butonu
+        function handleRefill() {
+            // Önce verdiğin reklam linkini aç
             window.open("https://adexora.my.id/dl/QFm5mnRYbJV", "_blank");
             
-            // Enerjiyi fullle
+            // Sonra enerjiyi fulle
             energy = maxEnergy;
             updateUI();
-            console.log("Enerji fullendi!");
+            saveData();
         }
 
-        // --- OTOMATİK REKLAM FONKSİYONU ---
-        function triggerAutoAd() {
-            if (typeof window.showAdexora === 'function') {
-                window.showAdexora().catch(e => console.log("Ad error"));
-            }
-        }
-
-        // --- ARAYÜZ GÜNCELLEME ---
         function updateUI() {
-            balanceEl.innerText = `$${balance.toFixed(5)}`;
-            energyTextEl.innerText = `Enerji: ${energy} / ${maxEnergy}`;
+            document.getElementById('balance').innerText = `$${balance.toFixed(5)}`;
+            document.getElementById('energy-text').innerText = `${energy} / ${maxEnergy}`;
+            document.getElementById('energy-fill').style.width = (energy / maxEnergy * 100) + "%";
             
-            const energyPercent = (energy / maxEnergy) * 100;
-            energyFillEl.style.width = energyPercent + "%";
+            if (energy <= 0) spiderEl.classList.add('disabled');
+            else spiderEl.classList.remove('disabled');
+        }
 
-            if (energy <= 0) {
-                spiderEl.classList.add('disabled');
-            } else {
-                spiderEl.classList.remove('disabled');
+        // Firestore Kayıt
+        function saveData() {
+            if (userId) {
+                db.collection("players").doc(userId).set({
+                    balance: balance,
+                    energy: energy,
+                    totalClicks: totalClicks,
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
             }
         }
 
-        // --- FIREBASE BAĞLANTISI (Burayı kendi bilgilerinle doldur) ---
-        /*
-        const firebaseConfig = { apiKey: "...", ... };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        */
+        // Firestore Veri Çekme
+        function loadData() {
+            db.collection("players").doc(userId).get().then((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    balance = data.balance || 0;
+                    energy = data.energy || 1000;
+                    totalClicks = data.totalClicks || 0;
+                    updateUI();
+                }
+            });
+        }
     </script>
 </body>
 </html>
