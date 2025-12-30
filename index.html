@@ -3,141 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emoji Clicker - Kazanç</title>
+    <title>Emoji Cash - Tabs Edition</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #00b894;
+            --bg: #f9f9fb;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
             display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sekme İçerikleri */
+        .tab-content {
+            flex: 1;
+            display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f2f5;
+            padding: 20px;
+            animation: fadeIn 0.3s;
         }
-        .container {
-            text-align: center;
-            background: white;
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
+
+        .active-tab { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Ana Tıklama Alanı */
         #emoji {
-            font-size: 100px;
+            font-size: 120px;
             cursor: pointer;
             transition: transform 0.1s;
             user-select: none;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
         }
-        #emoji:active {
-            transform: scale(0.9);
+        #emoji:active { transform: scale(0.85); }
+
+        /* Bilgi Kartları */
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+            margin-bottom: 20px;
         }
-        .balance {
-            font-size: 24px;
-            margin-top: 20px;
-            color: #2ecc71;
+
+        .balance-text { font-size: 28px; color: var(--secondary); font-weight: bold; }
+
+        /* Navigasyon Bar */
+        .nav-bar {
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            border-top: 1px solid #ddd;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .nav-item {
+            cursor: pointer;
+            color: #b2bec3;
             font-weight: bold;
+            font-size: 14px;
+            text-align: center;
         }
-        .stats {
-            margin-top: 10px;
-            color: #666;
+
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { display: block; font-size: 20px; }
+
+        /* Liste Tasarımı */
+        .leader-item {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div id="emoji">💰</div>
-    <div class="balance">Bakiye: $<span id="balance-amount">0.00000</span></div>
-    <div class="stats">Toplam Tıklama: <span id="click-count">0</span></div>
-</div>
+    <div id="tab-earn" class="tab-content active-tab">
+        <div class="card">
+            <small>ANLIK KAZANÇ</small>
+            <div class="balance-text">$<span id="earn-balance">0.00000</span></div>
+        </div>
+        <div id="emoji">💰</div>
+        <p>Reklama kalan: <span id="ad-counter">10</span> tıklama</p>
+    </div>
 
-<script>
-    // --- FIREBASE AYARLARI ---
-    const firebaseConfig = {
-        apiKey: "BURAYA_API_KEY_GELECEK",
-        authDomain: "PROJE_ID.firebaseapp.com",
-        databaseURL: "https://PROJE_ID-default-rtdb.firebaseio.com",
-        projectId: "PROJE_ID",
-        storageBucket: "PROJE_ID.appspot.com",
-        messagingSenderId: "SENDER_ID",
-        appId: "APP_ID"
-    };
+    <div id="tab-wallet" class="tab-content">
+        <h2>Cüzdanım</h2>
+        <div class="card">
+            <p>Toplam Bakiyeniz</p>
+            <div class="balance-text">$<span id="wallet-balance">0.00000</span></div>
+            <button style="margin-top:15px; padding:10px; width:100%; border:none; border-radius:5px; background:var(--primary); color:white;">Ödeme Al (Min $10)</button>
+        </div>
+    </div>
 
-    // Firebase Başlat
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-    
-    // Değişkenler
-    let balance = 0;
-    let clicks = 0;
-    const perClick = 0.00001;
+    <div id="tab-leader" class="tab-content">
+        <h2>En Çok Kazananlar</h2>
+        <div class="card" id="leaderboard-list">
+            <div class="leader-item"><span>1. Oyuncu</span> <span>$0.052</span></div>
+            <div class="leader-item"><span>2. Oyuncu</span> <span>$0.041</span></div>
+        </div>
+    </div>
 
-    const emojiBtn = document.getElementById('emoji');
-    const balanceDisplay = document.getElementById('balance-amount');
-    const clickDisplay = document.getElementById('click-count');
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="showTab('earn', this)">
+            <span>💰</span><br>Kazan
+        </div>
+        <div class="nav-item" onclick="showTab('wallet', this)">
+            <span>💳</span><br>Cüzdan
+        </div>
+        <div class="nav-item" onclick="showTab('leader', this)">
+            <span>🏆</span><br>Liderler
+        </div>
+    </div>
 
-    // Verileri Firebase'den Çek (Kullanıcı ID'si varsayılan olarak 'user1' yapıldı)
-    const userRef = database.ref('users/user1');
-    userRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            balance = data.balance || 0;
-            clicks = data.clicks || 0;
+    <script>
+        // --- FIREBASE AYARLARI ---
+        const firebaseConfig = {
+            apiKey: "BURAYA_API_KEY",
+            authDomain: "PROJE_ID.firebaseapp.com",
+            databaseURL: "https://PROJE_ID-default-rtdb.firebaseio.com",
+            projectId: "PROJE_ID",
+            storageBucket: "PROJE_ID.appspot.com",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const userId = "user_" + Math.floor(Math.random() * 1000); // Test için rastgele ID
+
+        let balance = 0;
+        let totalClicks = 0;
+        let adStep = 0;
+
+        // Sekme Değiştirme Fonksiyonu
+        function showTab(tabName, element) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            
+            document.getElementById('tab-' + tabName).classList.add('active-tab');
+            element.classList.add('active');
+        }
+
+        // Tıklama ve Ödül
+        document.getElementById('emoji').addEventListener('click', () => {
+            adStep++;
+            document.getElementById('ad-counter').innerText = 10 - adStep;
+
+            if (adStep >= 10) {
+                adStep = 0;
+                document.getElementById('ad-counter').innerText = "10";
+                showAd();
+            } else {
+                processReward();
+            }
+        });
+
+        function processReward() {
+            balance += 0.00001;
+            totalClicks++;
+            updateFirebase();
             updateUI();
         }
-    });
 
-    // Tıklama Olayı
-    emojiBtn.addEventListener('click', () => {
-        clicks++;
-        
-        // Her 10 tıklamada reklam göster
-        if (clicks % 10 === 0) {
-            showAd();
-        } else {
-            addReward();
+        function showAd() {
+            if (typeof window.showAdexora === 'function') {
+                window.showAdexora().then(() => { processReward(); }).catch(e => { processReward(); });
+            } else {
+                processReward();
+            }
         }
-    });
 
-    function addReward() {
-        balance += perClick;
-        saveData();
-        updateUI();
-    }
-
-    function showAd() {
-        if (typeof window.showAdexora === 'function') {
-            window.showAdexora()
-                .then(() => {
-                    console.log("Reklam izlendi, ödül veriliyor...");
-                    addReward();
-                })
-                .catch(e => {
-                    console.error("Reklam hatası:", e);
-                    // Hata olsa bile tıklamayı kaydetmek istersen buraya ekleme yapabilirsin
-                });
-        } else {
-            // Reklam scripti yüklenmediyse direkt ödül ver
-            addReward();
+        function updateFirebase() {
+            database.ref('users/' + userId).set({
+                balance: balance,
+                clicks: totalClicks
+            });
         }
-    }
 
-    function saveData() {
-        userRef.set({
-            balance: balance,
-            clicks: clicks
+        function updateUI() {
+            const formatted = balance.toFixed(5);
+            document.getElementById('earn-balance').innerText = formatted;
+            document.getElementById('wallet-balance').innerText = formatted;
+        }
+
+        // Verileri Dinle
+        database.ref('users/' + userId).on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                balance = data.balance;
+                totalClicks = data.clicks;
+                updateUI();
+            }
         });
-    }
-
-    function updateUI() {
-        balanceDisplay.innerText = balance.toFixed(5);
-        clickDisplay.innerText = clicks;
-    }
-</script>
-
+    </script>
 </body>
 </html>
