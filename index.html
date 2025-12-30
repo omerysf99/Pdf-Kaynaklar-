@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpyderCoin Pro - v8.0</title>
+    <title>SpyderCoin - Task Edition</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
     <style>
         :root {
@@ -17,370 +16,115 @@
             --secondary: #9c27b0;
             --bg-dark: #0a0014;
             --card-bg: #1a002e;
-            --text-gray: #b0b0b0;
             --success: #00e676;
+            --blue: #0088cc;
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body {
-            background-color: var(--bg-dark);
             background: radial-gradient(circle at center, #1a002e 0%, #000 100%);
-            color: white;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            color: white; font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh;
+            display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* --- Header Section --- */
-        header {
-            padding: 20px;
-            text-align: center;
-            flex-shrink: 0;
-            border-bottom: 1px solid rgba(255, 235, 59, 0.1);
-        }
+        header { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255, 235, 59, 0.1); }
+        .balance-container { font-size: 42px; font-weight: 900; color: var(--primary); text-shadow: 0 0 15px rgba(255, 235, 59, 0.5); }
+        
+        main { flex-grow: 1; overflow-y: auto; padding-bottom: 90px; }
+        .tab-content { display: none; padding: 20px; animation: fadeIn 0.3s ease; width: 100%; }
+        .tab-content.active { display: flex; flex-direction: column; align-items: center; }
 
-        .balance-container {
-            font-size: 42px;
-            font-weight: 900;
-            color: var(--primary);
-            text-shadow: 0 0 15px rgba(255, 235, 59, 0.5);
-            margin-bottom: 5px;
-        }
+        /* Oyun Alanı */
+        .game-card { position: relative; width: 260px; height: 260px; background: rgba(156, 39, 176, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 25px 0; border: 2px solid rgba(156, 39, 176, 0.3); }
+        #spider-main { font-size: 130px; cursor: pointer; transition: transform 0.05s; z-index: 10; }
+        #spider-main:active { transform: scale(0.85); }
+        .floating-text { position: absolute; color: var(--primary); font-weight: bold; pointer-events: none; animation: floatUp 0.8s forwards; }
 
-        .user-tag {
-            font-size: 14px;
-            color: var(--text-gray);
-            background: rgba(255,255,255,0.05);
-            padding: 4px 12px;
-            border-radius: 20px;
-        }
+        /* Enerji Barı */
+        .energy-section { width: 90%; max-width: 350px; margin-bottom: 15px; }
+        .energy-bar-bg { width: 100%; height: 14px; background: #222; border-radius: 10px; border: 1px solid var(--primary); overflow: hidden; }
+        #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ffd600, #ffeb3b); transition: width 0.2s; }
 
-        /* --- Main Content Area --- */
-        main {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding-bottom: 80px; /* Navbar spacing */
+        /* Görev Kartı */
+        .task-card {
+            background: var(--card-bg); border-radius: 20px; padding: 25px; width: 100%; max-width: 400px;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            border: 2px solid var(--blue); box-shadow: 0 0 20px rgba(0, 136, 204, 0.2);
         }
+        .task-info h4 { margin: 0; font-size: 18px; color: white; }
+        .task-info p { margin: 10px 0; font-size: 24px; color: var(--success); font-weight: bold; }
+        
+        /* Butonlar */
+        .btn-action { background: var(--primary); color: black; border: none; padding: 15px; border-radius: 12px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.2s; }
+        .task-btn { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; font-size: 16px; }
+        .task-btn.done { background: #333; color: #777; cursor: default; }
 
-        .tab-content {
-            display: none;
-            padding: 20px;
-            animation: fadeIn 0.3s ease;
-        }
+        /* Admin Alanı */
+        .admin-item { background: #111; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--secondary); font-size: 12px; text-align: left; width: 100%; }
 
-        .tab-content.active {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        /* Navigasyon */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 75px; background: #050505; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); }
+        .nav-link { display: flex; flex-direction: column; align-items: center; color: #555; text-decoration: none; font-size: 11px; cursor: pointer; }
+        .nav-link.active { color: var(--primary); }
 
-        /* --- Spider Game Area --- */
-        .game-card {
-            position: relative;
-            width: 280px;
-            height: 280px;
-            background: rgba(156, 39, 176, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 30px 0;
-            border: 2px solid rgba(156, 39, 176, 0.3);
-            box-shadow: 0 0 50px rgba(156, 39, 176, 0.2);
-        }
-
-        #spider-main {
-            font-size: 140px;
-            cursor: pointer;
-            transition: transform 0.05s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 10;
-        }
-
-        #spider-main:active {
-            transform: scale(0.85);
-        }
-
-        .floating-text {
-            position: absolute;
-            color: var(--primary);
-            font-weight: bold;
-            pointer-events: none;
-            animation: floatUp 0.8s forwards;
-            z-index: 20;
-        }
-
-        /* --- Energy Bar --- */
-        .energy-section {
-            width: 90%;
-            max-width: 350px;
-            margin-bottom: 20px;
-        }
-
-        .energy-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .energy-bar-bg {
-            width: 100%;
-            height: 16px;
-            background: #222;
-            border-radius: 10px;
-            border: 1px solid var(--primary);
-            overflow: hidden;
-        }
-
-        #energy-fill {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, #ffd600, #ffeb3b);
-            transition: width 0.2s;
-        }
-
-        /* --- Stats Card --- */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            width: 100%;
-            max-width: 400px;
-            margin-top: 10px;
-        }
-
-        .stat-item {
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 15px;
-            border: 1px solid rgba(255,255,255,0.05);
-            text-align: center;
-        }
-
-        .stat-value {
-            display: block;
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: var(--text-gray);
-            text-transform: uppercase;
-        }
-
-        /* --- Admin Dashboard --- */
-        .admin-box {
-            width: 100%;
-            max-width: 500px;
-            background: #000;
-            border: 2px solid var(--secondary);
-            border-radius: 20px;
-            padding: 20px;
-        }
-
-        .admin-scroll-list {
-            max-height: 300px;
-            overflow-y: auto;
-            margin-top: 15px;
-            padding-right: 5px;
-        }
-
-        .user-row {
-            background: #111;
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            border-left: 4px solid var(--secondary);
-            font-size: 12px;
-        }
-
-        /* --- Navigation --- */
-        .nav-bar {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            height: 70px;
-            background: #050505;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            z-index: 100;
-        }
-
-        .nav-link {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: #555;
-            text-decoration: none;
-            font-size: 10px;
-            transition: 0.3s;
-        }
-
-        .nav-link.active {
-            color: var(--primary);
-        }
-
-        .nav-icon {
-            font-size: 24px;
-            margin-bottom: 4px;
-        }
-
-        /* --- Utilities --- */
-        .btn-action {
-            background: var(--primary);
-            color: black;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 15px;
-            font-weight: 800;
-            width: 100%;
-            max-width: 350px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 235, 59, 0.3);
-        }
-
-        .input-dark {
-            width: 100%;
-            background: #000;
-            border: 1px solid #333;
-            color: white;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-100px); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--secondary); border-radius: 10px; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="balance-container animate__animated animate__pulse animate__infinite">
-            $<span id="main-balance">0.00000</span>
-        </div>
-        <div class="user-tag" id="display-name">Yükleniyor...</div>
+        <div class="balance-container">$<span id="main-balance">0.00000</span></div>
+        <div id="display-name" style="font-size: 12px; color: #888;">Yükleniyor...</div>
     </header>
 
     <main>
         <div id="tab-game" class="tab-content active">
             <div class="energy-section">
-                <div class="energy-header">
-                    <span>⚡ ENERJİ</span>
-                    <span id="energy-val">1000/1000</span>
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
+                    <span>⚡ ENERJİ</span><span id="energy-val">1000/1000</span>
                 </div>
-                <div class="energy-bar-bg">
-                    <div id="energy-fill"></div>
-                </div>
+                <div class="energy-bar-bg"><div id="energy-fill"></div></div>
             </div>
-
-            <div class="game-card">
-                <div id="spider-main" onclick="processTap(event)">🕷️</div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="stat-label">Toplam Tık</span>
-                    <span class="stat-value" id="stat-clicks">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Seviye</span>
-                    <span class="stat-value" id="stat-level">1</span>
-                </div>
-            </div>
-
-            <div style="width: 90%; margin-top: 20px;">
-                <button class="btn-action" onclick="handleAdRefill()">⚡ ENERJİ DOLDUR (İZLE)</button>
+            
+            <div class="game-card"><div id="spider-main" onclick="processTap(event)">🕷️</div></div>
+            
+            <div style="width:90%; max-width:300px; text-align:center;">
+                <div style="margin-bottom:10px; font-size:14px; color:var(--primary);">Puan: <span id="ads-count-display">0</span></div>
+                <button class="btn-action" onclick="handleAdRefill()">⚡ ENERJİ FULLLE (REKLAM)</button>
             </div>
         </div>
 
-        <div id="tab-wallet" class="tab-content">
-            <div class="wallet-card">
-                <h3 style="color: var(--primary)">Bakiye Çekimi</h3>
-                <div class="ad-counter-box" style="margin-bottom: 20px;">
-                    <span class="stat-label">Onaylı Reklam İzleme</span>
-                    <div id="wallet-ads-count" style="font-size: 32px; font-weight: bold;">0</div>
+        <div id="tab-tasks" class="tab-content">
+            <h3 style="color: var(--primary); margin-bottom: 20px;">Özel Görevler</h3>
+            <div class="task-card">
+                <div class="task-info">
+                    <div style="font-size: 40px; margin-bottom: 10px;">📢</div>
+                    <h4>Telegram Kanalına Katıl</h4>
+                    <p>+1000 Puan</p>
                 </div>
-                
-                <input type="number" id="withdraw-amount" class="input-dark" placeholder="Miktar (USDT)">
-                <input type="text" id="withdraw-addr" class="input-dark" placeholder="TRC20 Cüzdan Adresi">
-                
-                <div id="withdraw-info" style="font-size: 12px; color: #888; margin: 10px 0;">
-                    Minimum çekim: 0.5 USDT (750 Reklam)
-                </div>
-                
-                <button class="btn-action" onclick="requestWithdraw()">ÖDEME TALEBİ OLUŞTUR</button>
+                <button class="task-btn" id="task-tg" onclick="completeTask('tg', 'https://t.me/SpyderCommunity', 1000)">KANALA GİT</button>
             </div>
         </div>
 
         <div id="tab-admin" class="tab-content">
-            <div class="admin-box">
-                <h2 style="margin:0; color:var(--secondary)">🛡️ Yönetim Paneli</h2>
-                <div style="display:flex; justify-content: space-between; margin-top:15px; background:#111; padding:10px; border-radius:10px;">
-                    <div>
-                        <small>TOPLAM REKLAM</small><br>
-                        <b id="adm-total-ads" style="color:var(--primary)">0</b>
-                    </div>
-                    <div style="text-align:right">
-                        <small>TOPLAM USDT</small><br>
-                        <b id="adm-total-cash" style="color:var(--success)">$0.00</b>
-                    </div>
-                </div>
-
-                <h4 style="margin:20px 0 10px 0;">📋 Üye Veritabanı (Canlı)</h4>
-                <div class="admin-scroll-list" id="adm-player-list">
-                    Yükleniyor...
-                </div>
+            <div style="width:100%; max-width:400px; background:#000; border:1px solid var(--secondary); padding:15px; border-radius:15px;">
+                <h3 style="margin:0; color:var(--secondary);">🛡️ Admin Paneli</h3>
+                <div id="adm-player-list" style="margin-top:15px; max-height:450px; overflow-y:auto;"></div>
             </div>
         </div>
     </main>
 
     <nav class="nav-bar">
-        <a href="#" class="nav-link active" onclick="showTab('game', this)">
-            <div class="nav-icon">🎮</div>
-            <span>OYUN</span>
-        </a>
-        <a href="#" class="nav-link" onclick="showTab('wallet', this)">
-            <div class="nav-icon">👛</div>
-            <span>CÜZDAN</span>
-        </a>
-        <a href="#" id="admin-nav-link" class="nav-link" style="display:none;" onclick="showTab('admin', this)">
-            <div class="nav-icon">🛡️</div>
-            <span>ADMİN</span>
-        </a>
+        <div class="nav-link active" onclick="showTab('game', this)"><span>🎮</span><span>OYUN</span></div>
+        <div class="nav-link" onclick="showTab('tasks', this)"><span>📋</span><span>GÖREVLER</span></div>
+        <div id="admin-nav-link" class="nav-link" style="display:none;" onclick="showTab('admin', this)"><span>🛡️</span><span>ADMİN</span></div>
     </nav>
 
     <script>
-        // --- CONFIGURATION ---
         const tg = window.Telegram.WebApp;
         tg.expand();
-
+        
         const firebaseConfig = {
             apiKey: "AIzaSyDfy6QdIZ0BthEHTmxkw-NAja3B9bFFd8U",
             authDomain: "spydercoin-94f7b.firebaseapp.com",
@@ -389,165 +133,98 @@
             messagingSenderId: "218267568158",
             appId: "1:218267568158:web:832728845ba0f42202060f"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // --- STATE MANAGEMENT ---
         const adminId = "8392479231";
-        const rawUser = tg.initDataUnsafe.user || { id: "test_dev", first_name: "Geliştirici", username: "dev_mode" };
-        const UID = rawUser.id.toString();
-        const fName = rawUser.first_name || "Gizli";
-        const uName = rawUser.username || "yok";
+        const u = tg.initDataUnsafe.user || { id: "dev_test", first_name: "Geliştirici", username: "dev" };
+        const UID = u.id.toString();
 
-        let localData = {
-            money: 0,
-            energy: 1000,
-            adsWatched: 0,
-            totalClicks: 0,
-            level: 1
-        };
+        let localData = { money: 0, energy: 1000, adsWatched: 0, completedTasks: [] };
+        let tapCount = 0;
 
-        let tempClickStack = 0;
-
-        // --- INITIALIZATION ---
-        document.getElementById('display-name').innerText = `${fName} (@${uName})`;
+        document.getElementById('display-name').innerText = `${u.first_name} (@${u.username || 'yok'})`;
         if(UID === adminId) document.getElementById('admin-nav-link').style.display = 'flex';
 
-        // Real-time Sync
         db.collection("players").doc(UID).onSnapshot(doc => {
-            if(doc.exists) {
-                localData = doc.data();
-                renderUI();
-            } else {
-                syncToFirebase();
-            }
+            if(doc.exists) { localData = doc.data(); renderUI(); }
+            else { save(); }
         });
 
-        // Admin Engine
         if(UID === adminId) {
             db.collection("players").onSnapshot(snap => {
-                let globalAds = 0;
-                let globalMoney = 0;
-                const listEl = document.getElementById('adm-player-list');
-                listEl.innerHTML = "";
-
-                snap.forEach(playerDoc => {
-                    const p = playerDoc.data();
-                    globalAds += (p.adsWatched || 0);
-                    globalMoney += (p.money || 0);
-
-                    listEl.innerHTML += `
-                        <div class="user-row">
-                            <b>${p.first_name || 'Anonim'}</b> (@${p.username || 'yok'})<br>
-                            <span style="color:var(--primary)">$${(p.money || 0).toFixed(5)}</span> | 
-                            <span style="color:var(--secondary)">📺 ${p.adsWatched || 0}</span> | 
-                            <small>ID: ${playerDoc.id}</small>
-                        </div>
-                    `;
+                const list = document.getElementById('adm-player-list');
+                list.innerHTML = "";
+                snap.forEach(d => {
+                    const p = d.data();
+                    list.innerHTML += `<div class="admin-item"><b>${p.first_name}</b> (@${p.username})<br>Para: $${(p.money || 0).toFixed(4)} | Puan: ${p.adsWatched || 0}</div>`;
                 });
-
-                document.getElementById('adm-total-ads').innerText = globalAds.toLocaleString();
-                document.getElementById('adm-total-cash').innerText = "$" + globalMoney.toFixed(2);
             });
         }
 
-        // --- CORE FUNCTIONS ---
         function processTap(e) {
-            if(localData.energy <= 0) {
-                tg.HapticFeedback.notificationOccurred('error');
-                return;
-            }
-
-            // Haptic & Visual
-            tg.HapticFeedback.impactOccurred('medium');
+            if(localData.energy <= 0) return;
+            tg.HapticFeedback.impactOccurred('light');
             createFloatingText(e);
 
-            // Logic
-            localData.money += 0.00001;
+            localData.money += 0.0001;
             localData.energy -= 1;
-            localData.totalClicks += 1;
-            tempClickStack += 1;
+            tapCount++;
 
-            // Every 10 clicks = 1 Ad point
-            if(tempClickStack >= 10) {
-                tempClickStack = 0;
+            if(tapCount >= 10) {
+                tapCount = 0;
                 localData.adsWatched += 1;
-                if(window.showAdexora) window.showAdexora().catch(err => console.log("Ad Error"));
+                if(window.showAdexora) window.showAdexora().catch(e=>{});
             }
-
-            // Leveling
-            localData.level = Math.floor(localData.totalClicks / 500) + 1;
-
-            renderUI();
-            syncToFirebase();
+            renderUI(); save();
         }
 
         function createFloatingText(e) {
-            const float = document.createElement('div');
-            float.className = 'floating-text';
-            float.innerText = '+0.00001';
-            float.style.left = e.clientX + 'px';
-            float.style.top = e.clientY + 'px';
-            document.body.appendChild(float);
-            setTimeout(() => float.remove(), 800);
+            const f = document.createElement('div');
+            f.className = 'floating-text'; f.innerText = '+0.0001';
+            f.style.left = e.clientX + 'px'; f.style.top = e.clientY + 'px';
+            document.body.appendChild(f); setTimeout(() => f.remove(), 800);
+        }
+
+        function completeTask(taskId, link, reward) {
+            if(localData.completedTasks && localData.completedTasks.includes(taskId)) return;
+            tg.openLink(link);
+            setTimeout(() => {
+                if(!localData.completedTasks) localData.completedTasks = [];
+                localData.completedTasks.push(taskId);
+                localData.adsWatched += reward; // Görev ödülü puan olarak eklenir
+                save();
+                tg.showAlert(`Tebrikler! ${reward} Puan hesabına eklendi.`);
+            }, 6000);
         }
 
         function handleAdRefill() {
             window.open("https://adexora.my.id/dl/QFm5mnRYbJV", "_blank");
-            localData.energy = 1000;
-            localData.adsWatched += 1;
-            syncToFirebase();
-            tg.showAlert("Enerji Fullendi! +1 Reklam Puanı.");
-        }
-
-        function requestWithdraw() {
-            const amount = parseFloat(document.getElementById('withdraw-amount').value);
-            const addr = document.getElementById('withdraw-addr').value;
-            const requiredAds = Math.ceil((amount / 0.5) * 750);
-
-            if(amount < 0.5) return tg.showAlert("Min çekim 0.5 USDT!");
-            if(localData.money < amount) return tg.showAlert("Bakiye yetersiz!");
-            if(localData.adsWatched < requiredAds) return tg.showAlert(`Bu miktar için ${requiredAds} reklam izlemelisin!`);
-            if(addr.length < 10) return tg.showAlert("Geçerli bir TRC20 adresi girin!");
-
-            db.collection("withdrawals").add({
-                uid: UID,
-                user: uName,
-                name: fName,
-                amount: amount,
-                address: addr,
-                date: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                localData.money -= amount;
-                localData.adsWatched -= requiredAds;
-                syncToFirebase();
-                tg.showAlert("Talep alındı! 24 saat içinde kontrol edilecektir.");
-            });
+            localData.energy = 1000; localData.adsWatched += 1;
+            save(); tg.showAlert("Enerji dolduruldu! +1 Puan kazandın.");
         }
 
         function renderUI() {
             document.getElementById('main-balance').innerText = localData.money.toFixed(5);
-            document.getElementById('energy-val').innerText = `${localData.energy}/1000`;
+            document.getElementById('energy-val').innerText = localData.energy + "/1000";
             document.getElementById('energy-fill').style.width = (localData.energy / 10) + "%";
-            document.getElementById('stat-clicks').innerText = localData.totalClicks;
-            document.getElementById('stat-level').innerText = localData.level;
-            document.getElementById('wallet-ads-count').innerText = localData.adsWatched;
+            document.getElementById('ads-count-display').innerText = localData.adsWatched;
+            
+            if(localData.completedTasks && localData.completedTasks.includes('tg')) {
+                const btn = document.getElementById('task-tg');
+                if(btn) { btn.innerText = "TAMAMLANDI ✅"; btn.classList.add('done'); btn.onclick = null; }
+            }
         }
 
-        function syncToFirebase() {
+        function save() { 
             db.collection("players").doc(UID).set({
-                ...localData,
-                first_name: fName,
-                username: uName,
-                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
+                ...localData, first_name: u.first_name, username: u.username || "yok"
+            }, {merge: true}); 
         }
 
         function showTab(tabId, el) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            
             document.getElementById('tab-' + tabId).classList.add('active');
             el.classList.add('active');
         }
