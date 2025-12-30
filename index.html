@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spider-Cash: Referral Edition</title>
+    <title>Spider-Cash: Professional Edition</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
@@ -11,52 +11,47 @@
     <style>
         :root { --spidey-red: #e62117; --spidey-blue: #001d4a; --spidey-dark: #0a0a0a; --text: #fff; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--spidey-dark); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
         .tab-content { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
         .active-tab { display: flex; animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
         .card { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--spidey-red); border-radius: 20px; padding: 20px; width: 90%; max-width: 360px; box-shadow: 0 0 20px rgba(230, 33, 23, 0.2); }
-        #emoji { font-size: 100px; cursor: pointer; transition: 0.1s; margin: 20px 0; user-select: none; }
+        #emoji { font-size: 100px; cursor: pointer; transition: 0.1s; margin: 20px 0; user-select: none; filter: drop-shadow(0 0 10px red); }
         #emoji:active { transform: scale(0.8); }
-
         .nav-bar { background: #111; display: flex; border-top: 2px solid var(--spidey-red); padding: 10px 0; }
         .nav-item { flex: 1; text-align: center; cursor: pointer; color: #666; font-size: 12px; }
-        .nav-item.active { color: var(--spidey-red); }
-
+        .nav-item.active { color: var(--spidey-red); font-weight: bold; }
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: #fff; }
         button { width: 100%; padding: 12px; border: none; border-radius: 8px; background: var(--spidey-red); color: white; font-weight: bold; cursor: pointer; }
-        .ref-box { background: #1a1a1a; padding: 10px; border-radius: 8px; font-size: 11px; margin-top: 10px; word-break: break-all; border: 1px dashed #555; }
+        .ref-box { background: #1a1a1a; padding: 10px; border-radius: 8px; font-size: 11px; margin-top: 10px; word-break: break-all; border: 1px dashed #555; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="tab-earn" class="tab-content active-tab">
         <div class="card">
-            <small>TOPLAM GÜÇ</small>
+            <small>TOPLAM BAKİYE</small>
             <div style="font-size: 32px; font-weight: 900; color: var(--spidey-red);">$<span id="bal">0.00000</span></div>
         </div>
         <div id="emoji">🕷️</div>
-        <p>Ağ limitine: <b id="ad-count">10</b> tık</p>
+        <p>Reklama: <b id="ad-count">10</b> tık kaldı</p>
     </div>
 
     <div id="tab-ref" class="tab-content">
-        <h2>Arkadaşlarını Davet Et</h2>
+        <h2>Referans Paneli</h2>
         <div class="card">
-            <p>Her arkadaşının tıklamasından <b>$0.000005</b> bonus kazan!</p>
-            <div class="ref-box" id="ref-link">Yükleniyor...</div>
-            <button onclick="copyRef()" style="margin-top:10px; background: #444;">Linki Kopyala</button>
-            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #333;">
-            <p>Toplam Referansın: <b id="ref-total">0</b></p>
+            <p>Arkadaşın her tıkladığında<br><b style="color:var(--spidey-red)">$0.000005</b> kazanırsın!</p>
+            <div class="ref-box" onclick="copyRef()" id="ref-link">LİNK OLUŞTURULUYOR...</div>
+            <p style="font-size:12px; color:#888;">(Kopyalamak için tıklayın)</p>
+            <hr style="border:0; border-top:1px solid #333; margin:15px 0;">
+            <p>Getirdiğin Üye Sayısı: <b id="ref-total" style="color:var(--spidey-red)">0</b></p>
         </div>
     </div>
 
     <div id="tab-wallet" class="tab-content">
         <div class="card">
-            <h2>Ödeme</h2>
-            <input type="number" id="amt" placeholder="Miktar (Min $0.50)">
-            <input type="text" id="adr" placeholder="USDT (TRC20) Adresi">
-            <button id="btn-pay" onclick="sendPay()" disabled>Ödeme Al</button>
+            <h2>Ödeme Al</h2>
+            <input type="number" id="amt" placeholder="Çekilecek USDT Miktarı">
+            <input type="text" id="adr" placeholder="USDT TRC20 Cüzdan Adresi">
+            <button id="btn-pay" onclick="sendPay()" disabled>Yetersiz Bakiye</button>
         </div>
     </div>
 
@@ -67,48 +62,69 @@
     </div>
 
     <script>
-        // FIREBASE CONFIG
+        // --- CONFIG ---
         const firebaseConfig = {
-            apiKey: "API_KEY",
-            authDomain: "PROJECT.firebaseapp.com",
-            databaseURL: "https://PROJECT.firebaseio.com",
-            projectId: "PROJECT",
+            apiKey: "BURAYA_KENDI_API_KEY",
+            authDomain: "PROJE.firebaseapp.com",
+            databaseURL: "https://PROJE.firebaseio.com",
+            projectId: "PROJE",
             appId: "APP_ID"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // KULLANICI AYARLARI
-        let myId = localStorage.getItem('spidey_uid') || "u" + Math.floor(Math.random()*999999);
-        localStorage.setItem('spidey_uid', myId);
+        // KULLANICI KİMLİĞİ
+        let myId = localStorage.getItem('spidey_user_id');
+        if (!myId) {
+            myId = 'U' + Math.floor(Math.random() * 1000000);
+            localStorage.setItem('spidey_user_id', myId);
+        }
 
-        // URL'den REFERANS KONTROLÜ
+        // LİNK VE REFERANS KONTROLÜ
         const urlParams = new URLSearchParams(window.location.search);
-        const refBy = urlParams.get('ref');
+        const invitedBy = urlParams.get('ref');
+        
+        const myRefLink = window.location.origin + window.location.pathname + "?ref=" + myId;
+        document.getElementById('ref-link').innerText = myRefLink;
 
         let balance = 0;
         let adStep = 0;
-        let myReferrer = "";
+        let myBoss = ""; // Beni davet eden kişi
 
-        // REFERANS LİNKİNİ OLUŞTUR
-        const currentUrl = window.location.href.split('?')[0];
-        document.getElementById('ref-link').innerText = currentUrl + "?ref=" + myId;
-
-        // VERİLERİ BAŞLAT
+        // KULLANICI KAYDI VE REFERANS BAĞLAMA
         db.ref('users/' + myId).once('value', s => {
-            if(!s.exists()) {
-                db.ref('users/' + myId).set({ balance: 0, refBy: refBy || "", refsCount: 0 });
+            if (!s.exists()) {
+                // Yeni kullanıcı ise
+                db.ref('users/' + myId).set({
+                    balance: 0,
+                    refBy: (invitedBy && invitedBy !== myId) ? invitedBy : "",
+                    refsCount: 0
+                });
+                // Beni davet edenin sayacını 1 artır
+                if (invitedBy && invitedBy !== myId) {
+                    db.ref('users/' + invitedBy + '/refsCount').transaction(c => (c || 0) + 1);
+                }
             } else {
-                myReferrer = s.val().refBy;
+                myBoss = s.val().refBy || "";
             }
         });
 
+        // VERİLERİ ANLIK DİNLE
         db.ref('users/' + myId).on('value', s => {
-            if(s.val()) {
-                balance = s.val().balance;
+            if (s.val()) {
+                balance = s.val().balance || 0;
+                myBoss = s.val().refBy || "";
                 document.getElementById('bal').innerText = balance.toFixed(5);
                 document.getElementById('ref-total').innerText = s.val().refsCount || 0;
-                checkPay();
+                
+                const pBtn = document.getElementById('btn-pay');
+                if(balance >= 0.50) {
+                    pBtn.disabled = false;
+                    pBtn.innerText = "Ödeme Al";
+                } else {
+                    pBtn.disabled = true;
+                    pBtn.innerText = "Minimum $0.50";
+                }
             }
         });
 
@@ -116,56 +132,51 @@
         document.getElementById('emoji').addEventListener('click', () => {
             adStep++;
             let req = 10 + (Math.floor(balance / 0.01) * 15);
-            if(adStep >= req) {
+            
+            if (adStep >= req) {
                 adStep = 0;
-                if(window.showAdexora) window.showAdexora().then(() => addMoney());
-                else addMoney();
+                if (window.showAdexora) {
+                    window.showAdexora().then(() => processReward()).catch(() => processReward());
+                } else {
+                    processReward();
+                }
             } else {
-                addMoney();
+                processReward();
             }
-            document.getElementById('ad-count').innerText = req - adStep;
+            document.getElementById('ad-count').innerText = Math.max(0, req - adStep);
         });
 
-        function addMoney() {
-            balance += 0.00001;
-            db.ref('users/' + myId).update({ balance: balance });
+        function processReward() {
+            // 1. Kendi bakiyemi artır
+            db.ref('users/' + myId + '/balance').transaction(b => (b || 0) + 0.00001);
 
-            // REFERANSINA PARA KAZANDIR
-            if(myReferrer) {
-                db.ref('users/' + myReferrer).transaction(user => {
-                    if(user) {
-                        user.balance = (user.balance || 0) + 0.000005;
-                    }
-                    return user;
-                });
+            // 2. Beni davet eden varsa ona pay gönder
+            if (myBoss) {
+                db.ref('users/' + myBoss + '/balance').transaction(b => (b || 0) + 0.000005);
             }
         }
 
-        // DİĞER FONKSİYONLAR
+        // ARA YÜZ FONKSİYONLARI
         function showTab(t, el) {
             document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active-tab'));
             document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-            document.getElementById('tab-'+t).classList.add('active-tab');
+            document.getElementById('tab-' + t).classList.add('active-tab');
             el.classList.add('active');
         }
 
         function copyRef() {
-            const link = document.getElementById('ref-link').innerText;
-            navigator.clipboard.writeText(link);
-            alert("Referans linkin kopyalandı!");
-        }
-
-        function checkPay() {
-            document.getElementById('btn-pay').disabled = balance < 0.50;
+            navigator.clipboard.writeText(myRefLink);
+            alert("Link kopyalandı! Arkadaşlarına gönder.");
         }
 
         function sendPay() {
-            const a = document.getElementById('amt').value;
+            const a = parseFloat(document.getElementById('amt').value);
             const ad = document.getElementById('adr').value;
-            if(a > balance || a < 0.50) return alert("Hatalı miktar!");
-            db.ref('withdrawals').push({ uid: myId, amount: a, address: ad, date: Date.now() });
-            db.ref('users/' + myId).update({ balance: balance - a });
-            alert("Talep iletildi!");
+            if (a > balance || a < 0.50 || ad.length < 10) return alert("Hatalı bilgi!");
+
+            db.ref('payouts').push({ uid: myId, amount: a, address: ad, status: "bekliyor", date: Date.now() });
+            db.ref('users/' + myId + '/balance').transaction(b => b - a);
+            alert("Talebiniz yöneticiye iletildi.");
         }
     </script>
 </body>
