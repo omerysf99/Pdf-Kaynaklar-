@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spyder Network v18.0 - Otomatik Sistem</title>
+    <title>Spyder Network Platinum v18.8</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -27,39 +27,53 @@
         .view.active { display: flex; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* CARDS */
+        /* BAN */
+        #ban-overlay { position: fixed; inset: 0; background: #000; z-index: 999999; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; border: 5px solid var(--error); }
+
+        /* STAT CARDS */
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .stat-card { background: var(--bg-card); padding: 12px 5px; border-radius: 18px; text-align: center; border: 1px solid var(--border); }
         .stat-card b { display: block; font-family: 'Orbitron'; font-size: 11px; color: var(--p-purple); margin-top: 5px; }
         .stat-card small { font-size: 9px; color: var(--text-dim); text-transform: uppercase; font-weight: 800; }
 
+        /* INPUTS & BUTTONS */
         .action-box { background: #0a0a0c; border: 1px solid var(--border); border-radius: 25px; padding: 20px; margin-bottom: 15px; }
         .input-group { background: #000; border: 1px solid #1a1a1a; border-radius: 15px; padding: 12px; margin: 10px 0; display: flex; align-items: center; }
         .input-group input { background: transparent; border: none; color: #fff; width: 100%; font-weight: 600; font-size: 14px; outline: none; }
-        
         .btn-main { padding: 18px; border-radius: 22px; border: none; font-weight: 800; color: #fff; background: var(--p-purple); width: 100%; font-size: 13px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
         .btn-main:active { transform: scale(0.98); opacity: 0.9; }
 
+        /* TAP AREA */
         .tap-area { width: 210px; height: 210px; background: radial-gradient(circle, #10b981 0%, #064e3b 100%); border-radius: 50%; margin: 30px auto; display: flex; align-items: center; justify-content: center; font-size: 80px; cursor: pointer; transition: 0.1s; box-shadow: 0 0 50px rgba(16, 185, 129, 0.15); user-select: none; }
-        
+        .tap-area:active { transform: scale(0.92); }
+
+        /* NAV */
         nav { position: fixed; bottom: 0; width: 100%; height: 95px; background: #050505; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: 20px; z-index: 1000; }
         .nav-item { color: var(--text-dim); display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: 800; }
         .nav-item.active { color: var(--p-purple); }
         .nav-item i { font-size: 22px; margin-bottom: 4px; font-style: normal; }
 
+        /* MODAL */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 25px; }
-        .modal-content { background: var(--bg-card); border: 1px solid var(--p-purple); border-radius: 30px; padding: 25px; width: 100%; }
+        .modal-content { background: var(--bg-card); border: 1px solid var(--p-purple); border-radius: 30px; padding: 25px; width: 100%; max-width: 400px; }
 
-        .info-bar { background: #1a1608; border-left: 4px solid var(--warning); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 11px; line-height: 1.4; }
+        /* SWAP & CALC INFO */
+        .swap-info { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 0 10px; font-size: 13px; font-weight: 600; }
+        .calc-box { margin-top: 5px; font-size: 12px; color: var(--warning); font-weight: 700; text-align: center; display: none; border: 1px dashed var(--warning); padding: 8px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
+<div id="ban-overlay">
+    <h1 class="orbitron" style="color:var(--error); font-size: 50px;">YASAKLANDIN</h1>
+    <p>Sistem ihlali tespit edildi.</p>
+</div>
+
 <div id="admin-modal" class="modal">
     <div class="modal-content">
-        <h3 id="m-user-tag" class="orbitron" style="text-align:center; color:var(--p-purple); margin-bottom:15px;"></h3>
-        <div id="m-stats" class="stat-grid" style="grid-template-columns: 1fr 1fr;"></div>
-        <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+        <h3 id="m-user-tag" class="orbitron" style="text-align:center; color:var(--p-purple); margin-bottom:15px; font-size: 18px;"></h3>
+        <div id="m-stats" class="stat-grid" style="grid-template-columns: 1fr 1fr; gap: 8px;"></div>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
             <button id="m-ban-btn" class="btn-main" style="background:var(--error);" onclick="Admin.execBan()">BANLA</button>
             <button class="btn-main" style="background:#222;" onclick="Admin.close()">KAPAT</button>
         </div>
@@ -70,26 +84,20 @@
     <section id="v-home" class="view active">
         <div class="stat-grid">
             <div class="stat-card"><small>SPYDER</small><b id="u-bal">0</b></div>
-            <div class="stat-card"><small>CÜZDAN</small><b id="u-usdt" style="color:var(--success)">$0.00</b></div>
-            <div class="stat-card"><small>GEREKLİ REKLAM</small><b id="u-req">0</b></div>
+            <div class="stat-card"><small>CÜZDAN</small><b id="u-usdt" style="color:var(--p-green)">$0.00</b></div>
+            <div class="stat-card"><small>İZLENEN REK.</small><b id="u-ads-count">0</b></div>
         </div>
         <div id="spyder-btn" class="tap-area" onclick="App.tap()">🕷️</div>
-        <div style="text-align:center; font-weight:900; letter-spacing:2px; margin-top:-20px;">TAP TO EARN</div>
-        <button class="btn-main" style="background:linear-gradient(90deg, #f59e0b, #d97706); margin-top:40px;" onclick="App.watchAd()">📺 ENERJİ FULLLE (REKLAM)</button>
+        <button class="btn-main" style="background:linear-gradient(90deg, #f59e0b, #d97706); margin-top: 40px;" onclick="App.watchAd()">📺 ENERJİ FULLLE (REKLAM)</button>
     </section>
 
     <section id="v-swap" class="view">
-        <h2 class="orbitron" style="margin-bottom:20px;">TAKAS</h2>
+        <h2 class="orbitron" style="margin-bottom: 20px;">TAKAS</h2>
         <div class="action-box">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                <span>Gidecek Spyder:</span><span id="sw-out-spy" style="color:var(--p-purple)">0</span>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-                <span>Gelecek USDT:</span><span id="sw-in-usdt" style="color:var(--p-purple)">$0.00</span>
-            </div>
-            <hr style="border:0.1px solid var(--border); margin:15px 0;">
-            <small style="color:var(--text-dim); text-align:center; display:block;">TAHMİNİ KAZANÇ</small>
-            <h1 id="sw-preview" class="orbitron" style="text-align:center; color:var(--p-purple); font-size:40px;">$0.00</h1>
+            <div class="swap-info"><span>Gidecek Spyder:</span><span id="sw-out-spy">0</span></div>
+            <div class="swap-info"><span>Gelecek USDT:</span><span id="sw-in-usdt">$0.00</span></div>
+            <hr style="border: 0.1px solid var(--border); margin: 15px 0;">
+            <h1 id="sw-preview" class="orbitron" style="text-align:center; color:var(--p-purple); font-size: 38px;">$0.00</h1>
         </div>
         <button class="btn-main" onclick="App.processSwap()">TÜMÜNÜ USDT'YE ÇEVİR</button>
     </section>
@@ -97,32 +105,35 @@
     <section id="v-wallet" class="view">
         <h2 class="orbitron">CÜZDAN</h2>
         <div class="action-box" style="margin-top:15px;">
-            <small style="color:var(--text-dim); text-align:center; display:block;">KULLANILABİLİR BAKİYE</small>
-            <h1 id="w-balance-txt" style="font-size:50px; text-align:center; margin:10px 0;">$0.00</h1>
+            <small style="color:var(--text-dim); text-align: center; display: block;">BAKİYE</small>
+            <h2 id="w-balance-txt" style="font-size: 50px; text-align:center; margin: 10px 0;">$0.00</h2>
             
-            <div class="info-bar">
-                • Minimum çekim <b>1.00 USDT</b>.<br>
-                • Ödeme için gerekli reklam sayısı otomatik hesaplanır.
+            <div style="background: #1a1608; border-left: 4px solid var(--warning); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 11px;">
+                • Min çekim <b>1.00 USDT</b>.<br>
+                • Her 0.10$ için 170 reklam gereklidir.
             </div>
 
             <div class="input-group">
-                <input type="number" id="withdraw-amount" placeholder="ÇEKİLECEK MİKTAR (Min 1.00)">
+                <input type="number" id="withdraw-amount" placeholder="MİKTAR" oninput="App.liveCalc()">
             </div>
+            
+            <div id="calc-result" class="calc-box">
+                Gerekli Reklam: <span id="needed-ads-val">0</span>
+            </div>
+
             <div class="input-group">
-                <input type="text" id="wallet-addr-in" placeholder="USDT (TON/BEP20) ADRESİ">
+                <input type="text" id="wallet-addr-in" placeholder="USDT ADRESİ">
             </div>
-            <button class="btn-main" style="background:var(--p-green);" onclick="App.withdraw()">ÇEKİM TALEBİ GÖNDER</button>
+            <button class="btn-main" style="background: var(--p-green);" onclick="App.withdraw()">ÇEKİM TALEBİ GÖNDER</button>
         </div>
     </section>
 
     <section id="v-admin" class="view">
-        <h2 class="orbitron" style="color:var(--warning)">SYSTEM ADMIN</h2>
+        <h2 class="orbitron" style="color:var(--warning)">SYSTEM PANEL</h2>
         <div class="action-box">
             <small>FİYAT AYARI ($)</small>
-            <div class="input-group">
-                <input type="number" id="adm-price-in" step="0.0001">
-            </div>
-            <button class="btn-main" onclick="Admin.savePrice()">GÜNCELLE</button>
+            <div class="input-group"><input type="number" id="adm-price-in" step="0.0001"></div>
+            <button class="btn-main" onclick="Admin.savePrice()">KAYDET</button>
         </div>
         <div id="adm-user-list"></div>
     </section>
@@ -143,7 +154,7 @@
     const tg = window.Telegram.WebApp;
     let uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_user";
 
-    let user = { bal: 0, usdt: 0, ads: 0, isBan: false, username: "" };
+    let user = { bal: 0, usdt: 0, ads: 0, isBan: false, username: "", tasks: [] };
     let globalPrice = 0.001;
     let targetUid = null;
 
@@ -165,19 +176,28 @@
         },
         tap: () => {
             user.bal++;
-            tg.HapticFeedback.impactOccurred('light');
             App.render();
-            if(user.bal % 25 === 0) db.collection("users").doc(uid).update({bal: user.bal});
+            if(user.bal % 20 === 0) db.collection("users").doc(uid).update({bal: user.bal});
         },
         watchAd: () => {
             if(typeof window.showAdexora === 'function') {
                 window.showAdexora().then(() => {
                     user.ads++;
                     db.collection("users").doc(uid).update({ads: user.ads});
-                    tg.showAlert("Ödül kazanıldı! Reklam sayacı güncellendi.");
                     App.render();
                 });
             }
+        },
+        liveCalc: () => {
+            const amt = parseFloat(document.getElementById('withdraw-amount').value);
+            const box = document.getElementById('calc-result');
+            const span = document.getElementById('needed-ads-val');
+            if(!isNaN(amt) && amt > 0) {
+                const needed = Math.ceil((amt / 0.10) * 170);
+                span.innerText = needed.toLocaleString();
+                box.style.display = 'block';
+                span.style.color = (user.ads >= needed) ? 'var(--p-green)' : 'var(--error)';
+            } else { box.style.display = 'none'; }
         },
         prepSwap: () => {
             let gain = user.bal * globalPrice;
@@ -186,36 +206,24 @@
             document.getElementById('sw-preview').innerText = "$" + gain.toFixed(2);
         },
         processSwap: () => {
-            if(user.bal <= 0) return tg.showAlert("Takas edilecek Spyder yok!");
-            let gain = user.bal * globalPrice;
-            user.usdt += gain;
+            if(user.bal <= 0) return;
+            user.usdt += (user.bal * globalPrice);
             user.bal = 0;
             db.collection("users").doc(uid).update(user);
-            tg.showAlert("Takas işlemi başarıyla tamamlandı!");
             App.render(); App.prepSwap();
         },
         withdraw: () => {
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
-            const addr = document.getElementById('wallet-addr-in').value;
-            
-            // OTOMATİK HESAPLAMA VE KONTROLLER
-            const requiredAds = Math.ceil((user.usdt || 0) * 1700);
-            
-            if(isNaN(amt) || amt < 1.00) return tg.showAlert("Minimum çekim miktarı 1.00 USDT'dir!");
-            if(amt > user.usdt) return tg.showAlert("Cüzdanınızda yeterli bakiye yok!");
-            if(addr.length < 10) return tg.showAlert("Lütfen geçerli bir USDT adresi girin!");
-            if(user.ads < requiredAds) return tg.showAlert(`Yetersiz reklam! Bu bakiye için ${requiredAds} reklam izlemeniz gerekiyor. Sizin izlediğiniz: ${user.ads}`);
-            
-            tg.showAlert("Çekim talebiniz başarıyla alındı! 24 saat içinde kontrol edilecektir.");
+            const needed = Math.ceil((amt / 0.10) * 170);
+            if(amt < 1.00 || user.ads < needed) return tg.showAlert("Yetersiz bakiye veya reklam!");
+            tg.showAlert("Talebiniz gönderildi!");
         },
         render: () => {
             document.getElementById('u-bal').innerText = user.bal.toLocaleString();
             document.getElementById('u-usdt').innerText = "$" + (user.usdt || 0).toFixed(2);
             document.getElementById('w-balance-txt').innerText = "$" + (user.usdt || 0).toFixed(2);
-            
-            // REKLAM SAYISI OTOMATİK HESAPLAMA (Her 0.01$ için 17 reklam -> Her 1$ için 1700 reklam)
-            const autoReqAds = Math.ceil((user.usdt || 0) * 1700);
-            document.getElementById('u-req').innerText = autoReqAds.toLocaleString();
+            document.getElementById('u-ads-count').innerText = user.ads.toLocaleString();
+            App.liveCalc();
         }
     };
 
@@ -237,24 +245,24 @@
             targetUid = id;
             const d = await db.collection("users").doc(id).get();
             const u = d.data();
+            const g = (u.tasks && u.tasks.length > 0) ? u.tasks.join(", ") : "Yok";
             document.getElementById('m-user-tag').innerText = "@" + (u.username || "Bilinmiyor");
             document.getElementById('m-stats').innerHTML = `
+                <div class="stat-card"><small>USDT</small><b style="color:var(--p-green)">$${(u.usdt || 0).toFixed(2)}</b></div>
                 <div class="stat-card"><small>SPYDER</small><b>${(u.bal || 0).toLocaleString()}</b></div>
-                <div class="stat-card"><small>İZLENEN REKLAM</small><b>${u.ads || 0}</b></div>
+                <div class="stat-card" style="grid-column: span 2;"><small>ADS</small><b>${u.ads || 0} REKLAM</b></div>
+                <div class="stat-card" style="grid-column: span 2; text-align:left; padding:10px;"><small>GÖREVLER</small><div style="font-size:10px; color:#ccc;">${g}</div></div>
             `;
-            document.getElementById('m-ban-btn').innerText = u.isBan ? "ENGELİ KALDIR" : "BANLA";
+            document.getElementById('m-ban-btn').innerText = u.isBan ? "UNBAN" : "BAN";
             document.getElementById('admin-modal').style.display = 'flex';
         },
         execBan: async () => {
             const d = await db.collection("users").doc(targetUid).get();
-            const n = !d.data().isBan;
-            await db.collection("users").doc(targetUid).update({ isBan: n });
+            await db.collection("users").doc(targetUid).update({ isBan: !d.data().isBan });
             Admin.close(); Admin.load();
         },
         savePrice: () => {
-            const p = parseFloat(document.getElementById('adm-price-in').value);
-            db.collection("settings").doc("global").set({ coinPrice: p });
-            tg.showAlert("Global fiyat güncellendi!");
+            db.collection("settings").doc("global").set({ coinPrice: parseFloat(document.getElementById('adm-price-in').value) });
         },
         close: () => document.getElementById('admin-modal').style.display = 'none'
     };
