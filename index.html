@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spyder Network Ultimate Edition</title>
+    <title>Spyder Network Enterprise | v2.0</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -11,277 +11,231 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* TASARIM DEĞİŞKENLERİ */
         :root {
-            --p-purple: #a855f7; 
-            --p-glow: rgba(168, 85, 247, 0.5);
-            --bg-black: #000000;
-            --bg-card: #0c0c0e;
-            --success: #10b981;
-            --error: #ef4444;
-            --warning: #f59e0b;
-            --text-dim: #64748b;
-            --border: rgba(255, 255, 255, 0.05);
+            --p-purple: #a855f7; --p-glow: rgba(168, 85, 247, 0.4);
+            --bg-black: #000000; --bg-card: #0c0c0e;
+            --success: #10b981; --error: #ef4444; --warning: #f59e0b;
+            --text-dim: #64748b; --border: rgba(255, 255, 255, 0.05);
         }
 
-        /* RESET & GENEL AYARLAR */
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { 
-            background: var(--bg-black); 
-            color: #fff; 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            height: 100vh; 
-            overflow: hidden; 
-            display: flex; 
-            flex-direction: column; 
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg-black); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* VIEWPORT & ANIMASYONLAR */
-        #viewport { flex: 1; overflow-y: auto; padding: 20px 20px 140px; scroll-behavior: smooth; }
-        .view { display: none; flex-direction: column; animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        /* SCROLLBAR & LAYOUT */
+        #viewport { flex: 1; overflow-y: auto; padding: 20px 20px 140px; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--p-purple); border-radius: 10px; }
+
+        .view { display: none; animation: viewFade 0.4s ease; flex-direction: column; }
         .view.active { display: flex; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes viewFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* KART TASARIMLARI */
-        .glass-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 28px; padding: 22px; margin-bottom: 16px; position: relative; overflow: hidden; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
-        .stat-item { background: #0a0a0c; padding: 15px; border-radius: 20px; text-align: center; border: 1px solid var(--border); transition: 0.3s; }
-        .stat-item b { display: block; font-family: 'Orbitron'; font-size: 16px; margin-top: 4px; color: var(--p-purple); }
+        /* UI ELEMENTS */
+        .glass-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 20px; margin-bottom: 15px; position: relative; }
+        .btn { padding: 18px; border-radius: 18px; border: none; font-weight: 800; cursor: pointer; color: #fff; background: var(--p-purple); width: 100%; transition: 0.3s; }
+        .btn:active { transform: scale(0.96); }
+        .input-pro { width: 100%; padding: 16px; background: #050505; border: 1px solid #1a1a1a; color: #fff; border-radius: 16px; margin: 8px 0; text-align: center; font-family: 'JetBrains Mono'; font-size: 14px; }
 
-        /* BUTTONS */
-        .btn { padding: 18px; border-radius: 20px; border: none; font-weight: 800; cursor: pointer; color: #fff; background: var(--p-purple); width: 100%; font-size: 14px; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .btn:active { transform: scale(0.96); opacity: 0.8; }
-        .btn-success { background: var(--success); }
-        .btn-error { background: var(--error); }
+        /* TAP MECHANIC */
+        .tap-area { width: 260px; height: 260px; background: radial-gradient(circle, #c084fc 0%, #7e22ce 100%); border-radius: 50%; margin: 30px auto; display: flex; align-items: center; justify-content: center; font-size: 90px; box-shadow: 0 0 50px var(--p-glow); cursor: pointer; position: relative; }
         
-        /* INPUTS */
-        .input-pro { width: 100%; padding: 18px; background: #050505; border: 1px solid #1a1a1a; color: #fff; border-radius: 18px; margin: 10px 0; text-align: center; font-family: 'JetBrains Mono'; font-size: 16px; }
-
-        /* TAP CIRCLE */
-        .tap-circle { 
-            width: 270px; height: 270px; 
-            background: radial-gradient(circle, #c084fc 0%, #7e22ce 100%); 
-            border-radius: 50%; margin: 40px auto; 
-            display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 0 70px var(--p-glow);
-            border: 10px solid rgba(255,255,255,0.05);
-            cursor: pointer; transition: transform 0.1s;
-        }
-        .tap-circle:active { transform: scale(0.92); }
+        /* ADMIN UI */
+        .admin-label { font-size: 10px; font-weight: 900; color: var(--warning); letter-spacing: 2px; margin-bottom: 5px; display: block; }
+        .req-item { background: #000; border: 1px solid #222; padding: 15px; border-radius: 15px; margin-top: 10px; border-left: 5px solid var(--success); }
+        .task-item { border-left: 5px solid var(--p-purple); }
 
         /* NAVIGATION */
-        nav { position: fixed; bottom: 0; width: 100%; height: 95px; background: rgba(5,5,5,0.98); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: 20px; z-index: 1000; backdrop-filter: blur(10px); }
+        nav { position: fixed; bottom: 0; width: 100%; height: 90px; background: rgba(5,5,5,0.95); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: 20px; z-index: 1000; backdrop-filter: blur(15px); }
         .tab { color: var(--text-dim); display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: 800; transition: 0.3s; }
         .tab.active { color: var(--p-purple); transform: translateY(-5px); }
         .tab i { font-size: 24px; margin-bottom: 4px; font-style: normal; }
-
-        /* ADMIN MODAL */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(15px); }
-        .modal-content { background: #0c0c0e; border: 1px solid var(--p-purple); border-radius: 35px; padding: 25px; width: 100%; max-width: 420px; position: relative; }
     </style>
 </head>
 <body>
 
-<div id="adm-modal" class="modal">
-    <div class="modal-content">
-        <h2 id="det-name" class="orbitron" style="text-align:center; color:var(--p-purple);">USERNAME</h2>
-        <div class="stat-grid" style="margin-top:20px;">
-            <div class="stat-item"><small>SPYDER</small><b id="det-spy">0</b></div>
-            <div class="stat-item"><small>USDT</small><b id="det-usdt">$0.00</b></div>
-        </div>
-        <input type="number" id="adm-val" class="input-pro" placeholder="Miktar Gir">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
-            <button onclick="Admin.action('bal','add')" class="btn btn-success">S. EKLE</button>
-            <button onclick="Admin.action('bal','sub')" class="btn btn-error">S. SİL</button>
-            <button onclick="Admin.action('usdt','add')" class="btn btn-success">U. EKLE</button>
-            <button onclick="Admin.action('usdt','sub')" class="btn btn-error">U. SİL</button>
-        </div>
-        <button onclick="Admin.close()" class="btn" style="background:#222;">KAPAT</button>
-    </div>
-</div>
-
 <main id="viewport">
     <section id="v-home" class="view active">
-        <div class="stat-grid">
-            <div class="stat-item"><small>SPYDER COIN</small><b id="u-bal">0</b></div>
-            <div class="stat-item"><small>USDT WALLET</small><b id="u-usdt" style="color:var(--success)">$0.00</b></div>
-        </div>
-        <div class="tap-circle" onclick="App.tap(event)">
-            <span style="font-size:110px;">🕷️</span>
-        </div>
-        <div style="text-align:center; color:var(--text-dim); font-weight:800; letter-spacing:2px;">TAP TO EARN</div>
-    </section>
-
-    <section id="v-mining" class="view">
-        <h2 class="orbitron" style="margin-bottom:20px;">MINING</h2>
-        <div class="glass-card" style="height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; border-style: dashed;">
-            <div style="background:var(--warning); color:#000; padding:5px 15px; border-radius:20px; font-weight:900; font-size:10px; margin-bottom:15px;">COMING SOON</div>
-            <h3>Cloud Infrastructure</h3>
-            <p style="color:var(--text-dim); font-size:13px; margin-top:10px;">Sunucular hazırlanıyor. Pasif gelir özelliği çok yakında aktif olacak.</p>
+        <div style="text-align:center;">
+            <small style="color:var(--text-dim); letter-spacing:3px;">TOTAL SPYDER</small>
+            <h1 id="u-bal" style="font-family:'Orbitron'; font-size:45px; margin-bottom:10px;">0</h1>
+            <div class="tap-area" onclick="App.tap(event)">🕷️</div>
+            <p id="u-usdt-live" style="color:var(--success); font-weight:700; font-size:18px; margin-top:15px;">$0.000000</p>
         </div>
     </section>
 
-    <section id="v-swap" class="view">
-        <h2 class="orbitron" style="margin-bottom:20px;">SWAP</h2>
-        <div class="glass-card">
-            <input type="number" id="sw-input" class="input-pro" placeholder="Spyder Sat" oninput="Swap.update()">
-            <div style="text-align:center; margin:10px;">⬇️</div>
-            <div class="stat-item"><small>ALACAĞINIZ</small><b id="sw-output">$0.00</b></div>
-            <button class="btn" style="margin-top:20px;" onclick="Swap.now()">ŞİMDİ TAKAS ET</button>
-        </div>
+    <section id="v-tasks" class="view">
+        <h2 class="orbitron">MISSIONS</h2>
+        <div id="task-list"></div>
     </section>
 
     <section id="v-wallet" class="view">
         <h2 class="orbitron">WALLET</h2>
         <div class="glass-card" style="text-align:center;">
-            <small>AVAILABLE BALANCE</small>
-            <h1 id="w-usdt" style="font-size:45px; font-family:'Orbitron'; margin:10px 0;">$0.00</h1>
-            
-            <div style="text-align:left; background:rgba(255,255,255,0.02); padding:15px; border-radius:20px; margin:15px 0; font-size:12px;">
-                <p>• Min Çekim: 1.00 USDT</p>
-                <p>• Reklam Şartı: 0.01$ = 17 Reklam</p>
-                <p id="w-req-ads" style="color:var(--p-purple); font-weight:bold; margin-top:5px;">Gerekli Reklam: 0</p>
-            </div>
-
-            <input type="number" id="wd-amt" class="input-pro" placeholder="Miktar" oninput="Wallet.check()">
-            <input type="text" id="wd-addr" class="input-pro" placeholder="USDT Adresi">
-            <button id="wd-btn" class="btn btn-error" onclick="Wallet.request()">ÇEKİM TALEBİ GÖNDER</button>
+            <small>ESTIMATED VALUE</small>
+            <h1 id="w-usdt" style="font-size:38px; color:var(--success); margin:10px 0;">$0.00</h1>
+            <div style="height:1px; background:var(--border); margin:20px 0;"></div>
+            <input type="number" id="wd-amt" class="input-pro" placeholder="Tutar (USDT)">
+            <input type="text" id="wd-addr" class="input-pro" placeholder="USDT (BEP20/TON) Adresi">
+            <button class="btn" onclick="Wallet.request()">ÇEKİM TALEBİ GÖNDER</button>
         </div>
     </section>
 
     <section id="v-admin" class="view">
-        <h2 class="orbitron" style="color:var(--warning);">ADMIN CENTER</h2>
-        <div id="admin-user-list" style="margin-top:20px;"></div>
+        <h2 class="orbitron" style="color:var(--warning)">SYSTEM OVERRIDE</h2>
+        
+        <div class="glass-card">
+            <span class="admin-label">TOKEN ECONOMY</span>
+            <input type="number" id="adm-price" class="input-pro" step="0.0000001" placeholder="1 Coin Fiyatı ($)">
+            <button class="btn" style="background:var(--success)" onclick="Admin.updatePrice()">FİYATI SİSTEME İŞLE</button>
+        </div>
+
+        <div class="glass-card">
+            <span class="admin-label">MISSION CONTROL</span>
+            <input type="text" id="adm-t-title" class="input-pro" placeholder="Görev Başlığı">
+            <input type="number" id="adm-t-reward" class="input-pro" placeholder="Ödül (Coin)">
+            <input type="text" id="adm-t-link" class="input-pro" placeholder="URL">
+            <button class="btn" onclick="Admin.addTask()">YENİ GÖREV YAYINLA</button>
+        </div>
+
+        <div id="adm-pending-requests"></div>
     </section>
 </main>
 
 <nav>
     <div class="tab active" onclick="Nav.go('v-home', this)"><i>🎮</i><span>TAP</span></div>
-    <div class="tab" onclick="Nav.go('v-mining', this)"><i>⛏️</i><span>MINE</span></div>
-    <div class="tab" onclick="Nav.go('v-swap', this)"><i>🔄</i><span>SWAP</span></div>
-    <div class="tab" onclick="Nav.go('v-wallet', this)"><i>💼</i><span>WAL</span></div>
-    <div id="adm-tab" class="tab" style="display:none;" onclick="Nav.go('v-admin', this); Admin.load();"><i>🔑</i><span>ADM</span></div>
+    <div class="tab" onclick="Nav.go('v-tasks', this)"><i>📡</i><span>TASKS</span></div>
+    <div class="tab" onclick="Nav.go('v-wallet', this)"><i>💼</i><span>WALLET</span></div>
+    <div id="adm-tab" class="tab" style="display:none;" onclick="Nav.go('v-admin', this); Admin.init();"><i>🔑</i><span>ADMIN</span></div>
 </nav>
 
 <script>
-    /* FIREBASE CONFIG & INIT */
+    /* --- SYSTEM INITIALIZATION --- */
+    const ADMIN_UID = "8392479231";
     const firebaseConfig = { apiKey: "AIzaSyC18uinYQT9vOC-nhxv3x1WIhO_we3CRMY", projectId: "pdfkaynak-51615", appId: "1:228512804576:web:a0bba02ca83b4fa7adea85" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const tg = window.Telegram.WebApp;
-    const ADMIN_ID = "8392479231";
 
-    let user = { bal: 0, usdt: 0, ads: 0, ref: 0 };
-    let uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_test";
-    let uname = tg.initDataUnsafe?.user?.username || "Guest";
+    let user = { bal: 0, usdt: 0, completedTasks: [] };
+    let globalSettings = { coinPrice: 0.000001 };
+    let uid = tg.initDataUnsafe?.user?.id?.toString() || "dev_agent";
 
-    /* CORE LOGIC */
     const App = {
         init: async () => {
-            const doc = await db.collection("users").doc(uid).get();
-            if(doc.exists) {
-                user = {...user, ...doc.data()};
-            } else {
-                await db.collection("users").doc(uid).set({...user, username: uname});
-            }
-            if(uid === ADMIN_ID) document.getElementById('adm-tab').style.display = 'flex';
+            // Fiyatı Çek
+            db.collection("settings").doc("global").onSnapshot(doc => {
+                if(doc.exists) {
+                    globalSettings = doc.data();
+                    App.render();
+                }
+            });
+
+            // Kullanıcıyı Çek
+            const uDoc = await db.collection("users").doc(uid).get();
+            if(uDoc.exists) user = {...user, ...uDoc.data()};
+            
+            if(uid === ADMIN_UID) document.getElementById('adm-tab').style.display = 'flex';
+            
             App.render();
+            App.syncTasks();
         },
         tap: (e) => {
-            user.bal += 100;
-            tg.HapticFeedback.impactOccurred('light');
+            user.bal += 1; // 1 TIK = 1 COIN
+            tg.HapticFeedback.impactOccurred('medium');
             App.render();
-            if(user.bal % 500 === 0) App.save();
+            if(user.bal % 20 === 0) App.save();
         },
-        save: () => db.collection("users").doc(uid).set(user, {merge:true}),
+        save: () => {
+            db.collection("users").doc(uid).set(user, {merge:true});
+        },
         render: () => {
+            const usdtVal = (user.bal * globalSettings.coinPrice).toFixed(6);
             document.getElementById('u-bal').innerText = user.bal.toLocaleString();
-            document.getElementById('u-usdt').innerText = "$" + (user.usdt || 0).toFixed(2);
-            document.getElementById('w-usdt').innerText = "$" + (user.usdt || 0).toFixed(2);
-            Wallet.check();
+            document.getElementById('u-usdt-live').innerText = "$" + usdtVal;
+            document.getElementById('w-usdt').innerText = "$" + usdtVal;
+        },
+        syncTasks: () => {
+            db.collection("tasks").onSnapshot(snap => {
+                let html = "";
+                snap.forEach(doc => {
+                    const t = doc.data();
+                    const isDone = user.completedTasks.includes(doc.id);
+                    html += `
+                    <div class="glass-card task-item" style="opacity:${isDone ? 0.5 : 1}">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div><b>${t.title}</b><br><small style="color:var(--p-purple)">+${t.reward} SPYDER</small></div>
+                            ${isDone ? '✅' : `<button class="btn" style="width:auto; padding:8px 15px;" onclick="App.doTask('${doc.id}', '${t.link}', ${t.reward})">YAP</button>`}
+                            ${uid === ADMIN_UID ? `<button onclick="Admin.deleteTask('${doc.id}')" style="background:none; border:none; color:var(--error); margin-left:10px;">🗑️</button>` : ''}
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('task-list').innerHTML = html;
+            });
+        },
+        doTask: (tid, link, reward) => {
+            window.open(link);
+            setTimeout(() => {
+                if(!user.completedTasks.includes(tid)) {
+                    user.completedTasks.push(tid);
+                    user.bal += reward;
+                    App.save(); App.render();
+                    tg.showAlert("Ödül Hesabınıza Eklendi!");
+                }
+            }, 2000);
         }
     };
 
-    /* WALLET SYSTEM */
     const Wallet = {
-        check: () => {
-            const amt = parseFloat(document.getElementById('wd-amt').value) || 0;
-            const btn = document.getElementById('wd-btn');
-            const reqAds = Math.ceil((amt / 0.01) * 17);
-            document.getElementById('w-req-ads').innerText = `Gerekli Reklam: ${reqAds} (Sizde: ${user.ads || 0})`;
-
-            if(amt >= 1.0 && (user.ads || 0) >= reqAds && user.usdt >= amt) {
-                btn.className = "btn btn-success";
-                btn.innerText = "TALEBİ GÖNDER";
-            } else {
-                btn.className = "btn btn-error";
-                if(amt < 1) btn.innerText = "MİN 1.00 USDT";
-                else if(user.usdt < amt) btn.innerText = "YETERSİZ BAKİYE";
-                else btn.innerText = "REKLAM YETERSİZ";
-            }
-        },
         request: () => {
-            const amt = parseFloat(document.getElementById('wd-amt').value);
+            const amt = document.getElementById('wd-amt').value;
             const addr = document.getElementById('wd-addr').value;
-            if(amt < 1 || user.usdt < amt || !addr) return tg.showAlert("Şartlar sağlanmadı!");
-            user.usdt -= amt;
-            db.collection("withdraws").add({ uid, uname, amt, addr, date: Date.now() });
-            App.save(); App.render();
-            tg.showAlert("Talep başarıyla gönderildi!");
+            if(!amt || !addr || amt < 1) return tg.showAlert("Geçersiz miktar veya adres!");
+            
+            db.collection("withdraws").add({
+                uid, uname: tg.initDataUnsafe?.user?.username || "Agent",
+                amount: amt, address: addr, status: "PENDING", timestamp: Date.now()
+            });
+            tg.showAlert("Çekim talebi admin paneline iletildi.");
         }
     };
 
-    /* SWAP SYSTEM */
-    const Swap = {
-        update: () => {
-            const val = document.getElementById('sw-input').value || 0;
-            document.getElementById('sw-output').innerText = "$" + (val / 1000000).toFixed(2);
-        },
-        now: () => {
-            const val = parseFloat(document.getElementById('sw-input').value);
-            if(user.bal < val || val <= 0) return tg.showAlert("Yetersiz Spyder!");
-            user.bal -= val; user.usdt += (val / 1000000);
-            App.save(); App.render();
-            tg.showAlert("Başarıyla takas edildi!");
-        }
-    };
-
-    /* ADMIN SYSTEM */
     const Admin = {
-        users: [],
-        curr: null,
-        load: async () => {
-            const snap = await db.collection("users").get();
-            let html = "";
-            Admin.users = [];
-            snap.forEach(d => {
-                const u = {id: d.id, ...d.data()};
-                Admin.users.push(u);
-                html += `<div class="glass-card" onclick="Admin.open('${u.id}')" style="padding:15px; cursor:pointer;">
-                    <b>${u.username}</b> <small>($${(u.usdt||0).toFixed(2)})</small>
-                </div>`;
+        init: () => {
+            document.getElementById('adm-price').value = globalSettings.coinPrice;
+            db.collection("withdraws").where("status","==","PENDING").onSnapshot(snap => {
+                let html = "<h3>BEKLEYEN ÖDEMELER</h3>";
+                snap.forEach(doc => {
+                    const r = doc.data();
+                    html += `
+                    <div class="req-item">
+                        <b>User:</b> @${r.uname}<br><b>Miktar:</b> $${r.amount}<br><b>Cüzdan:</b> ${r.address}
+                        <div style="margin-top:10px;">
+                            <button class="btn" style="background:var(--success); padding:5px; font-size:10px;" onclick="Admin.completeWithdraw('${doc.id}')">ONAYLANDI OLARAK İŞARETLE</button>
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('adm-pending-requests').innerHTML = html;
             });
-            document.getElementById('admin-user-list').innerHTML = html;
         },
-        open: (id) => {
-            Admin.curr = Admin.users.find(x => x.id === id);
-            document.getElementById('det-name').innerText = Admin.curr.username;
-            document.getElementById('det-spy').innerText = (Admin.curr.bal || 0).toLocaleString();
-            document.getElementById('det-usdt').innerText = "$" + (Admin.curr.usdt || 0).toFixed(2);
-            document.getElementById('adm-modal').style.display = 'flex';
+        updatePrice: () => {
+            const p = parseFloat(document.getElementById('adm-price').value);
+            db.collection("settings").doc("global").set({coinPrice: p});
+            tg.showAlert("Yeni fiyat tüm sistemde aktif edildi.");
         },
-        action: async (field, type) => {
-            const val = parseFloat(document.getElementById('adm-val').value) || 0;
-            const change = type === 'add' ? val : -val;
-            await db.collection("users").doc(Admin.curr.id).update({
-                [field === 'bal' ? 'bal' : 'usdt']: firebase.firestore.FieldValue.increment(change)
-            });
-            tg.showAlert("Güncellendi"); Admin.close(); Admin.load();
+        addTask: () => {
+            const title = document.getElementById('adm-t-title').value;
+            const reward = parseInt(document.getElementById('adm-t-reward').value);
+            const link = document.getElementById('adm-t-link').value;
+            if(title && reward) db.collection("tasks").add({ title, reward, link });
         },
-        close: () => document.getElementById('adm-modal').style.display = 'none'
+        deleteTask: (id) => {
+            if(confirm("Görevi silmek istediğine emin misin?")) db.collection("tasks").doc(id).delete();
+        },
+        completeWithdraw: (id) => {
+            db.collection("withdraws").doc(id).update({status: "SUCCESS"});
+        }
     };
 
-    /* NAV LOGIC */
     const Nav = {
         go: (id, el) => {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
