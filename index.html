@@ -6,50 +6,84 @@
     <title>SpyderCoin - Web App</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
-        * { box-sizing: border-box; }
         body {
-            background: #1a002e;
+            background: radial-gradient(circle, #2e004f 0%, #000 100%);
             color: #ffeb3b;
-            font-family: Arial, sans-serif;
+            font-family: 'Arial Black', sans-serif;
             margin: 0;
+            height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
             text-align: center;
+            user-select: none;
         }
 
-        #balance { font-size: 48px; font-weight: bold; margin: 10px 0; color: #ffeb3b; }
-
-        .energy-bar-bg {
-            width: 280px; height: 25px; background: #333;
-            border: 2px solid #ffeb3b; border-radius: 15px;
-            position: relative; margin-bottom: 20px; overflow: hidden;
+        #balance {
+            font-size: 50px;
+            margin: 10px 0;
+            text-shadow: 0 0 20px #9c27b0;
         }
 
-        #energy-fill { height: 100%; width: 100%; background: #ffeb3b; transition: width 0.1s; }
-        #energy-text { position: absolute; width: 100%; top: 3px; left: 0; color: #000; font-weight: bold; font-size: 14px; }
+        .energy-container {
+            width: 300px;
+            height: 30px;
+            background: #222;
+            border: 3px solid #ffeb3b;
+            border-radius: 20px;
+            position: relative;
+            margin-bottom: 20px;
+        }
 
-        #spider { font-size: 150px; cursor: pointer; user-select: none; }
-        #spider:active { transform: scale(0.9); }
-        .disabled { opacity: 0.3; pointer-events: none; }
+        #energy-fill {
+            height: 100%;
+            width: 100%;
+            background: #ffeb3b;
+            transition: width 0.2s ease;
+        }
+
+        #energy-text {
+            position: absolute;
+            width: 100%;
+            top: 4px;
+            left: 0;
+            color: #000;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        #spider {
+            font-size: 160px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        #spider:active { transform: scale(0.85); }
+        .disabled { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
 
         .refill-btn {
-            background: #ffeb3b; color: #1a002e; border: none;
-            padding: 15px 30px; font-size: 18px; font-weight: bold;
-            border-radius: 10px; cursor: pointer; margin-top: 20px;
+            background: #ffeb3b;
+            color: #2e004f;
+            border: none;
+            padding: 18px 35px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            margin-top: 30px;
+            box-shadow: 0 6px #9c27b0;
         }
 
-        #error-log {
-            margin-top: 20px; font-size: 11px; color: #ff5555;
-            background: rgba(0,0,0,0.5); padding: 8px; border-radius: 5px;
-            max-width: 90%; word-wrap: break-word;
+        #status {
+            font-size: 12px;
+            margin-top: 20px;
+            color: #44ff44;
         }
     </style>
 </head>
@@ -57,73 +91,67 @@
 
     <div id="balance">$0.00000</div>
 
-    <div class="energy-bar-bg">
+    <div class="energy-container">
         <div id="energy-fill"></div>
         <div id="energy-text">1000 / 1000</div>
     </div>
 
     <div id="spider">🕷️</div>
 
-    <button class="refill-btn" onclick="refill()">ENERJİ DOLDUR (AD)</button>
+    <button class="refill-btn" onclick="refillEnergy()">ENERJİ DOLDUR (AD)</button>
 
-    <div id="error-log">Durum: Sistem başlatılıyor...</div>
+    <div id="status">Sistem Hazır.</div>
 
     <script>
-        const log = document.getElementById('error-log');
-
+        // Senin Verdiğin Config
         const firebaseConfig = {
             apiKey: "AIzaSyDfy6QdIZ0BthEHTmxkw-NAja3B9bFFd8U",
             authDomain: "spydercoin-94f7b.firebaseapp.com",
             projectId: "spydercoin-94f7b",
-            databaseURL: "https://spydercoin-94f7b-default-rtdb.firebaseio.com",
             storageBucket: "spydercoin-94f7b.firebasestorage.app",
             messagingSenderId: "218267568158",
-            appId: "1:218267568158:web:832728845ba0f42202060f"
+            appId: "1:218267568158:web:832728845ba0f42202060f",
+            measurementId: "G-8T6RSYSZMM"
         };
 
-        // Firebase'i Başlat
-        try {
-            firebase.initializeApp(firebaseConfig);
-            var database = firebase.database();
-            log.innerText = "Firebase Bağlantısı Hazır.";
-            log.style.color = "#44ff44";
-        } catch (e) {
-            log.innerText = "Firebase Hatası: " + e.message;
-        }
+        // Firestore'u Başlat
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-        let money = 0;
+        let money = 0.0;
         let energy = 1000;
-        let tık = 0;
+        let localClicks = 0;
 
-        // Veriyi Çek (User1 klasörü üzerinden)
-        database.ref('players/user1').on('value', (snap) => {
-            if(snap.exists()) {
-                const data = snap.val();
+        // Firestore'dan Veri Çek (Senin kurallarına uygun bağlantı)
+        db.collection("players").doc("user1").onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
                 money = data.money || 0;
                 energy = data.energy || 1000;
                 updateUI();
             }
         }, (error) => {
-            log.innerText = "ERİŞİM ENGELLENDİ: Firebase Rules ayarını yapmamışsın!";
-            log.style.color = "#ff5555";
+            document.getElementById('status').innerText = "Hata: " + error.message;
+            document.getElementById('status').style.color = "red";
         });
 
         // Tıklama
-        document.getElementById('spider').onclick = () => {
-            if(energy > 0) {
+        document.getElementById('spider').onclick = function() {
+            if (energy > 0) {
                 money += 0.00001;
                 energy--;
-                tık++;
+                localClicks++;
+                
                 updateUI();
                 save();
 
-                if(tık % 10 === 0 && window.showAdexora) {
+                if (localClicks % 10 === 0 && window.showAdexora) {
                     window.showAdexora().catch(e => {});
                 }
             }
         };
 
-        function refill() {
+        function refillEnergy() {
             window.open("https://adexora.my.id/dl/QFm5mnRYbJV", "_blank");
             energy = 1000;
             updateUI();
@@ -133,18 +161,16 @@
         function updateUI() {
             document.getElementById('balance').innerText = "$" + money.toFixed(5);
             document.getElementById('energy-text').innerText = energy + " / 1000";
-            document.getElementById('energy-fill').style.width = (energy/10) + "%";
+            document.getElementById('energy-fill').style.width = (energy / 10) + "%";
             
-            if(energy <= 0) document.getElementById('spider').classList.add('disabled');
+            if (energy <= 0) document.getElementById('spider').classList.add('disabled');
             else document.getElementById('spider').classList.remove('disabled');
         }
 
         function save() {
-            database.ref('players/user1').set({
+            db.collection("players").doc("user1").set({
                 money: money,
                 energy: energy
-            }).catch(e => {
-                log.innerText = "Kaydetme Hatası: " + e.message;
             });
         }
     </script>
