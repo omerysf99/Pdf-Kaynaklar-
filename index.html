@@ -2,8 +2,8 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpyderCoin - MultiUser</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SpyderCoin</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -11,35 +11,81 @@
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
 
     <style>
+        :root { --main-yellow: #ffeb3b; --bg-purple: #1a002e; --card-purple: #2e004f; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body {
-            background: radial-gradient(circle, #2e004f 0%, #000 100%);
-            color: #ffeb3b; font-family: 'Arial Black', sans-serif;
+            background: radial-gradient(circle, var(--card-purple) 0%, #000 100%);
+            color: var(--main-yellow); font-family: 'Arial Black', sans-serif;
             margin: 0; height: 100vh; display: flex; flex-direction: column;
-            align-items: center; text-align: center; overflow: hidden;
+            align-items: center; overflow: hidden; touch-action: manipulation;
         }
-        .header { margin-top: 30px; }
-        #balance { font-size: 45px; text-shadow: 0 0 20px #9c27b0; }
-        .tab-content { display: none; width: 100%; height: 75vh; flex-direction: column; align-items: center; justify-content: center; }
+
+        /* Üst Bakiye */
+        .header { margin-top: 10vh; flex-shrink: 0; }
+        #balance { font-size: 12vw; text-shadow: 0 0 20px #9c27b0; }
+        #user-info { font-size: 14px; color: #aaa; margin-top: 5px; }
+
+        /* Ana İçerik Alanı */
+        .tab-content { 
+            display: none; width: 100%; height: 70vh; 
+            flex-direction: column; align-items: center; justify-content: center; 
+            padding: 20px;
+        }
         .active-tab { display: flex; }
-        #spider { font-size: 160px; cursor: pointer; transition: transform 0.1s; user-select: none; }
-        #spider:active { transform: scale(0.9); }
-        .energy-wrap { width: 280px; height: 25px; background: #222; border: 3px solid #ffeb3b; border-radius: 20px; position: relative; margin: 15px 0; }
-        #energy-fill { height: 100%; width: 100%; background: #ffeb3b; border-radius: 15px; }
-        #energy-text { position: absolute; width: 100%; top: 3px; left: 0; color: #000; font-size: 14px; font-weight: bold; }
-        .navbar { position: fixed; bottom: 0; width: 100%; background: #1a002e; border-top: 3px solid #ffeb3b; display: flex; justify-content: space-around; padding: 12px 0; }
-        .nav-item { cursor: pointer; color: #d1c4e9; font-size: 12px; display: flex; flex-direction: center; align-items: center; flex-direction: column; }
-        .nav-item.active { color: #ffeb3b; }
-        .wallet-card { background: #2e004f; padding: 25px; border: 4px solid #ffeb3b; border-radius: 25px; width: 85%; max-width: 340px; }
-        .wallet-card input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: none; font-size: 16px; text-align: center; box-sizing: border-box; }
-        #calc-info { background: #1a002e; color: #00ff00; padding: 10px; border-radius: 10px; font-size: 13px; margin: 10px 0; display: none; }
-        .btn { background: #ffeb3b; color: #2e004f; border: none; padding: 15px 25px; font-size: 16px; font-weight: bold; border-radius: 15px; cursor: pointer; }
+
+        /* Örümcek ve Enerji */
+        #spider-img { width: 60vw; max-width: 250px; cursor: pointer; transition: transform 0.1s; user-select: none; }
+        #spider-img:active { transform: scale(0.85); }
+        
+        .energy-wrap { 
+            width: 80%; max-width: 300px; height: 25px; background: #222; 
+            border: 2px solid var(--main-yellow); border-radius: 20px; 
+            position: relative; margin: 20px 0; overflow: hidden;
+        }
+        #energy-fill { height: 100%; width: 100%; background: var(--main-yellow); transition: width 0.1s; }
+        #energy-text { position: absolute; width: 100%; text-align: center; top: 3px; color: #000; font-size: 14px; font-weight: bold; }
+
+        /* Cüzdan Kartı - Resimdeki Tasarım */
+        .wallet-card { 
+            background: var(--card-purple); padding: 20px; border: 3px solid var(--main-yellow); 
+            border-radius: 20px; width: 90%; max-width: 350px;
+        }
+        .wallet-card h2 { margin: 0 0 10px 0; font-size: 24px; }
+        .wallet-card input { 
+            width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; 
+            border: none; font-size: 16px; text-align: center; font-family: sans-serif;
+        }
+        #calc-info { 
+            background: #000; color: #00ff00; padding: 8px; border-radius: 10px; 
+            font-size: 14px; margin: 5px 0; display: none; border: 1px solid #00ff00;
+        }
+
+        /* Butonlar */
+        .btn { 
+            background: var(--main-yellow); color: #1a002e; border: none; 
+            padding: 15px 20px; font-size: 18px; font-weight: bold; 
+            border-radius: 15px; cursor: pointer; width: 100%;
+        }
+        .btn-red { background: #ff0000; color: white; }
+        .btn-row { display: flex; gap: 10px; margin-top: 10px; }
+
+        /* Alt Navbar */
+        .navbar { 
+            position: fixed; bottom: 0; width: 100%; background: #111; 
+            border-top: 2px solid var(--main-yellow); display: flex; 
+            justify-content: space-around; padding: 10px 0; z-index: 100;
+        }
+        .nav-item { cursor: pointer; color: #777; font-size: 12px; display: flex; flex-direction: column; align-items: center; }
+        .nav-item.active { color: var(--main-yellow); }
+        .nav-icon { font-size: 20px; margin-bottom: 3px; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div id="balance">$0.00000</div>
-        <div id="user-name" style="font-size: 12px; color: #aaa;">Yükleniyor...</div>
+        <div id="user-info">Yükleniyor...</div>
     </div>
 
     <div id="tab-game" class="tab-content active-tab">
@@ -47,41 +93,45 @@
             <div id="energy-fill"></div>
             <div id="energy-text">1000 / 1000</div>
         </div>
-        <div id="spider">🕷️</div>
-        <button class="btn" onclick="refill()">ENERJİ DOLDUR (AD)</button>
+        <img src="https://i.imgur.com/G4VzV3S.png" id="spider-img" alt="Spider">
+        <div style="margin-top:20px; width: 80%;">
+            <button class="btn" onclick="refill()">ENERJİ DOLDUR (AD)</button>
+        </div>
     </div>
 
     <div id="tab-tasks" class="tab-content">
-        <div style="background: rgba(46, 0, 79, 0.8); padding: 20px; border-radius: 20px; border: 2px solid #ffeb3b; width: 85%;">
-            <h3>Telegram Kanalı</h3>
-            <div style="color:#00ff00; font-size:20px; margin:10px 0;">+0.60 USDT</div>
-            <button id="tg-btn" class="btn" style="background:#0088cc; color:white; width:100%" onclick="doTelegramTask()">KATIL</button>
+        <div class="wallet-card">
+            <h3>Telegram Görevi</h3>
+            <p style="color:#00ff00">+0.60 USDT</p>
+            <button id="tg-btn" class="btn" onclick="doTelegramTask()">KATIL VE KAZAN</button>
         </div>
     </div>
 
     <div id="tab-wallet" class="tab-content">
         <div class="wallet-card">
-            <h2 style="margin:0">USDT ÇEKİM</h2>
-            <input type="number" id="w-amount" placeholder="Miktar (USDT)" oninput="autoCalc(this.value)">
+            <h2>USDT ÇEKİM</h2>
+            <p style="font-size:12px; margin:0;">Min: 0.50$ (0.50$=750 Reklam)</p>
+            <input type="number" id="w-amount" placeholder="Miktar" oninput="autoCalc(this.value)">
             <div id="calc-info">Zorunlu Reklam: 0</div>
-            <input type="text" id="w-address" placeholder="TRC20 Adresi">
-            <button class="btn" style="width:100%; margin-top:10px;" onclick="sendWithdraw()">TALEBİ GÖNDER</button>
+            <input type="text" id="w-address" placeholder="Cüzdan Adresi">
+            <div class="btn-row">
+                <button class="btn" style="flex:2" onclick="sendWithdraw()">GÖNDER</button>
+                <button class="btn btn-red" style="flex:1" onclick="switchTab('game', document.querySelector('.nav-item'))">KAPAT</button>
+            </div>
         </div>
     </div>
 
-    <div class="navbar">
-        <div class="nav-item active" onclick="switchTab('game', this)"><span>🕷️</span>Oyun</div>
-        <div class="nav-item" onclick="switchTab('tasks', this)"><span>📋</span>Görevler</div>
-        <div class="nav-item" onclick="switchTab('wallet', this)"><span>👛</span>Cüzdan</div>
-    </div>
+    <nav class="navbar">
+        <div class="nav-item active" onclick="switchTab('game', this)"><span class="nav-icon">🕷️</span>Oyun</div>
+        <div class="nav-item" onclick="switchTab('tasks', this)"><span class="nav-icon">📋</span>Görevler</div>
+        <div class="nav-item" onclick="switchTab('wallet', this)"><span class="nav-icon">👛</span>Cüzdan</div>
+    </nav>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-
-        // TELEGRAM'DAN KULLANICI ID'SİNİ AL (ÖNEMLİ!)
         const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id.toString() : "test_user";
-        document.getElementById('user-name').innerText = tg.initDataUnsafe.user ? "@" + tg.initDataUnsafe.user.username : "Misafir";
+        document.getElementById('user-info').innerText = "@" + (tg.initDataUnsafe.user?.username || "misafir");
 
         const firebaseConfig = {
             apiKey: "AIzaSyDfy6QdIZ0BthEHTmxkw-NAja3B9bFFd8U",
@@ -91,27 +141,36 @@
             messagingSenderId: "218267568158",
             appId: "1:218267568158:web:832728845ba0f42202060f"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        let money = 0, energy = 1000, adsWatched = 0, tgDone = false;
 
-        // HER KULLANICIYI KENDİ ID'Sİ İLE TAKİP ET
+        let money = 0, energy = 1000, adsWatched = 0, tgDone = false, clickCount = 0;
+
         db.collection("players").doc(userId).onSnapshot(doc => {
             if(doc.exists){
                 const d = doc.data();
-                money = d.money || 0;
-                energy = d.energy || 1000;
-                adsWatched = d.adsWatched || 0;
-                tgDone = d.tgDone || false;
+                money = d.money || 0; energy = d.energy || 1000;
+                adsWatched = d.adsWatched || 0; tgDone = d.tgDone || false;
                 updateUI();
-            } else {
-                save(); // Yeni kullanıcı oluştur
-            }
+            } else { save(); }
         });
 
-        document.getElementById('spider').onclick = () => {
-            if(energy > 0) { money += 0.00001; energy--; updateUI(); save(); }
+        // 10 Tıklamada Bir Reklam Kontrolü
+        document.getElementById('spider-img').onclick = () => {
+            if(energy > 0) {
+                money += 0.00001;
+                energy--;
+                clickCount++;
+                
+                // Her 10 tıklamada reklam çıkar
+                if(clickCount >= 10) {
+                    clickCount = 0;
+                    if(window.showAdexora) window.showAdexora().catch(e=>{});
+                }
+                
+                updateUI();
+                save();
+            }
         };
 
         function refill() {
@@ -123,43 +182,42 @@
         function doTelegramTask() {
             if(tgDone) return;
             tg.openTelegramLink("https://t.me/SpyderCommunity");
-            setTimeout(() => {
-                if(!tgDone) { money += 0.60; tgDone = true; save(); tg.showAlert("0.60$ Eklendi!"); }
-            }, 3000);
+            setTimeout(() => { if(!tgDone){ money += 0.60; tgDone = true; save(); } }, 3000);
         }
 
         function autoCalc(val) {
             const info = document.getElementById('calc-info');
             if(val > 0) {
-                info.innerText = "Zorunlu Reklam Sayısı: " + Math.ceil((val / 0.50) * 750);
+                info.innerText = "Zorunlu Reklam Sayısı: " + Math.ceil((val / 0.5) * 750);
                 info.style.display = "block";
             } else { info.style.display = "none"; }
         }
 
         function sendWithdraw() {
             const amt = parseFloat(document.getElementById('w-amount').value);
-            const addr = document.getElementById('w-address').value;
-            const needed = (amt / 0.50) * 750;
-            if(amt < 0.50 || money < amt || adsWatched < needed) return alert("Şartlar sağlanmadı!");
-            db.collection("withdrawals").add({ userId, amount:amt, address:addr, date:new Date() })
-            .then(() => alert("Talep iletildi!"));
+            const needed = (amt / 0.5) * 750;
+            if(amt >= 0.5 && money >= amt && adsWatched >= needed) {
+                db.collection("withdrawals").add({ userId, amount:amt, address:document.getElementById('w-address').value, date:new Date() })
+                .then(() => tg.showAlert("Talep Gönderildi!"));
+            } else { tg.showAlert("Şartlar sağlanmadı!"); }
         }
 
         function updateUI() {
             document.getElementById('balance').innerText = "$" + money.toFixed(5);
-            document.getElementById('energy-text').innerText = energy + " / 1000";
             document.getElementById('energy-fill').style.width = (energy/10) + "%";
-            if(tgDone) { document.getElementById('tg-btn').innerText = "TAMAMLANDI ✅"; document.getElementById('tg-btn').disabled = true; }
+            document.getElementById('energy-text').innerText = energy + " / 1000";
+            if(tgDone) { 
+                const b = document.getElementById('tg-btn');
+                b.innerText = "TAMAMLANDI ✅"; b.disabled = true; b.style.opacity = "0.5";
+            }
         }
 
-        function save() {
-            db.collection("players").doc(userId).set({ money, energy, adsWatched, tgDone }, {merge:true});
-        }
+        function save() { db.collection("players").doc(userId).set({ money, energy, adsWatched, tgDone }, {merge:true}); }
 
-        function switchTab(tabId, el) {
+        function switchTab(id, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active-tab');
+            document.getElementById('tab-' + id).classList.add('active-tab');
             el.classList.add('active');
         }
     </script>
