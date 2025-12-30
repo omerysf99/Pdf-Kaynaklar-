@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spider Clicker - Kazanç</title>
+    <title>Spider Clicker v2</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-database-compat.js"></script>
@@ -12,150 +12,158 @@
 
     <style>
         body {
-            background: linear-gradient(135deg, #2e004f 0%, #000000 100%);
+            background: radial-gradient(circle, #2e004f 0%, #000000 100%);
             color: #ffeb3b;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Arial', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
-            overflow: hidden;
+            user-select: none;
+        }
+
+        #ui-container {
+            background: rgba(46, 0, 79, 0.8);
+            padding: 20px;
+            border-radius: 20px;
+            border: 3px solid #ffeb3b;
+            box-shadow: 0 0 20px #9c27b0;
             text-align: center;
+            width: 300px;
         }
 
-        #stats {
-            margin-bottom: 20px;
-            background: rgba(255, 235, 59, 0.1);
-            padding: 15px 30px;
-            border-radius: 15px;
-            border: 2px solid #ffeb3b;
-            box-shadow: 0 0 15px #9c27b0;
+        #balance { font-size: 2.5rem; font-weight: bold; margin-bottom: 5px; color: #ffeb3b; }
+        #energy-bar-container {
+            width: 100%;
+            background: #444;
+            height: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 1px solid #ffeb3b;
+            overflow: hidden;
         }
-
-        #balance {
-            font-size: 2rem;
-            font-weight: bold;
-            display: block;
-        }
-
-        #click-count {
-            color: #d1c4e9;
-            font-size: 0.9rem;
+        #energy-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #ffeb3b, #fbc02d);
+            transition: width 0.2s;
         }
 
         #spider {
-            font-size: 100px;
+            font-size: 120px;
             cursor: pointer;
-            user-select: none;
             transition: transform 0.1s;
-            filter: drop-shadow(0 0 10px #ffeb3b);
+            margin: 20px 0;
+            display: inline-block;
         }
+        #spider:active { transform: scale(0.9); }
+        #spider.disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
 
-        #spider:active {
-            transform: scale(0.8);
+        .btn-refill {
+            background: #9c27b0;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px #6a1b9a;
+            transition: 0.2s;
         }
-
-        .container {
-            position: relative;
-        }
-
-        /* Basit bir yüzen animasyon */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .floating {
-            animation: float 3s ease-in-out infinite;
-        }
+        .btn-refill:hover { background: #ab47bc; }
+        .btn-refill:active { box-shadow: 0 0; transform: translateY(4px); }
     </style>
 </head>
 <body>
 
-    <div id="stats">
-        <span id="balance">$0.00000</span>
-        <div id="click-count">Toplam Tıklama: 0</div>
-    </div>
+    <div id="ui-container">
+        <div id="balance">$0.00000</div>
+        
+        <div id="energy-bar-container">
+            <div id="energy-fill"></div>
+        </div>
+        <div id="energy-text">Enerji: 1000 / 1000</div>
 
-    <div class="container floating">
         <div id="spider">🕷️</div>
-    </div>
 
-    <p style="color: #9c27b0; margin-top: 20px;">Her 10 tıklamada bir ödüllü reklam!</p>
+        <div style="margin-top: 20px;">
+            <button class="btn-refill" onclick="refillEnergy()">ENERJİ DOLDUR (AD)</button>
+        </div>
+    </div>
 
     <script>
-        // --- FIREBASE AYARLARI ---
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_ID",
-            appId: "YOUR_APP_ID"
-        };
-        // Firebase Başlat (Bilgileri doldurduğunda aktif et)
-        // firebase.initializeApp(firebaseConfig);
-        // const database = firebase.database();
+        // --- AYARLAR ---
+        let balance = 0.0;
+        let energy = 1000;
+        const maxEnergy = 1000;
+        let clickCount = 0;
 
-        let totalClicks = 0;
-        let currentBalance = 0.0;
-        const increment = 0.00001;
+        // --- ELEMENTLER ---
+        const spiderEl = document.getElementById('spider');
+        const balanceEl = document.getElementById('balance');
+        const energyFillEl = document.getElementById('energy-fill');
+        const energyTextEl = document.getElementById('energy-text');
 
-        const spider = document.getElementById('spider');
-        const balanceDisplay = document.getElementById('balance');
-        const clickDisplay = document.getElementById('click-count');
+        // --- TIKLAMA MANTIĞI ---
+        spiderEl.addEventListener('click', () => {
+            if (energy > 0) {
+                // Kazanç ve Enerji Azaltma
+                energy--;
+                balance += 0.00001;
+                clickCount++;
 
-        spider.addEventListener('click', () => {
-            // Tıklama işlemlerini yap
-            totalClicks++;
-            currentBalance += increment;
+                updateUI();
 
-            // Ekranı güncelle
-            updateUI();
-
-            // Her 10 tıklamada reklam göster
-            if (totalClicks % 10 === 0) {
-                showRewardAd();
+                // Her 10 tıklamada bir otomatik reklam (İsteğe bağlı)
+                if (clickCount % 10 === 0) {
+                    triggerAutoAd();
+                }
+            } else {
+                alert("Enerjin bitti! Lütfen doldur.");
             }
         });
 
-        function updateUI() {
-            balanceDisplay.innerText = `$${currentBalance.toFixed(5)}`;
-            clickDisplay.innerText = `Toplam Tıklama: ${totalClicks}`;
+        // --- ENERJİ DOLDURMA VE REKLAM LİNKİ ---
+        function refillEnergy() {
+            // Belirttiğin linke yönlendirme/açma
+            window.open("https://adexora.my.id/dl/QFm5mnRYbJV", "_blank");
+            
+            // Enerjiyi fullle
+            energy = maxEnergy;
+            updateUI();
+            console.log("Enerji fullendi!");
         }
 
-        function showRewardAd() {
-            console.log("Reklam yükleniyor...");
-            
+        // --- OTOMATİK REKLAM FONKSİYONU ---
+        function triggerAutoAd() {
             if (typeof window.showAdexora === 'function') {
-                window.showAdexora()
-                .then(() => {
-                    // Reklam başarıyla izlendi
-                    console.log("Reklam başarıyla tamamlandı.");
-                    // İstersen buraya ek ödül mantığı ekleyebilirsin
-                    saveToFirebase();
-                })
-                .catch(e => {
-                    console.error("Reklam hatası:", e);
-                });
-            } else {
-                console.log("Reklam scripti henüz yüklenmedi veya engellendi.");
+                window.showAdexora().catch(e => console.log("Ad error"));
             }
         }
 
-        function saveToFirebase() {
-            // Firebase veritabanına kayıt fonksiyonu örneği
-            /*
-            database.ref('users/user1').set({
-                balance: currentBalance,
-                clicks: totalClicks
-            });
-            */
+        // --- ARAYÜZ GÜNCELLEME ---
+        function updateUI() {
+            balanceEl.innerText = `$${balance.toFixed(5)}`;
+            energyTextEl.innerText = `Enerji: ${energy} / ${maxEnergy}`;
+            
+            const energyPercent = (energy / maxEnergy) * 100;
+            energyFillEl.style.width = energyPercent + "%";
+
+            if (energy <= 0) {
+                spiderEl.classList.add('disabled');
+            } else {
+                spiderEl.classList.remove('disabled');
+            }
         }
+
+        // --- FIREBASE BAĞLANTISI (Burayı kendi bilgilerinle doldur) ---
+        /*
+        const firebaseConfig = { apiKey: "...", ... };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        */
     </script>
 </body>
 </html>
