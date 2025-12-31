@@ -3,53 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sade Coin Tıklayıcı</title>
+    <title>Robot Testi ile Kazan</title>
     <style>
         body {
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background-color: #f8f9fa;
-            user-select: none;
+            background-color: #eef2f3;
+            color: #333;
         }
 
-        #stats {
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             text-align: center;
-            margin-bottom: 30px;
+            width: 300px;
         }
 
-        #balance {
-            font-size: 32px;
+        #balance-display {
+            font-size: 28px;
+            color: #27ae60;
             font-weight: bold;
-            color: #2ecc71;
-            display: block;
+            margin-bottom: 5px;
         }
 
-        #click-info {
+        .stat {
+            font-size: 14px;
             color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        #captcha-container {
+            border-top: 2px solid #f1f1f1;
+            padding-top: 20px;
+        }
+
+        #question {
+            font-size: 20px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 80%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 85%;
             font-size: 16px;
         }
 
-        /* Sabit Coin Görseli */
-        #coin-btn {
-            font-size: 120px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            outline: none;
-            transition: transform 0.05s; /* Sadece hafif bir basılma hissi */
-        }
+        button:hover { background: #2980b9; }
 
-        #coin-btn:active {
-            transform: scale(0.95); /* Tıklayınca hafifçe küçülür */
-        }
-
-        /* Reklam Alanı */
-        #ad-screen {
+        /* Reklam Paneli */
+        #ad-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -58,93 +83,95 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 100;
-        }
-
-        .ad-content {
-            background: #fff;
-            color: #333;
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-        }
-
-        #close-ad {
-            margin-top: 20px;
-            padding: 10px 30px;
-            font-size: 16px;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
 
-    <div id="stats">
-        <span id="balance">$0.00000</span>
-        <span id="click-info">Toplam Tıklama: <span id="count">0</span></span>
-    </div>
+    <div class="card">
+        <div id="balance-display">$<span id="balance">0.00000</span></div>
+        <div class="stat">Başarılı Test: <span id="solved">0</span></div>
 
-    <button id="coin-btn">🕸️🕷️ྀི</button>
-
-    <div id="ad-screen">
-        <div class="ad-content">
-            <h2>REKLAM</h2>
-            <p id="ad-status">Bekleyin...</p>
-            <button id="close-ad" style="display:none;">Reklamı Kapat</button>
+        <div id="captcha-container">
+            <p>Robot olmadığını kanıtla:</p>
+            <div id="question">Yükleniyor...</div>
+            <input type="number" id="answer" placeholder="Cevabı yaz">
+            <button onclick="checkAnswer()">Doğrula ve Kazan</button>
         </div>
     </div>
 
+    <div id="ad-overlay">
+        <h2>REKLAM İZLENİYOR</h2>
+        <p id="ad-timer">3 saniye bekleyin...</p>
+        <button id="close-ad" style="display:none; padding:10px 20px;">Reklamı Kapat</button>
+    </div>
+
     <script>
-        let totalBalance = 0.0;
-        let clickCount = 0;
+        let balance = 0;
+        let solvedCount = 0;
+        let correctAnswer = 0;
 
-        const balanceDisplay = document.getElementById('balance');
-        const countDisplay = document.getElementById('count');
-        const coinBtn = document.getElementById('coin-btn');
-        const adScreen = document.getElementById('ad-screen');
-        const closeAdBtn = document.getElementById('close-ad');
-        const adStatus = document.getElementById('ad-status');
-
-        coinBtn.addEventListener('click', () => {
-            // Değerleri güncelle
-            totalBalance += 0.00001;
-            clickCount++;
-
-            // Ekrana yazdır
-            balanceDisplay.innerText = "$" + totalBalance.toFixed(5);
-            countDisplay.innerText = clickCount;
-
-            // Her 10 tıklamada bir reklam
-            if (clickCount % 10 === 0) {
-                triggerAd();
-            }
-        });
-
-        function triggerAd() {
-            adScreen.style.display = 'flex';
-            closeAdBtn.style.display = 'none';
-            let timeLeft = 3;
-            adStatus.innerText = `Reklamın bitmesine ${timeLeft} saniye...`;
-
-            const timer = setInterval(() => {
-                timeLeft--;
-                if (timeLeft > 0) {
-                    adStatus.innerText = `Reklamın bitmesine ${timeLeft} saniye...`;
-                } else {
-                    clearInterval(timer);
-                    adStatus.innerText = "Reklam bitti!";
-                    closeAdBtn.style.display = 'block';
-                }
-            }, 1000);
+        // Rastgele soru oluşturma
+        function generateCaptcha() {
+            let num1 = Math.floor(Math.random() * 10) + 1;
+            let num2 = Math.floor(Math.random() * 10) + 1;
+            correctAnswer = num1 + num2;
+            document.getElementById('question').innerText = `${num1} + ${num2} = ?`;
+            document.getElementById('answer').value = '';
         }
 
-        closeAdBtn.onclick = () => {
-            adScreen.style.display = 'none';
-        };
+        // Cevabı kontrol etme
+        function checkAnswer() {
+            let userAnswer = parseInt(document.getElementById('answer').value);
+            
+            if (userAnswer === correctAnswer) {
+                balance += 0.00001;
+                solvedCount++;
+                
+                document.getElementById('balance').innerText = balance.toFixed(5);
+                document.getElementById('solved').innerText = solvedCount;
+
+                if (solvedCount % 10 === 0) {
+                    showAd();
+                } else {
+                    alert("Tebrikler! Kazandın.");
+                    generateCaptcha();
+                }
+            } else {
+                alert("Yanlış cevap! Tekrar dene.");
+                generateCaptcha();
+            }
+        }
+
+        function showAd() {
+            const overlay = document.getElementById('ad-overlay');
+            const timerTxt = document.getElementById('ad-timer');
+            const closeBtn = document.getElementById('close-ad');
+            
+            overlay.style.display = 'flex';
+            closeBtn.style.display = 'none';
+            let timeLeft = 3;
+
+            const interval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    timerTxt.innerText = "Reklam bitti!";
+                    closeBtn.style.display = 'block';
+                } else {
+                    timerTxt.innerText = `${timeLeft} saniye bekleyin...`;
+                }
+            }, 1000);
+
+            closeBtn.onclick = () => {
+                overlay.style.display = 'none';
+                generateCaptcha();
+            };
+        }
+
+        // İlk soruyu başlat
+        generateCaptcha();
     </script>
 </body>
 </html>
