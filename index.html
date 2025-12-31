@@ -3,140 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emoji Clicker - Para Kazan</title>
+    <title>Coin Clicker - Animasyonlu</title>
     <style>
+        :root {
+            --gold: #f1c40f;
+            --bag-color: #d35400;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Arial', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f2f5;
+            background: #2c3e50;
+            overflow: hidden;
+            color: white;
         }
 
-        #balance-container {
-            font-size: 24px;
-            margin-bottom: 20px;
-            font-weight: bold;
-            color: #2c3e50;
+        #balance-display {
+            font-size: 2rem;
+            margin-bottom: 10px;
         }
 
-        #emoji-btn {
-            font-size: 100px;
+        /* Çuval Konteynırı */
+        #game-container {
+            position: relative;
             cursor: pointer;
             user-select: none;
+        }
+
+        /* Para Çuvalı Görseli (Basit CSS Çizimi) */
+        .bag {
+            font-size: 100px;
             transition: transform 0.1s;
-            background: none;
-            border: none;
+            position: relative;
+            display: inline-block;
         }
 
-        #emoji-btn:active {
-            transform: scale(0.9);
+        /* Fırlayan Coin Efekti */
+        .coin {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: var(--gold);
+            border: 3px solid #f39c12;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d35400;
+            font-weight: bold;
+            font-size: 14px;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
+            animation: flyUp 0.6s ease-out forwards;
+            z-index: -1;
         }
 
-        /* Reklam Simülasyonu Paneli */
+        @keyframes flyUp {
+            0% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -150px) scale(1.2); opacity: 0; }
+        }
+
+        /* Tıklama Zıplama Efekti */
+        .bounce {
+            animation: bounceAnim 0.2s ease-in-out;
+        }
+
+        @keyframes bounceAnim {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.85); }
+            100% { transform: scale(1); }
+        }
+
+        /* Reklam Paneli */
         #ad-overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            color: white;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            z-index: 9999;
         }
-
-        .ad-content {
-            background: white;
-            color: black;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        button#close-ad {
-            margin-top: 15px;
-            padding: 10px 20px;
-            background: #27ae60;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+        .ad-box { background: white; color: #333; padding: 30px; border-radius: 15px; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div id="balance-container">
-        Bakiye: $<span id="balance">0.00000</span>
+    <div id="balance-display">$<span id="balance">0.00000</span></div>
+    <div style="margin-bottom: 20px;">Tıklama: <span id="click-count">0</span></div>
+
+    <div id="game-container">
+        <div id="bag-emoji" class="bag">💰</div>
     </div>
 
-    <button id="emoji-btn">💰</button>
-    <p>Tıklama Sayısı: <span id="click-count">0</span></p>
-
     <div id="ad-overlay">
-        <div class="ad-content">
-            <h3>REKLAM ARASI</h3>
-            <p>Bu bir simüle edilmiş reklamdır.</p>
-            <div id="timer">Kapatmak için 3 saniye bekle...</div>
-            <button id="close-ad" style="display:none;">Reklamı Kapat</button>
+        <div class="ad-box">
+            <h2>REKLAM İZLENİYOR...</h2>
+            <p id="ad-timer">3 saniye sonra kapatılabilir.</p>
+            <button id="close-ad" style="display:none; padding:10px 20px; cursor:pointer;">Kapat</button>
         </div>
     </div>
 
     <script>
         let balance = 0.0;
         let clicks = 0;
-        const clickValue = 0.00001;
+        const bag = document.getElementById('bag-emoji');
+        const container = document.getElementById('game-container');
+        const balanceTxt = document.getElementById('balance');
+        const clickTxt = document.getElementById('click-count');
 
-        const balanceDisplay = document.getElementById('balance');
-        const clickDisplay = document.getElementById('click-count');
-        const emojiBtn = document.getElementById('emoji-btn');
-        const adOverlay = document.getElementById('ad-overlay');
-        const closeAdBtn = document.getElementById('close-ad');
-        const timerDisplay = document.getElementById('timer');
-
-        emojiBtn.addEventListener('click', () => {
-            // Bakiyeyi güncelle
-            balance += clickValue;
+        container.addEventListener('mousedown', () => {
+            // Bakiyeyi artır
+            balance += 0.00001;
             clicks++;
+            
+            balanceTxt.innerText = balance.toFixed(5);
+            clickTxt.innerText = clicks;
 
-            // Ekranı güncelle (Virgülden sonra 5 basamak)
-            balanceDisplay.innerText = balance.toFixed(5);
-            clickDisplay.innerText = clicks;
+            // Animasyonları tetikle
+            bag.classList.remove('bounce');
+            void bag.offsetWidth; // Reflow: animasyonu tekrar oynatmak için
+            bag.classList.add('bounce');
+            bag.innerText = "🥡"; // Ağzı açık çuval/kap temsili
 
-            // Her 10 tıklamada reklam çıkar
+            // Coin oluştur ve fırlat
+            createCoin();
+
+            // Reklam kontrolü
             if (clicks % 10 === 0) {
                 showAd();
             }
         });
 
-        function showAd() {
-            adOverlay.style.display = 'flex';
-            let timeLeft = 3;
-            closeAdBtn.style.display = 'none';
-            timerDisplay.innerText = `Kapatmak için ${timeLeft} saniye bekle...`;
+        container.addEventListener('mouseup', () => {
+            setTimeout(() => {
+                bag.innerText = "💰"; // Ağzı tekrar kapat
+            }, 150);
+        });
 
-            const countdown = setInterval(() => {
+        function createCoin() {
+            const coin = document.createElement('div');
+            coin.className = 'coin';
+            coin.innerText = '$';
+            container.appendChild(coin);
+
+            // Animasyon bitince elementi temizle
+            setTimeout(() => {
+                coin.remove();
+            }, 600);
+        }
+
+        function showAd() {
+            const overlay = document.getElementById('ad-overlay');
+            const timerTxt = document.getElementById('ad-timer');
+            const closeBtn = document.getElementById('close-ad');
+            
+            overlay.style.display = 'flex';
+            closeBtn.style.display = 'none';
+            let timeLeft = 3;
+
+            const interval = setInterval(() => {
                 timeLeft--;
                 if (timeLeft <= 0) {
-                    clearInterval(countdown);
-                    timerDisplay.innerText = "Reklamı kapatabilirsiniz.";
-                    closeAdBtn.style.display = 'block';
+                    clearInterval(interval);
+                    timerTxt.innerText = "Reklam tamamlandı!";
+                    closeBtn.style.display = 'block';
                 } else {
-                    timerDisplay.innerText = `Kapatmak için ${timeLeft} saniye bekle...`;
+                    timerTxt.innerText = `${timeLeft} saniye sonra kapatılabilir.`;
                 }
             }, 1000);
         }
 
-        closeAdBtn.addEventListener('click', () => {
-            adOverlay.style.display = 'none';
-        });
+        document.getElementById('close-ad').onclick = () => {
+            document.getElementById('ad-overlay').style.display = 'none';
+        };
     </script>
 </body>
 </html>
