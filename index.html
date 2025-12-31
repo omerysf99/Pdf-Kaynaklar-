@@ -1,123 +1,331 @@
-<style>
-        .stats-container {
-            width: 100%;
-            max-width: 380px;
-            background: rgba(20, 20, 20, 0.8);
-            border-radius: 12px;
-            padding: 15px;
-            margin-top: 10px;
-            border: 1px dashed #333;
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TON Ultra Miner Pro - Enterprise Edition</title>
+    <style>
+        /* --- [1-100] CSS DEĞİŞKENLERİ VE RESET --- */
+        :root {
+            --ton-blue: #0088cc;
+            --ton-dark: #005580;
+            --purple-main: #8A2BE2;
+            --purple-dark: #4B0082;
+            --gold: #f1c40f;
+            --bg-black: #050505;
+            --card-bg: #111111;
+            --green-glow: #00ff41;
+            --text-gray: #888888;
         }
 
-        /* İlerleme Çubuğu (Progress Bar) */
-        .progress-wrapper {
-            margin-bottom: 15px;
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--bg-black);
+            color: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+            overflow-x: hidden;
         }
-        .progress-label {
+
+        /* --- [101-250] ÜST PANEL VE CÜZDAN --- */
+        .wallet-container {
+            width: 100%;
+            max-width: 400px;
+            background: linear-gradient(145deg, #151515, #0a0a0a);
+            border: 1px solid #222;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        .asset-row {
             display: flex;
             justify-content: space-between;
-            font-size: 12px;
-            margin-bottom: 5px;
-            color: #aaa;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #1a1a1a;
         }
-        .progress-bg {
-            width: 100%;
-            height: 8px;
+        .asset-row:last-child { border: none; margin-bottom: 0; padding-bottom: 0; }
+
+        .asset-info { display: flex; align-items: center; gap: 12px; }
+        .asset-icon { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #333; }
+        
+        .asset-balance { text-align: right; }
+        .balance-val { font-size: 18px; font-weight: 800; letter-spacing: 0.5px; transition: color 0.3s; }
+        .balance-label { font-size: 10px; color: var(--text-gray); text-transform: uppercase; }
+
+        .btn-send {
             background: #222;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
             border-radius: 10px;
-            overflow: hidden;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
         }
-        #claim-progress-fill {
+        .btn-send:hover { background: var(--ton-blue); }
+
+        /* --- [251-450] ANA FAN VE PERVANE TASARIMI --- */
+        .miner-section {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fan-chassis {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 12px solid #1a1a1a;
+            background: radial-gradient(circle, #080808 30%, #000 100%);
+            box-shadow: 
+                inset 0 0 50px var(--purple-dark),
+                0 0 20px rgba(138, 43, 226, 0.2);
+            z-index: 1;
+        }
+
+        /* Cam Efekti Overlay */
+        .fan-glass {
+            position: absolute;
+            width: 276px;
+            height: 276px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .fan-blades-wrap {
+            position: absolute;
+            width: 270px;
+            height: 270px;
+            z-index: 3;
+            animation: fan-spin 0.3s linear infinite;
+        }
+
+        .hub-center {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: #000;
+            border: 3px solid var(--ton-blue);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            box-shadow: 0 0 30px var(--ton-blue);
+        }
+
+        @keyframes fan-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- [451-550] MADENCİLİK SAYACI VE PROGRESS --- */
+        .mining-display { text-align: center; margin-bottom: 25px; }
+        #ton-counter { font-size: 48px; font-weight: 900; font-family: 'monospace'; color: #fff; }
+        
+        .speed-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.05);
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: var(--gold);
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .progress-box {
+            width: 100%;
+            max-width: 350px;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #1a1a1a;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+        #bar-fill {
             width: 0%;
             height: 100%;
-            background: linear-gradient(90deg, var(--purple-glow), var(--ton-blue));
-            transition: width 0.5s ease;
+            background: linear-gradient(90deg, var(--purple-main), var(--ton-blue));
             box-shadow: 0 0 10px var(--ton-blue);
+            transition: width 0.4s;
         }
 
-        /* Detaylı Bilgi Kartları */
-        .info-grid {
+        /* --- [551-650] BUTONLAR VE AKSİYONLAR --- */
+        .action-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-        .info-box {
-            background: #1a1a1a;
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            border-bottom: 2px solid #333;
-        }
-        .info-box span { display: block; font-size: 10px; color: #777; margin-bottom: 3px; }
-        .info-box b { font-size: 14px; color: #eee; }
-
-        /* Şans Efekti */
-        .luck-badge {
-            display: inline-block;
-            background: var(--gold);
-            color: black;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: bold;
-            margin-top: 5px;
-            animation: pulse 1.5s infinite;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
         }
 
-        @keyframes pulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.05); }
-            100% { opacity: 1; transform: scale(1); }
+        .main-btn {
+            padding: 18px;
+            border-radius: 15px;
+            border: none;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+
+        .claim-btn { background: var(--ton-blue); color: white; box-shadow: 0 5px 0 #005a87; }
+        .boost-btn { background: white; color: black; box-shadow: 0 5px 0 #bbb; }
+
+        .main-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        /* --- [651-789] JAVASCRIPT MANTIĞI --- */
     </style>
+</head>
+<body>
 
-    <div class="stats-container">
-        <div class="progress-wrapper">
-            <div class="progress-label">
-                <span>Claim Progress</span>
-                <span id="progress-percent">%0</span>
+    <div class="wallet-container">
+        <div class="asset-row">
+            <div class="asset-info">
+                <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="asset-icon">
+                <div>
+                    <p class="balance-label">Total Balance</p>
+                    <p class="balance-val" id="main-wallet">0.0000 TON</p>
+                </div>
             </div>
-            <div class="progress-bg">
-                <div id="claim-progress-fill"></div>
-            </div>
+            <button class="btn-send">Withdraw</button>
         </div>
-
-        <div class="info-grid">
-            <div class="info-box">
-                <span>DAILY ESTIMATE</span>
-                <b id="daily-ton">0.0102 TON</b>
+        <div class="asset-row" style="opacity: 0.6">
+            <div class="asset-info">
+                <img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png" class="asset-icon">
+                <div>
+                    <p class="balance-label">SHIB Assets</p>
+                    <p class="balance-val">0.00 SHIB</p>
+                </div>
             </div>
-            <div class="info-box">
-                <span>LUCK FACTOR</span>
-                <div class="luck-badge">x1.05 BOOST</div>
-            </div>
+            <button class="btn-send">Swap</button>
         </div>
     </div>
 
-    <script>
-        // İlerleme çubuğunu ve günlük tahmini güncelleyen fonksiyon
-        function updateStats() {
-            // İlerleme yüzdesi hesaplama (Min: 0.019 TON)
-            let progress = (currentMining / 0.019) * 100;
-            if (progress > 100) progress = 100;
-            
-            document.getElementById('claim-progress-fill').style.width = progress + "%";
-            document.getElementById('progress-percent').innerText = "%" + progress.toFixed(1);
+    <div class="miner-section">
+        <div class="fan-chassis"></div>
+        <div class="fan-glass"></div>
+        <div class="hub-center">
+            <svg width="35" height="35" viewBox="0 0 24 24" fill="white"><path d="M12 2L3 20h18L12 2zm0 4.25L17.25 18h-10.5L12 6.25z"/></svg>
+        </div>
+        <div class="fan-blades-wrap">
+            <svg viewBox="0 0 100 100" style="width:100%; height:100%;">
+                <defs>
+                    <linearGradient id="bladeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#8A2BE2;" />
+                        <stop offset="100%" style="stop-color:#4B0082;" />
+                    </linearGradient>
+                </defs>
+                <g fill="url(#bladeGrad)">
+                    <path d="M50 50 C 50 2, 98 2, 98 50 C 98 60, 60 60, 50 50" />
+                    <path d="M50 50 C 50 2, 98 2, 98 50 C 98 60, 60 60, 50 50" transform="rotate(60 50 50)" />
+                    <path d="M50 50 C 50 2, 98 2, 98 50 C 98 60, 60 60, 50 50" transform="rotate(120 50 50)" />
+                    <path d="M50 50 C 50 2, 98 2, 98 50 C 98 60, 60 60, 50 50" transform="rotate(180 50 50)" />
+                    <path d="M50 50 C 50 2, 98 2, 98 50 C 98 60, 60 60, 50 50" transform="rotate(240 50 50)" />
+                    <path d="M50 50 C 50 2, 98 2, 98 50 C 98 60, 60 60, 50 50" transform="rotate(300 50 50)" />
+                </g>
+            </svg>
+        </div>
+    </div>
 
-            // Günlük kazanç tahmini (Saniyelik kazanç * 86400)
-            let daily = tick * 100 * 86400; // tick 10ms olduğu için 100 ile çarptık
-            document.getElementById('daily-ton').innerText = daily.toFixed(4) + " TON";
+    <div class="mining-display">
+        <div id="ton-counter">0.000000000</div>
+        <div class="speed-badge">1.0 TH/s ⚡</div>
+    </div>
+
+    <div class="progress-box">
+        <div style="display:flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px; color: #666;">
+            <span>PROGRESS TO CLAIM (0.019 TON)</span>
+            <span id="percent-txt">0%</span>
+        </div>
+        <div class="progress-bar"><div id="bar-fill"></div></div>
+    </div>
+
+    <div class="action-grid">
+        <button class="main-btn claim-btn" onclick="executeClaim()">CLAIM</button>
+        <button class="main-btn boost-btn">BOOST</button>
+    </div>
+
+    <script>
+        // --- DATA STATE ---
+        let mainBalance = 0.0000;
+        let currentMining = 0.000000000;
+        const MIN_LIMIT = 0.019;
+        const EARNING_RATE = 0.00000116; // Every 10ms
+
+        // --- CORE LOOP ---
+        function startMining() {
+            setInterval(() => {
+                currentMining += EARNING_RATE;
+                updateUI();
+            }, 10);
         }
 
-        // Ana update döngüsüne bunu ekle
-        setInterval(updateStats, 500); // 500ms'de bir istatistikleri yenile
+        function updateUI() {
+            // Update Counter
+            document.getElementById('ton-counter').innerText = currentMining.toFixed(9);
+            
+            // Update Progress Bar
+            let progress = (currentMining / MIN_LIMIT) * 100;
+            if(progress > 100) progress = 100;
+            
+            document.getElementById('bar-fill').style.width = progress + "%";
+            document.getElementById('percent-txt').innerText = progress.toFixed(1) + "%";
+            
+            // Button visual check
+            const btn = document.querySelector('.claim-btn');
+            if(currentMining >= MIN_LIMIT) {
+                btn.style.filter = "brightness(1.2)";
+                btn.style.boxShadow = "0 0 15px var(--ton-blue)";
+            } else {
+                btn.style.filter = "brightness(1)";
+                btn.style.boxShadow = "0 5px 0 #005a87";
+            }
+        }
+
+        function executeClaim() {
+            if(currentMining >= MIN_LIMIT) {
+                mainBalance += currentMining;
+                currentMining = 0;
+                
+                // Update Main Wallet
+                const walletEl = document.getElementById('main-wallet');
+                walletEl.innerText = mainBalance.toFixed(4) + " TON";
+                
+                // Success Anim
+                walletEl.style.color = "var(--green-glow)";
+                setTimeout(() => walletEl.style.color = "white", 1500);
+                
+                alert("Claim Successful! TON added to your balance.");
+            } else {
+                alert("You need at least 0.019 TON to claim.");
+            }
+        }
+
+        // INIT
+        window.onload = startMining;
     </script>
-    ```
-
-### Bu Kodla Neler Eklendi?
-1.  **Dinamik Progress Bar:** 0.019 TON hedefine ne kadar yaklaştığını görsel olarak gösterir. Bar doldukça rengi parlaklaşır.
-2.  **Daily Estimate (Günlük Tahmin):** Mevcut hızınla 24 saatte ne kadar kazanacağını otomatik hesaplar.
-3.  **Luck Factor (Şans Faktörü):** Arayüze "x1.05 Boost" gibi bir şans rozeti ekleyerek kullanıcıya özel bir his verir.
-4.  **Modern Kart Tasarımı:** Bilgileri düzenli bir `grid` yapısında sunar.
-
-**Bir sonraki adımda ne istersin?** İstersen **"Referans Sistemi"** paneli veya **"Son Çekimler"** (Last Payouts) listesi ekleyebilirim.
+</body>
+</html>
