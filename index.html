@@ -3,175 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Robot Testi ile Kazan</title>
+    <title>Görsel Doğrulama & Kazan</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #eef2f3;
-            color: #333;
-        }
+        body { font-family: 'Roboto', Arial, sans-serif; background: #f9f9f9; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        
+        #balance-box { background: white; padding: 15px 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; }
+        #balance { font-size: 30px; color: #2ecc71; font-weight: bold; }
 
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 300px;
-        }
+        /* reCAPTCHA Kutusu */
+        .captcha-box { background: #f9f9f9; border: 1px solid #d3d3d3; border-radius: 3px; width: 300px; height: 74px; display: flex; align-items: center; padding: 0 10px; cursor: pointer; transition: background 0.2s; }
+        .captcha-box:hover { background: #f1f1f1; }
+        .checkbox { width: 24px; height: 24px; border: 2px solid #c1c1c1; border-radius: 2px; background: white; margin-right: 15px; position: relative; }
+        .checkbox.checked::after { content: '✔'; color: #357ae8; position: absolute; font-size: 20px; top: -5px; left: 3px; }
+        .captcha-text { font-size: 14px; color: #555; flex-grow: 1; }
+        .captcha-logo { text-align: center; }
+        .captcha-logo img { width: 30px; }
 
-        #balance-display {
-            font-size: 28px;
-            color: #27ae60;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
+        /* Görsel Test Paneli */
+        #verify-window { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 350px; background: white; border: 1px solid #ccc; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 10; padding: 10px; }
+        .verify-header { background: #4a90e2; color: white; padding: 15px; margin-bottom: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .grid img { width: 100%; height: 100px; cursor: pointer; border: 2px solid transparent; }
+        .grid img.selected { border-color: #4a90e2; opacity: 0.7; }
+        .verify-footer { padding: 10px; text-align: right; border-top: 1px solid #eee; margin-top: 10px; }
+        .btn-verify { background: #4a90e2; color: white; border: none; padding: 10px 20px; cursor: pointer; }
 
-        .stat {
-            font-size: 14px;
-            color: #7f8c8d;
-            margin-bottom: 20px;
-        }
-
-        #captcha-container {
-            border-top: 2px solid #f1f1f1;
-            padding-top: 20px;
-        }
-
-        #question {
-            font-size: 20px;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-
-        input {
-            width: 80%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            text-align: center;
-            font-size: 18px;
-        }
-
-        button {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 85%;
-            font-size: 16px;
-        }
-
-        button:hover { background: #2980b9; }
-
-        /* Reklam Paneli */
-        #ad-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            color: white;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
+        /* Reklam Katmanı */
+        #ad-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); color: white; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <div id="balance-display">$<span id="balance">0.00000</span></div>
-        <div class="stat">Başarılı Test: <span id="solved">0</span></div>
+    <div id="balance-box">
+        <div>Cüzdanım</div>
+        <div id="balance">$0.00000</div>
+    </div>
 
-        <div id="captcha-container">
-            <p>Robot olmadığını kanıtla:</p>
-            <div id="question">Yükleniyor...</div>
-            <input type="number" id="answer" placeholder="Cevabı yaz">
-            <button onclick="checkAnswer()">Doğrula ve Kazan</button>
+    <div class="captcha-box" onclick="openCaptcha()">
+        <div class="checkbox" id="main-check"></div>
+        <div class="captcha-text">Ben robot değilim</div>
+        <div class="captcha-logo">
+            <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="recaptcha">
+            <div style="font-size: 8px; color: #555;">reCAPTCHA</div>
+        </div>
+    </div>
+
+    <div id="verify-window">
+        <div class="verify-header">
+            <div style="font-size: 12px;">Şunu içeren tüm resimleri seçin:</div>
+            <div style="font-size: 20px; font-weight: bold;">YAYA GEÇİDİ</div>
+        </div>
+        <div class="grid" id="image-grid">
+            <img src="https://picsum.photos/200?random=1" onclick="this.classList.toggle('selected')">
+            <img src="https://picsum.photos/200?random=2" onclick="this.classList.toggle('selected')">
+            <img src="https://picsum.photos/200?random=3" onclick="this.classList.toggle('selected')">
+            <img src="https://picsum.photos/200?random=4" onclick="this.classList.toggle('selected')">
+            <img src="https://picsum.photos/200?random=5" onclick="this.classList.toggle('selected')">
+            <img src="https://picsum.photos/200?random=6" onclick="this.classList.toggle('selected')">
+            <img src="https://picsum.photos/200?random=7" onclick="this.classList.toggle('selected')">
+            <img src="https://picsum.photos/200?random=8" onclick="this.classList.toggle('selected')">
+            <img src="https://picsum.photos/200?random=9" onclick="this.classList.toggle('selected')">
+        </div>
+        <div class="verify-footer">
+            <button class="btn-verify" onclick="startAdProcess()">DOĞRULA</button>
         </div>
     </div>
 
     <div id="ad-overlay">
-        <h2>REKLAM İZLENİYOR</h2>
-        <p id="ad-timer">3 saniye bekleyin...</p>
-        <button id="close-ad" style="display:none; padding:10px 20px;">Reklamı Kapat</button>
+        <h2>REKLAM İZLENİYOR...</h2>
+        <p>Bakiyeniz reklamdan sonra eklenecektir.</p>
+        <p id="ad-timer">5 saniye kaldı</p>
+        <button id="close-ad" style="display:none; padding:10px 20px;">Ödülü Al</button>
     </div>
 
     <script>
-        let balance = 0;
-        let solvedCount = 0;
-        let correctAnswer = 0;
-
-        // Rastgele soru oluşturma
-        function generateCaptcha() {
-            let num1 = Math.floor(Math.random() * 10) + 1;
-            let num2 = Math.floor(Math.random() * 10) + 1;
-            correctAnswer = num1 + num2;
-            document.getElementById('question').innerText = `${num1} + ${num2} = ?`;
-            document.getElementById('answer').value = '';
+        let balance = 0.0;
+        
+        function openCaptcha() {
+            document.getElementById('verify-window').style.display = 'block';
         }
 
-        // Cevabı kontrol etme
-        function checkAnswer() {
-            let userAnswer = parseInt(document.getElementById('answer').value);
+        function startAdProcess() {
+            // Testi kapat
+            document.getElementById('verify-window').style.display = 'none';
             
-            if (userAnswer === correctAnswer) {
-                balance += 0.00001;
-                solvedCount++;
-                
-                document.getElementById('balance').innerText = balance.toFixed(5);
-                document.getElementById('solved').innerText = solvedCount;
-
-                if (solvedCount % 10 === 0) {
-                    showAd();
-                } else {
-                    alert("Tebrikler! Kazandın.");
-                    generateCaptcha();
-                }
-            } else {
-                alert("Yanlış cevap! Tekrar dene.");
-                generateCaptcha();
-            }
-        }
-
-        function showAd() {
+            // Reklamı başlat
             const overlay = document.getElementById('ad-overlay');
             const timerTxt = document.getElementById('ad-timer');
             const closeBtn = document.getElementById('close-ad');
             
             overlay.style.display = 'flex';
             closeBtn.style.display = 'none';
-            let timeLeft = 3;
+            let timeLeft = 5;
 
             const interval = setInterval(() => {
                 timeLeft--;
                 if (timeLeft <= 0) {
                     clearInterval(interval);
-                    timerTxt.innerText = "Reklam bitti!";
+                    timerTxt.innerText = "Reklam tamamlandı!";
                     closeBtn.style.display = 'block';
                 } else {
-                    timerTxt.innerText = `${timeLeft} saniye bekleyin...`;
+                    timerTxt.innerText = `${timeLeft} saniye kaldı`;
                 }
             }, 1000);
-
-            closeBtn.onclick = () => {
-                overlay.style.display = 'none';
-                generateCaptcha();
-            };
         }
 
-        // İlk soruyu başlat
-        generateCaptcha();
+        document.getElementById('close-ad').onclick = () => {
+            // Bakiyeyi ekle
+            balance += 0.00001;
+            document.getElementById('balance').innerText = "$" + balance.toFixed(5);
+            
+            // UI Sıfırla
+            document.getElementById('ad-overlay').style.display = 'none';
+            document.getElementById('main-check').classList.add('checked');
+            
+            // Bir süre sonra kutuyu tekrar açılabilir yap
+            setTimeout(() => {
+                document.getElementById('main-check').classList.remove('checked');
+                // Resimleri yenilemek için sayfadaki seçimleri temizle
+                document.querySelectorAll('.grid img').forEach(img => img.classList.remove('selected'));
+            }, 3000);
+        };
     </script>
 </body>
 </html>
