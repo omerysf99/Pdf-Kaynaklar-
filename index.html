@@ -3,155 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Görsel Captcha - Canlı Resimli</title>
+    <title>Auto Miner - Advent Calendar</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; user-select: none; }
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
         
-        #wallet { background: #fff; padding: 20px 50px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 30px; text-align: center; }
-        #balance { font-size: 32px; color: #2ecc71; font-weight: bold; display: block; }
+        #wallet { background: #2c3e50; padding: 20px 40px; border-radius: 15px; box-shadow: 0 0 20px rgba(0,255,128,0.2); text-align: center; margin-bottom: 30px; border: 2px solid #27ae60; }
+        #balance { font-size: 36px; color: #2ecc71; font-weight: bold; font-family: 'Courier New', Courier, monospace; }
 
-        /* reCAPTCHA Ana Kutu */
-        .captcha-box { background: #fff; border: 1px solid #d3d3d3; border-radius: 3px; width: 300px; height: 74px; display: flex; align-items: center; padding: 0 12px; cursor: pointer; }
-        .checkbox { width: 24px; height: 24px; border: 2px solid #c1c1c1; border-radius: 2px; margin-right: 15px; }
-        .captcha-text { font-size: 14px; color: #555; flex: 1; }
+        /* Advent Calendar Bölümü */
+        #advent-section { width: 90%; max-width: 600px; background: #34495e; padding: 20px; border-radius: 15px; text-align: center; }
+        h2 { margin-top: 0; color: #e74c3c; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+        .day-box { background: #c0392b; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: bold; position: relative; }
+        .day-box:hover { background: #e74c3c; transform: scale(1.05); }
+        .day-box.opened { background: #27ae60; cursor: default; }
 
-        /* Doğrulama Penceresi */
-        #verify-window { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 380px; background: #fff; z-index: 100; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
-        .v-header { background: #4a90e2; color: #fff; padding: 20px; }
-        .v-header b { font-size: 24px; display: block; text-transform: uppercase; }
-
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; background: #fff; }
-        .tile { position: relative; height: 110px; cursor: pointer; background: #ddd; }
+        /* Captcha Penceresi */
+        #verify-window { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 350px; background: white; color: black; z-index: 100; box-shadow: 0 0 50px rgba(0,0,0,0.8); border-radius: 5px; }
+        .v-header { background: #4a90e2; color: white; padding: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 5px; }
+        .tile { height: 100px; background: #ddd; cursor: pointer; }
         .tile img { width: 100%; height: 100%; object-fit: cover; }
-        .tile.selected::after { content: '✓'; position: absolute; top: 5px; left: 5px; background: #4a90e2; color: white; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .tile.selected img { opacity: 0.6; transform: scale(0.9); transition: 0.2s; }
+        .tile.selected { border: 4px solid #4a90e2; box-sizing: border-box; opacity: 0.7; }
 
-        .v-footer { padding: 15px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; }
-        .v-btn { background: #4a90e2; color: #fff; border: none; padding: 12px 25px; cursor: pointer; font-weight: bold; }
-
-        /* Reklam Ekranı */
-        #ad-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #fff; z-index: 200; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        #ad-btn { display: none; margin-top: 20px; padding: 12px 40px; background: #2ecc71; color: white; border: none; cursor: pointer; border-radius: 5px; }
+        /* Reklam */
+        #ad-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 200; flex-direction: column; align-items: center; justify-content: center; }
+        #ad-btn { display: none; padding: 15px 30px; background: #f1c40f; color: black; border: none; cursor: pointer; font-weight: bold; margin-top: 15px; }
     </style>
 </head>
 <body>
 
     <div id="wallet">
-        <span style="color: #95a5a6; font-size: 14px;">Mevcut Bakiye</span>
-        <span id="balance">$0.00000</span>
+        <div style="font-size: 14px; color: #bdc3c7;">TOPLAM KAZANÇ</div>
+        <div id="balance">$0.000000000</div>
     </div>
 
-    <div class="captcha-box" onclick="initCaptcha()">
-        <div class="checkbox" id="tick"></div>
-        <div class="captcha-text">Ben robot değilim</div>
-        <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" width="30">
+    <div id="advent-section">
+        <h2>🎄 Advent Calendar 🎁</h2>
+        <p>Her gün bir kutu aç ve Captcha çözerek ödülünü katla!</p>
+        <div class="calendar-grid" id="calendar-grid">
+            </div>
     </div>
 
     <div id="verify-window">
-        <div class="v-header">
-            <span>Şunu içeren resimleri seçin:</span>
-            <b id="target-label">Yükleniyor...</b>
-        </div>
-        <div class="grid" id="grid"></div>
-        <div class="v-footer">
-            <button class="v-btn" onclick="verifyCaptcha()">DOĞRULA</button>
-        </div>
+        <div class="v-header">Şunu içeren resimleri seç:<br><b id="target-label">Gemi</b></div>
+        <div class="grid" id="captcha-grid"></div>
+        <div style="padding:10px; text-align:right;"><button onclick="verifyCaptcha()" style="background:#4a90e2; color:white; border:none; padding:8px 15px; cursor:pointer;">Doğrula</button></div>
     </div>
 
     <div id="ad-screen">
-        <h2>REKLAM İZLENİYOR</h2>
-        <p id="ad-timer">5 saniye bekleyin...</p>
-        <button id="ad-btn">ÖDÜLÜ AL</button>
+        <h2 style="color:#f1c40f">HEDİYE REKLAMI</h2>
+        <p id="ad-timer">Bonus bakiye için 5 saniye bekle...</p>
+        <button id="ad-btn" onclick="collectBonus()">BONUSU AL</button>
     </div>
 
     <script>
-        let balance = 0;
-        const categories = [
-            { name: "Araba", query: "car" },
-            { name: "Gemi", query: "ship" },
-            { name: "Bisiklet", query: "bicycle" },
-            { name: "Ağaç", query: "tree" },
-            { name: "Deniz", query: "ocean" }
-        ];
+        let balance = 0.0;
+        // Her milisaniyede (salise mantığı) eklenecek miktar: 0.000000116
+        const tickAmount = 0.000000116; 
 
-        function initCaptcha() {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = "Lütfen görsellerin yüklenmesini bekleyin..."; 
-            
-            const category = categories[Math.floor(Math.random() * categories.length)];
-            document.getElementById('target-label').innerText = category.name;
+        // 1. OTOMATİK KAZANÇ DÖNGÜSÜ
+        setInterval(() => {
+            balance += tickAmount;
+            document.getElementById('balance').innerText = "$" + balance.toFixed(9);
+        }, 10); // Her 10 milisaniyede bir çalışır (salise hızı)
 
-            let tilesHTML = "";
-            let positions = [0,1,2,3,4,5,6,7,8].sort(() => Math.random() - 0.5);
-            let correctSpots = positions.slice(0, 3); 
+        // 2. ADVENT CALENDAR OLUŞTURMA
+        const calendar = document.getElementById('calendar-grid');
+        for (let i = 1; i <= 12; i++) {
+            const day = document.createElement('div');
+            day.className = 'day-box';
+            day.innerText = i;
+            day.onclick = function() { if(!this.classList.contains('opened')) startCaptcha(this); };
+            calendar.appendChild(day);
+        }
 
-            grid.innerHTML = ""; // Yazıyı temizle
+        // 3. CAPTCHA MANTIĞI
+        let currentDayBox = null;
+        function startCaptcha(box) {
+            currentDayBox = box;
+            const grid = document.getElementById('captcha-grid');
+            grid.innerHTML = "";
+            document.getElementById('verify-window').style.display = 'block';
 
+            // Rastgele 9 resim (3 doğru)
+            let correctSpots = [0, 1, 2, 3, 4, 5, 6, 7, 8].sort(() => Math.random() - 0.5).slice(0, 3);
             for (let i = 0; i < 9; i++) {
                 const isCorrect = correctSpots.includes(i);
-                const q = isCorrect ? category.query : "city,building,sky";
-                const randomId = Math.floor(Math.random() * 500);
-                
                 const tile = document.createElement('div');
-                tile.className = "tile";
+                tile.className = 'tile';
                 tile.dataset.correct = isCorrect;
-                tile.onclick = function() { this.classList.toggle('selected'); };
-                
                 const img = document.createElement('img');
-                // Alternatif ve daha hızlı resim servisi:
-                img.src = `https://picsum.photos/seed/${randomId + i + q}/200/200`;
-                
+                img.src = `https://picsum.photos/seed/${Math.random()}/100/100`;
                 tile.appendChild(img);
+                tile.onclick = function() { this.classList.toggle('selected'); };
                 grid.appendChild(tile);
             }
-
-            document.getElementById('verify-window').style.display = 'block';
         }
 
         function verifyCaptcha() {
             const tiles = document.querySelectorAll('.tile');
             let success = true;
-            tiles.forEach(tile => {
-                const selected = tile.classList.contains('selected');
-                const correct = tile.dataset.correct === "true";
-                if (selected !== correct) success = false;
+            tiles.forEach(t => {
+                if ((t.classList.contains('selected')) !== (t.dataset.correct === "true")) success = false;
             });
 
             if (success) {
-                startAd();
+                document.getElementById('verify-window').style.display = 'none';
+                showAd();
             } else {
-                alert("Hatalı! Lütfen tekrar deneyin.");
-                initCaptcha();
+                alert("Hatalı seçim! Tekrar dene.");
+                startCaptcha(currentDayBox);
             }
         }
 
-        function startAd() {
-            document.getElementById('verify-window').style.display = 'none';
+        // 4. REKLAM VE ÖDÜL
+        function showAd() {
             const screen = document.getElementById('ad-screen');
             const timer = document.getElementById('ad-timer');
             const btn = document.getElementById('ad-btn');
-
             screen.style.display = 'flex';
             btn.style.display = 'none';
             let sec = 5;
-
-            const countdown = setInterval(() => {
+            
+            const count = setInterval(() => {
                 sec--;
-                timer.innerText = `${sec} saniye bekleyin...`;
-                if (sec <= 0) {
-                    clearInterval(countdown);
+                timer.innerText = `Bonus bakiye için ${sec} saniye bekle...`;
+                if(sec <= 0) {
+                    clearInterval(count);
                     timer.innerText = "Reklam bitti!";
                     btn.style.display = 'block';
                 }
             }, 1000);
+        }
 
-            btn.onclick = () => {
-                balance += 0.00001;
-                document.getElementById('balance').innerText = "$" + balance.toFixed(5);
-                screen.style.display = 'none';
-                document.getElementById('tick').innerHTML = '<b style="color:#357ae8">✔</b>';
-                setTimeout(() => { document.getElementById('tick').innerHTML = ""; }, 3000);
-            };
+        function collectBonus() {
+            balance += 0.05; // Advent hediyesi olarak 0.05$ bonus
+            currentDayBox.classList.add('opened');
+            currentDayBox.innerText = "✅";
+            document.getElementById('ad-screen').style.display = 'none';
         }
     </script>
 </body>
