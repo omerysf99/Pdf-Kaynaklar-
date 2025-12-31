@@ -3,10 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Spyder - Cyber Mining</title>
+    <title>Spyder - Firebase Mining</title>
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://adexora.com/cdn/ads.js?id=1545"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --primary: #00a3ff;
@@ -20,12 +26,9 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
         body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
+        /* ARAYÜZ STİLLERİ (Öncekiyle Aynı) */
         header { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .bal-card { 
-            background: var(--card); padding: 12px 15px; border-radius: 18px; 
-            display: flex; align-items: center; justify-content: space-between; 
-            border: 1px solid rgba(255,255,255,0.05); 
-        }
+        .bal-card { background: var(--card); padding: 12px 15px; border-radius: 18px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.05); }
         .bal-info { display: flex; align-items: center; gap: 12px; }
         .coin-icon { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #0088cc; }
         .coin-icon img { width: 20px; }
@@ -33,70 +36,45 @@
         .bal-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; }
         .bal-num { font-family: 'Orbitron'; font-size: 14px; font-weight: 700; }
         
-        .wd-btn { 
-            background: var(--primary); color: white; border: none; padding: 6px 12px; 
-            border-radius: 10px; font-family: 'Orbitron'; font-size: 10px; font-weight: 700; cursor: pointer;
-        }
+        .wd-btn { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 10px; font-family: 'Orbitron'; font-size: 10px; font-weight: 700; cursor: pointer; }
 
         main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 20px; }
-        
         .clicker-container { position: relative; width: 240px; height: 240px; display: flex; align-items: center; justify-content: center; }
-        .main-logo-orb {
-            width: 180px; height: 180px; background: radial-gradient(circle, #1a2a44 0%, #070d16 100%);
-            border: 5px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 40px rgba(0,163,255,0.3), inset 0 0 20px rgba(0,163,255,0.2);
-            transition: transform 0.1s; z-index: 10; cursor: pointer;
-        }
+        .main-logo-orb { width: 180px; height: 180px; background: radial-gradient(circle, #1a2a44 0%, #070d16 100%); border: 5px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 40px rgba(0,163,255,0.3), inset 0 0 20px rgba(0,163,255,0.2); transition: transform 0.1s; z-index: 10; cursor: pointer; }
         .main-logo-orb:active { transform: scale(0.92); }
-        .main-logo-orb img { width: 80px; pointer-events: none; filter: drop-shadow(0 0 10px #fff); }
+        .main-logo-orb img { width: 80px; pointer-events: none; }
 
-        .ton-particle {
-            position: absolute; pointer-events: none; width: 25px; height: 25px;
-            animation: flyOut 0.8s ease-out forwards; z-index: 100;
-        }
-        @keyframes flyOut {
-            0% { transform: translate(0,0) scale(1) rotate(0deg); opacity: 1; }
-            100% { transform: translate(var(--tx), var(--ty)) scale(0.5) rotate(120deg); opacity: 0; }
-        }
+        .ton-particle { position: absolute; pointer-events: none; width: 25px; height: 25px; animation: flyOut 0.8s ease-out forwards; z-index: 100; }
+        @keyframes flyOut { 0% { transform: translate(0,0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0.5) rotate(120deg); opacity: 0; } }
 
         .pool-text { font-family: 'Orbitron'; font-size: 40px; font-weight: 900; color: white; margin-top: 15px; }
-        .speed-badge { 
-            background: rgba(0,163,255,0.1); border: 1px solid var(--primary); 
-            padding: 4px 12px; border-radius: 20px; color: var(--primary); 
-            font-size: 12px; font-weight: 700; margin-top: 5px;
-        }
+        .speed-badge { background: rgba(0,163,255,0.1); border: 1px solid var(--primary); padding: 4px 12px; border-radius: 20px; color: var(--primary); font-size: 12px; font-weight: 700; margin-top: 5px; }
 
-        /* ACTIONS SECTION */
         .actions-container { width: 100%; max-width: 350px; display: flex; flex-direction: column; gap: 10px; margin-top: 25px; padding: 0 15px; }
         .action-row { display: flex; gap: 10px; width: 100%; }
         .btn-act { flex: 1; height: 50px; border-radius: 15px; border: none; font-family: 'Orbitron'; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-claim { background: var(--primary); color: white; }
         .btn-boost { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
-        
-        /* YENİ BONUS BUTONU */
-        .btn-bonus { 
-            background: linear-gradient(90deg, #111b2b 0%, #1a2a44 100%); 
-            border: 1px solid var(--gold); color: var(--gold); 
-            width: 100%; height: 50px; font-size: 12px;
-        }
-        .btn-bonus span { font-size: 16px; }
+        .btn-bonus { background: linear-gradient(90deg, #111b2b 0%, #1a2a44 100%); border: 1px solid var(--gold); color: var(--gold); width: 100%; height: 50px; font-size: 12px; }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .modal-cont { background: var(--card); width: 100%; max-width: 380px; padding: 25px; border-radius: 25px; border: 1px solid var(--primary); }
         .m-title { font-family: 'Orbitron'; color: var(--primary); text-align: center; margin-bottom: 20px; }
         .m-input { width: 100%; padding: 15px; background: #070d16; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; margin-bottom: 15px; outline: none; }
-        .m-info { background: rgba(250, 204, 21, 0.1); border: 1px dashed #facc15; padding: 12px; border-radius: 12px; font-size: 12px; text-align: center; margin-bottom: 15px; }
 
-        nav { 
-            position: fixed; bottom: 20px; left: 15px; right: 15px; height: 70px; 
-            background: #111b2b; border-radius: 22px; display: flex; justify-content: space-around; 
-            align-items: center; border: 1px solid rgba(255,255,255,0.05); pointer-events: none; 
-        }
+        nav { position: fixed; bottom: 20px; left: 15px; right: 15px; height: 70px; background: #111b2b; border-radius: 22px; display: flex; justify-content: space-around; align-items: center; border: 1px solid rgba(255,255,255,0.05); pointer-events: none; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-dim); font-size: 10px; opacity: 0.6; }
         .nav-item.active { color: var(--primary); opacity: 1; }
+
+        #loading { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
     </style>
 </head>
-<body onload="init()">
+<body onload="initApp()">
+
+    <div id="loading">
+        <h2 style="font-family:'Orbitron'; color:var(--primary);">SPYDER CORE</h2>
+        <p>Veriler Senkronize Ediliyor...</p>
+    </div>
 
     <header>
         <div class="bal-card">
@@ -117,7 +95,6 @@
                 <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png">
             </div>
         </div>
-
         <div class="pool-text" id="pool-v">0.000000</div>
         <div class="speed-badge"><span id="speed-v">100.00</span> GH/s ⚡</div>
 
@@ -134,12 +111,11 @@
 
     <div class="modal" id="m-withdraw">
         <div class="modal-cont">
-            <h2 class="m-title">WITHDRAW TON</h2>
-            <input type="number" id="wd-amt" class="m-input" value="0.10" step="0.01" oninput="calc()">
-            <div class="m-info">Gereken Reklam: <span id="req-ads">150</span> | İzlenen: <span id="cur-ads">0</span></div>
-            <input type="text" class="m-input" placeholder="Wallet Address">
+            <h2 class="m-title">WITHDRAW</h2>
+            <input type="number" id="wd-amt" class="m-input" value="0.10" step="0.01">
+            <input type="text" id="wd-wallet" class="m-input" placeholder="UQ... Wallet Address">
             <button class="btn-act btn-claim" style="width:100%;" onclick="processWD()">GÖNDER</button>
-            <p style="text-align:center; color:var(--spyder); margin-top:20px; cursor:pointer;" onclick="closeM()">KAPAT</p>
+            <p onclick="closeM()" style="text-align:center; color:var(--spyder); margin-top:15px; cursor:pointer;">KAPAT</p>
         </div>
     </div>
 
@@ -147,7 +123,7 @@
         <div class="modal-cont">
             <h2 class="m-title">BOOST SPEED</h2>
             <button class="btn-act btn-claim" id="ad-btn" style="width:100%;" onclick="watchAd()">REKLAM İZLE (+1 GH/s) 📺</button>
-            <p style="text-align:center; color:var(--spyder); margin-top:20px; cursor:pointer;" onclick="closeM()">KAPAT</p>
+            <p onclick="closeM()" style="text-align:center; color:var(--spyder); margin-top:15px; cursor:pointer;">KAPAT</p>
         </div>
     </div>
 
@@ -160,75 +136,136 @@
     </nav>
 
     <script>
-        const TG = window.Telegram.WebApp;
-        let data = { ton: 0, pool: 0, speed: 100.0, ads: 0 };
+        // --- FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_ID",
+            appId: "YOUR_APP_ID"
+        };
 
-        function init() {
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const TG = window.Telegram.WebApp;
+
+        // --- APP STATE ---
+        let userID = "guest";
+        let data = {
+            ton: 0,
+            pool: 0,
+            speed: 100.0,
+            ads: 0,
+            lastUpdate: Date.now()
+        };
+
+        async function initApp() {
             TG.expand();
-            setInterval(mine, 1000);
+            TG.ready();
+            
+            // Telegram User ID al
+            if (TG.initDataUnsafe && TG.initDataUnsafe.user) {
+                userID = TG.initDataUnsafe.user.id;
+            }
+
+            // Firebase'den verileri çek
+            db.ref('users/' + userID).once('value', (snapshot) => {
+                const cloudData = snapshot.val();
+                if (cloudData) {
+                    // PASİF KAZIM HESABI: Bot kapalıyken geçen süre
+                    const now = Date.now();
+                    const secondsPassed = Math.floor((now - cloudData.lastUpdate) / 1000);
+                    const passiveGain = secondsPassed * (cloudData.speed * 0.0000001);
+                    
+                    data = {
+                        ...cloudData,
+                        pool: cloudData.pool + passiveGain,
+                        lastUpdate: now
+                    };
+                }
+                document.getElementById('loading').style.display = 'none';
+                startMiningLoop();
+            });
         }
 
-        function mine() {
-            data.pool += (data.speed * 0.0000001);
+        function startMiningLoop() {
+            setInterval(() => {
+                data.pool += (data.speed * 0.0000001);
+                data.lastUpdate = Date.now();
+                updateUI();
+                
+                // Her 10 saniyede bir buluta yedekle (Optimizasyon)
+                if (Math.floor(data.lastUpdate / 1000) % 10 === 0) {
+                    saveToCloud();
+                }
+            }, 1000);
+        }
+
+        function saveToCloud() {
+            db.ref('users/' + userID).set(data);
+        }
+
+        function updateUI() {
             document.getElementById('pool-v').innerText = data.pool.toFixed(6);
             document.getElementById('ton-h').innerText = data.ton.toFixed(5);
             document.getElementById('speed-v').innerText = data.speed.toFixed(2);
-            document.getElementById('cur-ads').innerText = data.ads;
-        }
-
-        // --- HIZ ARTIRAN REKLAM ---
-        function watchAd() {
-            const btn = document.getElementById('ad-btn');
-            btn.disabled = true;
-            window.showAdexora().then(() => {
-                data.ads++;
-                data.speed += 1.0;
-                TG.showAlert("Hızınız arttı!");
-                closeM();
-            }).catch(() => {
-                TG.showAlert("Reklam tamamlanmadı.");
-            }).finally(() => btn.disabled = false);
-        }
-
-        // --- YENİ: DOĞRUDAN TON VEREN REKLAM ---
-        function watchBonusAd() {
-            const btn = document.getElementById('bonus-btn');
-            btn.disabled = true;
-            btn.innerText = "REKLAM YÜKLENİYOR...";
-
-            window.showAdexora()
-                .then(() => {
-                    // ✅ ÖDÜL: DOĞRUDAN 0.0001 TON
-                    data.ads++;
-                    data.ton += 0.0001;
-                    TG.HapticFeedback.notificationOccurred('success');
-                    TG.showAlert("Tebrikler! Bakiyenize 0.0001 TON eklendi.");
-                })
-                .catch(e => {
-                    TG.showAlert("Reklam izlenemedi.");
-                })
-                .finally(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = "<span>🎁</span> GÜNLÜK BONUS (+0.0001 TON)";
-                });
-        }
-
-        function clickAction(e) {
-            TG.HapticFeedback.impactOccurred('light');
-            data.pool += 0.0000001;
-            // Görsel efekt kodları...
         }
 
         function claim() {
             if(data.pool <= 0) return;
             data.ton += data.pool;
             data.pool = 0;
+            saveToCloud();
             TG.HapticFeedback.notificationOccurred('success');
         }
 
-        function openM(type) { document.getElementById('m-' + type).style.display = 'flex'; }
+        function watchAd() {
+            const btn = document.getElementById('ad-btn');
+            btn.disabled = true;
+            window.showAdexora().then(() => {
+                data.ads++;
+                data.speed += 1.0;
+                saveToCloud();
+                TG.showAlert("Hız arttı!");
+                closeM();
+            }).finally(() => btn.disabled = false);
+        }
+
+        function watchBonusAd() {
+            const btn = document.getElementById('bonus-btn');
+            btn.disabled = true;
+            window.showAdexora().then(() => {
+                data.ads++;
+                data.ton += 0.0001;
+                saveToCloud();
+                TG.showAlert("0.0001 TON eklendi!");
+            }).finally(() => {
+                btn.disabled = false;
+            });
+        }
+
+        function clickAction(e) {
+            TG.HapticFeedback.impactOccurred('light');
+            data.pool += 0.0000001;
+            // Parçacık efekti... (Görsellik için eklenebilir)
+        }
+
+        function openM(id) { document.getElementById('m-' + id).style.display = 'flex'; }
         function closeM() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
-        function processWD() { /* Çekim işlemleri */ }
+
+        function processWD() {
+            const amt = parseFloat(document.getElementById('wd-amt').value);
+            if(data.ton >= amt && amt >= 0.1) {
+                data.ton -= amt;
+                saveToCloud();
+                TG.showAlert("Çekim talebi kaydedildi.");
+                closeM();
+            } else {
+                TG.showAlert("Bakiye yetersiz veya miktar düşük.");
+            }
+        }
     </script>
 </body>
 </html>
