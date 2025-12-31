@@ -76,7 +76,7 @@
         .claim-btn { background: var(--primary); }
         .boost-btn { background: var(--card); border: 1px solid var(--primary); color: var(--primary); }
 
-        /* MODAL (MINI PENCERE) STİLLERİ */
+        /* MODAL STİLLERİ */
         .modal-overlay {
             position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.8); display: none;
@@ -89,6 +89,14 @@
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* ZAMANLAYICI BADGE */
+        #boost-timer {
+            display: none; background: rgba(255, 0, 255, 0.15);
+            color: var(--spyder); padding: 4px 12px; border-radius: 20px;
+            font-size: 11px; font-weight: bold; margin-bottom: 10px;
+            border: 1px solid var(--spyder); font-family: 'Orbitron';
+        }
 
         /* NAVBAR */
         .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #0a0f1d; display: flex; justify-content: space-around; padding: 12px 0 30px; border-top: 1px solid rgba(255,255,255,0.08); opacity: 0.7; }
@@ -128,6 +136,7 @@
         </div>
 
         <div class="stat-group">
+            <center><div id="boost-timer">00:00:00</div></center>
             <div class="pool-main" id="pool-ton">0.0000000000</div>
             <div style="font-size: 11px; color: var(--primary); letter-spacing: 2px; margin-bottom: 15px;">TON POOL</div>
             <div style="font-size: 13px; color: var(--text-dim);">Speed: <span id="speed-val" style="color: var(--accent);">1.00</span> GH/s</div>
@@ -144,7 +153,7 @@
             <div style="font-size: 40px; margin-bottom: 15px;">🚀</div>
             <h3 style="font-family: 'Orbitron'; margin-bottom: 10px; color: var(--primary);">Speed Boost</h3>
             <p style="font-size: 14px; color: var(--text-dim); margin-bottom: 20px;">
-                Reklam izleyerek hızını saniyede <b>+0.00000001 TON</b> artırabilirsin!
+                Reklam izleyerek <b>0.01 GH/s</b> kazanmak ister misin?
             </p>
             <button class="main-btn claim-btn" style="width: 100%;" onclick="watchAd()">REKLAM İZLE</button>
             <p style="margin-top: 15px; font-size: 12px; color: var(--spyder); cursor: pointer;" onclick="closeBoostModal()">Kapat</p>
@@ -165,12 +174,14 @@
             ton: 0.0, spy: 189.0,
             p_ton: 0.0,
             baseSpeed: 1.0,
-            boostCount: 0
+            boostCount: 0,
+            firstBoostExpiry: null
         };
 
         function init() {
             TWA.expand();
             setInterval(mine, 1000);
+            setInterval(updateTimerUI, 1000);
         }
 
         function mine() {
@@ -184,6 +195,26 @@
             
             const rotateSpeed = Math.max(0.2, 2.5 - (currentTotalSpeed / 2));
             document.getElementById('fan-anim').style.animationDuration = rotateSpeed + "s";
+        }
+
+        function updateTimerUI() {
+            if (userData.firstBoostExpiry) {
+                const now = Date.now();
+                const diff = userData.firstBoostExpiry - now;
+
+                if (diff <= 0) {
+                    userData.boostCount--;
+                    userData.firstBoostExpiry = null;
+                    document.getElementById('boost-timer').style.display = 'none';
+                    TWA.showAlert("Boost süresi doldu!");
+                } else {
+                    const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                    document.getElementById('boost-timer').innerText = `${h}:${m}:${s}`;
+                    document.getElementById('boost-timer').style.display = 'inline-block';
+                }
+            }
         }
 
         function doClaim() {
@@ -204,11 +235,16 @@
         }
 
         function watchAd() {
-            // Reklam izleme simülasyonu
             userData.boostCount++;
+            
+            // Eğer bu ilk alınan boost ise zamanlayıcıyı kur (24 saat)
+            if (!userData.firstBoostExpiry) {
+                userData.firstBoostExpiry = Date.now() + (24 * 60 * 60 * 1000);
+            }
+
             TWA.HapticFeedback.notificationOccurred('success');
             closeBoostModal();
-            TWA.showAlert("Boost Aktif! Hızın arttı.");
+            TWA.showAlert("Boost Aktif! 0.01 GH/s eklendi.");
         }
 
         function updateUI() {
