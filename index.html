@@ -5,393 +5,353 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Spyder Ultimate - Cyber TON Mining</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- CSS VARIABLES --- */
         :root {
             --primary: #00a3ff;
             --primary-glow: rgba(0, 163, 255, 0.4);
-            --bg: #070d16;
+            --bg: #050a12;
             --card: #111b2b;
             --nav: #152238;
             --spyder: #ff4444;
             --text: #ffffff;
             --text-dim: #8e99a8;
             --gold: #facc15;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --success: #22c55e;
         }
 
-        /* --- RESET & GLOBAL --- */
+        /* --- TEMEL AYARLAR --- */
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
         body { 
-            background-color: var(--bg); 
-            color: var(--text); 
-            font-family: 'Inter', sans-serif; 
-            height: 100vh; 
-            overflow: hidden; 
-            display: flex; 
-            flex-direction: column; 
+            background-color: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; 
+            height: 100vh; overflow: hidden; display: flex; flex-direction: column; 
         }
 
-        /* --- LOADING SCREEN --- */
-        #loading-screen {
-            position: fixed; inset: 0; background: var(--bg); z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .loader-spin {
-            width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1);
-            border-top: 4px solid var(--primary); border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        /* --- PAGES --- */
-        .page { 
-            display: none; flex: 1; flex-direction: column; 
-            padding: 20px; overflow-y: auto; padding-bottom: 100px;
-        }
-        .page.active { display: flex; animation: fadeIn 0.4s ease; }
-
-        /* --- HEADER SYSTEM --- */
-        header { padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; z-index: 100; }
-        .bal-card { 
-            background: var(--card); padding: 12px; border-radius: 20px; 
-            border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        .bal-icon { 
-            width: 35px; height: 35px; border-radius: 50%; background: var(--primary);
-            display: flex; align-items: center; justify-content: center;
-        }
-        .bal-icon img { width: 20px; }
-        .bal-data { display: flex; flex-direction: column; }
-        .bal-lbl { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-        .bal-num { font-family: 'Orbitron'; font-size: 13px; font-weight: 700; }
-
-        /* --- MAIN MINING SECTION (HOME) --- */
-        .mining-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        
-        .clicker-container { position: relative; width: 250px; height: 250px; cursor: pointer; }
-        .core-sphere {
-            width: 100%; height: 100%; background: var(--card);
-            border: 6px solid var(--primary); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 50px var(--primary-glow), inset 0 0 30px var(--primary-glow);
-            transition: transform 0.1s ease;
-        }
-        .core-sphere:active { transform: scale(0.92); }
-        .core-sphere img { width: 100px; filter: drop-shadow(0 0 15px white); pointer-events: none; }
-
-        /* Havaya Uçan TON Logoları Animasyonu */
-        .flying-ton {
-            position: absolute; pointer-events: none; width: 30px; height: 30px;
-            animation: flyUp 1s ease-out forwards; z-index: 1000;
-        }
-
-        .pool-display { text-align: center; margin-top: 30px; }
-        .pool-val { font-family: 'Orbitron'; font-size: 48px; font-weight: 900; color: white; text-shadow: 0 0 20px var(--primary); }
-        .speed-tag { 
-            display: inline-block; background: rgba(0,163,255,0.1); border: 1px solid var(--primary);
-            padding: 6px 20px; border-radius: 50px; color: var(--primary); font-weight: 700; margin-top: 10px;
-        }
-
-        .action-btns { display: flex; gap: 12px; width: 100%; max-width: 400px; margin-top: 30px; }
-        .btn { 
-            flex: 1; height: 60px; border-radius: 20px; border: none; font-family: 'Orbitron';
-            font-weight: 700; cursor: pointer; transition: var(--transition);
-        }
-        .btn-claim { background: var(--primary); color: white; box-shadow: 0 10px 20px rgba(0,163,255,0.2); }
-        .btn-boost { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
-
-        /* --- MODAL SYSTEM --- */
-        .modal { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); 
-            z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; 
-        }
-        .modal-content { 
-            background: var(--card); width: 100%; max-width: 400px; border-radius: 30px; 
-            padding: 30px; border: 1px solid var(--primary); animation: slideUp 0.3s ease;
-        }
-        .modal-title { font-family: 'Orbitron'; color: var(--primary); text-align: center; margin-bottom: 20px; }
-        .m-input { width: 100%; padding: 16px; background: #070d16; border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: white; margin-bottom: 15px; outline: none; }
-        .m-info-box { background: rgba(0,163,255,0.1); border-radius: 15px; padding: 15px; margin-bottom: 20px; border-left: 4px solid var(--primary); }
-
-        /* --- TASKS & FRIENDS --- */
-        .list-item { 
-            background: var(--card); padding: 15px; border-radius: 20px; margin-bottom: 10px;
+        /* --- HEADER & BAKİYE YANINDA WITHDRAW --- */
+        header { padding: 12px; display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+        .bal-row { 
+            background: var(--card); padding: 8px 12px; border-radius: 16px; 
             display: flex; align-items: center; justify-content: space-between;
-            border: 1px solid rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        .task-info h4 { font-size: 14px; margin-bottom: 4px; }
-        .task-info p { font-size: 11px; color: var(--text-dim); }
-        .task-btn { background: #fff; color: #000; padding: 8px 15px; border-radius: 12px; font-weight: 700; font-size: 12px; }
+        .bal-content { display: flex; align-items: center; gap: 10px; }
+        .bal-icon-circle { 
+            width: 32px; height: 32px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; font-size: 16px;
+        }
+        .bal-texts { display: flex; flex-direction: column; }
+        .bal-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; }
+        .bal-value { font-family: 'Orbitron'; font-size: 13px; font-weight: 700; }
+        
+        /* Bakiyenin yanındaki çekim butonu */
+        .withdraw-mini-btn {
+            background: rgba(255,255,255,0.05); color: var(--primary);
+            border: 1px solid var(--primary); padding: 5px 10px; border-radius: 10px;
+            font-size: 10px; font-weight: 700; font-family: 'Orbitron'; cursor: pointer;
+            transition: 0.2s;
+        }
+        .withdraw-mini-btn:active { transform: scale(0.9); background: var(--primary); color: white; }
+
+        /* --- SAYFA YÖNETİMİ --- */
+        .page { display: none; flex: 1; flex-direction: column; padding: 20px; overflow-y: auto; padding-bottom: 100px; }
+        .page.active { display: flex; animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* --- ANA SAYFA (MINING) --- */
+        .main-mining { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .click-zone { position: relative; width: 220px; height: 220px; margin-bottom: 20px; }
+        .main-orb {
+            width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle, var(--card) 0%, var(--bg) 100%);
+            border: 4px solid var(--primary); display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 40px var(--primary-glow), inset 0 0 20px var(--primary-glow);
+            transition: transform 0.05s; z-index: 5;
+        }
+        .main-orb:active { transform: scale(0.95); }
+        .main-orb img { width: 90px; filter: drop-shadow(0 0 10px var(--primary)); pointer-events: none; }
+
+        /* Uçan Logolar */
+        .particle {
+            position: absolute; pointer-events: none; width: 25px; height: 25px;
+            animation: particleFly 0.8s ease-out forwards; z-index: 10;
+        }
+        @keyframes particleFly {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(180deg); opacity: 0; }
+        }
+
+        .pool-box { text-align: center; }
+        .pool-amount { font-family: 'Orbitron'; font-size: 42px; font-weight: 900; color: white; margin-bottom: 5px; }
+        .speed-indicator { 
+            background: rgba(0,163,255,0.1); color: var(--primary); border: 1px solid var(--primary);
+            padding: 4px 15px; border-radius: 20px; font-size: 13px; font-weight: 700;
+        }
+
+        /* --- MODAL TASARIMLARI --- */
+        .modal-overlay { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); 
+            display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; 
+        }
+        .modal-box { 
+            background: var(--card); width: 100%; max-width: 380px; border-radius: 24px; 
+            padding: 25px; border: 1px solid var(--primary); box-shadow: 0 0 30px rgba(0,163,255,0.2);
+        }
+        .modal-header { font-family: 'Orbitron'; color: var(--primary); text-align: center; margin-bottom: 20px; font-size: 18px; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 5px; text-transform: uppercase; }
+        .custom-input { width: 100%; background: #070d16; border: 1px solid rgba(255,255,255,0.1); padding: 14px; border-radius: 12px; color: white; outline: none; }
+        .status-box { background: rgba(250, 204, 21, 0.05); border: 1px dashed var(--gold); border-radius: 12px; padding: 12px; margin-bottom: 15px; font-size: 12px; text-align: center; }
+
+        /* --- SEKMELER İÇİN LİSTE YAPILARI --- */
+        .list-card { 
+            background: var(--card); border-radius: 18px; padding: 15px; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.03);
+        }
+        .list-icon { width: 45px; height: 45px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .list-info { flex: 1; }
+        .list-info h4 { font-size: 14px; margin-bottom: 3px; }
+        .list-info p { font-size: 11px; color: var(--text-dim); }
+        .list-action-btn { background: var(--primary); border: none; color: white; padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: 700; }
 
         /* --- NAVBAR --- */
         nav { 
-            position: fixed; bottom: 25px; left: 15px; right: 15px; height: 75px; 
-            background: var(--nav); border-radius: 25px; display: flex; justify-content: space-around; 
-            align-items: center; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1000;
+            position: fixed; bottom: 20px; left: 12px; right: 12px; height: 68px; 
+            background: var(--nav); border-radius: 20px; display: flex; justify-content: space-around; 
+            align-items: center; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 25px rgba(0,0,0,0.4);
         }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-dim); font-size: 10px; font-weight: 600; cursor: pointer; }
-        .nav-item.active { color: var(--primary); }
-        .nav-item i { font-size: 22px; }
+        .nav-tab { display: flex; flex-direction: column; align-items: center; color: var(--text-dim); font-size: 10px; cursor: pointer; transition: 0.2s; }
+        .nav-tab.active { color: var(--primary); transform: translateY(-3px); }
+        .nav-tab i { font-size: 20px; margin-bottom: 4px; font-style: normal; }
 
-        /* --- ANIMATIONS --- */
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes flyUp {
-            0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-200px) scale(0.5) rotate(45deg); opacity: 0; }
-        }
+        /* --- GENEL BUTONLAR --- */
+        .full-btn { width: 100%; height: 55px; border-radius: 15px; border: none; font-family: 'Orbitron'; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .primary-btn { background: var(--primary); color: white; }
+        .outline-btn { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
     </style>
 </head>
-<body onload="initApp()">
-
-    <div id="loading-screen">
-        <div class="loader-spin"></div>
-        <p style="margin-top:20px; font-family:'Orbitron'; color:var(--primary); font-size:12px;">CORE STABILIZING...</p>
-    </div>
+<body onload="startup()">
 
     <header>
-        <div class="bal-card" onclick="switchPage('wallet')">
-            <div class="bal-icon"><img src="https://cryptologos.cc/logos/toncoin-ton-logo.png"></div>
-            <div class="bal-data"><span class="bal-lbl">TON</span><span class="bal-num" id="h-ton">0.0000</span></div>
+        <div class="bal-row">
+            <div class="bal-content">
+                <div class="bal-icon-circle" style="background:#0088cc;"><img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" width="18"></div>
+                <div class="bal-texts">
+                    <span class="bal-label">TON Balance</span>
+                    <span class="bal-value" id="header-ton">0.0000</span>
+                </div>
+            </div>
+            <button class="withdraw-mini-btn" onclick="openModal('withdraw-ton')">WITHDRAW</button>
         </div>
-        <div class="bal-card">
-            <div class="bal-icon" style="background:var(--spyder);">🕷️</div>
-            <div class="bal-data"><span class="bal-lbl">SPYDER</span><span class="bal-num" id="h-spy">0.00</span></div>
+        <div class="bal-row">
+            <div class="bal-content">
+                <div class="bal-icon-circle" style="background:var(--spyder);">🕷️</div>
+                <div class="bal-texts">
+                    <span class="bal-label">Spyder Balance</span>
+                    <span class="bal-value" id="header-spy" style="color:var(--spyder);">0.00 SPY</span>
+                </div>
+            </div>
+            <button class="withdraw-mini-btn" style="border-color:var(--spyder); color:var(--spyder);" onclick="TWA.showAlert('Spyder çekimleri yakında açılacak!')">WITHDRAW</button>
         </div>
     </header>
 
     <main id="home" class="page active">
-        <div class="mining-area">
-            <div class="clicker-container" id="main-clicker" onclick="handleTap(event)">
-                <div class="core-sphere">
+        <div class="main-mining">
+            <div class="click-zone">
+                <div class="main-orb" id="orb" onclick="spawnParticles(event)">
                     <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png">
                 </div>
             </div>
-
-            <div class="pool-display">
-                <div class="pool-val" id="p-val">0.00000</div>
-                <div class="speed-tag"><span id="s-val">100.00</span> GH/s ⚡</div>
+            <div class="pool-box">
+                <div class="pool-amount" id="p-amount">0.00000</div>
+                <div class="speed-indicator"><span id="s-amount">100.00</span> GH/s ⚡</div>
             </div>
-
-            <div class="action-btns">
-                <button class="btn btn-claim" onclick="claimPool()">CLAIM</button>
-                <button class="btn btn-boost" onclick="openBoost()">BOOST</button>
+            <div style="width:100%; max-width:320px; margin-top:25px; display:flex; gap:10px;">
+                <button class="full-btn primary-btn" onclick="claimPool()">CLAIM TON</button>
+                <button class="full-btn outline-btn" onclick="openModal('boost')">BOOST</button>
             </div>
         </div>
     </main>
 
-    <div id="wallet" class="page">
-        <h2 class="modal-title">WALLET</h2>
-        <div class="bal-card" style="width:100%; margin-bottom:20px; justify-content:space-between; padding:20px;">
-            <div style="display:flex; align-items:center; gap:15px;">
-                <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" width="40">
-                <div><p class="bal-lbl">Total TON</p><h3 id="w-ton">0.00000</h3></div>
+    <section id="friends" class="page">
+        <h2 style="font-family:'Orbitron'; text-align:center; color:var(--primary); margin-bottom:15px;">FRIENDS</h2>
+        <div class="status-box">Arkadaşlarını davet et, kazım hızlarının %10'u kadar bonus kazan!</div>
+        <div class="list-card">
+            <div class="list-icon">🔗</div>
+            <div class="list-info"><h4>Davet Linkin</h4><p>t.me/SpyderBot?start=ref_123</p></div>
+            <button class="list-action-btn" onclick="TWA.showAlert('Kopyalandı!')">COPY</button>
+        </div>
+        <h4 style="margin:15px 0;">Davet Edilenler (0)</h4>
+        <p style="text-align:center; color:var(--text-dim); font-size:12px; margin-top:40px;">Henüz kimseyi davet etmedin.</p>
+    </section>
+
+    <section id="tasks" class="page">
+        <h2 style="font-family:'Orbitron'; text-align:center; color:var(--primary); margin-bottom:15px;">TASKS</h2>
+        <div class="list-card">
+            <div class="list-icon">🐦</div>
+            <div class="list-info"><h4>Follow Spyder X</h4><p>+5.00 GH/s Hız</p></div>
+            <button class="list-action-btn">DONE</button>
+        </div>
+        <div class="list-card">
+            <div class="list-icon">📢</div>
+            <div class="list-info"><h4>Join Telegram</h4><p>+10.00 GH/s Hız</p></div>
+            <button class="list-action-btn">DONE</button>
+        </div>
+        <div class="list-card">
+            <div class="list-icon">📺</div>
+            <div class="list-info"><h4>Watch YouTube</h4><p>+2.00 GH/s Hız</p></div>
+            <button class="list-action-btn">DONE</button>
+        </div>
+    </section>
+
+    <div class="modal-overlay" id="modal-withdraw-ton">
+        <div class="modal-box">
+            <div class="modal-header">WITHDRAW TON</div>
+            <div class="input-group">
+                <label>Çekilecek Miktar (Min 0.10)</label>
+                <input type="number" class="custom-input" id="wd-ton-val" value="0.10" step="0.01" oninput="updateWdCalc()">
             </div>
-            <button class="task-btn" onclick="openWithdraw()">WITHDRAW</button>
-        </div>
-        <h3 style="margin-bottom:15px; font-size:16px;">History</h3>
-        <p style="color:var(--text-dim); text-align:center;">No transactions yet.</p>
-    </div>
-
-    <div id="friends" class="page">
-        <h2 class="modal-title">FRIENDS</h2>
-        <div class="m-info-box" style="text-align:center;">
-            <p>Invite friends and get <span style="color:var(--primary)">10%</span> of their mining speed!</p>
-        </div>
-        <div class="list-item">
-            <div class="task-info"><h4>Invite Link</h4><p>t.me/SpyderBot?start=12345</p></div>
-            <button class="task-btn" onclick="copyRef()">COPY</button>
-        </div>
-        <h3 style="margin:20px 0 10px; font-size:16px;">Your Referrals (0)</h3>
-    </div>
-
-    <div id="tasks" class="page">
-        <h2 class="modal-title">DAILY TASKS</h2>
-        <div class="list-item">
-            <div class="task-info"><h4>Follow Spyder X</h4><p>+5 GH/s Speed</p></div>
-            <button class="task-btn">GO</button>
-        </div>
-        <div class="list-item">
-            <div class="task-info"><h4>Join Telegram Channel</h4><p>+10 GH/s Speed</p></div>
-            <button class="task-btn">GO</button>
-        </div>
-    </div>
-
-    <div class="modal" id="boost-modal">
-        <div class="modal-content">
-            <h2 class="modal-title">SPEED BOOST</h2>
-            <div class="m-info-box">
-                Saniyede kazım hızını artırmak için reklam izle. Her reklam <b>+1 GH/s</b> kazandırır.
+            <div class="status-box">
+                Gereken Reklam: <span id="req-ads" style="color:var(--gold); font-weight:900;">150</span><br>
+                Mevcut İzlenen: <span id="user-ads">0</span>
             </div>
-            <button class="btn btn-claim" style="width:100%;" onclick="watchAd()">WATCH ADS 📺</button>
-            <p style="text-align:center; margin-top:20px; color:var(--spyder); cursor:pointer;" onclick="closeModals()">CLOSE</p>
+            <div class="input-group">
+                <label>TON Cüzdan Adresin (UQ...)</label>
+                <input type="text" class="custom-input" placeholder="UQ...">
+            </div>
+            <button class="full-btn primary-btn" onclick="processWithdraw()">SEND REQUEST</button>
+            <p style="text-align:center; color:var(--spyder); margin-top:20px; font-size:13px; cursor:pointer;" onclick="closeAllModals()">CANCEL</p>
         </div>
     </div>
 
-    <div class="modal" id="withdraw-modal">
-        <div class="modal-content">
-            <h2 class="modal-title">WITHDRAW</h2>
-            <input type="number" id="wd-amt" class="m-input" value="0.10" step="0.01" oninput="calcWD()">
-            <div class="m-info-box" style="font-size:12px;">
-                Gereken Reklam: <span id="req-ads" style="font-weight:900; color:var(--gold);">150</span><br>
-                Mevcut Reklam: <span id="cur-ads">0</span>
-            </div>
-            <input type="text" id="wd-addr" class="m-input" placeholder="UQ... Wallet Address">
-            <button class="btn btn-claim" style="width:100%;" onclick="sendWithdraw()">WITHDRAW NOW</button>
-            <p style="text-align:center; margin-top:20px; color:var(--spyder); cursor:pointer;" onclick="closeModals()">CANCEL</p>
+    <div class="modal-overlay" id="modal-boost">
+        <div class="modal-box">
+            <div class="modal-header">BOOST ENGINE</div>
+            <div class="status-box">Reklam izleyerek kazım hızını her seferinde <b>+1 GH/s</b> artırabilirsin.</div>
+            <button class="full-btn primary-btn" onclick="simulateAd()">WATCH AD 📺</button>
+            <p style="text-align:center; color:var(--spyder); margin-top:20px; font-size:13px; cursor:pointer;" onclick="closeAllModals()">CLOSE</p>
         </div>
     </div>
 
     <nav>
-        <div class="nav-item" onclick="switchPage('wallet')"><i>💼</i>Wallet</div>
-        <div class="nav-item" onclick="switchPage('friends')"><i>👥</i>Friends</div>
-        <div class="nav-item active" onclick="switchPage('home')"><i>🌀</i>Home</div>
-        <div class="nav-item" onclick="switchPage('tasks')"><i>🎯</i>Tasks</div>
-        <div class="nav-item" onclick="TWA.showAlert('Settings coming soon!')"><i>⚙️</i>More</div>
+        <div class="nav-tab active" onclick="navTo('home', this)"><i>🌀</i>Home</div>
+        <div class="nav-tab" onclick="navTo('friends', this)"><i>👥</i>Friends</div>
+        <div class="nav-tab" onclick="navTo('tasks', this)"><i>🎯</i>Tasks</div>
+        <div class="nav-tab" onclick="TWA.showAlert('Settings very soon!')"><i>⚙️</i>Settings</div>
     </nav>
 
     <script>
         const TWA = window.Telegram.WebApp;
-        
-        // --- APP STATE ---
-        let state = {
-            tonBalance: 0.0,
-            spyBalance: 0.0,
+        let userData = {
+            ton: 0.0,
+            spy: 0.0,
             pool: 0.0,
             speed: 100.0,
-            ads: 0,
-            lastTick: Date.now()
+            adsWatched: 0
         };
 
-        // --- CORE LOGIC ---
-        function initApp() {
+        function startup() {
             TWA.expand();
             TWA.ready();
-            
-            // Mining Loop (Saniyede 1 kez)
-            setInterval(() => {
-                // Formula: 100 GH/s = 0.00001 TON/sec
-                const income = (state.speed / 100) * 0.00001;
-                state.pool += income;
-                updateUI();
-            }, 1000);
-
-            // Hide Loading
-            setTimeout(() => {
-                document.getElementById('loading-screen').style.display = 'none';
-            }, 2000);
+            setInterval(tick, 1000); // Saniyelik kazım
         }
 
-        function updateUI() {
-            document.getElementById('p-val').innerText = state.pool.toFixed(5);
-            document.getElementById('h-ton').innerText = state.tonBalance.toFixed(4);
-            document.getElementById('w-ton').innerText = state.tonBalance.toFixed(5);
-            document.getElementById('h-spy').innerText = state.spyBalance.toFixed(2);
-            document.getElementById('s-val').innerText = state.speed.toFixed(2);
-            document.getElementById('cur-ads').innerText = state.ads;
+        function tick() {
+            // Madencilik Formülü: 100 GH/s -> 0.00001 TON/sn
+            const perSec = (userData.speed / 100) * 0.00001;
+            userData.pool += perSec;
+            refreshUI();
         }
 
-        // --- CLICKER EFFECT (HAVAYA UÇAN LOGOLAR) ---
-        function handleTap(e) {
+        function refreshUI() {
+            document.getElementById('p-amount').innerText = userData.pool.toFixed(5);
+            document.getElementById('header-ton').innerText = userData.ton.toFixed(4);
+            document.getElementById('header-spy').innerText = userData.spy.toFixed(2) + " SPY";
+            document.getElementById('s-amount').innerText = userData.speed.toFixed(2);
+            document.getElementById('user-ads').innerText = userData.adsWatched;
+        }
+
+        // --- TIKLAMA EFEKTİ (UÇAN LOGOLAR) ---
+        function spawnParticles(e) {
             TWA.HapticFeedback.impactOccurred('light');
-            
-            // Küçük bir miktar havuza ekle (Clicker bonus)
-            state.pool += 0.000001;
-            
-            // Görsel efekt yarat
-            const container = document.getElementById('main-clicker');
-            const icon = document.createElement('img');
-            icon.src = "https://cryptologos.cc/logos/toncoin-ton-logo.png";
-            icon.className = "flying-ton";
-            
-            // Mouse veya Touch pozisyonuna göre
-            const rect = container.getBoundingClientRect();
-            const x = (e.clientX || e.touches[0].clientX) - rect.left;
-            const y = (e.clientY || e.touches[0].clientY) - rect.top;
-            
-            icon.style.left = x + "px";
-            icon.style.top = y + "px";
-            
-            container.appendChild(icon);
-            
-            // Animasyon bitince temizle
-            setTimeout(() => icon.remove(), 1000);
+            userData.pool += 0.000001; // Her tık ufak bir bonus verir
+
+            for(let i=0; i<3; i++) {
+                const img = document.createElement('img');
+                img.src = "https://cryptologos.cc/logos/toncoin-ton-logo.png";
+                img.className = "particle";
+                
+                const rect = e.target.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                img.style.left = x + "px";
+                img.style.top = y + "px";
+                
+                // Rastgele fırlama yönü
+                const tx = (Math.random() - 0.5) * 200;
+                const ty = -100 - (Math.random() * 100);
+                img.style.setProperty('--tx', `${tx}px`);
+                img.style.setProperty('--ty', `${ty}px`);
+
+                e.target.parentElement.appendChild(img);
+                setTimeout(() => img.remove(), 800);
+            }
         }
 
-        // --- ACTIONS ---
+        // --- FONKSİYONLAR ---
         function claimPool() {
-            if(state.pool <= 0) return;
-            state.tonBalance += state.pool;
-            state.pool = 0;
+            if(userData.pool <= 0) return;
+            userData.ton += userData.pool;
+            userData.pool = 0;
             TWA.HapticFeedback.notificationOccurred('success');
-            updateUI();
+            refreshUI();
         }
 
-        function watchAd() {
-            // Reklam simülasyonu
-            TWA.showConfirm("Watch 15s Ad to boost speed?", (res) => {
-                if(res) {
-                    state.ads++;
-                    state.speed += 1.0;
-                    TWA.showAlert("Speed Boosted! +1 GH/s");
-                    closeModals();
-                    updateUI();
+        function simulateAd() {
+            TWA.showConfirm("Boost için reklam izlensin mi?", (ok) => {
+                if(ok) {
+                    userData.adsWatched++;
+                    userData.speed += 1.0;
+                    TWA.showAlert("Hız Arttı: +1 GH/s");
+                    closeAllModals();
                 }
             });
         }
 
-        // --- PAGE SYSTEM ---
-        function switchPage(pageId) {
+        function navTo(pageId, el) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
-            
-            // Find active nav item and highlight
-            const navItems = document.querySelectorAll('.nav-item');
-            if(pageId === 'wallet') navItems[0].classList.add('active');
-            if(pageId === 'friends') navItems[1].classList.add('active');
-            if(pageId === 'home') navItems[2].classList.add('active');
-            if(pageId === 'tasks') navItems[3].classList.add('active');
+            el.classList.add('active');
+            TWA.HapticFeedback.impactOccurred('soft');
         }
 
-        // --- MODAL ACTIONS ---
-        function openBoost() { document.getElementById('boost-modal').style.display = 'flex'; }
-        function openWithdraw() { document.getElementById('withdraw-modal').style.display = 'flex'; calcWD(); }
-        function closeModals() { 
-            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); 
+        function openModal(id) {
+            document.getElementById('modal-' + id).style.display = 'flex';
+            if(id === 'withdraw-ton') updateWdCalc();
         }
 
-        function calcWD() {
-            const val = parseFloat(document.getElementById('wd-amt').value) || 0;
+        function closeAllModals() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+        }
+
+        function updateWdCalc() {
+            const val = parseFloat(document.getElementById('wd-ton-val').value) || 0;
             const req = (val / 0.01) * 15;
             document.getElementById('req-ads').innerText = Math.ceil(req);
         }
 
-        function sendWithdraw() {
-            const amt = parseFloat(document.getElementById('wd-amt').value);
-            const req = (amt / 0.01) * 15;
-            const addr = document.getElementById('wd-addr').value;
+        function processWithdraw() {
+            const val = parseFloat(document.getElementById('wd-ton-val').value);
+            const req = (val / 0.01) * 15;
+            
+            if(val < 0.10) return TWA.showAlert("Minimum çekim 0.10 TON!");
+            if(userData.adsWatched < req) return TWA.showAlert("Gereken reklam izlenmedi!");
+            if(userData.ton < val) return TWA.showAlert("Yetersiz bakiye!");
 
-            if(amt < 0.10) return TWA.showAlert("Minimum limit 0.10 TON!");
-            if(state.ads < req) return TWA.showAlert("Yetersiz reklam izlendi!");
-            if(addr.length < 10) return TWA.showAlert("Geçersiz cüzdan adresi!");
-
-            TWA.showConfirm(`${amt} TON çekilecek. Onaylıyor musun?`, (ok) => {
-                if(ok) {
-                    state.tonBalance -= amt;
-                    TWA.showAlert("Talebiniz alındı. 24 saat içinde işlenecektir.");
-                    closeModals();
-                    updateUI();
-                }
-            });
-        }
-
-        function copyRef() {
-            TWA.showAlert("Link kopyalandı!");
+            TWA.showAlert("Çekim talebi başarılı! İncelendikten sonra gönderilecektir.");
+            userData.ton -= val;
+            closeAllModals();
+            refreshUI();
         }
     </script>
 </body>
