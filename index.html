@@ -31,7 +31,6 @@
 
         .page { flex: 1; display: flex; flex-direction: column; padding: 20px; padding-bottom: 120px; }
 
-        /* YENİ MODERN FAN TASARIMI */
         .mining-core { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; min-height: 250px; }
         .cyber-fan {
             position: relative; width: 200px; height: 200px;
@@ -51,7 +50,6 @@
             transform-origin: bottom center;
             clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
         }
-        /* 8 Bıçaklı Modern Yapı */
         .cyber-blade:nth-child(1) { transform: translateX(-50%) rotate(0deg); }
         .cyber-blade:nth-child(2) { transform: translateX(-50%) rotate(45deg); }
         .cyber-blade:nth-child(3) { transform: translateX(-50%) rotate(90deg); }
@@ -77,14 +75,26 @@
         .main-btn { flex: 1; padding: 15px; border-radius: 14px; border: none; font-weight: bold; font-size: 15px; cursor: pointer; color: white; transition: 0.2s; }
         .claim-btn { background: var(--primary); }
         .boost-btn { background: var(--card); border: 1px solid var(--primary); color: var(--primary); }
-        
-        /* NAVBAR (İŞLEVSİZ) */
+
+        /* MODAL (MINI PENCERE) STİLLERİ */
+        .modal-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.8); display: none;
+            align-items: center; justify-content: center; z-index: 100;
+        }
+        .modal-content {
+            background: var(--card); width: 85%; padding: 25px;
+            border-radius: 24px; border: 1px solid var(--primary);
+            text-align: center; position: relative;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* NAVBAR */
         .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #0a0f1d; display: flex; justify-content: space-around; padding: 12px 0 30px; border-top: 1px solid rgba(255,255,255,0.08); opacity: 0.7; }
         .nav-item { flex: 1; text-align: center; color: #475569; font-size: 11px; }
         .nav-item.active { color: var(--primary); }
         .nav-icon { font-size: 22px; margin-bottom: 5px; }
-
-        .timer-badge { background: rgba(0, 163, 255, 0.1); color: var(--primary); padding: 5px 10px; border-radius: 10px; font-family: 'Orbitron'; font-size: 10px; }
     </style>
 </head>
 <body onload="init()">
@@ -120,17 +130,24 @@
         <div class="stat-group">
             <div class="pool-main" id="pool-ton">0.0000000000</div>
             <div style="font-size: 11px; color: var(--primary); letter-spacing: 2px; margin-bottom: 15px;">TON POOL</div>
-            
-            <div style="font-size: 13px; color: var(--text-dim);">
-                Speed: <span id="speed-val" style="color: var(--accent);">1.00</span> GH/s
-            </div>
-
-            <div id="active-boosts-mini" style="margin-top: 10px; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px;"></div>
+            <div style="font-size: 13px; color: var(--text-dim);">Speed: <span id="speed-val" style="color: var(--accent);">1.00</span> GH/s</div>
 
             <div class="btn-row">
                 <button class="main-btn claim-btn" onclick="doClaim()">CLAIM TON</button>
-                <button class="main-btn boost-btn" onclick="watchAd()">🚀 BOOST</button>
+                <button class="main-btn boost-btn" onclick="openBoostModal()">🚀 BOOST</button>
             </div>
+        </div>
+    </div>
+
+    <div id="boost-modal" class="modal-overlay" onclick="closeBoostModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div style="font-size: 40px; margin-bottom: 15px;">🚀</div>
+            <h3 style="font-family: 'Orbitron'; margin-bottom: 10px; color: var(--primary);">Speed Boost</h3>
+            <p style="font-size: 14px; color: var(--text-dim); margin-bottom: 20px;">
+                Reklam izleyerek hızını saniyede <b>+0.00000001 TON</b> artırabilirsin!
+            </p>
+            <button class="main-btn claim-btn" style="width: 100%;" onclick="watchAd()">REKLAM İZLE</button>
+            <p style="margin-top: 15px; font-size: 12px; color: var(--spyder); cursor: pointer;" onclick="closeBoostModal()">Kapat</p>
         </div>
     </div>
 
@@ -148,29 +165,17 @@
             ton: 0.0, spy: 189.0,
             p_ton: 0.0,
             baseSpeed: 1.0,
-            bonuses: []
+            boostCount: 0
         };
 
         function init() {
             TWA.expand();
             setInterval(mine, 1000);
-            setInterval(updateTimers, 1000);
         }
 
         function mine() {
-            // Hesaplama: 
-            // 1 GH/s için saniyede 0.000001
-            // 0.01 GH/s (bonus başına) için saniyede 0.00000001
-            const bonusSpeed = userData.bonuses.length * 0.01;
-            const currentTotalSpeed = userData.baseSpeed + bonusSpeed;
-            
-            // Üretim Formülü
-            const production = (userData.baseSpeed * 0.000001) + (bonusSpeed * 1.0); // 0.01 GH/s zaten saniyede 0.00000001 verir (formüle göre bonusSpeed/100 * 0.0001 e tekabül eder)
-            
-            // Basit ve net olması için:
-            // 1 GH/s = 0.000001
-            // Bonus başına (0.01 GH/s) = 0.00000001
-            const totalEarningPerSec = (userData.baseSpeed * 0.000001) + (userData.bonuses.length * 0.00000001);
+            const currentTotalSpeed = userData.baseSpeed + (userData.boostCount * 0.01);
+            const totalEarningPerSec = (userData.baseSpeed * 0.000001) + (userData.boostCount * 0.00000001);
             
             userData.p_ton += totalEarningPerSec;
 
@@ -189,34 +194,26 @@
             updateUI();
         }
 
+        function openBoostModal() {
+            TWA.HapticFeedback.impactOccurred('medium');
+            document.getElementById('boost-modal').style.display = 'flex';
+        }
+
+        function closeBoostModal() {
+            document.getElementById('boost-modal').style.display = 'none';
+        }
+
         function watchAd() {
-            TWA.showConfirm("+0.01 GH/s hız (saniyede +0.00000001 TON) kazanmak ister misin?", (ok) => {
-                if(ok) {
-                    userData.bonuses.push({ id: Date.now(), exp: Date.now() + 86400000 });
-                    TWA.HapticFeedback.impactOccurred('medium');
-                }
-            });
+            // Reklam izleme simülasyonu
+            userData.boostCount++;
+            TWA.HapticFeedback.notificationOccurred('success');
+            closeBoostModal();
+            TWA.showAlert("Boost Aktif! Hızın arttı.");
         }
 
         function updateUI() {
             document.getElementById('ton-bal').innerText = userData.ton.toFixed(6);
             document.getElementById('spy-bal').innerText = userData.spy.toFixed(2);
-        }
-
-        function updateTimers() {
-            const now = Date.now();
-            userData.bonuses = userData.bonuses.filter(b => b.exp > now);
-            const miniList = document.getElementById('active-boosts-mini');
-            miniList.innerHTML = "";
-            userData.bonuses.forEach((b) => {
-                const diff = b.exp - now;
-                const h = Math.floor(diff/3600000);
-                const m = Math.floor((diff%3600000)/60000);
-                const div = document.createElement('div');
-                div.className = "timer-badge";
-                div.innerText = `⚡ ${h}h ${m}m`;
-                miniList.appendChild(div);
-            });
         }
     </script>
 </body>
