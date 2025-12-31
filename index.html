@@ -3,142 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sade Para Kazan</title>
+    <title>Sade Coin Tıklayıcı</title>
     <style>
         body {
-            font-family: sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background: #f4f4f4;
             margin: 0;
-        }
-
-        #ui-top {
-            font-size: 24px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        /* Çuval Alanı */
-        #main-btn {
-            font-size: 100px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            position: relative;
+            background-color: #f8f9fa;
             user-select: none;
         }
 
-        /* Çuvalın üstünde çıkan coin */
-        #coin-popup {
-            display: none;
-            position: absolute;
-            top: -40px;
-            left: 35%;
-            font-size: 40px;
-            color: gold;
-            font-weight: bold;
+        #stats {
+            text-align: center;
+            margin-bottom: 30px;
         }
 
-        /* Reklam Paneli */
-        #ad-box {
+        #balance {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2ecc71;
+            display: block;
+        }
+
+        #click-info {
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+
+        /* Sabit Coin Görseli */
+        #coin-btn {
+            font-size: 120px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            outline: none;
+            transition: transform 0.05s; /* Sadece hafif bir basılma hissi */
+        }
+
+        #coin-btn:active {
+            transform: scale(0.95); /* Tıklayınca hafifçe küçülür */
+        }
+
+        /* Reklam Alanı */
+        #ad-screen {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.9);
             color: white;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 10;
+            z-index: 100;
         }
-        
-        button#close-btn {
-            padding: 10px 25px;
-            font-size: 18px;
+
+        .ad-content {
+            background: #fff;
+            color: #333;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        #close-ad {
+            margin-top: 20px;
+            padding: 10px 30px;
+            font-size: 16px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
-            margin-top: 15px;
         }
     </style>
 </head>
 <body>
 
-    <div id="ui-top">
-        Bakiye: <b>$<span id="balance">0.00000</span></b><br>
-        <small>Tık: <span id="clicks">0</span></small>
+    <div id="stats">
+        <span id="balance">$0.00000</span>
+        <span id="click-info">Toplam Tıklama: <span id="count">0</span></span>
     </div>
 
-    <button id="main-btn">
-        <span id="coin-popup">🪙</span>
-        <span id="bag-icon">💰</span>
-    </button>
+    <button id="coin-btn">🕸️🕷️ྀི</button>
 
-    <div id="ad-box">
-        <h2>REKLAM GÖRÜNTÜLENİYOR</h2>
-        <p id="timer">Lütfen bekleyin...</p>
-        <button id="close-btn" style="display:none;">Kapat</button>
+    <div id="ad-screen">
+        <div class="ad-content">
+            <h2>REKLAM</h2>
+            <p id="ad-status">Bekleyin...</p>
+            <button id="close-ad" style="display:none;">Reklamı Kapat</button>
+        </div>
     </div>
 
     <script>
-        let balance = 0;
-        let count = 0;
+        let totalBalance = 0.0;
+        let clickCount = 0;
 
-        const bagIcon = document.getElementById('bag-icon');
-        const coinPop = document.getElementById('coin-popup');
-        const balanceTxt = document.getElementById('balance');
-        const clickTxt = document.getElementById('clicks');
-        const mainBtn = document.getElementById('main-btn');
+        const balanceDisplay = document.getElementById('balance');
+        const countDisplay = document.getElementById('count');
+        const coinBtn = document.getElementById('coin-btn');
+        const adScreen = document.getElementById('ad-screen');
+        const closeAdBtn = document.getElementById('close-ad');
+        const adStatus = document.getElementById('ad-status');
 
-        // Tıklama Fonksiyonu
-        mainBtn.addEventListener('mousedown', () => {
-            // Bakiyeyi artır
-            balance += 0.00001;
-            count++;
-            
-            balanceTxt.innerText = balance.toFixed(5);
-            clickTxt.innerText = count;
+        coinBtn.addEventListener('click', () => {
+            // Değerleri güncelle
+            totalBalance += 0.00001;
+            clickCount++;
 
-            // Görsel Değişim (Ağız Aç/Coin Göster)
-            bagIcon.innerText = "🥡"; 
-            coinPop.style.display = "block";
+            // Ekrana yazdır
+            balanceDisplay.innerText = "$" + totalBalance.toFixed(5);
+            countDisplay.innerText = clickCount;
 
-            // Reklam Kontrolü
-            if (count % 10 === 0) {
-                startAd();
+            // Her 10 tıklamada bir reklam
+            if (clickCount % 10 === 0) {
+                triggerAd();
             }
         });
 
-        // Tıklamayı bırakınca geri düzelt
-        mainBtn.addEventListener('mouseup', () => {
-            bagIcon.innerText = "💰";
-            coinPop.style.display = "none";
-        });
-
-        // Reklam Fonksiyonu
-        function startAd() {
-            const box = document.getElementById('ad-box');
-            const btn = document.getElementById('close-btn');
-            const timerTxt = document.getElementById('timer');
-            
-            box.style.display = 'flex';
-            btn.style.display = 'none';
-            let sec = 3;
+        function triggerAd() {
+            adScreen.style.display = 'flex';
+            closeAdBtn.style.display = 'none';
+            let timeLeft = 3;
+            adStatus.innerText = `Reklamın bitmesine ${timeLeft} saniye...`;
 
             const timer = setInterval(() => {
-                sec--;
-                timerTxt.innerText = sec + " saniye kaldı...";
-                if (sec <= 0) {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    adStatus.innerText = `Reklamın bitmesine ${timeLeft} saniye...`;
+                } else {
                     clearInterval(timer);
-                    timerTxt.innerText = "Reklam bitti.";
-                    btn.style.display = 'block';
+                    adStatus.innerText = "Reklam bitti!";
+                    closeAdBtn.style.display = 'block';
                 }
             }, 1000);
-
-            btn.onclick = () => { box.style.display = 'none'; };
         }
+
+        closeAdBtn.onclick = () => {
+            adScreen.style.display = 'none';
+        };
     </script>
 </body>
 </html>
