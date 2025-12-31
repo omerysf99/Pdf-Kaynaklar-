@@ -50,7 +50,7 @@
         .main-logo-orb:active { transform: scale(0.92); }
         .main-logo-orb img { width: 90px; pointer-events: none; filter: drop-shadow(0 0 10px #fff); }
 
-        /* UÇAN LOGOLAR (PARTICLES) */
+        /* UÇAN LOGOLAR */
         .ton-particle {
             position: absolute; pointer-events: none; width: 25px; height: 25px;
             animation: flyOut 0.8s ease-out forwards; z-index: 100;
@@ -81,11 +81,11 @@
         .m-input { width: 100%; padding: 15px; background: #070d16; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; margin-bottom: 15px; outline: none; }
         .m-info { background: rgba(250, 204, 21, 0.1); border: 1px dashed #facc15; padding: 12px; border-radius: 12px; font-size: 12px; text-align: center; margin-bottom: 15px; }
 
-        /* NAVBAR (SADECE GÖRSEL) */
+        /* NAVBAR (GÖRSEL) */
         nav { 
             position: fixed; bottom: 20px; left: 15px; right: 15px; height: 70px; 
             background: #111b2b; border-radius: 22px; display: flex; justify-content: space-around; 
-            align-items: center; border: 1px solid rgba(255,255,255,0.05); pointer-events: none; /* Tıklamayı devre dışı bıraktım */
+            align-items: center; border: 1px solid rgba(255,255,255,0.05); pointer-events: none; 
         }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-dim); font-size: 10px; opacity: 0.6; }
         .nav-item.active { color: var(--primary); opacity: 1; }
@@ -150,7 +150,8 @@
         <div class="modal-cont">
             <h2 class="m-title">BOOST SPEED</h2>
             <div class="m-info" style="border-color:var(--primary); color:white;">
-                Reklam izleyerek hızını <br><b>+1.00 GH/s</b> artırabilirsin!
+                Her reklam hızı <b>+1.00 GH/s</b> artırır.<br>
+                Bonus: <b>+0.0000001 TON/sn</b>
             </div>
             <button class="btn-act btn-claim" style="width:100%;" onclick="watchAd()">REKLAM İZLE 📺</button>
             <p style="text-align:center; color:var(--spyder); margin-top:20px; cursor:pointer;" onclick="closeM()">KAPAT</p>
@@ -167,7 +168,7 @@
 
     <script>
         const TG = window.Telegram.WebApp;
-        let data = { ton: 0, pool: 0, speed: 100, ads: 0 };
+        let data = { ton: 0, pool: 0, speed: 100.0, ads: 0 };
 
         function init() {
             TG.expand();
@@ -175,8 +176,12 @@
         }
 
         function mine() {
-            data.pool += (data.speed / 100) * 0.00001;
-            document.getElementById('pool-v').innerText = data.pool.toFixed(5);
+            // MATEMATİKSEL GÜNCELLEME: 
+            // 1 GH/s = 0.0000001 TON/s kazandırır.
+            // 100 GH/s = 0.00001 TON/s kazandırır.
+            data.pool += (data.speed * 0.0000001);
+            
+            document.getElementById('pool-v').innerText = data.pool.toFixed(6);
             document.getElementById('ton-h').innerText = data.ton.toFixed(5);
             document.getElementById('speed-v').innerText = data.speed.toFixed(2);
             document.getElementById('cur-ads').innerText = data.ads;
@@ -184,28 +189,20 @@
 
         function clickAction(e) {
             TG.HapticFeedback.impactOccurred('light');
-            data.pool += 0.000001;
+            data.pool += 0.0000001; // Tıklama başına 1 GH/s'lik saniyelik kazanç kadar bonus
 
-            // Parçacık fırlatma
             const target = document.getElementById('target');
             for(let i=0; i<3; i++) {
                 const p = document.createElement('img');
                 p.src = "https://cryptologos.cc/logos/toncoin-ton-logo.png";
                 p.className = "ton-particle";
-                
                 const rect = target.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                p.style.left = x + "px";
-                p.style.top = y + "px";
-                
-                // Rastgele yön
+                p.style.left = (e.clientX - rect.left) + "px";
+                p.style.top = (e.clientY - rect.top) + "px";
                 const tx = (Math.random() - 0.5) * 300;
                 const ty = -150 - (Math.random() * 150);
                 p.style.setProperty('--tx', tx + "px");
                 p.style.setProperty('--ty', ty + "px");
-
                 target.appendChild(p);
                 setTimeout(() => p.remove(), 800);
             }
@@ -221,7 +218,7 @@
         function watchAd() {
             data.ads++;
             data.speed += 1.0;
-            TG.showAlert("Hız Arttı! +1 GH/s");
+            TG.showAlert("Hız +1.00 GH/s Artırıldı!\nEkstra Kazanç: +0.0000001 TON/sn");
             closeM();
         }
 
@@ -244,7 +241,7 @@
             const req = (amt / 0.01) * 15;
             if(amt < 0.10) return TG.showAlert("Min 0.10 TON!");
             if(data.ads < req) return TG.showAlert("Reklam yetersiz!");
-            TG.showAlert("Talep alındı.");
+            TG.showAlert("Talebiniz kuyruğa alındı.");
             data.ton -= amt;
             closeM();
         }
