@@ -3,216 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Spyder - Cyber Mining</title>
+    <title>Spyder - Cyber TON Mining</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* --- GLOBAL CSS --- */
         :root {
             --primary: #00a3ff;
             --bg: #070d16;
             --card: #111b2b;
             --spyder: #ff4444;
-            --text: #ffffff;
-            --dim: #8e99a8;
+            --text-dim: #8e99a8;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* --- LOADING SCR --- */
-        #loader { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .spin { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: s 1s linear infinite; }
-        @keyframes s { to { transform: rotate(360deg); } }
+        /* ÜST PANEL */
+        header { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .bal-card { background: var(--card); padding: 12px 15px; border-radius: 18px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .coin-box { display: flex; align-items: center; gap: 12px; }
+        .coin-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #0088cc; box-shadow: 0 0 15px rgba(0,163,255,0.3); }
+        .coin-icon img { width: 22px; }
+        .bal-info { display: flex; flex-direction: column; }
+        .bal-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+        .bal-val { font-family: 'Orbitron'; font-size: 15px; font-weight: 700; }
+        .wallet-btn { background: #0088cc; width: 45px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .wallet-btn img { width: 18px; filter: brightness(0) invert(1); }
 
-        /* --- HEADER --- */
-        header { padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .b-card { background: var(--card); padding: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px; }
-        .b-icon { width: 35px; height: 35px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px var(--primary); }
-        .b-icon img { width: 20px; }
-        .b-info { display: flex; flex-direction: column; }
-        .b-lbl { font-size: 10px; color: var(--dim); text-transform: uppercase; }
-        .b-val { font-size: 13px; font-weight: 700; font-family: 'Orbitron'; }
-
-        /* --- MAIN ENGINE (NO SPIN) --- */
+        /* ANA SAYFA */
         main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 80px; }
-        
-        .engine-wrap { position: relative; width: 300px; height: 300px; display: flex; align-items: center; justify-content: center; }
-        
-        /* Sabit Kanatlar */
-        .static-fan { width: 240px; height: 240px; position: relative; z-index: 2; }
-        .blade { 
-            position: absolute; width: 40px; height: 100px; 
-            background: linear-gradient(to bottom, var(--primary), transparent); 
-            left: 50%; top: 20px; transform-origin: bottom center; 
-            clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
-            border-radius: 10px;
-            opacity: 0.8;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
 
-        /* Parlayan Merkez */
-        .core { 
-            position: absolute; width: 90px; height: 90px; 
-            background: var(--bg); border: 3px solid var(--primary); 
-            border-radius: 50%; z-index: 5; 
+        /* --- YENİ NESİL ESTETİK FAN --- */
+        .fan-container {
+            position: relative; width: 300px; height: 300px;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 30px var(--primary), inset 0 0 20px var(--primary);
-            animation: breathe 3s ease-in-out infinite; /* Sadece nefes alma efekti */
-        }
-        .core img { width: 45px; }
-
-        @keyframes breathe {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 20px var(--primary); }
-            50% { transform: scale(1.08); box-shadow: 0 0 40px var(--primary); }
         }
 
-        /* --- UI ELEMENTS --- */
-        .stats { text-align: center; margin: 20px 0; }
-        .pool { font-size: 48px; font-weight: 900; font-family: 'Orbitron'; color: #fff; margin-bottom: 5px; }
-        .ghs { background: rgba(0,163,255,0.1); padding: 5px 15px; border-radius: 20px; color: var(--primary); font-size: 14px; border: 1px solid var(--primary); }
+        /* Dış Çerçeve */
+        .fan-rim {
+            position: absolute; width: 260px; height: 260px;
+            border: 10px solid #1a2a44; border-radius: 50%;
+            box-shadow: inset 0 0 20px #000, 0 0 30px rgba(0,163,255,0.2);
+            z-index: 1;
+        }
 
-        .btns { display: flex; gap: 10px; width: 100%; max-width: 350px; padding: 0 20px; }
-        .btn { flex: 1; height: 60px; border-radius: 20px; border: none; font-weight: 700; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s; }
-        .claim { background: var(--primary); color: #fff; box-shadow: 0 5px 15px rgba(0,163,255,0.3); }
-        .boost { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        /* Dönen Kanatlar */
+        .fan-blades-group {
+            width: 230px; height: 230px;
+            position: relative;
+            animation: fan-spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            z-index: 2;
+        }
+
+        .blade {
+            position: absolute; width: 55px; height: 110px;
+            left: 50%; top: 5px; transform-origin: bottom center;
+            background: linear-gradient(180deg, #00a3ff 0%, #0055ff 100%);
+            clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+            border-radius: 50% 50% 10% 10%;
+            opacity: 0.9;
+            box-shadow: inset -5px 0 10px rgba(0,0,0,0.4);
+        }
+
+        /* Sabit Orta Göbek */
+        .fan-center {
+            position: absolute; width: 85px; height: 85px;
+            background: #070d16; border: 4px solid var(--primary);
+            border-radius: 50%; z-index: 10;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 25px var(--primary), inset 0 0 15px var(--primary);
+        }
+        .fan-center img { width: 42px; filter: drop-shadow(0 0 8px #fff); }
+
+        @keyframes fan-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* SAYILAR */
+        .pool-text { font-family: 'Orbitron'; font-size: 44px; font-weight: 900; color: white; margin-top: 15px; text-shadow: 0 0 20px var(--primary); }
+        .speed-badge { background: rgba(0,163,255,0.1); border: 1px solid var(--primary); padding: 6px 18px; border-radius: 30px; color: var(--primary); font-size: 14px; margin: 10px 0 25px; font-weight: 700; }
+
+        .btn-row { display: flex; gap: 12px; width: 100%; max-width: 360px; padding: 0 20px; }
+        .btn { flex: 1; height: 58px; border-radius: 18px; border: none; font-family: 'Orbitron'; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 15px; }
+        .btn-claim { background: var(--primary); color: white; box-shadow: 0 8px 20px rgba(0,163,255,0.3); }
+        .btn-boost { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
         .btn:active { transform: scale(0.95); }
 
-        /* --- NAVIGATION --- */
-        nav { position: fixed; bottom: 20px; left: 15px; right: 15px; height: 75px; background: var(--card); border-radius: 25px; display: flex; justify-content: space-around; align-items: center; border: 1px solid rgba(255,255,255,0.05); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--dim); font-size: 10px; text-decoration: none; }
-        .nav-item.active { color: var(--primary); }
-        .nav-item i { font-size: 20px; }
+        /* MODAL */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: var(--card); width: 100%; max-width: 400px; padding: 30px; border-radius: 25px; border: 1px solid var(--primary); }
+        .modal-input { width: 100%; padding: 15px; background: #070d16; border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: white; margin: 10px 0 20px; outline: none; font-size: 16px; }
+        .ad-calc { background: rgba(250, 204, 21, 0.1); padding: 15px; border-radius: 15px; border: 1px dashed #facc15; text-align: center; margin-bottom: 20px; }
 
-        /* --- MODAL --- */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .m-cont { background: var(--card); width: 100%; max-width: 400px; border-radius: 30px; padding: 25px; border: 1px solid var(--primary); animation: pop 0.3s ease; }
-        @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        
-        .m-inp { width: 100%; padding: 15px; background: var(--bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: #fff; margin: 10px 0; outline: none; }
-        .m-box { background: rgba(0,163,255,0.1); padding: 15px; border-radius: 15px; margin-bottom: 15px; text-align: center; }
-
+        /* NAVBAR */
+        nav { position: fixed; bottom: 20px; left: 15px; right: 15px; background: #111b2b; height: 70px; border-radius: 22px; display: flex; justify-content: space-around; align-items: center; border: 1px solid rgba(255,255,255,0.05); }
+        .nav-link { text-decoration: none; color: var(--text-dim); font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .nav-link.active { color: var(--primary); }
     </style>
 </head>
 <body onload="init()">
 
-    <div id="loader">
-        <div class="spin"></div>
-        <p style="color: var(--primary); font-family: 'Orbitron'; margin-top: 15px; font-size: 12px;">LOADING ENGINE...</p>
-    </div>
-
     <header>
-        <div class="b-card">
-            <div class="b-icon"><img src="https://cryptologos.cc/logos/toncoin-ton-logo.png"></div>
-            <div class="b-info"><span class="b-lbl">TON Balance</span><span class="b-val" id="ton-val">0.00000</span></div>
+        <div class="bal-card">
+            <div class="coin-box">
+                <div class="coin-icon"><img src="https://cryptologos.cc/logos/toncoin-ton-logo.png"></div>
+                <div class="bal-info"><span class="bal-label">TON Balance</span><span class="bal-val" id="ton-bal">0.00000</span></div>
+            </div>
+            <div class="wallet-btn" onclick="openWithdraw()"><img src="https://cdn-icons-png.flaticon.com/512/60/60484.png"></div>
         </div>
-        <div class="b-card">
-            <div class="b-icon" style="background:var(--spyder); box-shadow:0 0 10px var(--spyder);">🕷️</div>
-            <div class="b-info"><span class="b-lbl">Spyder</span><span class="b-val" id="spy-val">0.00</span></div>
+        <div class="bal-card">
+            <div class="coin-box">
+                <div class="coin-icon" style="background: var(--spyder);">🕷️</div>
+                <div class="bal-info"><span class="bal-label">Spyder Balance</span><span class="bal-val" style="color: var(--spyder);">0.00 SPY</span></div>
+            </div>
+            <div class="wallet-btn" style="background: var(--spyder);" onclick="TWA.showAlert('Spyder Yakında!')"><img src="https://cdn-icons-png.flaticon.com/512/60/60484.png"></div>
         </div>
     </header>
 
     <main>
-        <div class="engine-wrap">
-            <div class="core">
+        <div class="fan-container">
+            <div class="fan-rim"></div>
+            <div class="fan-center">
                 <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png">
             </div>
-            <div class="static-fan" id="fan-container"></div>
+            <div class="fan-blades-group" id="blade-wrapper">
+                </div>
         </div>
 
-        <div class="stats">
-            <div class="pool" id="pool-val">0.00000</div>
-            <div class="ghs"><span id="speed-val">100.00</span> GH/s ⚡</div>
-        </div>
+        <div class="pool-text" id="pool-val">0.00000</div>
+        <div class="speed-badge"><span id="speed-val">100.00</span> GH/s ⚡</div>
 
-        <div class="btns">
-            <button class="btn claim" onclick="claim()">CLAIM TON</button>
-            <button class="btn boost" onclick="openBoost()">BOOST</button>
+        <div class="btn-row">
+            <button class="btn btn-claim" onclick="claim()">CLAIM</button>
+            <button class="btn btn-boost" onclick="watchAd()">BOOST SPEED</button>
         </div>
     </main>
 
-    <div class="modal" id="w-modal">
-        <div class="m-cont">
-            <h2 style="font-family:'Orbitron'; text-align:center; color:var(--primary);">WITHDRAW</h2>
-            <div style="font-size: 12px; color:var(--dim); margin-top: 15px;">Miktar (Min 0.10)</div>
-            <input type="number" id="w-amt" class="m-inp" value="0.10" oninput="calc()">
-            <div class="m-box">
-                Gereken Reklam: <span id="r-ads" style="color:var(--primary); font-weight:700;">150</span> 📺<br>
-                <small style="font-size:10px; color:var(--dim);">Her 0.01 TON için 15 reklam gereklidir.</small>
+    <div id="modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="font-family: 'Orbitron'; text-align: center; color: var(--primary); margin-bottom: 20px;">WITHDRAW</h2>
+            <label style="font-size: 12px; color: var(--text-dim);">Çekilecek TON (Min: 0.10)</label>
+            <input type="number" id="w-amt" class="modal-input" value="0.10" step="0.01" oninput="updateAds()">
+            
+            <div class="ad-calc">
+                Gereken Reklam: <span id="needed-ads" style="font-weight: 900; color: #facc15;">150</span> 📺<br>
+                <small style="font-size: 10px; opacity: 0.7;">Mevcut İzlenen: <span id="current-ads">0</span></small>
             </div>
-            <div style="font-size: 12px; color:var(--dim);">Cüzdan Adresi</div>
-            <input type="text" id="w-addr" class="m-inp" placeholder="UQ...">
-            <button class="btn claim" style="width:100%; margin-top:10px;" onclick="process()">TALEBİ GÖNDER</button>
-            <p style="text-align:center; color:var(--spyder); margin-top:15px; cursor:pointer;" onclick="closeM()">KAPAT</p>
+
+            <label style="font-size: 12px; color: var(--text-dim);">Cüzdan Adresiniz</label>
+            <input type="text" id="w-addr" class="modal-input" placeholder="UQ...">
+            
+            <button class="btn btn-claim" style="width: 100%;" onclick="withdraw()">GÖNDER</button>
+            <p style="text-align: center; margin-top: 20px; color: var(--spyder); cursor: pointer; font-size: 14px;" onclick="closeModal()">İPTAL</p>
         </div>
     </div>
 
     <nav>
-        <a href="javascript:void(0)" class="nav-item" onclick="openW()"><i>💼</i>Wallet</a>
-        <a href="javascript:void(0)" class="nav-item"><i>👥</i>Friends</a>
-        <a href="javascript:void(0)" class="nav-item active"><i>🌀</i>Home</a>
-        <a href="javascript:void(0)" class="nav-item"><i>🎯</i>Tasks</a>
-        <a href="javascript:void(0)" class="nav-item"><i>⚙️</i>More</a>
+        <a href="#" class="nav-link"><i>💼</i>Wallet</a>
+        <a href="#" class="nav-link"><i>👥</i>Friends</a>
+        <a href="#" class="nav-link active"><i>🌀</i>Home</a>
+        <a href="#" class="nav-link"><i>🎯</i>Tasks</a>
+        <a href="#" class="nav-link"><i>⚙️</i>More</a>
     </nav>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        let data = { ton: 0, pool: 0, ads: 0, speed: 100.0 };
+        const TWA = window.Telegram.WebApp;
+        let user = { ton: 0, pool: 0, ads: 0, speed: 100.0 };
 
         function init() {
-            tg.expand();
-            renderBlades();
-            setInterval(mine, 1000);
-            setTimeout(() => document.getElementById('loader').style.display='none', 1000);
+            TWA.expand();
+            createBlades();
+            setInterval(updatePool, 1000);
         }
 
-        function renderBlades() {
-            const container = document.getElementById('fan-container');
-            for(let i=0; i<12; i++) {
+        function createBlades() {
+            const wrapper = document.getElementById('blade-wrapper');
+            for(let i=0; i<10; i++) {
                 const b = document.createElement('div');
                 b.className = 'blade';
-                b.style.transform = `rotate(${i*30}deg)`;
-                container.appendChild(b);
+                b.style.transform = `rotate(${i * 36}deg)`;
+                wrapper.appendChild(b);
             }
         }
 
-        function mine() {
+        function updatePool() {
             // 100 GH/s = saniyede 0.00001 TON
-            data.pool += (data.speed / 100) * 0.00001;
-            document.getElementById('pool-val').innerText = data.pool.toFixed(5);
-            document.getElementById('ton-val').innerText = data.ton.toFixed(5);
-            document.getElementById('speed-val').innerText = data.speed.toFixed(2);
+            user.pool += (user.speed / 100) * 0.00001;
+            document.getElementById('pool-val').innerText = user.pool.toFixed(5);
+            document.getElementById('ton-bal').innerText = user.ton.toFixed(5);
+            document.getElementById('speed-val').innerText = user.speed.toFixed(2);
+            document.getElementById('current-ads').innerText = user.ads;
+        }
+
+        function watchAd() {
+            user.ads++;
+            user.speed += 1.0;
+            TWA.HapticFeedback.notificationOccurred('success');
+            TWA.showAlert("Hız +1 GH/s Arttı!");
         }
 
         function claim() {
-            if(data.pool <= 0) return;
-            data.ton += data.pool;
-            data.pool = 0;
-            tg.HapticFeedback.notificationOccurred('success');
+            if(user.pool <= 0) return;
+            user.ton += user.pool;
+            user.pool = 0;
+            TWA.HapticFeedback.impactOccurred('medium');
         }
 
-        function openBoost() {
-            data.ads++;
-            data.speed += 1.0;
-            tg.showAlert("Reklam izlendi! Hız +1 GH/s. (Toplam Reklam: " + data.ads + ")");
-        }
+        function openWithdraw() { document.getElementById('modal').style.display = 'flex'; updateAds(); }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-        function openW() { document.getElementById('w-modal').style.display='flex'; calc(); }
-        function closeM() { document.getElementById('w-modal').style.display='none'; }
-        
-        function calc() {
+        function updateAds() {
             const amt = parseFloat(document.getElementById('w-amt').value) || 0;
-            document.getElementById('r-ads').innerText = Math.ceil((amt / 0.01) * 15);
+            const req = (amt / 0.01) * 15;
+            document.getElementById('needed-ads').innerText = Math.ceil(req);
         }
 
-        function process() {
+        function withdraw() {
             const amt = parseFloat(document.getElementById('w-amt').value);
             const req = (amt / 0.01) * 15;
-            if(amt < 0.10) return tg.showAlert("Min 0.10 TON!");
-            if(data.ads < req) return tg.showAlert("Gereken reklam izlenmedi!");
-            tg.showAlert("Talep alındı.");
-            data.ton -= amt;
-            closeM();
+            if(amt < 0.10) return TWA.showAlert("Min 0.10 TON!");
+            if(user.ads < req) return TWA.showAlert("Reklam yetersiz!");
+            TWA.showAlert("Talep Gönderildi!");
+            user.ton -= amt;
+            closeModal();
         }
     </script>
 </body>
