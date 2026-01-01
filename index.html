@@ -3,157 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hamster Kombat on TON</title>
+    <title>Hamster Kombat - on TON</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --text-gold: #f3ba2f;
             --ton-blue: #0088cc;
-            --btn-light-blue: #a2d2ff;
-            --bg-dark: #000000;
+            --btn-blue: #a2d2ff;
+            --text-gold: #f3ba2f;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-dark); color: #fff; overflow: hidden; height: 100vh; }
+        body { background-color: #000; color: #fff; overflow: hidden; height: 100vh; }
 
-        /* --- LOADING BACKGROUND (image_7e1003.jpg) --- */
-        .loading-screen {
+        /* --- ANA YÜKLEME EKRANI (image_7e1003.jpg) --- */
+        .loading-bg {
             height: 100vh;
             width: 100%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.8)), 
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.9)), 
                         url('image_7e1003.jpg') center/cover no-repeat;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-end;
-            padding-bottom: 40px;
+            padding-bottom: 50px;
             text-align: center;
+            cursor: pointer;
         }
 
-        .loading-text { font-size: 28px; font-weight: 800; margin-bottom: 40px; }
-        .token-info { font-size: 22px; font-weight: 800; color: var(--text-gold); margin-bottom: 5px; }
-        .token-sub { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
-        .on-ton { font-size: 70px; font-weight: 900; margin-bottom: 30px; line-height: 1; }
-        .stay-tuned { font-size: 14px; color: #888; margin-bottom: 5px; }
-        .official-info { font-size: 14px; color: #fff; font-weight: 600; margin-bottom: 25px; }
+        .loader-circle {
+            width: 60px; height: 60px;
+            border: 5px solid rgba(255,255,255,0.1);
+            border-top: 5px solid var(--text-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Social Icons (image_7e1003.jpg) */
-        .social-row { display: flex; gap: 15px; margin-bottom: 20px; }
-        .social-btn {
-            width: 50px; height: 50px; background: rgba(255,255,255,0.1);
+        .yükleniyor { font-size: 24px; font-weight: 700; margin-bottom: 40px; }
+        .token-title { color: var(--text-gold); font-size: 24px; font-weight: 800; margin-bottom: 5px; }
+        .token-sub { font-size: 16px; font-weight: 400; color: #ccc; margin-bottom: 5px; }
+        .on-ton { font-size: 72px; font-weight: 900; line-height: 1; margin-bottom: 30px; }
+        
+        .footer-info { font-size: 14px; color: #888; margin-bottom: 20px; }
+        .social-icons { display: flex; gap: 20px; }
+        .icon-circle {
+            width: 45px; height: 45px; background: rgba(255,255,255,0.1);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 20px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2);
+            font-size: 18px; border: 1px solid rgba(255,255,255,0.2);
         }
 
-        /* --- TON WITHDRAW MODAL (image_7ca003.png) --- */
-        #withdraw-panel {
+        /* --- TON ÇEKİM PANELİ (image_7ca003.png) --- */
+        #withdraw-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 100;
+            background: rgba(0,0,0,0.85); z-index: 1000;
             display: none; align-items: center; justify-content: center; padding: 20px;
         }
-        .w-card {
-            background: #f0f2f5; color: #000; width: 100%; max-width: 400px;
-            border-radius: 28px; padding: 25px; text-align: center;
+        .withdraw-card {
+            background: #f0f2f5; color: #333; width: 100%; max-width: 400px;
+            border-radius: 28px; padding: 25px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .w-card h3 { font-size: 20px; font-weight: 800; margin-bottom: 10px; }
-        .w-card p.desc { font-size: 14px; color: #7d7d7d; line-height: 1.4; margin-bottom: 15px; }
-        .min-send { font-size: 15px; font-weight: 700; margin-bottom: 15px; }
-        
-        .input-group {
-            background: #fff; border: 1px solid #e0e0e0; border-radius: 12px;
+        .withdraw-card h3 { font-size: 19px; font-weight: 800; color: #000; margin-bottom: 8px; }
+        .withdraw-card p.subtitle { font-size: 13px; color: #888; line-height: 1.4; margin-bottom: 15px; }
+        .min-amount { font-size: 15px; font-weight: 700; color: #000; margin-bottom: 15px; }
+
+        .input-box {
+            background: #fff; border: 1px solid #ddd; border-radius: 12px;
             padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
         }
-        .input-group input { border: none; outline: none; width: 100%; font-size: 16px; font-weight: 600; }
-        .max-btn { color: var(--ton-blue); font-weight: 800; cursor: pointer; font-size: 14px; }
-        
-        .fee-info { font-size: 13px; color: #7d7d7d; margin: 10px 0; }
-        .rec-amount { font-size: 18px; font-weight: 800; margin-bottom: 20px; }
-        
+        .input-box input { border: none; outline: none; width: 100%; font-size: 16px; font-weight: 600; color: #000; }
+        .max-txt { color: var(--ton-blue); font-weight: 800; cursor: pointer; font-size: 14px; }
+
+        .fee-label { font-size: 13px; color: #888; margin: 10px 0; }
+        .receive-txt { font-size: 18px; font-weight: 800; color: #000; margin-bottom: 20px; }
+
         .btn-send {
-            background: var(--btn-light-blue); color: white; width: 100%; padding: 18px;
-            border-radius: 20px; border: none; font-weight: 800; font-size: 18px; margin-bottom: 10px;
+            background: var(--btn-blue); color: #fff; width: 100%; padding: 18px;
+            border-radius: 20px; border: none; font-weight: 800; font-size: 18px; margin-bottom: 10px; cursor: pointer;
         }
         .btn-notyet {
             background: #fff; color: #000; width: 100%; padding: 18px;
-            border-radius: 20px; border: 1px solid #e0e0e0; font-weight: 800; font-size: 18px;
-        }
-
-        /* Clickable Area to open panel */
-        .trigger-area {
-            position: absolute; top: 0; width: 100%; height: 70%; cursor: pointer;
+            border-radius: 20px; border: 1px solid #ddd; font-weight: 800; font-size: 18px; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <div class="loading-screen">
-        <div class="trigger-area" onclick="openWithdraw()"></div>
+    <div class="loading-bg" onclick="openPanel()">
+        <div class="loader-circle"></div>
+        <div class="yükleniyor">Yükleniyor</div>
         
-        <div class="loading-text">Yükleniyor</div>
-        
-        <div class="token-info">Hamster Kombat Token</div>
+        <div class="token-title">Hamster Kombat Token</div>
         <div class="token-sub">will be launched</div>
         <div class="on-ton">on TON</div>
         
-        <div class="stay-tuned">Stay tuned</div>
-        <div class="official-info">More info in official channels</div>
+        <div class="footer-info">Stay tuned. More info in official channels</div>
         
-        <div class="social-row">
-            <div class="social-btn">✈️</div>
-            <div class="social-btn">▶️</div>
-            <div class="social-btn">𝕏</div>
+        <div class="social-icons">
+            <div class="icon-circle">✈️</div>
+            <div class="icon-circle">▶️</div>
+            <div class="icon-circle">𝕏</div>
         </div>
     </div>
 
-    <div id="withdraw-panel">
-        <div class="w-card">
+    <div id="withdraw-overlay">
+        <div class="withdraw-card">
             <h3>Enter your personal TON address</h3>
-            <p class="desc">This amount will be sent to the TON compatible wallet address</p>
-            <p class="min-send">Minimum send amount is 1,5 TON</p>
-            
-            <div class="input-group">
+            <p class="subtitle">This amount will be sent to the TON compatible wallet address</p>
+            <p class="min-amount">Minimum send amount is 1,5 TON</p>
+
+            <div class="input-box">
                 <span style="margin-right:10px;">💎</span>
                 <input type="text" value="TON" readonly>
-                <span>▼</span>
+                <span style="font-size:12px;">▼</span>
             </div>
-            
-            <div class="input-group">
+
+            <div class="input-box">
                 <input type="text" placeholder="Your TON address">
             </div>
-            
-            <div class="input-group">
-                <input type="number" placeholder="Amount" id="w-amount" oninput="calculate()">
-                <span class="max-btn" onclick="setMax()">MAX</span>
+
+            <div class="input-box">
+                <input type="number" placeholder="Amount" id="amount-input" oninput="calcReceive()">
+                <span class="max-txt" onclick="setMax()">MAX</span>
             </div>
-            
-            <p class="fee-info">Network fee: 0,3 TON</p>
-            <p class="rec-amount">Receive amount: <span id="res-val">0</span> TON</p>
-            
-            <button class="btn-send" onclick="closeWithdraw()">Send</button>
-            <button class="btn-notyet" onclick="closeWithdraw()">Not yet</button>
+
+            <p class="fee-label">Network fee: 0,3 TON</p>
+            <p class="receive-txt">Receive amount: <span id="receive-val">0</span> TON</p>
+
+            <button class="btn-send" onclick="closePanel()">Send</button>
+            <button class="btn-notyet" onclick="closePanel()">Not yet</button>
         </div>
     </div>
 
     <script>
-        // Tüm değerler 0'dan başlar
-        let tonBalance = 0;
+        // Rakamlar 0'dan başlar
+        let currentBalance = 0; 
 
-        function openWithdraw() {
-            document.getElementById('withdraw-panel').style.display = 'flex';
+        function openPanel() {
+            document.getElementById('withdraw-overlay').style.display = 'flex';
         }
 
-        function closeWithdraw() {
-            document.getElementById('withdraw-panel').style.display = 'none';
+        function closePanel() {
+            document.getElementById('withdraw-overlay').style.display = 'none';
         }
 
         function setMax() {
-            document.getElementById('w-amount').value = tonBalance;
-            calculate();
+            document.getElementById('amount-input').value = currentBalance;
+            calcReceive();
         }
 
-        function calculate() {
-            let amt = document.getElementById('w-amount').value;
-            let res = amt > 0.3 ? (amt - 0.3).toFixed(2) : 0;
-            document.getElementById('res-val').innerText = res;
+        function calcReceive() {
+            let val = document.getElementById('amount-input').value;
+            let result = val > 0.3 ? (val - 0.3).toFixed(2) : 0;
+            document.getElementById('receive-val').innerText = result;
         }
     </script>
 </body>
