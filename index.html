@@ -3,116 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hamster Kombat - Overlay Fix</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Amine Kombat - Pro Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; user-select: none; }
-        body { background-color: #000; color: #fff; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        body { background-color: #000; color: #fff; height: 100vh; overflow: hidden; display: flex; justify-content: center; }
 
-        /* YÜKLEME EKRANI - YAZILAR GÖRSELİN ÜSTÜNDE */
+        /* YÜKLEME EKRANI - TAM ÜST ÜSTE DÜZEN */
         #loading-screen {
-            position: relative; /* İçindeki absolute öğeleri buna göre hizalar */
-            width: 100%;
-            max-width: 450px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            position: fixed; width: 100%; height: 100%; z-index: 1000;
+            background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-
-        .loading-img {
-            width: 100%; /* Genişlik tam, boylamasına büyüme için yüksekliği artırabilirsin */
-            height: auto;
-            border-radius: 25px;
-            display: block;
-        }
-
-        /* YAZI KATMANI - GÖRSELİN ÜZERİNE BİNER */
+        .loading-container { position: relative; width: 100%; max-width: 450px; }
+        .loading-img { width: 100%; height: auto; border-radius: 25px; display: block; }
         .overlay-content {
-            position: absolute;
-            bottom: 40px; /* Yazıları görselin alt kısmına sabitler */
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            pointer-events: none; /* Tıklamayı engellemez */
+            position: absolute; bottom: 50px; width: 100%;
+            display: flex; flex-direction: column; align-items: center; pointer-events: none;
         }
-
-        .spinner { 
-            width: 40px; height: 40px; 
-            border: 4px solid rgba(255,255,255,0.1); 
-            border-top: 4px solid #f3ba2f; 
-            border-radius: 50%; 
-            animation: spin 1s linear infinite; 
-            margin-bottom: 15px; 
-        }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #f3ba2f; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        
-        .on-ton { 
-            font-size: 70px; 
-            font-weight: 900; 
-            line-height: 1; 
-            text-shadow: 0px 4px 15px rgba(0,0,0,0.8); /* Yazının okunması için gölge */
-        }
+        .on-ton { font-size: 75px; font-weight: 900; line-height: 1; text-shadow: 0px 4px 15px rgba(0,0,0,1); }
 
-        /* OYUN ARAYÜZÜ */
+        /* OYUN EKRANI - HAMSTER KOMBAT ARAYÜZÜ */
         #game-screen {
-            display: none; flex-direction: column; width: 100%; max-width: 450px; padding: 20px;
+            display: none; flex-direction: column; width: 100%; max-width: 450px; padding: 15px;
             background: linear-gradient(180deg, #1d2025 0%, #000000 100%);
-            height: 100vh;
         }
 
-        .main-score-area { margin: 40px 0; text-align: center; font-size: 52px; font-weight: 900; color: #fff; }
+        /* Üst Profil Barı */
+        .header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .pfp { width: 40px; height: 40px; background: #272a2f; border-radius: 10px; border: 1px solid #333; }
+        .user-info { flex: 1; font-size: 14px; font-weight: 700; }
 
-        .click-container { display: flex; justify-content: center; align-items: center; margin-top: 20px; }
+        /* Kazanç Panelleri */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 30px; }
+        .stat-card { background: #272a2f; padding: 8px; border-radius: 12px; text-align: center; border: 1px solid #333; }
+        .stat-label { font-size: 9px; color: #888; text-transform: uppercase; margin-bottom: 4px; }
+        .stat-value { font-size: 11px; font-weight: 700; }
+
+        /* Puan Alanı */
+        .score-container { text-align: center; margin-bottom: 20px; }
+        .coin-val { font-size: 44px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .coin-val span { color: #f3ba2f; }
+
+        /* Tıklama Alanı */
+        .tap-area { display: flex; justify-content: center; margin-top: 10px; }
         .circle-outer {
-            width: 290px; height: 290px; border-radius: 50%;
-            background: radial-gradient(circle, #2a2e35 0%, #111418 100%);
+            width: 310px; height: 310px; border-radius: 50%;
+            background: radial-gradient(circle, #3a3f47 0%, #111418 100%);
             display: flex; justify-content: center; align-items: center;
-            border: 14px solid #272a2f;
+            border: 15px solid #272a2f; box-shadow: 0 0 50px rgba(0,0,0,0.6);
         }
-        .amine-main {
-            width: 240px; height: 240px; border-radius: 50%;
+        .amine-coin {
+            width: 260px; height: 260px; border-radius: 50%;
             background: url('Amine.co.jpg') center/cover no-repeat;
             cursor: pointer; transition: transform 0.05s;
         }
-        .amine-main:active { transform: scale(0.94); }
+        .amine-coin:active { transform: scale(0.94); }
+
+        /* Enerji ve Alt Menü */
+        .bottom-nav { margin-top: auto; padding-bottom: 10px; }
+        .energy-info { display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+        .bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; overflow: hidden; }
+        .bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #f3ba2f, #ffcc00); }
     </style>
 </head>
 <body>
 
     <div id="loading-screen">
-        <img src="coins.hmstr.jpg" class="loading-img">
-        
-        <div class="overlay-content">
-            <div class="spinner"></div>
-            <p style="font-weight: 800; font-size: 18px; color: #f3ba2f; margin-bottom: 8px; text-shadow: 2px 2px 5px #000;">YÜKLENİYOR</p>
-            <div class="on-ton">on TON</div>
+        <div class="loading-container">
+            <img src="coins.hmstr.jpg" class="loading-img">
+            <div class="overlay-content">
+                <div class="spinner"></div>
+                <p style="font-weight: 800; color: #f3ba2f; margin-bottom: 5px; text-shadow: 2px 2px 5px #000;">YÜKLENİYOR</p>
+                <div class="on-ton">on TON</div>
+            </div>
         </div>
     </div>
 
     <div id="game-screen">
-        <div class="main-score-area" id="score">0</div>
-        <div class="click-container">
+        <div class="header">
+            <div class="pfp"></div>
+            <div class="user-info">Amine (CEO)</div>
+            <div class="stat-card" style="padding: 5px 15px;">Binance</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">Earn per tap</div><div class="stat-value" style="color:#f3ba2f;">+1</div></div>
+            <div class="stat-card"><div class="stat-label">Coins to level up</div><div class="stat-value">25K</div></div>
+            <div class="stat-card"><div class="stat-label">Profit per hour</div><div class="stat-value" style="color:#82ff82;">+0</div></div>
+        </div>
+
+        <div class="score-container">
+            <div class="coin-val"><span>🪙</span> <span id="coin-count">0</span></div>
+        </div>
+
+        <div class="tap-area">
             <div class="circle-outer">
-                <div class="amine-main" onclick="handleTap(event)"></div>
+                <div class="amine-coin" onclick="tapAction(event)"></div>
             </div>
         </div>
-        <p style="text-align: center; margin-top: 20px; color: #f3ba2f; font-weight: 800;">TAP TO EARN</p>
+
+        <div class="bottom-nav">
+            <div class="energy-info">
+                <span>⚡ 1000 / 1000</span>
+                <span style="color: #f3ba2f;">Bronze ></span>
+            </div>
+            <div class="bar-bg"><div class="bar-fill"></div></div>
+        </div>
     </div>
 
     <script>
-        let count = 0;
+        let score = 0;
+
         window.onload = function() {
             setTimeout(() => {
                 document.getElementById('loading-screen').style.display = 'none';
                 document.getElementById('game-screen').style.display = 'flex';
-            }, 4000); // 4 saniye sonra oyuna geçer
+            }, 4000); // 4 saniye yükleme
         };
 
-        function handleTap(e) {
-            count++;
-            document.getElementById('score').innerText = count.toLocaleString();
+        function tapAction(e) {
+            score++;
+            document.getElementById('coin-count').innerText = score.toLocaleString();
+            
+            // Mobil titreşim efekti
             if (navigator.vibrate) navigator.vibrate(5);
         }
     </script>
