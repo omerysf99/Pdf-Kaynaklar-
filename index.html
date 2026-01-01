@@ -3,226 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AnimeBTC - Mega Mine Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <title>AnimeBTC - Balanced Empire</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --p: #ff4d94; --g: #00ffa3; --bg: #0b0e11; --card: #1e2329; --gold: #f0b90b; --ton: #0088cc; --text-muted: #848e9c;
+            --p: #ff4d94; --g: #00ffa3; --bg: #0b0e11; --card: #1e2329; --gold: #f0b90b; 
+            --ton: #0088cc; --text-muted: #848e9c; --white: #ffffff;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: #fff; overflow: hidden; height: 100vh; user-select: none; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: #fff; overflow: hidden; height: 100vh; user-select: none; font-family: 'Inter', sans-serif; }
 
-        .header-crypto { padding: 15px 20px; background: #161a1e; border-bottom: 1px solid #2b3139; text-align: center; }
-        .profit-badge { color: var(--g); background: rgba(0, 255, 163, 0.1); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; margin-bottom: 8px; display: inline-block; }
-        .price-main { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 900; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        /* --- HEADER --- */
+        .header { padding: 15px; background: #161a1e; border-bottom: 1px solid #2b3139; text-align: center; }
+        .profit-badge { color: var(--g); background: rgba(0, 255, 163, 0.1); padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: 800; margin-bottom: 5px; display: inline-block; }
+        .main-balance { font-family: 'JetBrains Mono', monospace; font-size: 30px; font-weight: 900; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-        .viewport { height: calc(100vh - 170px); overflow-y: auto; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        /* --- VIEWPORT --- */
+        .container { height: calc(100vh - 170px); overflow-y: auto; padding: 15px; width: 100%; max-width: 500px; margin: 0 auto; }
         .page { display: none; width: 100%; flex-direction: column; align-items: center; }
-        .page.active { display: flex; animation: fadeIn 0.2s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .page.active { display: flex; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* CLICKER */
-        .main-target {
-            width: 240px; height: 240px; border-radius: 50%; border: 8px solid #2b3139; margin-top: 20px;
+        /* --- CLICKER --- */
+        .tap-circle {
+            width: 250px; height: 250px; border-radius: 50%; border: 8px solid #2b3139; margin-top: 30px;
             background: url('photo_2026-01-01_19-32-18.jpg') center/cover;
-            box-shadow: 0 0 30px rgba(0, 136, 204, 0.15); cursor: pointer; transition: transform 0.05s;
+            box-shadow: 0 0 40px rgba(0, 136, 204, 0.2); cursor: pointer; transition: transform 0.05s;
         }
-        .main-target:active { transform: scale(0.95); }
+        .tap-circle:active { transform: scale(0.94); }
+        
+        .energy-box { width: 100%; max-width: 300px; margin-top: 30px; }
+        .energy-bar { width: 100%; height: 10px; background: #2b3139; border-radius: 10px; overflow: hidden; margin-top: 5px; }
+        .energy-fill { height: 100%; background: var(--ton); transition: width 0.2s; }
 
-        /* MINE GRID */
-        .mine-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; padding-bottom: 30px; }
-        .card { background: var(--card); border: 1px solid #2b3139; border-radius: 16px; padding: 12px; position: relative; transition: 0.2s; display: flex; flex-direction: column; justify-content: space-between; min-height: 140px; }
-        .card:active { transform: scale(0.96); background: #2b3139; }
-        .card-emoji { font-size: 24px; margin-bottom: 5px; }
-        .card-name { font-size: 12px; font-weight: 800; color: #fff; line-height: 1.2; }
-        .card-profit { font-size: 10px; color: var(--g); font-weight: 800; margin: 4px 0; }
-        .card-price { border-top: 1px solid #2b3139; margin-top: 8px; padding-top: 8px; color: var(--gold); font-weight: 900; font-size: 13px; display: flex; align-items: center; gap: 4px; }
-        .card-lvl { position: absolute; top: 8px; right: 10px; font-size: 9px; font-weight: 900; color: var(--text-muted); }
-
-        /* WITHDRAW MODAL */
-        #withdraw-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.95); z-index: 20000; display: none;
-            flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+        /* --- MINE GRID --- */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; padding-bottom: 40px; }
+        .card { 
+            background: var(--card); border: 1px solid #2b3139; border-radius: 16px; 
+            padding: 12px; position: relative; transition: 0.2s; 
+            display: flex; flex-direction: column; justify-content: space-between; min-height: 130px;
         }
-        .modal-content { background: #f3f4f6; color: #000; width: 100%; max-width: 360px; border-radius: 24px; padding: 25px; text-align: center; }
-        .input-group { background: #fff; border-radius: 12px; padding: 12px; margin-bottom: 10px; display: flex; align-items: center; border: 1px solid #e5e7eb; }
-        .input-group input { border: none; outline: none; width: 100%; font-weight: 600; }
-        .btn-send { width: 100%; background: #7dd3fc; color: #fff; padding: 15px; border-radius: 50px; border: none; font-weight: 800; cursor: pointer; margin-top: 10px; }
+        .card:active { transform: scale(0.97); }
+        .card-lvl { position: absolute; top: 8px; right: 10px; font-size: 9px; font-weight: 900; color: var(--ton); }
+        .card-name { font-size: 13px; font-weight: 800; }
+        .card-profit { font-size: 10px; color: var(--g); font-weight: 700; margin: 2px 0; }
+        .card-price { border-top: 1px solid #2b3139; padding-top: 8px; margin-top: 5px; color: var(--gold); font-weight: 900; font-size: 13px; }
 
-        /* NAV */
-        .nav { position: fixed; bottom: 0; width: 100%; height: 80px; background: #161a1e; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #2b3139; padding-bottom: 10px; }
-        .nav-item { color: var(--text-muted); text-align: center; flex: 1; font-size: 10px; font-weight: 800; }
-        .nav-item.active { color: var(--ton); }
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 5000; display: none;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal { background: #fff; color: #000; width: 100%; max-width: 360px; border-radius: 24px; padding: 25px; text-align: center; }
+        .input-group { background: #f1f5f9; border-radius: 12px; padding: 12px; margin: 10px 0; display: flex; border: 1px solid #e2e8f0; }
+        .input-group input { border: none; background: transparent; width: 100%; outline: none; font-weight: 700; }
+        .btn-send { width: 100%; background: #0088cc; color: #fff; padding: 14px; border-radius: 50px; border: none; font-weight: 800; cursor: pointer; }
 
-        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--ton); color: white; padding: 10px 25px; border-radius: 50px; font-weight: 900; display: none; z-index: 30000; font-size: 12px; }
+        /* --- NAV --- */
+        .nav { position: fixed; bottom: 0; width: 100%; height: 80px; background: #161a1e; display: flex; border-top: 1px solid #2b3139; padding-bottom: 10px; }
+        .nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; }
+        .nav-link.active { color: var(--ton); }
+        .nav-link b { font-size: 10px; margin-top: 4px; }
+
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--ton); padding: 10px 20px; border-radius: 50px; font-weight: 900; z-index: 10000; display: none; }
     </style>
 </head>
 <body>
 
-    <div id="toast">İşlem Başarılı!</div>
+    <div id="toast">Başarılı!</div>
 
-    <div id="withdraw-modal">
-        <div class="modal-content">
-            <h3 style="margin-bottom:10px">TON Withdraw</h3>
-            <p style="font-size:12px; color:#6b7280; margin-bottom:15px">Minimum 1.5 TON</p>
-            <div class="input-group"><input type="text" placeholder="Your TON Address" id="addr-input"></div>
+    <div class="modal-overlay" id="withdraw-modal">
+        <div class="modal">
+            <h3 style="margin-bottom:15px">TON Withdraw</h3>
+            <div class="input-group"><input type="text" placeholder="Wallet Address" id="w-addr"></div>
             <div class="input-group">
-                <input type="number" placeholder="Amount" id="amount-input">
-                <span style="color:var(--ton); font-weight:800; cursor:pointer" onclick="setMax()">MAX</span>
+                <input type="number" placeholder="Amount" id="w-amt">
+                <span style="color:var(--ton); font-weight:900; cursor:pointer" onclick="setMax()">MAX</span>
             </div>
-            <p style="font-size:11px; margin-bottom:15px">Fee: 0.3 TON | Receive: <span id="receive-val">0</span></p>
-            <button class="btn-send" onclick="processWithdraw()">Send</button>
-            <button style="background:none; border:none; margin-top:15px; font-weight:700; cursor:pointer" onclick="closeModal()">Close</button>
+            <p style="font-size:12px; margin-bottom:15px">Min: 1.5 TON | Fee: 0.3 TON</p>
+            <button class="btn-send" onclick="confirmWithdraw()">Send</button>
+            <p style="margin-top:10px; cursor:pointer; font-weight:700" onclick="closeModal()">Cancel</p>
         </div>
     </div>
 
-    <header class="header-crypto">
-        <span class="profit-badge" id="top-profit">🚀 +0/sa</span>
-        <div class="price-main">💰 <span id="top-balance">0.000</span></div>
+    <header class="header">
+        <div class="profit-badge" id="stat-profit">🚀 +0/sa</div>
+        <div class="main-balance">💰 <span id="stat-balance">0.000</span></div>
     </header>
 
-    <div class="viewport">
+    <div class="container">
         <section id="exchange" class="page active">
-            <div class="main-target" id="tap-target"></div>
-            <div style="margin-top: 30px; width: 100%; max-width: 300px;">
-                <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:900;">⚡ <span id="energy-cur">1000</span> / 1000</div>
-                <div style="width:100%; height:8px; background:#2b3139; border-radius:10px; margin-top:5px;"><div id="energy-fill" style="height:100%; background:var(--ton); width:100%"></div></div>
+            <div class="tap-circle" id="tap-btn"></div>
+            <div class="energy-box">
+                <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:900;">⚡ <span id="energy-val">1000</span> / 1000</div>
+                <div class="energy-bar"><div class="energy-fill" id="energy-bar" style="width: 100%;"></div></div>
             </div>
         </section>
 
         <section id="mine" class="page">
-            <h3 style="align-self:flex-start; margin-bottom:15px">⛏️ İmparatorluğu Geliştir</h3>
-            <div class="mine-grid" id="mine-market"></div>
+            <h3 style="align-self:flex-start; margin-bottom:15px">⛏️ Maden Pazarı</h3>
+            <div class="grid" id="mine-grid"></div>
         </section>
 
         <section id="wallet" class="page">
             <h3 style="align-self:flex-start; margin-bottom:15px">👛 Web3 Cüzdan</h3>
-            <div style="width:100%; background:var(--card); border:1px solid var(--ton); border-radius:20px; padding:20px;">
-                <p style="font-size:11px; font-weight:800; opacity:0.6">TON BALANCE</p>
-                <div style="font-size:28px; font-weight:900; margin:10px 0; display:flex; align-items:center; gap:10px">
-                    <img src="https://cryptologos.cc/logos/toncoin-ton-logo.svg" width="30">
-                    <span id="ton-balance">0.000000</span>
+            <div style="width:100%; background:var(--card); border-radius:20px; padding:20px; border:1px solid var(--ton)">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px">
+                    <img src="https://cryptologos.cc/logos/toncoin-ton-logo.svg" width="25">
+                    <b>TON Balance</b>
                 </div>
-                <button onclick="openModal()" style="width:100%; background:var(--ton); color:white; padding:15px; border-radius:15px; border:none; font-weight:900;">WITHDRAW TON</button>
+                <div style="font-size:24px; font-weight:900; margin-bottom:15px" id="wallet-ton">0.000000</div>
+                <button onclick="openModal()" style="width:100%; background:var(--ton); color:#fff; border:none; padding:12px; border-radius:12px; font-weight:900;">WITHDRAW</button>
             </div>
         </section>
     </div>
 
     <nav class="nav">
-        <div class="nav-item active" onclick="tab('exchange', this)">📈<br>BORSA</div>
-        <div class="nav-item" onclick="tab('mine', this)">⛏️<br>MADEN</div>
-        <div class="nav-item" onclick="tab('wallet', this)">👛<br>CÜZDAN</div>
+        <div class="nav-link active" onclick="navigate('exchange', this)"><span>📈</span><b>Borsa</b></div>
+        <div class="nav-link" onclick="navigate('mine', this)"><span>⛏️</span><b>Maden</b></div>
+        <div class="nav-link" onclick="navigate('wallet', this)"><span>👛</span><b>Cüzdan</b></div>
     </nav>
 
     <script>
-        let state = {
-            balance: 0, tonBalance: 0, profit: 0, energy: 1000,
-            cards: [
-                { id: 1, name: "Instagram Sayfası", emoji: "📸", profit: 25, price: 250, lvl: 0 },
-                { id: 2, name: "YouTube Kanalı", emoji: "🎥", profit: 80, price: 1000, lvl: 0 },
-                { id: 3, name: "TikTok Viral", emoji: "🎵", profit: 220, price: 3500, lvl: 0 },
-                { id: 4, name: "Twitter (X) Botu", emoji: "🐦", profit: 550, price: 10000, lvl: 0 },
-                { id: 5, name: "Telegram Kanalı", emoji: "💎", profit: 1200, price: 25000, lvl: 0 },
-                { id: 6, name: "Discord Sunucusu", emoji: "👾", profit: 2800, price: 65000, lvl: 0 },
-                { id: 7, name: "Reddit Topluluğu", emoji: "👽", profit: 6000, price: 150000, lvl: 0 },
-                { id: 8, name: "Kripto Madeni", emoji: "⛏️", profit: 14000, price: 400000, lvl: 0 },
-                { id: 9, name: "TON Validator", emoji: "⛓️", profit: 32000, price: 1000000, lvl: 0 },
-                { id: 10, name: "Web3 Ajansı", emoji: "🌐", profit: 75000, price: 2500000, lvl: 0 },
-                { id: 11, name: "NFT Koleksiyonu", emoji: "🖼️", profit: 160000, price: 6000000, lvl: 0 },
-                { id: 12, name: "Metaverse Arsa", emoji: "🏝️", profit: 350000, price: 15000000, lvl: 0 },
-                { id: 13, name: "Borsa Lisansı", emoji: "🏢", profit: 800000, price: 40000000, lvl: 0 },
-                { id: 14, name: "Elon Musk Tweet", emoji: "🚀", profit: 2000000, price: 120000000, lvl: 0 },
-                { id: 15, name: "AnimeBTC Bankası", emoji: "🏦", profit: 5000000, price: 500000000, lvl: 0 }
-            ]
+        const CARDS = [
+            { id: 0, name: "Instagram Bot", profit: 15, price: 50 },
+            { id: 1, name: "YouTube Kids", profit: 40, price: 200 },
+            { id: 2, name: "TikTok Dance", profit: 120, price: 800 },
+            { id: 3, name: "Twitter X", profit: 300, price: 2500 },
+            { id: 4, name: "Telegram Group", profit: 750, price: 8000 },
+            { id: 5, name: "Discord Nitro", profit: 1800, price: 22000 },
+            { id: 6, name: "NFT Monkey", profit: 4500, price: 65000 },
+            { id: 7, name: "TON Mining", profit: 11000, price: 180000 },
+            { id: 8, name: "Web3 Agency", profit: 25000, price: 450000 },
+            { id: 9, name: "Crypto Whale", profit: 60000, price: 1200000 },
+            { id: 10, name: "Bank Boss", profit: 150000, price: 3500000 },
+            { id: 11, name: "Elon's Friend", profit: 400000, price: 10000000 },
+            { id: 12, name: "Anime BTC CEO", profit: 1000000, price: 30000000 },
+            { id: 13, name: "Mars Colony", profit: 3000000, price: 100000000 },
+            { id: 14, name: "Galactic Bank", profit: 10000000, price: 500000000 }
+        ];
+
+        let user = {
+            balance: 0,
+            ton: 0,
+            profit: 0,
+            energy: 1000,
+            lvls: Array(15).fill(0)
         };
 
-        // KAZANÇ DÖNGÜSÜ
+        // Otomatik Kazanç: Saniyede 10 kez çalışır
         setInterval(() => {
-            if (state.profit > 0) {
-                let gain = (state.profit / 3600000) * 100;
-                state.balance += gain;
-                state.tonBalance += (gain * 0.01); 
+            if (user.profit > 0) {
+                let gain = user.profit / 36000;
+                user.balance += gain;
+                user.ton += gain * 0.01; // %1 TON birikir
                 updateUI();
             }
         }, 100);
 
         function updateUI() {
-            document.getElementById('top-balance').innerText = state.balance.toLocaleString('tr-TR', {minimumFractionDigits: 3});
-            document.getElementById('ton-balance').innerText = state.tonBalance.toFixed(6);
-            document.getElementById('top-profit').innerText = `🚀 +${state.profit.toLocaleString()}/sa`;
-            document.getElementById('energy-cur').innerText = Math.floor(state.energy);
-            document.getElementById('energy-fill').style.width = (state.energy/1000*100) + "%";
+            document.getElementById('stat-balance').innerText = user.balance.toLocaleString('tr-TR', {maximumFractionDigits: 3});
+            document.getElementById('stat-profit').innerText = `🚀 +${user.profit.toLocaleString()}/sa`;
+            document.getElementById('wallet-ton').innerText = user.ton.toFixed(6);
+            document.getElementById('energy-val').innerText = Math.floor(user.energy);
+            document.getElementById('energy-bar').style.width = (user.energy/10)+'%';
         }
 
-        function renderMine() {
-            const m = document.getElementById('mine-market');
-            m.innerHTML = state.cards.map(c => {
-                let cost = Math.floor(c.price * Math.pow(1.6, c.lvl));
+        function renderGrid() {
+            const grid = document.getElementById('mine-grid');
+            grid.innerHTML = CARDS.map((c, i) => {
+                let lvl = user.lvls[i];
+                // Fiyat her levelda %40, Gelir %30 artar
+                let currentPrice = Math.floor(c.price * Math.pow(1.4, lvl));
+                let currentProfit = Math.floor(c.profit * Math.pow(1.3, lvl));
                 return `
-                    <div class="card" onclick="buyCard(${c.id})">
-                        <div class="card-lvl">Lv ${c.lvl}</div>
-                        <div class="card-emoji">${c.emoji}</div>
+                    <div class="card" onclick="buy(${i})">
+                        <div class="card-lvl">Lv ${lvl}</div>
                         <div class="card-name">${c.name}</div>
-                        <div class="card-profit">+${c.profit.toLocaleString()}/sa</div>
-                        <div class="card-price">💰 ${cost.toLocaleString()}</div>
+                        <div class="card-profit">+${currentProfit.toLocaleString()}/sa</div>
+                        <div class="card-price">💰 ${currentPrice.toLocaleString()}</div>
                     </div>
                 `;
             }).join('');
         }
 
-        function buyCard(id) {
-            const c = state.cards.find(x => x.id === id);
-            let cost = Math.floor(c.price * Math.pow(1.6, c.lvl));
-            if(state.balance >= cost) {
-                state.balance -= cost;
-                state.profit += c.profit;
-                c.lvl++;
-                renderMine();
+        function buy(i) {
+            let lvl = user.lvls[i];
+            let price = Math.floor(CARDS[i].price * Math.pow(1.4, lvl));
+            let profitIncrease = (lvl === 0) ? CARDS[i].profit : Math.floor(CARDS[i].profit * Math.pow(1.3, lvl)) - Math.floor(CARDS[i].profit * Math.pow(1.3, lvl-1));
+
+            if (user.balance >= price) {
+                user.balance -= price;
+                user.profit += profitIncrease;
+                user.lvls[i]++;
+                renderGrid();
                 updateUI();
-            } else { showToast("Bakiye Yetersiz!", "#ff4d94"); }
+                showToast("Yatırım Yapıldı! 📈");
+            } else {
+                showToast("Bakiye Yetersiz! ❌", "#ff4d94");
+            }
         }
 
-        // MODAL & WITHDRAW
+        // Tıklama
+        document.getElementById('tap-btn').onclick = (e) => {
+            if (user.energy >= 1) {
+                user.balance += 1;
+                user.energy -= 1;
+                updateUI();
+            }
+        };
+
+        // Enerji Yenileme
+        setInterval(() => { if(user.energy < 1000) { user.energy++; updateUI(); } }, 1500);
+
+        // Modal & Diğer
+        function navigate(id, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+            if(id === 'mine') renderGrid();
+        }
+
         function openModal() { document.getElementById('withdraw-modal').style.display = 'flex'; }
         function closeModal() { document.getElementById('withdraw-modal').style.display = 'none'; }
-        function setMax() { document.getElementById('amount-input').value = state.tonBalance.toFixed(2); updateReceive(); }
-        function updateReceive() {
-            let val = parseFloat(document.getElementById('amount-input').value) || 0;
-            document.getElementById('receive-val').innerText = val > 0.3 ? (val - 0.3).toFixed(2) : 0;
-        }
-        document.getElementById('amount-input').oninput = updateReceive;
-
-        function processWithdraw() {
-            let amount = parseFloat(document.getElementById('amount-input').value);
-            if(amount >= 1.5 && amount <= state.tonBalance) {
-                state.tonBalance -= amount;
+        function setMax() { document.getElementById('w-amt').value = user.ton.toFixed(2); }
+        function confirmWithdraw() {
+            let amt = parseFloat(document.getElementById('w-amt').value);
+            if(amt >= 1.5 && amt <= user.ton) {
+                user.ton -= amt;
                 closeModal();
-                showToast("Talebiniz İletildi! ✅");
+                showToast("TON Çekildi! 💎");
                 updateUI();
             } else { showToast("Hatalı Miktar!", "#ff4d94"); }
         }
-
-        function tab(id, el) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            el.classList.add('active');
-            if(id === 'mine') renderMine();
+        function showToast(m, c="#0088cc") {
+            let t = document.getElementById('toast');
+            t.innerText = m; t.style.background = c; t.style.display = 'block';
+            setTimeout(() => t.style.display='none', 2000);
         }
 
-        document.getElementById('tap-target').onclick = () => {
-            if(state.energy >= 1) { state.balance += 1; state.energy -= 1; updateUI(); }
-        };
-
-        function showToast(msg, color = "#0088cc") {
-            const t = document.getElementById('toast');
-            t.innerText = msg; t.style.background = color; t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 3000);
-        }
-
-        setInterval(() => { if(state.energy < 1000) state.energy++; updateUI(); }, 1500);
         updateUI();
     </script>
 </body>
