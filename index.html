@@ -3,197 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AnimeBTC - Coin Flow Edition</title>
+    <title>AnimeBTC - Ultimate Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0b0d0f; --panel: #1c1f24; --panel-br: #2d3139; --gray: #85868b;
-            --gold: #f3ba2f; --ton-blue: #0088cc; --ton-soft: #96ccf3; --red: #ff4d4d; --green: #69c54a;
+            --gold: #f3ba2f; --ton-blue: #0088cc; --red: #ff4d4d; --green: #69c54a;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: #fff; overflow: hidden; height: 100vh; user-select: none; touch-action: manipulation; }
+        body { background: var(--bg); color: #fff; overflow: hidden; height: 100vh; user-select: none; }
 
-        /* --- HOŞGELDİN POPUP --- */
-        #welcome-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 50000; display: none; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .gift-box { background: #1c1f24; border: 2px solid var(--gold); padding: 40px 30px; border-radius: 30px; max-width: 350px; width: 100%; box-shadow: 0 0 50px rgba(243, 186, 47, 0.2); animation: popScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes popScale { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .btn-claim { background: var(--gold); color: #000; width: 100%; padding: 18px; border-radius: 20px; border: none; font-weight: 800; font-size: 18px; cursor: pointer; }
+        /* --- TOAST & MODAL --- */
+        #toast { position: fixed; top: 15%; left: 50%; transform: translateX(-50%); background: var(--red); color: #fff; padding: 12px 25px; border-radius: 50px; font-weight: 800; z-index: 100000; display: none; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 50000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .m-box { background: var(--panel); border: 1px solid var(--panel-br); padding: 30px; border-radius: 25px; width: 100%; text-align: center; }
 
-        /* --- UI ELEMENTS --- */
-        .top-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 15px; }
-        .s-box { background: #15181c; border-radius: 12px; padding: 10px 5px; text-align: center; border: 1px solid #24282e; }
-        .s-label { font-size: 9px; font-weight: 700; margin-bottom: 4px; color: var(--gray); }
-        .s-val { font-size: 11px; font-weight: 900; }
+        /* --- HEADER STATS --- */
+        .header { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; }
+        .stat-card { background: #15181c; border-radius: 12px; padding: 8px; text-align: center; border: 1px solid #24282e; }
+        .stat-label { font-size: 9px; color: var(--gray); font-weight: 700; margin-bottom: 2px; }
+        .stat-val { font-size: 11px; font-weight: 900; }
 
-        .balance-hero { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 10px 0; font-size: 44px; font-weight: 900; position: relative; }
-        .gold-coin-main { width: 42px; height: 42px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #000; font-size: 26px; z-index: 1001; }
+        .balance-section { text-align: center; margin: 10px 0; }
+        .coin-display { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 40px; font-weight: 900; }
+        .main-coin { width: 40px; height: 40px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #000; font-size: 22px; }
 
-        .viewport { height: calc(100vh - 180px); overflow-y: auto; padding: 0 15px 100px; scrollbar-width: none; }
-        .page { display: none; padding-top: 10px; }
-        .page.active { display: block; animation: fadeIn 0.3s ease; }
+        /* --- VIEWPORT --- */
+        .viewport { height: calc(100vh - 190px); overflow-y: auto; padding: 0 15px 120px; }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- CLICKER --- */
-        .lvl-bar { background: #24282e; height: 10px; border-radius: 10px; width: 100%; margin-bottom: 30px; overflow: hidden; }
-        .lvl-fill { background: #3b3e44; height: 100%; width: 10%; transition: width 0.3s; }
-        .clicker-zone { display: flex; justify-content: center; position: relative; margin-top: 20px; }
-        .circle-outer { width: 300px; height: 300px; background: radial-gradient(circle, #3d44af 0%, #111429 70%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 60px rgba(61, 68, 175, 0.4); cursor: pointer; transition: transform 0.05s; }
-        .circle-outer:active { transform: scale(0.92); }
-        .hamster-img { width: 270px; height: 270px; border-radius: 50%; background: url('photo_2026-01-01_19-32-18.jpg') center/cover; border: 5px solid #1a1d3d; pointer-events: none; }
+        /* --- EXCHANGE PAGE --- */
+        .click-area { display: flex; justify-content: center; margin-top: 40px; position: relative; }
+        .circle { width: 280px; height: 280px; background: radial-gradient(circle, #3d44af 0%, #111429 80%); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.05s; box-shadow: 0 0 50px rgba(61, 68, 175, 0.4); }
+        .circle:active { transform: scale(0.95); }
+        .hamster { width: 250px; height: 250px; border-radius: 50%; background: url('photo_2026-01-01_19-32-18.jpg') center/cover; border: 5px solid #1a1d3d; pointer-events: none; }
 
-        /* --- COIN FLY ANIMATION --- */
-        .coin-particle {
-            position: fixed;
-            width: 25px;
-            height: 25px;
-            background: var(--gold);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #000;
-            font-weight: 900;
-            font-size: 14px;
-            box-shadow: 0 0 10px rgba(243, 186, 47, 0.5);
-            transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
-        }
+        /* --- MINE & COMMON CARDS --- */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        .card { background: var(--panel); border-radius: 15px; padding: 15px; border: 1px solid var(--panel-br); position: relative; }
+        .card h4 { font-size: 13px; margin: 8px 0 4px; }
+        .card .desc { font-size: 10px; color: var(--gray); }
+        .card .cost { color: var(--gold); font-weight: 800; font-size: 13px; margin-top: 10px; display: flex; align-items: center; gap: 4px; }
 
-        /* --- HUD & NAV --- */
-        .hud { position: fixed; bottom: 105px; width: 100%; padding: 0 30px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 95px; background: var(--panel); display: flex; justify-content: space-around; padding: 10px 5px 30px; border-top: 1px solid var(--panel-br); z-index: 1000; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--gray); font-size: 10px; font-weight: 700; flex: 1; cursor: pointer; }
-        .nav-item.active { color: #fff; }
+        /* --- ANIMATIONS --- */
+        .fly-coin { position: fixed; width: 20px; height: 20px; background: var(--gold); border-radius: 50%; z-index: 9999; pointer-events: none; transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1); }
+        .tap-pop { position: absolute; font-weight: 900; font-size: 30px; color: white; pointer-events: none; animation: tapPop 0.7s forwards; }
+        @keyframes tapPop { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
 
-        .pop { position: absolute; font-weight: 900; font-size: 38px; color: #fff; pointer-events: none; animation: popUp 0.8s ease-out forwards; z-index: 10000; }
-        @keyframes popUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-160px); } }
+        /* --- NAV & FOOTER --- */
+        .footer-info { position: fixed; bottom: 100px; width: 100%; padding: 0 25px; display: flex; justify-content: space-between; align-items: center; }
+        .nav { position: fixed; bottom: 0; width: 100%; height: 90px; background: var(--panel); display: flex; justify-content: space-around; padding: 10px 5px 25px; border-top: 1px solid var(--panel-br); }
+        .nav-btn { flex: 1; text-align: center; color: var(--gray); font-size: 10px; font-weight: 700; cursor: pointer; }
+        .nav-btn.active { color: #fff; }
+        .nav-btn i { font-size: 22px; display: block; margin-bottom: 4px; font-style: normal; }
     </style>
 </head>
 <body>
 
-    <div id="welcome-modal">
-        <div class="gift-box">
-            <div style="font-size: 60px; margin-bottom: 20px;">🎁</div>
-            <div style="font-size: 24px; font-weight: 900; margin-bottom: 10px; color: var(--gold);">Hoşgeldin Hediyesi!</div>
-            <p style="color: var(--gray); font-size: 14px; margin-bottom: 25px;">10.000 puan bakiyene eklendi!</p>
-            <button class="btn-claim" onclick="claimGift()">Puanları Al</button>
+    <div id="toast">Yetersiz Bakiye!</div>
+
+    <div id="gift-modal" class="modal">
+        <div class="m-box">
+            <h1 style="font-size: 50px;">🎁</h1>
+            <h2 style="color:var(--gold); margin:10px 0;">Hoşgeldin!</h2>
+            <p style="color:var(--gray); font-size:14px; margin-bottom:20px;">10.000 Puan Hediyeni Al!</p>
+            <button onclick="claimGift()" style="background:var(--gold); color:#000; width:100%; padding:15px; border-radius:15px; border:none; font-weight:900; cursor:pointer;">PUANLARI AL</button>
         </div>
     </div>
 
-    <div class="top-stats">
-        <div class="s-box"><div class="s-label">Tap Earn</div><div class="s-val">🟡 +<span id="ui-pwr">1</span></div></div>
-        <div class="s-box"><div class="s-label">Level</div><div class="s-val">Bronze</div></div>
-        <div class="s-box"><div class="s-label">Profit/h</div><div class="s-val">🟡 +<span id="ui-prof">0</span></div></div>
+    <div class="header">
+        <div class="stat-card"><div class="stat-label">TAP EARN</div><div class="stat-val">🟡 +<span id="pwr">1</span></div></div>
+        <div class="stat-card"><div class="stat-label">LVL UP</div><div class="stat-val">50.0K</div></div>
+        <div class="stat-card"><div class="stat-label">PROFIT/H</div><div class="stat-val" style="color:var(--green)">🟡 +<span id="prof">0</span></div></div>
     </div>
 
-    <div class="balance-hero" id="balance-container">
-        <div class="gold-coin-main" id="target-coin">$</div>
-        <span id="ui-bal">0</span>
+    <div class="balance-section">
+        <div class="coin-display"><div class="main-coin" id="target-coin">$</div><span id="bal">0</span></div>
     </div>
 
     <div class="viewport">
         <section id="p-exchange" class="page active">
-            <div class="lvl-bar"><div class="lvl-fill" id="ui-lvl"></div></div>
-            <div class="clicker-zone">
-                <div class="circle-outer" onmousedown="handleTap(event)" ontouchstart="handleTap(event)">
-                    <div class="hamster-img"></div>
+            <div class="click-area">
+                <div class="circle" onmousedown="tap(event)" ontouchstart="tap(event)">
+                    <div class="hamster"></div>
                 </div>
             </div>
         </section>
-        </div>
 
-    <div class="hud">
-        <div style="font-weight:900;">⚡ <span id="ui-en">500</span> / <span id="ui-max-en">500</span></div>
-        <div style="color:var(--gold); font-weight:900;">🚀 Boost</div>
+        <section id="p-mine" class="page">
+            <h3 style="margin:10px 0;">Mining Cards</h3>
+            <div class="grid" id="mine-grid"></div>
+        </section>
+
+        <section id="p-friends" class="page" style="text-align:center; padding-top:20px;">
+            <h2>Arkadaşlarını Davet Et!</h2>
+            <p style="color:var(--gray); margin:15px 0;">Her arkadaşın için 5.000 puan kazan.</p>
+            <div class="card" style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="text-align:left;">
+                    <h4>Referans Linkin</h4>
+                    <p class="desc">t.me/animebtc_bot?start=123</p>
+                </div>
+                <button onclick="showToast('Link Kopyalandı!')" style="background:var(--ton-blue); color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:700;">Kopyala</button>
+            </div>
+        </section>
+
+        <section id="p-boost" class="page">
+            <h3 style="margin:10px 0;">Ücretsiz Boostlar</h3>
+            <div class="card" onclick="fullEn()" style="margin-bottom:15px; display:flex; align-items:center; gap:15px;">
+                <div style="font-size:30px;">⚡</div>
+                <div><h4>Full Energy</h4><p class="desc"><span id="f-avail">6</span>/6 Hakkın Var</p></div>
+            </div>
+            <h3 style="margin:10px 0;">Geliştirmeler</h3>
+            <div class="grid">
+                <div class="card" onclick="upMt()">
+                    <div>👆</div><h4>Multitap</h4>
+                    <p class="desc">Lvl <span id="mt-lvl">1</span></p>
+                    <p class="cost">🟡 <span id="mt-cost">500</span></p>
+                </div>
+                <div class="card" onclick="upEl()">
+                    <div>🔋</div><h4>Energy Limit</h4>
+                    <p class="desc">Lvl <span id="el-lvl">1</span></p>
+                    <p class="cost">🟡 <span id="el-cost">1000</span></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="p-airdrop" class="page" style="text-align:center; padding-top:30px;">
+            <div style="font-size:60px;">💎</div>
+            <h2>Airdrop Tasks</h2>
+            <p style="color:var(--gray); font-size:12px; margin-top:10px;">Görevleri tamamla, listelemeye hak kazan!</p>
+            <div class="card" style="margin-top:20px; text-align:left; border-left:4px solid var(--ton-blue);">
+                <h4>Cüzdanını Bağla</h4>
+                <p class="desc">TON cüzdanını bağlayarak ödeme al.</p>
+                <button onclick="showToast('Cüzdan Servisi Yakında!')" style="width:100%; margin-top:10px; background:var(--ton-blue); color:white; border:none; padding:12px; border-radius:10px; font-weight:800;">Connect Wallet</button>
+            </div>
+        </section>
     </div>
 
-    <nav class="bottom-nav">
-        <div class="nav-item active"><i>🏛️</i>Exchange</div>
-        <div class="nav-item"><i>⛏️</i>Mine</div>
-        <div class="nav-item"><i>🚀</i>Boost</div>
-        <div class="nav-item"><i>💎</i>Airdrop</div>
+    <div class="footer-info">
+        <div style="font-weight:900; font-size:18px;">⚡ <span id="en">500</span> / <span id="max-en">500</span></div>
+        <div style="color:var(--gold); font-weight:800; cursor:pointer;" onclick="nav('boost', 'btn-boost')">BOOST 🚀</div>
+    </div>
+
+    <nav class="nav">
+        <div class="nav-btn active" onclick="nav('exchange', this)"><i>🏛️</i>Exchange</div>
+        <div class="nav-btn" onclick="nav('mine', this)"><i>⛏️</i>Mine</div>
+        <div class="nav-btn" onclick="nav('friends', this)"><i>👥</i>Friends</div>
+        <div id="btn-boost" class="nav-btn" onclick="nav('boost', this)"><i>🚀</i>Boost</div>
+        <div class="nav-btn" onclick="nav('airdrop', this)"><i>💎</i>Airdrop</div>
     </nav>
 
     <script>
         let game = {
             bal: 0, en: 500, maxEn: 500, pwr: 1, prof: 0,
-            levels: { multitap: 1, energyLimit: 1 }
+            fAvail: 6,
+            lvls: { mt: 1, el: 1, mine: [0, 0, 0, 0] }
         };
 
+        const MINE_DATA = [
+            {n:"Youtube Gold", p:100, c:1000, i:"🎬"},
+            {n:"Token Sale", p:500, c:6000, i:"🪙"},
+            {n:"Mining Farm", p:2000, c:30000, i:"🏭"},
+            {n:"Hamster CEO", p:10000, c:150000, i:"🐹"}
+        ];
+
         window.onload = () => {
-            if (!localStorage.getItem('animebtc_first_join')) {
-                document.getElementById('welcome-modal').style.display = 'flex';
-            }
-            updateUI();
+            if(!localStorage.getItem('user_started')) document.getElementById('gift-modal').style.display='flex';
+            renderMine(); updateUI();
         };
 
         function claimGift() {
-            game.bal += 10000;
-            localStorage.setItem('animebtc_first_join', 'true');
-            document.getElementById('welcome-modal').style.display = 'none';
-            updateUI();
+            game.bal += 10000; localStorage.setItem('user_started','true');
+            document.getElementById('gift-modal').style.display='none';
+            showToast("10.000 Hediye Alındı!", "var(--green)"); updateUI();
         }
 
-        function handleTap(e) {
-            if (e.type === 'touchstart') e.preventDefault();
+        function showToast(m, c = "var(--red)") {
+            const t = document.getElementById('toast');
+            t.innerText = m; t.style.background = c; t.style.display = 'block';
+            setTimeout(() => t.style.display='none', 2000);
+        }
+
+        function nav(id, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('p-' + id).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
+            if(typeof el === 'string') document.getElementById(el).classList.add('active');
+            else el.classList.add('active');
+        }
+
+        function tap(e) {
+            if(e.type==='touchstart') e.preventDefault();
             if(game.en >= game.pwr) {
-                game.bal += game.pwr;
-                game.en -= game.pwr;
-                
-                let x = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-                let y = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-                
-                spawnPop(x, y);
-                spawnCoinFly(x, y); // Yeni uçan coin efekti
-                updateUI();
-            }
+                game.bal += game.pwr; game.en -= game.pwr;
+                let x = e.type==='touchstart'?e.touches[0].clientX : e.clientX;
+                let y = e.type==='touchstart'?e.touches[0].clientY : e.clientY;
+                fx(x, y); updateUI();
+            } else showToast("Enerji Bitti!");
         }
 
-        function spawnPop(x, y) {
-            let f = document.createElement('div'); f.className='pop'; f.innerText=`+${game.pwr}`;
-            f.style.left=(x-20)+'px'; f.style.top=(y-40)+'px';
-            document.body.appendChild(f); setTimeout(()=>f.remove(), 800);
-        }
+        function fx(x, y) {
+            const p = document.createElement('div'); p.className='tap-pop'; p.innerText=`+${game.pwr}`;
+            p.style.left=(x-15)+'px'; p.style.top=(y-30)+'px';
+            document.body.appendChild(p); setTimeout(()=>p.remove(), 700);
 
-        // --- COIN UÇURMA FONKSİYONU ---
-        function spawnCoinFly(startX, startY) {
-            const coin = document.createElement('div');
-            coin.className = 'coin-particle';
-            coin.innerText = '$';
-            coin.style.left = startX + 'px';
-            coin.style.top = startY + 'px';
-            document.body.appendChild(coin);
-
-            // Hedef bakiye simgesinin koordinatlarını al
+            const c = document.createElement('div'); c.className='fly-coin';
+            c.style.left=x+'px'; c.style.top=y+'px';
+            document.body.appendChild(c);
             const target = document.getElementById('target-coin').getBoundingClientRect();
-            const targetX = target.left + (target.width / 2) - 12;
-            const targetY = target.top + (target.height / 2) - 12;
-
-            // Animasyonu başlat
             setTimeout(() => {
-                coin.style.transform = `translate(${targetX - startX}px, ${targetY - startY}px) scale(0.5)`;
-                coin.style.opacity = '0.7';
-            }, 10);
+                c.style.transform=`translate(${target.left - x + 10}px, ${target.top - y + 10}px) scale(0.2)`;
+                c.style.opacity='0';
+            }, 50);
+            setTimeout(()=>c.remove(), 600);
+        }
 
-            // Varınca yok et ve bakiye parlaması yap
-            setTimeout(() => {
-                coin.remove();
-                document.getElementById('ui-bal').style.transform = 'scale(1.1)';
-                setTimeout(() => document.getElementById('ui-bal').style.transform = 'scale(1)', 100);
-            }, 600);
+        function renderMine() {
+            document.getElementById('mine-grid').innerHTML = MINE_DATA.map((item, i) => {
+                let cost = Math.floor(item.c * Math.pow(1.5, game.lvls.mine[i]));
+                return `<div class="card" onclick="buyMine(${i})">
+                    <div style="font-size:20px;">${item.i}</div>
+                    <h4>${item.n}</h4>
+                    <p class="desc">Profit: +${item.p}/h</p>
+                    <p class="cost">🟡 ${cost.toLocaleString()}</p>
+                </div>`;
+            }).join('');
+        }
+
+        function buyMine(i) {
+            let cost = Math.floor(MINE_DATA[i].c * Math.pow(1.5, game.lvls.mine[i]));
+            if(game.bal >= cost) {
+                game.bal -= cost; game.prof += MINE_DATA[i].p; game.lvls.mine[i]++;
+                renderMine(); updateUI();
+            } else showToast("Yetersiz Bakiye!");
+        }
+
+        function upMt() {
+            let c = Math.floor(500 * Math.pow(2, game.lvls.mt - 1));
+            if(game.bal >= c) { game.bal -= c; game.lvls.mt++; game.pwr++; updateUI(); } 
+            else showToast("Yetersiz Bakiye!");
+        }
+
+        function upEl() {
+            let c = Math.floor(1000 * Math.pow(2, game.lvls.el - 1));
+            if(game.bal >= c) { game.bal -= c; game.lvls.el++; game.maxEn += 500; game.en = game.maxEn; updateUI(); } 
+            else showToast("Yetersiz Bakiye!");
+        }
+
+        function fullEn() {
+            if(game.fAvail > 0) { game.en = game.maxEn; game.fAvail--; updateUI(); showToast("Full Enerji!", "var(--green)"); }
+            else showToast("Hakkın Bitti!");
         }
 
         function updateUI() {
-            document.getElementById('ui-bal').innerText = Math.floor(game.bal).toLocaleString();
-            document.getElementById('ui-en').innerText = Math.floor(game.en);
-            document.getElementById('ui-max-en').innerText = game.maxEn;
-            document.getElementById('ui-pwr').innerText = game.pwr;
-            document.getElementById('ui-lvl').style.width = Math.min((game.bal/50000)*100, 100)+'%';
+            document.getElementById('bal').innerText = Math.floor(game.bal).toLocaleString();
+            document.getElementById('en').innerText = Math.floor(game.en);
+            document.getElementById('max-en').innerText = game.maxEn;
+            document.getElementById('pwr').innerText = game.pwr;
+            document.getElementById('prof').innerText = game.prof.toLocaleString();
+            document.getElementById('mt-lvl').innerText = game.lvls.mt;
+            document.getElementById('mt-cost').innerText = Math.floor(500 * Math.pow(2, game.lvls.mt - 1)).toLocaleString();
+            document.getElementById('el-lvl').innerText = game.lvls.el;
+            document.getElementById('el-cost').innerText = Math.floor(1000 * Math.pow(2, game.lvls.el - 1)).toLocaleString();
+            document.getElementById('f-avail').innerText = game.fAvail;
         }
 
         setInterval(() => {
             if(game.en < game.maxEn) game.en = Math.min(game.en + 1, game.maxEn);
+            if(game.prof > 0) game.bal += game.prof / 3600;
             updateUI();
         }, 1000);
     </script>
