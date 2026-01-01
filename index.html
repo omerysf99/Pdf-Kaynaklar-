@@ -1,189 +1,354 @@
+kodun içine ton görseli yerine bir anime kızı ekle (kod yaz)
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONIX - Anime GS Miner</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --gs-yellow: #fdb912;
-            --gs-red: #8e1018;
-            --ton-blue: #0098ea;
-            --bg-deep: #0a0a0a;
-            --glass: rgba(255, 255, 255, 0.05);
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TONIX - Ultimate Miner PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* --- DİNAMİK TASARIM MİMARİSİ --- */
+        :root {
+            --primary: #0098ea;
+            --primary-dark: #007bbd;
+            --primary-glow: rgba(0, 152, 234, 0.5);
+            --shib: #f06522;
+            --bg-deep: #050505;
+            --card-glass: rgba(18, 18, 18, 0.9);
+            --white: #ffffff;
+            --gray: #888;
+        }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        body {
-            background-color: var(--bg-deep);
-            color: white;
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        body {
+            background-color: var(--bg-deep);
+            color: var(--white);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
 
-        #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
 
-        /* --- ÜST PANEL --- */
-        .header { width: 100%; max-width: 400px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        
-        .card {
-            background: var(--glass);
-            border: 1px solid rgba(253, 185, 18, 0.2);
-            border-radius: 20px; padding: 15px;
-            display: flex; justify-content: space-between; align-items: center;
-            backdrop-filter: blur(10px);
-        }
+        /* --- ÜST PANEL: CÜZDANLAR --- */
+        .header-section { width: 100%; max-width: 440px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        
+        .wallet-card {
+            background: var(--card-glass);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 24px; padding: 18px;
+            display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
 
-        .info-row { display: flex; align-items: center; gap: 12px; }
-        .info-row img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--gs-yellow); object-fit: cover; }
-        
-        .btn-send {
-            background: white; color: black; border: none;
-            padding: 5px 15px; border-radius: 10px; font-weight: 800; font-size: 12px;
-        }
+        .asset-info { display: flex; align-items: center; gap: 14px; }
+        .asset-info img { width: 42px; height: 42px; border-radius: 50%; border: 2px solid rgba(0,152,234,0.2); }
+        .asset-info div b { display: block; font-size: 15px; letter-spacing: 0.3px; }
+        .asset-info div span { font-size: 11px; color: var(--gray); font-weight: 600; }
 
-        /* --- ANIME MERKEZ ÜSSÜ --- */
-        .engine-container {
-            position: relative; width: 300px; height: 300px;
-            margin: 20px 0; display: flex; justify-content: center; align-items: center;
-        }
+        .asset-balance { text-align: right; }
+        .asset-balance h3 { font-size: 18px; font-weight: 900; margin-bottom: 4px; }
+        .btn-send {
+            background: var(--white); color: #000; border: none;
+            padding: 6px 16px; border-radius: 12px; font-size: 12px; font-weight: 900;
+            cursor: pointer; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .btn-send:hover { transform: scale(1.1); background: var(--primary); color: white; }
 
-        .orbit {
-            position: absolute; border-radius: 50%;
-            border: 2px solid transparent;
-            animation: rotate 8s linear infinite;
-        }
-        .orbit-1 { width: 260px; height: 260px; border-top: 3px solid var(--gs-red); border-bottom: 3px solid var(--gs-yellow); }
+        /* --- ANA MOTOR (LOGO) --- */
+        .core-engine {
+            position: relative; width: 320px; height: 320px;
+            margin: 10px 0; display: flex; justify-content: center; align-items: center;
+        }
 
-        .main-avatar {
-            width: 160px; height: 160px; z-index: 10;
-            border-radius: 50%; border: 4px solid var(--gs-yellow);
-            box-shadow: 0 0 30px rgba(253, 185, 18, 0.4);
-            object-fit: cover;
-            animation: float 3s ease-in-out infinite;
-        }
+        .orbit-ring {
+            position: absolute; border: 2px solid transparent; border-radius: 50%;
+            animation: rotate 10s linear infinite;
+        }
+        .orbit-1 { width: 260px; height: 260px; border-top: 2px solid var(--primary); border-bottom: 2px solid var(--primary); opacity: 0.4; }
+        .orbit-2 { width: 220px; height: 220px; border-left: 2px solid var(--primary); border-right: 2px solid var(--primary); animation-duration: 6s; opacity: 0.6; }
 
-        /* --- MADENCİLİK TABLOSU --- */
-        .stats { text-align: center; margin-bottom: 30px; }
-        #mining-val {
-            font-size: 42px; font-weight: 900; font-family: 'JetBrains Mono';
-            background: linear-gradient(to bottom, #fff, var(--gs-yellow));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .badge {
-            background: rgba(253, 185, 18, 0.1); color: var(--gs-yellow);
-            padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: 800;
-        }
+        .main-logo {
+            width: 140px; z-index: 10;
+            filter: drop-shadow(0 0 30px var(--primary-glow));
+            animation: pulse-core 4s ease-in-out infinite;
+        }
 
-        /* --- KONTROLLER --- */
-        .actions { width: 100%; max-width: 360px; display: flex; gap: 10px; padding: 0 20px; }
-        .btn {
-            flex: 1; padding: 18px; border-radius: 18px; border: none;
-            font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.2s;
-        }
-        .btn-claim { background: var(--gs-red); color: white; box-shadow: 0 5px 0 #5e0a0f; }
-        .btn-boost { background: var(--gs-yellow); color: black; box-shadow: 0 5px 0 #c28d0e; }
-        .btn:active { transform: translateY(3px); box-shadow: none; }
+        /* --- MADENCİLİK BİLGİLERİ --- */
+        .stats-box { text-align: center; margin-bottom: 30px; }
+        #mining-display {
+            font-size: 50px; font-weight: 900; font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(180deg, #fff 0%, #999 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .speed-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(0, 255, 128, 0.1); color: #00ff80;
+            padding: 8px 24px; border-radius: 50px; font-weight: 900;
+            font-size: 15px; border: 1px solid rgba(0, 255, 128, 0.2); margin-top: 10px;
+        }
 
-        /* --- TAB BAR --- */
-        .nav {
-            position: fixed; bottom: 0; width: 100%; height: 70px;
-            background: #000; display: flex; justify-content: space-around; align-items: center;
-            border-top: 1px solid #222;
-        }
-        .nav-item { color: #555; font-size: 10px; font-weight: 700; text-align: center; }
-        .nav-item.active { color: var(--gs-yellow); }
+        /* --- AKSİYON BUTONLARI --- */
+        .controls { width: 100%; max-width: 400px; display: flex; gap: 15px; padding: 0 20px; }
+        .btn-main {
+            flex: 1; padding: 20px; border-radius: 22px; border: none;
+            font-size: 17px; font-weight: 900; cursor: pointer; transition: 0.2s;
+        }
+        .btn-claim { background: var(--primary); color: white; box-shadow: 0 6px 0 var(--primary-dark); }
+        .btn-boost { background: var(--white); color: black; box-shadow: 0 6px 0 #bbb; }
+        .btn-main:active { transform: translateY(4px); box-shadow: none; }
 
-        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-    </style>
+        /* --- PROFESYONEL WITHDRAW MODAL --- */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 2000;
+        }
+        .modal {
+            background: var(--white); color: #111; width: 92%; max-width: 420px;
+            border-radius: 40px; padding: 35px; text-align: center;
+            animation: modal-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-top-info { display: flex; gap: 12px; margin-bottom: 30px; }
+        .stat-chip {
+            flex: 1; background: #f4f8fb; padding: 15px; border-radius: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 900;
+        }
+        .input-wrap { text-align: left; margin-bottom: 18px; position: relative; }
+        .input-wrap label { font-size: 12px; font-weight: 900; color: #aaa; margin-left: 10px; text-transform: uppercase; }
+        .input-field {
+            width: 100%; padding: 18px; border-radius: 20px; border: 2.5px solid #f0f0f0;
+            background: #fafafa; font-size: 16px; font-weight: 700; margin-top: 6px; transition: 0.3s;
+        }
+        .input-field:focus { border-color: var(--primary); background: #fff; }
+        .max-trigger { position: absolute; right: 20px; bottom: 18px; color: var(--primary); font-weight: 900; cursor: pointer; }
+
+        .fee-info { background: #fdfdfd; padding: 20px; border-radius: 20px; text-align: left; font-size: 12px; color: #888; border: 1px solid #f0f0f0; }
+        .fee-info b { color: #111; float: right; }
+
+        .btn-submit {
+            width: 100%; padding: 22px; border-radius: 22px; border: none;
+            background: #daeeff; color: white; font-size: 18px; font-weight: 900;
+            margin-top: 20px; cursor: pointer; transition: 0.3s;
+        }
+        .btn-submit.ready { background: var(--primary); box-shadow: 0 10px 25px var(--primary-glow); }
+
+        /* --- ALT TAB BAR --- */
+        .tab-bar {
+            position: fixed; bottom: 0; width: 100%; height: 85px;
+            background: rgba(12, 12, 12, 0.98); backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex; justify-content: space-around; align-items: center; z-index: 1000;
+        }
+        .tab-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #555; text-decoration: none; cursor: pointer; }
+        .tab-btn.active { color: var(--primary); }
+        .tab-btn svg { width: 26px; height: 26px; fill: currentColor; }
+        .tab-btn span { font-size: 11px; font-weight: 700; }
+
+        /* --- ANIMASYONLAR --- */
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulse-core { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px var(--primary-glow)); } 50% { transform: scale(1.1); filter: drop-shadow(0 0 40px var(--primary-glow)); } }
+        @keyframes modal-up { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* --- REKLAM KATMANI --- */
+        #ad-box { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; }
+    </style>
 </head>
 <body>
 
-    <canvas id="bg-canvas"></canvas>
+    <canvas id="bg-canvas"></canvas>
 
-    <div class="header">
-        <div class="card">
-            <div class="info-row">
-                <img src="https://raw.githubusercontent.com/666-st/img/main/gs_anime.png" onerror="this.src='https://i.ibb.co/Xfq9r9p/anime-girl.png'">
-                <div><b>TON Miner</b><br><span style="font-size: 10px; color: #aaa;">GS SPECIAL EDITION</span></div>
-            </div>
-            <button class="btn-send" onclick="alert('Sending TON...')">SEND</button>
-        </div>
-    </div>
+    <div class="header-section">
+        <div class="wallet-card">
+            <div class="asset-info">
+                <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png">
+                <div><b>Toncoin</b><span>TON NETWORK</span></div>
+            </div>
+            <div class="asset-balance">
+                <h3 id="top-ton">0.0000</h3>
+                <button class="btn-send" onclick="openModal('TON')">Send</button>
+            </div>
+        </div>
+        <div class="wallet-card">
+            <div class="asset-info">
+                <img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png">
+                <div><b>Shiba Inu</b><span>SHIB TOKEN</span></div>
+            </div>
+            <div class="asset-balance">
+                <h3 id="top-shib" style="color:var(--shib)">0</h3>
+                <button class="btn-send" onclick="openModal('SHIB')">Send</button>
+            </div>
+        </div>
+    </div>
 
-    <div class="engine-container">
-        <div class="orbit orbit-1"></div>
-        <img src="https://raw.githubusercontent.com/666-st/img/main/gs_anime.png" class="main-avatar" onerror="this.src='https://i.ibb.co/Xfq9r9p/anime-girl.png'">
-    </div>
+    <div class="core-engine">
+        <div class="orbit-ring orbit-1"></div>
+        <div class="orbit-ring orbit-2"></div>
+        <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="main-logo">
+    </div>
 
-    <div class="stats">
-        <div id="mining-val">0.000000000</div>
-        <div class="badge">Speed: 2.50 TH/s 🔥</div>
-    </div>
+    <div class="stats-box">
+        <div id="mining-display">0.000000000</div>
+        <div class="speed-pill" id="speed-tag">1.00 TH/s ⚡</div>
+    </div>
 
-    <div class="actions">
-        <button class="btn btn-claim" onclick="claim()">CLAIM</button>
-        <button class="btn btn-boost" onclick="boost()">BOOST</button>
-    </div>
+    <div class="controls">
+        <button class="btn-main btn-claim" onclick="runClaim()">CLAIM REWARD</button>
+        <button class="btn-main btn-boost" onclick="runBoost()">BOOST</button>
+    </div>
 
-    <div class="nav">
-        <div class="nav-item active">MINING</div>
-        <div class="nav-item">FRIENDS</div>
-        <div class="nav-item">TASKS</div>
-        <div class="nav-item">WALLET</div>
-    </div>
+    <div class="overlay" id="withdraw-overlay">
+        <div class="modal">
+            <div class="modal-top-info">
+                <div class="stat-chip"><img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" width="20"> <span id="m-stat-ton">0.00</span></div>
+                <div class="stat-chip" style="background:#fff5f0;"><img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png" width="20"> <span id="m-stat-shib">0</span></div>
+            </div>
 
-    <script>
-        let balance = 0;
-        let speed = 1.0;
+            <h2 style="font-weight: 900; margin-bottom: 5px; font-size: 24px;">Send <span id="m-target">TON</span></h2>
+            <p style="color: #888; font-size: 14px; margin-bottom: 25px;">Personal wallet transfer is secure.</p>
 
-        // Kazım Simülasyonu
-        setInterval(() => {
-            balance += 0.000000013 * speed;
-            document.getElementById('mining-val').innerText = balance.toFixed(9);
-        }, 100);
+            <div class="input-wrap">
+                <label>Wallet Address</label>
+                <input type="text" class="input-field" placeholder="Paste address here..." id="inp-addr">
+            </div>
 
-        function claim() {
-            alert(balance.toFixed(4) + " TON Claimed!");
-            balance = 0;
-        }
+            <div class="input-wrap">
+                <label>Amount</label>
+                <input type="number" class="input-field" placeholder="0.00" id="inp-amt" oninput="liveCheck()">
+                <span class="max-trigger" onclick="pushMax()">MAX</span>
+            </div>
 
-        function boost() {
-            speed += 0.5;
-            alert("Speed Upgraded! New Speed: " + speed.toFixed(2));
-        }
+            <div class="fee-info">
+                Network Fee: <b id="m-fee">0.3 TON</b><br>
+                Minimum Limit: <b id="m-min">1.5 TON</b><br>
+                You will receive: <b id="m-receive" style="color:#000; font-size:15px;">0 TON</b>
+            </div>
 
-        // Arka Plan Yıldız Efekti
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        let stars = Array(100).fill().map(() => ({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            size: Math.random() * 2
-        }));
+            <button class="btn-submit" id="btn-final" onclick="executeWithdraw()">SEND NOW</button>
+            <p style="margin-top: 20px; color: #ccc; cursor: pointer; font-weight: 800;" onclick="closeModal()">CLOSE</p>
+        </div>
+    </div>
 
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "white";
-            stars.forEach(s => {
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
-                ctx.fill();
-                s.y -= 0.2;
-                if(s.y < 0) s.y = canvas.height;
-            });
-            requestAnimationFrame(animate);
-        }
-        animate();
-    </script>
+    <div id="ad-box">
+        <h1 style="color: var(--primary); font-size: 40px; font-weight: 900;">TONIX ADS</h1>
+        <p id="ad-timer" style="color: #555; font-size: 18px; margin-top: 10px;">Loading rewards in 5s...</p>
+        <div style="width: 200px; height: 4px; background: #222; margin-top: 40px; border-radius: 10px; overflow: hidden;">
+            <div id="ad-progress" style="width: 0%; height: 100%; background: var(--primary); transition: 5s linear;"></div>
+        </div>
+    </div>
+
+    <nav class="tab-bar">
+        <div class="tab-btn"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
+        <div class="tab-btn"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Friends</span></div>
+        <div class="tab-btn active"><svg viewBox="0 0 24 24"><path d="M13 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V9l-7-7zm0 1.5L18.5 9H13V3.5z"/></svg><span>Mining</span></div>
+        <div class="tab-btn"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l3.59-3.58L17 12l-5 5z"/></svg><span>Tasks</span></div>
+        <div class="tab-btn"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg><span>Help</span></div>
+    </nav>
+
+    <script>
+        /* --- CORE SYSTEM VARIABLES --- */
+        let db = { ton: 0, shib: 0, mining: 0, speed: 1.0, activeCoin: 'TON' };
+        const baseIncome = 0.00001157;
+
+        // --- BG PARTICLES ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let particles = [];
+        for(let i=0; i<60; i++) particles.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, r: Math.random()*1.5, v: Math.random()*0.4});
+        
+        function drawBg() {
+            ctx.clearRect(0,0,canvas.width, canvas.height); ctx.fillStyle = "rgba(255,255,255,0.15)";
+            particles.forEach(p => {
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+                p.y -= p.v; if(p.y < -10) p.y = canvas.height + 10;
+            });
+            requestAnimationFrame(drawBg);
+        }
+        drawBg();
+
+        // --- MINING ENGINE ---
+        setInterval(() => {
+            db.mining += (baseIncome / 10) * db.speed;
+            document.getElementById('mining-display').innerText = db.mining.toFixed(9);
+            document.getElementById('top-ton').innerText = db.ton.toFixed(4);
+            document.getElementById('top-shib').innerText = db.shib.toLocaleString();
+        }, 100);
+
+        function runClaim() {
+            if(db.mining < 0.019) return alert("Min 0.019 TON required to claim!");
+            const ad = document.getElementById('ad-box');
+            ad.style.display = 'flex';
+            document.getElementById('ad-progress').style.width = '100%';
+            let sec = 5;
+            let timer = setInterval(() => {
+                sec--;
+                document.getElementById('ad-timer').innerText = `Loading rewards in ${sec}s...`;
+                if(sec <= 0) {
+                    clearInterval(timer);
+                    db.ton += db.mining;
+                    db.shib += Math.floor(db.mining * 500000);
+                    db.mining = 0;
+                    ad.style.display = 'none';
+                    document.getElementById('ad-progress').style.width = '0%';
+                }
+            }, 1000);
+        }
+
+        function runBoost() {
+            db.speed += 0.20;
+            document.getElementById('speed-tag').innerText = db.speed.toFixed(2) + " TH/s ⚡";
+        }
+
+        // --- WITHDRAWAL LOGIC ---
+        function openModal(coin) {
+            db.activeCoin = coin;
+            document.getElementById('m-target').innerText = coin;
+            document.getElementById('m-stat-ton').innerText = db.ton.toFixed(2);
+            document.getElementById('m-stat-shib').innerText = db.shib.toLocaleString();
+            
+            const fee = coin === 'TON' ? "0.3 TON" : "50,000 SHIB";
+            const min = coin === 'TON' ? "1.5 TON" : "500,000 SHIB";
+            document.getElementById('m-fee').innerText = fee;
+            document.getElementById('m-min').innerText = min;
+            
+            document.getElementById('withdraw-overlay').style.display = 'flex';
+            liveCheck();
+        }
+
+        function closeModal() { document.getElementById('withdraw-overlay').style.display = 'none'; }
+
+        function pushMax() {
+            document.getElementById('inp-amt').value = db.activeCoin === 'TON' ? db.ton.toFixed(2) : db.shib;
+            liveCheck();
+        }
+
+        function liveCheck() {
+            let val = parseFloat(document.getElementById('inp-amt').value) || 0;
+            let feeNum = db.activeCoin === 'TON' ? 0.3 : 50000;
+            let minNum = db.activeCoin === 'TON' ? 1.5 : 500000;
+            let bal = db.activeCoin === 'TON' ? db.ton : db.shib;
+            
+            let rec = val > feeNum ? (val - feeNum) : 0;
+            document.getElementById('m-receive').innerText = rec.toLocaleString() + " " + db.activeCoin;
+            
+            let btn = document.getElementById('btn-final');
+            if(val >= minNum && val <= bal) btn.classList.add('ready');
+            else btn.classList.remove('ready');
+        }
+
+        function executeWithdraw() {
+            if(!document.getElementById('btn-final').classList.contains('ready')) return;
+            let val = parseFloat(document.getElementById('inp-amt').value);
+            if(db.activeCoin === 'TON') db.ton -= val; else db.shib -= val;
+            alert("Transfer request received! Processing via Blockchain...");
+            closeModal();
+        }
+    </script>
 </body>
 </html>
