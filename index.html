@@ -2,184 +2,147 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONIX - Elite Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Miner - Advent Calendar</title>
     <style>
-        :root {
-            --primary: #0098ea;
-            --primary-glow: rgba(0, 152, 234, 0.6);
-            --bg: #050505;
-            --card: #111111;
-            --white: #ffffff;
-            --shib: #f06522;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
         
-        body {
-            background-color: var(--bg);
-            color: var(--white);
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding-bottom: 90px; /* Menü barı için alt boşluk */
-        }
+        #wallet { background: #2c3e50; padding: 20px 40px; border-radius: 15px; box-shadow: 0 0 20px rgba(0,255,128,0.2); text-align: center; margin-bottom: 30px; border: 2px solid #27ae60; }
+        #balance { font-size: 36px; color: #2ecc71; font-weight: bold; font-family: 'Courier New', Courier, monospace; }
 
-        #starfield { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        /* Advent Calendar Bölümü */
+        #advent-section { width: 90%; max-width: 600px; background: #34495e; padding: 20px; border-radius: 15px; text-align: center; }
+        h2 { margin-top: 0; color: #e74c3c; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+        .day-box { background: #c0392b; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: bold; position: relative; }
+        .day-box:hover { background: #e74c3c; transform: scale(1.05); }
+        .day-box.opened { background: #27ae60; cursor: default; }
 
-        /* --- ÜST PANEL --- */
-        .top-nav { width: 100%; max-width: 420px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .balance-card {
-            background: var(--card); border-radius: 20px; padding: 15px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            border: 1px solid #1e1e1e;
-        }
-        .asset-box { display: flex; align-items: center; gap: 12px; }
-        .asset-box img { width: 38px; height: 38px; border-radius: 50%; }
-        .asset-meta b { display: block; font-size: 14px; }
-        .asset-meta span { font-size: 10px; color: #666; font-weight: bold; }
-        .amt-box { text-align: right; }
-        .amt-box h3 { font-size: 16px; font-weight: 900; }
-        .btn-send-mini {
-            margin-top: 5px; background: #fff; color: #000; border: none; 
-            padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 900; cursor: pointer;
-        }
+        /* Captcha Penceresi */
+        #verify-window { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 350px; background: white; color: black; z-index: 100; box-shadow: 0 0 50px rgba(0,0,0,0.8); border-radius: 5px; }
+        .v-header { background: #4a90e2; color: white; padding: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 5px; }
+        .tile { height: 100px; background: #ddd; cursor: pointer; }
+        .tile img { width: 100%; height: 100%; object-fit: cover; }
+        .tile.selected { border: 4px solid #4a90e2; box-sizing: border-box; opacity: 0.7; }
 
-        /* --- MERKEZİ LOGO --- */
-        .engine-container {
-            position: relative; width: 300px; height: 300px;
-            margin: 10px 0; display: flex; justify-content: center; align-items: center;
-        }
-        .energy-orbit {
-            position: absolute; width: 240px; height: 240px;
-            border: 2px solid transparent; border-top: 2px solid var(--primary);
-            border-radius: 50%; animation: spin 3s linear infinite;
-        }
-        .core-logo { width: 130px; z-index: 10; filter: drop-shadow(0 0 25px var(--primary-glow)); animation: pulse 4s infinite; }
-
-        /* --- COUNTER --- */
-        .mining-section { text-align: center; margin-bottom: 25px; }
-        #mining-val { font-size: 48px; font-weight: 900; font-family: 'JetBrains Mono', monospace; }
-        .speed-badge {
-            background: rgba(0, 255, 128, 0.1); color: #00ff80; padding: 8px 20px;
-            border-radius: 50px; font-weight: 900; font-size: 14px; margin-top: 10px; display: inline-block;
-        }
-
-        /* --- ACTIONS --- */
-        .action-grid { display: flex; gap: 12px; width: 100%; max-width: 380px; padding: 0 15px; }
-        .btn-hero { flex: 1; padding: 18px; border-radius: 18px; border: none; font-size: 15px; font-weight: 900; cursor: pointer; }
-        .btn-claim { background: var(--primary); color: #fff; box-shadow: 0 5px 0 #006da8; }
-        .btn-boost { background: #fff; color: #000; box-shadow: 0 5px 0 #bbb; }
-
-        /* --- TAB BAR (MENÜ LOGOLARI) --- */
-        .tab-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 75px;
-            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(15px);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex; justify-content: space-around; align-items: center;
-            padding: 0 10px; z-index: 100;
-        }
-        .tab-item {
-            display: flex; flex-direction: column; align-items: center; gap: 5px;
-            color: #555; cursor: pointer; transition: 0.3s;
-        }
-        .tab-item.active { color: var(--primary); }
-        .tab-item svg { width: 24px; height: 24px; fill: currentColor; }
-        .tab-item span { font-size: 10px; font-weight: 700; }
-
-        /* --- MODAL & AD --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .withdraw-modal { background: var(--white); color: #111; width: 90%; max-width: 380px; border-radius: 30px; padding: 25px; text-align: center; }
-        #ad-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        /* Reklam */
+        #ad-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 200; flex-direction: column; align-items: center; justify-content: center; }
+        #ad-btn { display: none; padding: 15px 30px; background: #f1c40f; color: black; border: none; cursor: pointer; font-weight: bold; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-    <canvas id="starfield"></canvas>
+    <div id="wallet">
+        <div style="font-size: 14px; color: #bdc3c7;">TOPLAM KAZANÇ</div>
+        <div id="balance">$0.000000000</div>
+    </div>
 
-    <div class="top-nav">
-        <div class="balance-card">
-            <div class="asset-box">
-                <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png">
-                <div class="asset-meta"><b>Toncoin</b><span>TON NETWORK</span></div>
+    <div id="advent-section">
+        <h2>🎄 Advent Calendar 🎁</h2>
+        <p>Her gün bir kutu aç ve Captcha çözerek ödülünü katla!</p>
+        <div class="calendar-grid" id="calendar-grid">
             </div>
-            <div class="amt-box"><h3 id="bal-ton">0.0000</h3><button class="btn-send-mini" onclick="openW('TON')">Send</button></div>
-        </div>
-        <div class="balance-card">
-            <div class="asset-box">
-                <img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png">
-                <div class="asset-meta"><b>Shiba Inu</b><span>SHIB TOKEN</span></div>
-            </div>
-            <div class="amt-box"><h3 id="bal-shib" style="color:var(--shib)">0</h3><button class="btn-send-mini" onclick="openW('SHIB')">Send</button></div>
-        </div>
     </div>
 
-    <div class="engine-container">
-        <div class="energy-orbit"></div>
-        <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="core-logo">
+    <div id="verify-window">
+        <div class="v-header">Şunu içeren resimleri seç:<br><b id="target-label">Gemi</b></div>
+        <div class="grid" id="captcha-grid"></div>
+        <div style="padding:10px; text-align:right;"><button onclick="verifyCaptcha()" style="background:#4a90e2; color:white; border:none; padding:8px 15px; cursor:pointer;">Doğrula</button></div>
     </div>
 
-    <div class="mining-section">
-        <div id="mining-val">0.000000000</div>
-        <div class="speed-badge" id="speed-display">1.00 TH/s ⚡</div>
-    </div>
-
-    <div class="action-grid">
-        <button class="btn-hero btn-claim" onclick="initClaim()">CLAIM REWARD</button>
-        <button class="btn-hero btn-boost" onclick="boost()">BOOST SPEED</button>
-    </div>
-
-    <div class="tab-bar">
-        <div class="tab-item">
-            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            <span>Home</span>
-        </div>
-        <div class="tab-item">
-            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-            <span>Friends</span>
-        </div>
-        <div class="tab-item active">
-            <svg viewBox="0 0 24 24" style="filter: drop-shadow(0 0 5px var(--primary-glow));"><path d="M13 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V9l-7-7zm0 1.5L18.5 9H13V3.5z"/></svg>
-            <span>Mining</span>
-        </div>
-        <div class="tab-item">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l3.59-3.58L17 12l-5 5z"/></svg>
-            <span>Tasks</span>
-        </div>
-        <div class="tab-item">
-            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
-            <span>Help</span>
-        </div>
+    <div id="ad-screen">
+        <h2 style="color:#f1c40f">HEDİYE REKLAMI</h2>
+        <p id="ad-timer">Bonus bakiye için 5 saniye bekle...</p>
+        <button id="ad-btn" onclick="collectBonus()">BONUSU AL</button>
     </div>
 
     <script>
-        let user = { ton: 0, shib: 0, mining: 0, speed: 1.0 };
+        let balance = 0.0;
+        // Her milisaniyede (salise mantığı) eklenecek miktar: 0.000000116
+        const tickAmount = 0.000000116; 
+
+        // 1. OTOMATİK KAZANÇ DÖNGÜSÜ
         setInterval(() => {
-            user.mining += (0.00000115 * user.speed);
-            document.getElementById('mining-val').innerText = user.mining.toFixed(9);
-            document.getElementById('bal-ton').innerText = user.ton.toFixed(4);
-            document.getElementById('bal-shib').innerText = user.shib.toLocaleString();
-        }, 100);
+            balance += tickAmount;
+            document.getElementById('balance').innerText = "$" + balance.toFixed(9);
+        }, 10); // Her 10 milisaniyede bir çalışır (salise hızı)
 
-        function boost() {
-            user.speed += 0.15;
-            document.getElementById('speed-display').innerText = user.speed.toFixed(2) + " TH/s ⚡";
+        // 2. ADVENT CALENDAR OLUŞTURMA
+        const calendar = document.getElementById('calendar-grid');
+        for (let i = 1; i <= 12; i++) {
+            const day = document.createElement('div');
+            day.className = 'day-box';
+            day.innerText = i;
+            day.onclick = function() { if(!this.classList.contains('opened')) startCaptcha(this); };
+            calendar.appendChild(day);
         }
 
-        function initClaim() {
-            if(user.mining < 0.01) return alert("Min 0.01 TON!");
-            user.ton += user.mining; user.shib += Math.floor(user.mining * 500000); user.mining = 0;
-            alert("Claimed!");
+        // 3. CAPTCHA MANTIĞI
+        let currentDayBox = null;
+        function startCaptcha(box) {
+            currentDayBox = box;
+            const grid = document.getElementById('captcha-grid');
+            grid.innerHTML = "";
+            document.getElementById('verify-window').style.display = 'block';
+
+            // Rastgele 9 resim (3 doğru)
+            let correctSpots = [0, 1, 2, 3, 4, 5, 6, 7, 8].sort(() => Math.random() - 0.5).slice(0, 3);
+            for (let i = 0; i < 9; i++) {
+                const isCorrect = correctSpots.includes(i);
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.dataset.correct = isCorrect;
+                const img = document.createElement('img');
+                img.src = `https://picsum.photos/seed/${Math.random()}/100/100`;
+                tile.appendChild(img);
+                tile.onclick = function() { this.classList.toggle('selected'); };
+                grid.appendChild(tile);
+            }
         }
-        
-        // Canvas ve Modal fonksiyonları bir önceki kod ile aynıdır...
+
+        function verifyCaptcha() {
+            const tiles = document.querySelectorAll('.tile');
+            let success = true;
+            tiles.forEach(t => {
+                if ((t.classList.contains('selected')) !== (t.dataset.correct === "true")) success = false;
+            });
+
+            if (success) {
+                document.getElementById('verify-window').style.display = 'none';
+                showAd();
+            } else {
+                alert("Hatalı seçim! Tekrar dene.");
+                startCaptcha(currentDayBox);
+            }
+        }
+
+        // 4. REKLAM VE ÖDÜL
+        function showAd() {
+            const screen = document.getElementById('ad-screen');
+            const timer = document.getElementById('ad-timer');
+            const btn = document.getElementById('ad-btn');
+            screen.style.display = 'flex';
+            btn.style.display = 'none';
+            let sec = 5;
+            
+            const count = setInterval(() => {
+                sec--;
+                timer.innerText = `Bonus bakiye için ${sec} saniye bekle...`;
+                if(sec <= 0) {
+                    clearInterval(count);
+                    timer.innerText = "Reklam bitti!";
+                    btn.style.display = 'block';
+                }
+            }, 1000);
+        }
+
+        function collectBonus() {
+            balance += 0.05; // Advent hediyesi olarak 0.05$ bonus
+            currentDayBox.classList.add('opened');
+            currentDayBox.innerText = "✅";
+            document.getElementById('ad-screen').style.display = 'none';
+        }
     </script>
 </body>
 </html>
