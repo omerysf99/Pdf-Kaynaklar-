@@ -3,267 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONIX - Anime Miner Pro</title>
+    <title>TONIX - Anime GS Miner</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #0098ea;
-            --primary-glow: rgba(0, 152, 234, 0.5);
-            --shib: #f06522;
-            --bg-deep: #050505;
-            --card-glass: rgba(18, 18, 18, 0.9);
-            --white: #ffffff;
+            --gs-yellow: #fdb912;
+            --gs-red: #8e1018;
+            --ton-blue: #0098ea;
+            --bg-deep: #0a0a0a;
+            --glass: rgba(255, 255, 255, 0.05);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body {
             background-color: var(--bg-deep);
-            color: var(--white);
+            color: white;
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            padding-bottom: 100px;
         }
 
-        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
 
-        /* --- ÜST PANEL: CÜZDANLAR --- */
-        .header-section { width: 100%; max-width: 440px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        /* --- ÜST PANEL --- */
+        .header { width: 100%; max-width: 400px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
         
-        .wallet-card {
-            background: var(--card-glass);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 24px; padding: 18px;
+        .card {
+            background: var(--glass);
+            border: 1px solid rgba(253, 185, 18, 0.2);
+            border-radius: 20px; padding: 15px;
             display: flex; justify-content: space-between; align-items: center;
             backdrop-filter: blur(10px);
         }
 
-        .asset-info { display: flex; align-items: center; gap: 14px; }
-        .asset-info img { width: 42px; height: 42px; border-radius: 12px; border: 2px solid var(--primary); object-fit: cover; }
-        .asset-info div b { display: block; font-size: 15px; }
-        .asset-info div span { font-size: 11px; color: #888; font-weight: 600; }
-
-        .asset-balance { text-align: right; }
-        .asset-balance h3 { font-size: 18px; font-weight: 900; margin-bottom: 4px; }
+        .info-row { display: flex; align-items: center; gap: 12px; }
+        .info-row img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--gs-yellow); object-fit: cover; }
+        
         .btn-send {
-            background: var(--white); color: #000; border: none;
-            padding: 6px 16px; border-radius: 12px; font-size: 12px; font-weight: 900;
-            cursor: pointer; transition: 0.2s;
-        }
-        .btn-send:active { transform: scale(0.9); }
-
-        /* --- ANA MOTOR (ANIME KIZI) --- */
-        .core-engine {
-            position: relative; width: 320px; height: 320px;
-            margin: 10px 0; display: flex; justify-content: center; align-items: center;
+            background: white; color: black; border: none;
+            padding: 5px 15px; border-radius: 10px; font-weight: 800; font-size: 12px;
         }
 
-        .orbit-ring {
-            position: absolute; border: 2px solid transparent; border-radius: 50%;
-            animation: rotate 10s linear infinite;
+        /* --- ANIME MERKEZ ÜSSÜ --- */
+        .engine-container {
+            position: relative; width: 300px; height: 300px;
+            margin: 20px 0; display: flex; justify-content: center; align-items: center;
         }
-        .orbit-1 { width: 280px; height: 280px; border-top: 2px solid #ff0000; border-bottom: 2px solid #ffcc00; opacity: 0.6; }
 
-        .main-anime {
-            width: 180px; height: 180px; z-index: 10;
-            border-radius: 50%;
-            border: 4px solid #ffcc00;
-            box-shadow: 0 0 40px rgba(255, 204, 0, 0.4);
-            animation: pulse-core 4s ease-in-out infinite;
+        .orbit {
+            position: absolute; border-radius: 50%;
+            border: 2px solid transparent;
+            animation: rotate 8s linear infinite;
+        }
+        .orbit-1 { width: 260px; height: 260px; border-top: 3px solid var(--gs-red); border-bottom: 3px solid var(--gs-yellow); }
+
+        .main-avatar {
+            width: 160px; height: 160px; z-index: 10;
+            border-radius: 50%; border: 4px solid var(--gs-yellow);
+            box-shadow: 0 0 30px rgba(253, 185, 18, 0.4);
             object-fit: cover;
+            animation: float 3s ease-in-out infinite;
         }
 
-        /* --- STATS --- */
-        .stats-box { text-align: center; margin-bottom: 30px; }
-        #mining-display {
-            font-size: 45px; font-weight: 900; font-family: 'JetBrains Mono', monospace;
-            background: linear-gradient(180deg, #fff 0%, #aaa 100%);
+        /* --- MADENCİLİK TABLOSU --- */
+        .stats { text-align: center; margin-bottom: 30px; }
+        #mining-val {
+            font-size: 42px; font-weight: 900; font-family: 'JetBrains Mono';
+            background: linear-gradient(to bottom, #fff, var(--gs-yellow));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .speed-pill {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(255, 204, 0, 0.1); color: #ffcc00;
-            padding: 8px 24px; border-radius: 50px; font-weight: 900; margin-top: 10px;
+        .badge {
+            background: rgba(253, 185, 18, 0.1); color: var(--gs-yellow);
+            padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: 800;
         }
 
-        /* --- BUTONLAR --- */
-        .controls { width: 100%; max-width: 400px; display: flex; gap: 15px; padding: 0 20px; }
-        .btn-main {
-            flex: 1; padding: 20px; border-radius: 22px; border: none;
-            font-size: 17px; font-weight: 900; cursor: pointer;
+        /* --- KONTROLLER --- */
+        .actions { width: 100%; max-width: 360px; display: flex; gap: 10px; padding: 0 20px; }
+        .btn {
+            flex: 1; padding: 18px; border-radius: 18px; border: none;
+            font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.2s;
         }
-        .btn-claim { background: var(--primary); color: white; box-shadow: 0 6px 0 #007bbd; }
-        .btn-boost { background: #ffcc00; color: black; box-shadow: 0 6px 0 #ccaa00; }
-        .btn-main:active { transform: translateY(4px); box-shadow: none; }
-
-        /* --- WITHDRAW MODAL --- */
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 2000;
-        }
-        .modal {
-            background: var(--white); color: #111; width: 92%; max-width: 420px;
-            border-radius: 40px; padding: 35px; text-align: center;
-            animation: modal-up 0.4s ease-out;
-        }
-        .modal-top-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 3px solid #ffcc00; }
-        .input-wrap { text-align: left; margin-bottom: 18px; position: relative; }
-        .input-field {
-            width: 100%; padding: 18px; border-radius: 20px; border: 2px solid #f0f0f0;
-            background: #fafafa; font-size: 16px; font-weight: 700; outline: none;
-        }
-        .btn-submit {
-            width: 100%; padding: 22px; border-radius: 22px; border: none;
-            background: #ccc; color: white; font-size: 18px; font-weight: 900; cursor: pointer;
-        }
-        .btn-submit.ready { background: var(--primary); box-shadow: 0 10px 20px var(--primary-glow); }
+        .btn-claim { background: var(--gs-red); color: white; box-shadow: 0 5px 0 #5e0a0f; }
+        .btn-boost { background: var(--gs-yellow); color: black; box-shadow: 0 5px 0 #c28d0e; }
+        .btn:active { transform: translateY(3px); box-shadow: none; }
 
         /* --- TAB BAR --- */
-        .tab-bar {
-            position: fixed; bottom: 0; width: 100%; height: 85px;
-            background: rgba(12, 12, 12, 0.98); backdrop-filter: blur(20px);
-            display: flex; justify-content: space-around; align-items: center; z-index: 1000;
+        .nav {
+            position: fixed; bottom: 0; width: 100%; height: 70px;
+            background: #000; display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid #222;
         }
-        .tab-btn { display: flex; flex-direction: column; align-items: center; color: #555; font-size: 11px; font-weight: 700; gap: 5px; }
-        .tab-btn.active { color: var(--primary); }
-        .tab-btn svg { width: 24px; height: 24px; fill: currentColor; }
+        .nav-item { color: #555; font-size: 10px; font-weight: 700; text-align: center; }
+        .nav-item.active { color: var(--gs-yellow); }
 
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes pulse-core { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        @keyframes modal-up { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
 </head>
 <body>
 
     <canvas id="bg-canvas"></canvas>
 
-    <div class="header-section">
-        <div class="wallet-card">
-            <div class="asset-info">
-                <img src="https://i.ibb.co/Xfq9r9p/anime-girl.png" id="anime-ico"> <div><b>Toncoin</b><span>GS EDITION</span></div>
+    <div class="header">
+        <div class="card">
+            <div class="info-row">
+                <img src="https://raw.githubusercontent.com/666-st/img/main/gs_anime.png" onerror="this.src='https://i.ibb.co/Xfq9r9p/anime-girl.png'">
+                <div><b>TON Miner</b><br><span style="font-size: 10px; color: #aaa;">GS SPECIAL EDITION</span></div>
             </div>
-            <div class="asset-balance">
-                <h3 id="top-ton">0.0000</h3>
-                <button class="btn-send" onclick="openModal('TON')">Send</button>
-            </div>
-        </div>
-        <div class="wallet-card">
-            <div class="asset-info">
-                <img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png">
-                <div><b>Shiba Inu</b><span>SHIB TOKEN</span></div>
-            </div>
-            <div class="asset-balance">
-                <h3 id="top-shib" style="color:var(--shib)">0</h3>
-                <button class="btn-send" onclick="openModal('SHIB')">Send</button>
-            </div>
+            <button class="btn-send" onclick="alert('Sending TON...')">SEND</button>
         </div>
     </div>
 
-    <div class="core-engine">
-        <div class="orbit-ring orbit-1"></div>
-        <img src="https://i.ibb.co/Xfq9r9p/anime-girl.png" class="main-anime"> </div>
-
-    <div class="stats-box">
-        <div id="mining-display">0.000000000</div>
-        <div class="speed-pill" id="speed-tag">1.00 TH/s ⚡</div>
+    <div class="engine-container">
+        <div class="orbit orbit-1"></div>
+        <img src="https://raw.githubusercontent.com/666-st/img/main/gs_anime.png" class="main-avatar" onerror="this.src='https://i.ibb.co/Xfq9r9p/anime-girl.png'">
     </div>
 
-    <div class="controls">
-        <button class="btn-main btn-claim" onclick="runClaim()">CLAIM REWARD</button>
-        <button class="btn-main btn-boost" onclick="runBoost()">BOOST</button>
+    <div class="stats">
+        <div id="mining-val">0.000000000</div>
+        <div class="badge">Speed: 2.50 TH/s 🔥</div>
     </div>
 
-    <div class="overlay" id="withdraw-overlay">
-        <div class="modal">
-            <img src="https://i.ibb.co/Xfq9r9p/anime-girl.png" class="modal-top-img">
-            <h2 style="font-weight: 900; margin-bottom: 20px;">Send <span id="m-target">TON</span></h2>
-            
-            <div class="input-wrap">
-                <input type="text" class="input-field" placeholder="Wallet Address" id="inp-addr">
-            </div>
-            <div class="input-wrap">
-                <input type="number" class="input-field" placeholder="Amount" id="inp-amt" oninput="liveCheck()">
-            </div>
-
-            <div style="text-align: left; font-size: 12px; color: #888; margin-bottom: 20px; padding: 10px; background: #f9f9f9; border-radius: 10px;">
-                Fee: <b id="m-fee">0.3 TON</b> | Min: <b id="m-min">1.5 TON</b>
-            </div>
-
-            <button class="btn-submit" id="btn-final" onclick="executeWithdraw()">SEND NOW</button>
-            <p style="margin-top: 20px; color: #aaa; cursor: pointer; font-weight: 800;" onclick="closeModal()">CANCEL</p>
-        </div>
+    <div class="actions">
+        <button class="btn btn-claim" onclick="claim()">CLAIM</button>
+        <button class="btn btn-boost" onclick="boost()">BOOST</button>
     </div>
 
-    <nav class="tab-bar">
-        <div class="tab-btn"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
-        <div class="tab-btn active"><svg viewBox="0 0 24 24"><path d="M13 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V9l-7-7zm0 1.5L18.5 9H13V3.5z"/></svg><span>Mining</span></div>
-        <div class="tab-btn"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l3.59-3.58L17 12l-5 5z"/></svg><span>Tasks</span></div>
-    </nav>
+    <div class="nav">
+        <div class="nav-item active">MINING</div>
+        <div class="nav-item">FRIENDS</div>
+        <div class="nav-item">TASKS</div>
+        <div class="nav-item">WALLET</div>
+    </div>
 
     <script>
-        let db = { ton: 10.5, shib: 5000000, mining: 0, speed: 1.0, activeCoin: 'TON' };
+        let balance = 0;
+        let speed = 1.0;
 
-        // Mining Loop
+        // Kazım Simülasyonu
         setInterval(() => {
-            db.mining += 0.000001 * db.speed;
-            document.getElementById('mining-display').innerText = db.mining.toFixed(9);
-            document.getElementById('top-ton').innerText = db.ton.toFixed(4);
-            document.getElementById('top-shib').innerText = db.shib.toLocaleString();
+            balance += 0.000000013 * speed;
+            document.getElementById('mining-val').innerText = balance.toFixed(9);
         }, 100);
 
-        function runClaim() {
-            db.ton += db.mining;
-            db.shib += Math.floor(db.mining * 1000000);
-            db.mining = 0;
-            alert("Rewards claimed by Anime Queen!");
+        function claim() {
+            alert(balance.toFixed(4) + " TON Claimed!");
+            balance = 0;
         }
 
-        function runBoost() {
-            db.speed += 0.2;
-            document.getElementById('speed-tag').innerText = db.speed.toFixed(2) + " TH/s ⚡";
+        function boost() {
+            speed += 0.5;
+            alert("Speed Upgraded! New Speed: " + speed.toFixed(2));
         }
 
-        function openModal(coin) {
-            db.activeCoin = coin;
-            document.getElementById('m-target').innerText = coin;
-            document.getElementById('m-fee').innerText = coin === 'TON' ? '0.3 TON' : '50,000 SHIB';
-            document.getElementById('m-min').innerText = coin === 'TON' ? '1.5 TON' : '500,000 SHIB';
-            document.getElementById('withdraw-overlay').style.display = 'flex';
-        }
-
-        function closeModal() { document.getElementById('withdraw-overlay').style.display = 'none'; }
-
-        function liveCheck() {
-            let val = parseFloat(document.getElementById('inp-amt').value) || 0;
-            let min = db.activeCoin === 'TON' ? 1.5 : 500000;
-            let bal = db.activeCoin === 'TON' ? db.ton : db.shib;
-            let btn = document.getElementById('btn-final');
-            if(val >= min && val <= bal) btn.classList.add('ready');
-            else btn.classList.remove('ready');
-        }
-
-        function executeWithdraw() {
-            if(!document.getElementById('btn-final').classList.contains('ready')) return;
-            alert("Anime Queen approved your transfer!");
-            closeModal();
-        }
-
-        // Starfield BG
+        // Arka Plan Yıldız Efekti
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        let stars = [];
-        for(let i=0; i<80; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, v:Math.random()*0.5});
-        function draw(){
-            ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle="white";
-            stars.forEach(s=>{ ctx.beginPath(); ctx.arc(s.x,s.y,1,0,Math.PI*2); ctx.fill(); s.y-=s.v; if(s.y<0) s.y=canvas.height; });
-            requestAnimationFrame(draw);
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let stars = Array(100).fill().map(() => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2
+        }));
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "white";
+            stars.forEach(s => {
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+                ctx.fill();
+                s.y -= 0.2;
+                if(s.y < 0) s.y = canvas.height;
+            });
+            requestAnimationFrame(animate);
         }
-        draw();
+        animate();
     </script>
 </body>
 </html>
