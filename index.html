@@ -3,256 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONIX - Premium Core Edition</title>
+    <title>TONIX - Core Engine</title>
     <style>
         :root {
             --ton-blue: #0098ea;
-            --ton-glow: rgba(0, 152, 234, 0.8);
+            --ton-glow: rgba(0, 152, 234, 0.7);
             --bg-deep: #050505;
             --card-dark: #121212;
-            --white: #ffffff;
             --modal-bg: #ffffff;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
         body {
             background-color: var(--bg-deep);
-            color: var(--white);
-            font-family: 'Inter', -apple-system, sans-serif;
+            color: white;
+            font-family: 'Inter', sans-serif;
             margin: 0; padding: 20px;
             display: flex; flex-direction: column; align-items: center;
             min-height: 100vh;
         }
 
-        /* --- CÜZDAN ÜST PANEL --- */
-        .wallet-stack {
-            width: 100%; max-width: 400px;
-            display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px;
+        /* --- ÜST CÜZDAN PANELİ --- */
+        .wallet-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .asset-card {
+            background: var(--card-dark); border-radius: 20px; padding: 18px;
+            display: flex; justify-content: space-between; align-items: center; border: 1px solid #1e1e1e;
+        }
+        .asset-left { display: flex; align-items: center; gap: 12px; }
+        .asset-left img { width: 38px; border-radius: 50%; }
+        .asset-info b { display: block; font-size: 14px; }
+        .asset-info span { font-size: 11px; color: #666; }
+        .btn-send { background: #f5f5f5; color: #111; border: none; padding: 7px 15px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; }
+
+        /* --- MERKEZİ TON LOGO ÇEKİRDEĞİ --- */
+        .core-stage {
+            position: relative; width: 320px; height: 320px;
+            display: flex; justify-content: center; align-items: center; margin: 30px 0;
         }
 
-        .asset-item {
-            background: var(--card-dark);
-            border: 1px solid #1e1e1e;
-            border-radius: 24px;
-            padding: 20px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .asset-meta { display: flex; align-items: center; gap: 15px; }
-        .asset-meta img { width: 42px; height: 42px; border-radius: 50%; }
-        .asset-meta b { display: block; font-size: 16px; }
-        .asset-meta span { font-size: 12px; color: #666; }
-
-        .btn-send-mini {
-            background: #f5f5f5; color: #111; border: none;
-            padding: 8px 18px; border-radius: 12px;
-            font-size: 13px; font-weight: 900; cursor: pointer;
-        }
-
-        /* --- ABARTILI GÜZEL TON LOGO ÇEKİRDEĞİ --- */
-        .core-container {
-            position: relative;
-            width: 320px;
-            height: 320px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 40px 0;
-        }
-
-        /* Enerji Halkası */
+        /* Dönen Neon Halka */
         .energy-ring {
-            position: absolute;
-            width: 280px;
-            height: 280px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            border-top: 2px solid var(--ton-blue);
-            border-right: 2px solid var(--ton-blue);
-            box-shadow: 0 0 40px var(--ton-glow);
-            animation: ring-rotate 3s linear infinite;
+            position: absolute; width: 280px; height: 280px;
+            border-radius: 50%; border: 3px solid transparent;
+            border-top: 3px solid var(--ton-blue);
+            border-right: 3px solid var(--ton-blue);
+            box-shadow: 0 0 30px var(--ton-glow);
+            animation: rotate-ring 3s linear infinite;
         }
 
-        .energy-ring::before {
-            content: '';
-            position: absolute;
-            top: -5px; left: -5px; right: -5px; bottom: -5px;
-            border-radius: 50%;
-            border: 1px solid rgba(0, 152, 234, 0.3);
-            animation: pulse-ring 2s ease-out infinite;
+        /* 3D TON LOGO (ÜÇGEN YERİNE) */
+        .ton-logo-center {
+            width: 150px; height: 150px; z-index: 10;
+            filter: drop-shadow(0 0 20px var(--ton-glow));
+            animation: float-logo 4s ease-in-out infinite;
         }
 
-        /* 3D TON Logo Animasyonu */
-        .ton-master-logo {
-            z-index: 10;
-            width: 160px;
-            height: 160px;
-            filter: drop-shadow(0 0 25px var(--ton-glow));
-            animation: logo-float 4s ease-in-out infinite;
-            transform-style: preserve-3d;
-        }
-
-        /* Arka Plan Işık Patlaması */
-        .core-glow {
-            position: absolute;
-            width: 120px;
-            height: 120px;
-            background: var(--ton-blue);
-            filter: blur(80px);
-            opacity: 0.5;
-            border-radius: 50%;
+        .core-blur {
+            position: absolute; width: 100px; height: 100px;
+            background: var(--ton-blue); filter: blur(70px); opacity: 0.4;
         }
 
         /* --- SAYAC VE BUTONLAR --- */
-        .mining-info { text-align: center; margin-bottom: 40px; }
-        .count-up { 
-            font-size: 54px; font-weight: 900; 
-            font-family: 'JetBrains Mono', monospace;
-            background: linear-gradient(to bottom, #fff, #888);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .speed-tag {
-            display: inline-block; padding: 6px 20px;
-            background: rgba(0, 255, 150, 0.1); color: #00ff96;
-            border-radius: 50px; font-weight: 800; margin-top: 15px;
-        }
+        .mining-display { text-align: center; margin-bottom: 30px; }
+        #mining-val { font-size: 50px; font-weight: 900; font-family: monospace; letter-spacing: -1px; }
+        .speed-badge { color: #00ff88; font-weight: bold; background: rgba(0,255,136,0.1); padding: 5px 15px; border-radius: 20px; font-size: 14px; margin-top: 10px; display: inline-block; }
 
-        .btn-group { display: flex; gap: 15px; width: 100%; max-width: 400px; }
-        .btn-action {
-            flex: 1; padding: 22px; border-radius: 20px; border: none;
-            font-size: 17px; font-weight: 900; cursor: pointer; transition: 0.2s;
-        }
-        .btn-claim { background: var(--ton-blue); color: #fff; box-shadow: 0 6px 0 #006da8; }
-        .btn-boost { background: #fff; color: #000; box-shadow: 0 6px 0 #bbb; }
-        .btn-action:active { transform: translateY(4px); box-shadow: none; }
+        .btn-grid { display: flex; gap: 15px; width: 100%; max-width: 400px; }
+        .btn-main { flex: 1; padding: 20px; border-radius: 18px; border: none; font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn-claim { background: var(--ton-blue); color: white; box-shadow: 0 5px 0 #006da8; }
+        .btn-boost { background: white; color: black; box-shadow: 0 5px 0 #ccc; }
+        .btn-main:active { transform: translateY(4px); box-shadow: none; }
 
-        /* --- MODAL TASARIMI --- */
+        /* --- WITHDRAW MODAL --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.92); display: none;
-            justify-content: center; align-items: center; z-index: 1000;
+            background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000;
         }
-
-        .modal-box {
-            background: var(--modal-bg); color: #111;
-            width: 90%; max-width: 400px; border-radius: 35px;
-            padding: 35px; text-align: center;
+        .withdraw-modal {
+            background: var(--modal-bg); color: #111; width: 90%; max-width: 380px;
+            border-radius: 30px; padding: 25px; text-align: center;
         }
-
-        .m-input {
-            width: 100%; padding: 18px; margin: 10px 0;
-            border: 1px solid #eee; border-radius: 15px;
-            background: #fcfcfc; font-size: 16px;
-        }
+        .m-header { display: flex; gap: 10px; margin-bottom: 20px; }
+        .m-box { flex: 1; background: #f0f7ff; padding: 12px; border-radius: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 13px; }
+        .m-input { width: 100%; padding: 16px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 15px; background: #fafafa; font-size: 15px; outline: none; }
+        .btn-confirm { width: 100%; padding: 18px; background: var(--ton-blue); color: white; border-radius: 18px; border: none; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 10px; }
 
         /* --- ANIMASYONLAR --- */
-        @keyframes ring-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes logo-float { 
-            0%, 100% { transform: translateY(0) rotateY(0deg); } 
-            50% { transform: translateY(-15px) rotateY(15deg); } 
-        }
-        @keyframes pulse-ring {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(1.3); opacity: 0; }
-        }
-
+        @keyframes rotate-ring { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes float-logo { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-15px) scale(1.05); } }
     </style>
 </head>
 <body>
 
-    <div class="wallet-stack">
-        <div class="asset-item">
-            <div class="asset-meta">
+    <div class="wallet-container">
+        <div class="asset-card">
+            <div class="asset-left">
                 <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png">
-                <div><b>Toncoin</b><span>Available to send</span></div>
+                <div class="asset-info"><b>Toncoin</b><span>Available Balance</span></div>
             </div>
             <div style="text-align:right">
-                <h3 id="ton-bal">0.0000</h3>
-                <button class="btn-send-mini" onclick="toggleM('TON')">Send</button>
+                <h3 id="top-ton">0.0000</h3>
+                <button class="btn-send" onclick="openModal('TON')">Send</button>
             </div>
         </div>
-        <div class="asset-item">
-            <div class="asset-meta">
+        <div class="asset-card">
+            <div class="asset-left">
                 <img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png">
-                <div><b>Shiba Inu</b><span>SHIB Balance</span></div>
+                <div class="asset-info"><b>Shiba Inu</b><span>SHIB Balance</span></div>
             </div>
             <div style="text-align:right">
-                <h3 id="shib-bal" style="color:#f06522">0</h3>
-                <button class="btn-send-mini" onclick="toggleM('SHIB')">Send</button>
+                <h3 id="top-shib" style="color:#f06522">0</h3>
+                <button class="btn-send" onclick="openModal('SHIB')">Send</button>
             </div>
         </div>
     </div>
 
-    <div class="core-container">
-        <div class="core-glow"></div>
+    <div class="core-stage">
+        <div class="core-blur"></div>
         <div class="energy-ring"></div>
-        <svg class="ton-master-logo" viewBox="0 0 128 128">
-            <defs>
-                <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#0098ea;stop-opacity:1" />
-                </linearGradient>
-            </defs>
-            <path d="M64 128C99.3462 128 128 99.3462 128 64C128 28.6538 99.3462 0 64 0C28.6538 0 0 28.6538 0 64C0 99.3462 28.6538 128 64 128Z" fill="url(#logo-grad)" fill-opacity="0.1"/>
-            <path d="M64 15L20 95H108L64 15ZM64 35L92 85H36L64 35Z" fill="#0098ea"/>
-        </svg>
+        <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="ton-logo-center">
     </div>
 
-    <div class="mining-info">
-        <div class="count-up" id="mining-val">0.000000000</div>
-        <div class="speed-tag" id="speed-display">1.00 TH/s ⚡</div>
+    <div class="mining-display">
+        <div id="mining-val">0.000000000</div>
+        <div class="speed-badge" id="speed-text">1.00 TH/s ⚡</div>
     </div>
 
-    <div class="btn-group">
-        <button class="btn-action btn-claim" onclick="doClaim()">CLAIM</button>
-        <button class="btn-action btn-boost" onclick="doBoost()">BOOST</button>
+    <div class="btn-grid">
+        <button class="btn-main btn-claim" onclick="claim()">CLAIM</button>
+        <button class="btn-main btn-boost" onclick="boost()">BOOST</button>
     </div>
 
     <div class="modal-overlay" id="modal">
-        <div class="modal-box">
-            <h2 style="margin:0">Withdraw <span id="m-type">TON</span></h2>
-            <p style="color:#666; font-size:14px;">Transfer funds to your personal wallet</p>
+        <div class="withdraw-modal">
+            <div class="m-header">
+                <div class="m-box"><img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" width="16"> <span id="m-ton-val">0</span></div>
+                <div class="m-box"><img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png" width="16"> <span id="m-shib-val">0</span></div>
+            </div>
+            <h3 style="margin:0">Send <span id="m-coin">TON</span></h3>
+            <p style="font-size:12px; color:#888; margin:5px 0 15px 0;">Enter your wallet address for secure transfer</p>
             <input type="text" class="m-input" placeholder="Wallet Address">
             <input type="number" class="m-input" placeholder="Amount">
-            <button class="btn-action btn-claim" style="width:100%; margin-top:15px; box-shadow:none;">Confirm Send</button>
-            <button style="background:none; border:none; color:#999; margin-top:15px; cursor:pointer;" onclick="toggleM()">Cancel</button>
+            <button class="btn-confirm">Confirm Withdrawal</button>
+            <button style="background:none; border:none; color:#bbb; margin-top:15px; cursor:pointer;" onclick="closeModal()">Not yet</button>
         </div>
     </div>
 
     <script>
-        let state = { ton: 0.0, shib: 0, mining: 0.0, speed: 1.0 };
+        let ton = 0; let shib = 0; let mining = 0; let speed = 1.0;
+        const rate = 0.000011574;
 
         function update() {
-            state.mining += (0.000011574 / 10) * state.speed;
-            document.getElementById('mining-val').innerText = state.mining.toFixed(9);
-            document.getElementById('ton-bal').innerText = state.ton.toFixed(4);
-            document.getElementById('shib-bal').innerText = state.shib.toLocaleString();
+            mining += (rate / 10) * speed;
+            document.getElementById('mining-val').innerText = mining.toFixed(9);
+            document.getElementById('top-ton').innerText = ton.toFixed(4);
+            document.getElementById('top-shib').innerText = shib.toLocaleString();
+            document.getElementById('m-ton-val').innerText = ton.toFixed(2);
+            document.getElementById('m-shib-val').innerText = shib;
         }
         setInterval(update, 100);
 
-        function doClaim() {
-            if(state.mining >= 0.019) {
-                state.ton += state.mining;
-                state.shib += Math.floor(state.mining * 100000);
-                state.mining = 0;
-                alert("Assets Claimed Successfully!");
-            } else { alert("Minimum 0.019 TON required!"); }
+        function claim() {
+            if(mining >= 0.019) {
+                ton += mining; shib += Math.floor(mining * 100000);
+                mining = 0;
+            } else { alert("Min 0.019 TON required!"); }
         }
 
-        function doBoost() {
-            state.speed += 0.10;
-            document.getElementById('speed-display').innerText = state.speed.toFixed(2) + " TH/s ⚡";
+        function boost() {
+            speed += 0.10;
+            document.getElementById('speed-text').innerText = speed.toFixed(2) + " TH/s ⚡";
         }
 
-        function toggleM(type) {
-            const m = document.getElementById('modal');
-            if(type) {
-                document.getElementById('m-type').innerText = type;
-                m.style.display = 'flex';
-            } else { m.style.display = 'none'; }
+        function openModal(type) {
+            document.getElementById('modal').style.display = 'flex';
+            document.getElementById('m-coin').innerText = type;
         }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
     </script>
 </body>
 </html>
