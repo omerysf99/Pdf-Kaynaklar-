@@ -1,112 +1,18 @@
-<script>
-    let game = { bal:0, ton:0, en:500, maxEn:500, pwr:1, prof:0, lvls:{} };
-    const CARDS = [
-        {n:"Fan Token", p:50, c:500, i:"🎫"},
-        {n:"Staking", p:150, c:2000, i:"🥩"},
-        {n:"CEO Room", p:1000, c:25000, i:"👔"}
-    ];
+// --- TAP TO EARN (FIXED) ---
+const tapBtn = document.getElementById('tap-btn');
 
-    function err(m) {
-        const b=document.getElementById('error-toast');
-        b.innerText=m;
-        b.style.display='block';
-        setTimeout(()=>b.style.display='none',2000);
+tapBtn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+
+    if (game.en < game.pwr) {
+        err("Enerji Bitti! ⚡");
+        return;
     }
 
-    function nav(id, el) {
-        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-        document.getElementById('p-'+id).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-        el.classList.add('active');
-        if(id==='mine') renderMine();
-    }
+    game.bal += game.pwr;
+    game.en -= game.pwr;
+    game.ton += 0.0002;
 
-    /* 🔥 TAP TO EARN – MOBİL + PC */
-    const tapBtn = document.getElementById('tap-btn');
-
-    function handleTap(x, y) {
-        if (game.en >= game.pwr) {
-            game.bal += game.pwr;
-            game.en -= game.pwr;
-            game.ton += 0.0002;
-            spawnPop(x, y);
-            updateUI();
-        } else {
-            err("Enerji Bitti! ⚡");
-        }
-    }
-
-    // Mobil
-    tapBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        const t = e.touches[0];
-        handleTap(t.clientX, t.clientY);
-    }, { passive: false });
-
-    // PC
-    tapBtn.addEventListener('click', (e) => {
-        handleTap(e.clientX, e.clientY);
-    });
-
-    function spawnPop(x, y) {
-        let f = document.createElement('div');
-        f.className='pop';
-        f.innerText=`+${game.pwr}`;
-        f.style.left=x+'px';
-        f.style.top=y+'px';
-        document.body.appendChild(f);
-        setTimeout(()=>f.remove(), 800);
-    }
-
-    function renderMine() {
-        document.getElementById('mine-grid').innerHTML = CARDS.map((c,i)=> {
-            let l=game.lvls[i]||0;
-            let pr=Math.floor(c.c*Math.pow(1.6, l));
-            return `<div class="m-card" onclick="buy(${i})">
-                <span class="c-icon">${c.i}</span>
-                <h4>${c.n}</h4>
-                <p style="font-size:10px; color:var(--gray)">Profit +${c.p}/h</p>
-                <p class="price">🟡 ${pr.toLocaleString()}</p>
-            </div>`;
-        }).join('');
-    }
-
-    function buy(i) {
-        let l=game.lvls[i]||0;
-        let pr=Math.floor(CARDS[i].c*Math.pow(1.6, l));
-        if(game.bal>=pr) {
-            game.bal-=pr;
-            game.prof+=CARDS[i].p;
-            game.lvls[i]=l+1;
-            renderMine();
-            updateUI();
-        } else {
-            err("Yetersiz Bakiye! ❌");
-        }
-    }
-
-    function boost() {
-        if(game.en<game.maxEn) {
-            game.en=game.maxEn;
-            err("Enerji Fullendi! 🚀");
-            updateUI();
-        }
-    }
-
-    function updateUI() {
-        document.getElementById('ui-bal').innerText = Math.floor(game.bal).toLocaleString();
-        document.getElementById('ui-en').innerText = Math.floor(game.en);
-        document.getElementById('ui-ton').innerText = game.ton.toFixed(4);
-        document.getElementById('ui-prof').innerText = game.prof.toLocaleString();
-        document.getElementById('ui-lvl').style.width =
-            Math.min((game.bal/5000)*100, 100)+'%';
-    }
-
-    setInterval(()=>{
-        if(game.en<game.maxEn) game.en+=1;
-        if(game.prof>0) game.bal+=game.prof/3600;
-        updateUI();
-    }, 1000);
-
+    spawnPop(e.clientX, e.clientY);
     updateUI();
-</script>
+});
