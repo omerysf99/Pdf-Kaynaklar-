@@ -3,6 +3,408 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AnimeBtc Pro: Ultimate Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pink: #ff4d94; --bg: #050505; --card: #121212;
+            --text: #ffffff; --dim: #8e8e93; --up: #00ff80; --gold: #ffcc00;
+            --blue: #0098ea; --red: #ff3b30;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; width: 100vw; }
+
+        /* --- UI OVERLAY --- */
+        #ui-layer { position: fixed; inset: 0; z-index: 50; pointer-events: none; display: flex; flex-direction: column; }
+        .header { height: 70px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); pointer-events: auto; }
+        .stat-item { display: flex; flex-direction: column; align-items: center; }
+        .stat-label { font-size: 9px; color: var(--dim); font-weight: 900; letter-spacing: 1px; }
+        .stat-value { font-size: 16px; font-weight: 900; color: var(--gold); font-family: 'JetBrains Mono'; }
+
+        /* --- PAGES --- */
+        .page { position: absolute; inset: 70px 0 80px 0; padding: 20px; overflow-y: auto; display: none; z-index: 10; pointer-events: auto; }
+        .page.active { display: block; animation: slideUp 0.3s ease-out; }
+
+        /* --- GAME OVERLAY (BLUM STYLE) --- */
+        #game-view { position: fixed; inset: 0; background: radial-gradient(circle at center, #1a0a15 0%, #050505 100%); display: none; z-index: 100; }
+        #game-canvas { position: absolute; inset: 0; }
+        .game-hud { position: absolute; top: 40px; width: 100%; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+        #game-score { font-size: 60px; font-weight: 900; color: white; text-shadow: 0 0 20px var(--pink); }
+        #game-timer-circle { width: 50px; height: 50px; border: 4px solid var(--pink); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-top: 10px; background: rgba(0,0,0,0.5); }
+        .combo-text { position: absolute; color: var(--gold); font-weight: 900; font-size: 24px; pointer-events: none; animation: comboPop 0.5s ease-out forwards; }
+
+        /* --- CARDS (HAMSTER) --- */
+        .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-bottom: 20px; }
+        .item-card { background: var(--card); border-radius: 20px; border: 1px solid #222; padding: 15px; display: flex; flex-direction: column; transition: 0.2s; }
+        .item-card:active { transform: scale(0.97); background: #1a1a1a; }
+        .card-lvl { font-size: 10px; color: var(--pink); font-weight: 900; }
+        .card-name { font-size: 14px; font-weight: 800; margin: 5px 0; }
+        .card-profit { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--up); font-weight: 700; }
+        .card-price { margin-top: 12px; display: flex; align-items: center; gap: 5px; font-weight: 900; font-size: 15px; border-top: 1px solid #222; padding-top: 10px; }
+        
+        /* --- MENU ELEMENTS --- */
+        .main-balance-container { text-align: center; margin: 50px 0; }
+        .balance-label { font-size: 12px; color: var(--dim); font-weight: 900; letter-spacing: 2px; }
+        .main-balance-value { font-size: 54px; font-weight: 900; font-family: 'JetBrains Mono'; color: white; margin: 10px 0; }
+        .play-btn-wrapper { display: flex; justify-content: center; margin-top: 30px; }
+        .play-button { width: 140px; height: 140px; border-radius: 50%; background: var(--pink); border: 10px solid rgba(255,77,148,0.2); color: white; font-weight: 900; font-size: 22px; cursor: pointer; box-shadow: 0 0 50px rgba(255,77,148,0.3); transition: 0.3s; position: relative; }
+        .play-button:active { transform: scale(0.9); }
+        .play-button::after { content: ''; position: absolute; inset: -15px; border: 2px solid var(--pink); border-radius: 50%; animation: pulse 2s linear infinite; }
+
+        /* --- NAV --- */
+        .nav { position: fixed; bottom: 0; width: 100%; height: 80px; background: #000; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #111; z-index: 60; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #444; font-size: 11px; font-weight: 800; }
+        .nav-item.active { color: var(--pink); }
+
+        /* --- ANIMATIONS --- */
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes comboPop { 0% { transform: scale(0.5); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(-50px) scale(1.2); opacity: 0; } }
+        
+        #toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 85%; padding: 15px; border-radius: 15px; z-index: 2000; text-align: center; font-weight: 900; backdrop-filter: blur(10px); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #toast.active { top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div id="toast">MESAJ</div>
+
+    <div id="ui-layer">
+        <header class="header">
+            <div class="stat-item">
+                <span class="stat-label">SAATLİK KAZANÇ</span>
+                <span class="stat-value" id="profit-display" style="color: var(--up);">+0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">TOPLAM $ANIMEBTC</span>
+                <span class="stat-value" id="header-balance">0</span>
+            </div>
+        </header>
+    </div>
+
+    <div id="game-view">
+        <canvas id="game-canvas"></canvas>
+        <div class="game-hud">
+            <div id="game-score">0</div>
+            <div id="game-timer-circle">30</div>
+            <p style="color: rgba(255,255,255,0.3); font-size: 10px; margin-top: 10px;">DOKUN VE TOPLA!</p>
+        </div>
+    </div>
+
+    <main id="home" class="page active">
+        <div class="main-balance-container">
+            <p class="balance-label">SENİN BAKİYEN</p>
+            <h1 class="main-balance-value" id="main-balance">0</h1>
+            <div class="play-btn-wrapper">
+                <button class="play-button" onclick="gameEngine.init()">OYNA</button>
+            </div>
+            <p style="color: var(--dim); font-size: 12px; margin-top: 40px; line-height: 1.6;">
+                Kartlarını geliştirerek pasif gelirini artır,<br>
+                Blum modunda reflekslerini konuştur!
+            </p>
+        </div>
+    </main>
+
+    <main id="mine" class="page">
+        <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 24px; font-weight: 900;">Madencilik</h2>
+            <p style="color: var(--dim); font-size: 12px;">Kart seviyesini artırarak saatlik kazancını katla.</p>
+        </div>
+        <div class="card-grid" id="card-list"></div>
+    </main>
+
+    <nav class="nav">
+        <div class="nav-item active" onclick="switchPage('home', this)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>ANA SAYFA</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('mine', this)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            <span>KARTLAR</span>
+        </div>
+    </nav>
+
+    <script>
+        /* --- GLOBAL STATE --- */
+        const state = {
+            balance: 100,
+            profit: 0,
+            lastSave: Date.now(),
+            cards: [
+                { id: 1, name: "Acemi Çizimci", baseProfit: 15, basePrice: 150, lvl: 0, icon: "🎨" },
+                { id: 2, name: "Discord Modu", baseProfit: 60, basePrice: 800, lvl: 0, icon: "💬" },
+                { id: 3, name: "Manga Editörü", baseProfit: 180, basePrice: 3000, lvl: 0, icon: "📖" },
+                { id: 4, name: "V-Tuber Seti", baseProfit: 500, basePrice: 12000, lvl: 0, icon: "🎧" },
+                { id: 5, name: "Anime Stüdyosu", baseProfit: 2200, basePrice: 65000, lvl: 0, icon: "🎬" },
+                { id: 6, name: "Kripto Balinası", baseProfit: 15000, basePrice: 400000, lvl: 0, icon: "🐋" }
+            ]
+        };
+
+        /* --- CORE GAME ENGINE (THE 999 SPIRIT) --- */
+        const gameEngine = {
+            canvas: document.getElementById('game-canvas'),
+            ctx: null,
+            isPlaying: false,
+            score: 0,
+            timeLeft: 30,
+            items: [],
+            particles: [],
+            combo: 0,
+            shake: 0,
+            spawnRate: 350,
+            lastSpawn: 0,
+
+            init() {
+                this.ctx = this.canvas.getContext('2d');
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                this.isPlaying = true;
+                this.score = 0;
+                this.timeLeft = 30;
+                this.items = [];
+                this.particles = [];
+                document.getElementById('game-view').style.display = 'block';
+                this.loop();
+                this.startTimer();
+            },
+
+            startTimer() {
+                const timer = setInterval(() => {
+                    this.timeLeft--;
+                    document.getElementById('game-timer-circle').innerText = this.timeLeft;
+                    if(this.timeLeft <= 0) {
+                        clearInterval(timer);
+                        this.end();
+                    }
+                }, 1000);
+            },
+
+            spawnItem() {
+                const types = [
+                    { t: 'flower', char: '🌸', color: '#ff4d94', p: 1 },
+                    { t: 'flower', char: '🌸', color: '#ff4d94', p: 1 },
+                    { t: 'gold', char: '⭐', color: '#ffcc00', p: 5 },
+                    { t: 'bomb', char: '💣', color: '#ff3b30', p: -15 }
+                ];
+                const type = types[Math.floor(Math.random() * types.length)];
+                this.items.push({
+                    x: Math.random() * (this.canvas.width - 60) + 30,
+                    y: -100,
+                    vy: Math.random() * 3 + 3,
+                    vx: Math.random() * 2 - 1,
+                    rot: Math.random() * Math.PI * 2,
+                    vr: Math.random() * 0.1 - 0.05,
+                    ...type
+                });
+            },
+
+            createParticles(x, y, color) {
+                for(let i=0; i<10; i++) {
+                    this.particles.push({
+                        x, y,
+                        vx: Math.random() * 6 - 3,
+                        vy: Math.random() * 6 - 3,
+                        life: 1.0,
+                        color: color
+                    });
+                }
+            },
+
+            update() {
+                const now = Date.now();
+                if(now - this.lastSpawn > this.spawnRate) {
+                    this.spawnItem();
+                    this.lastSpawn = now;
+                }
+
+                // Shake reduction
+                if(this.shake > 0) this.shake *= 0.9;
+
+                this.items.forEach((it, i) => {
+                    it.y += it.vy;
+                    it.x += it.vx;
+                    it.rot += it.vr;
+                    if(it.y > this.canvas.height + 100) this.items.splice(i, 1);
+                });
+
+                this.particles.forEach((p, i) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.02;
+                    if(p.life <= 0) this.particles.splice(i, 1);
+                });
+            },
+
+            draw() {
+                this.ctx.save();
+                if(this.shake > 1) {
+                    this.ctx.translate(Math.random()*this.shake, Math.random()*this.shake);
+                }
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Particles
+                this.particles.forEach(p => {
+                    this.ctx.globalAlpha = p.life;
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
+                    this.ctx.fill();
+                });
+
+                // Items
+                this.ctx.globalAlpha = 1.0;
+                this.items.forEach(it => {
+                    this.ctx.save();
+                    this.ctx.translate(it.x, it.y);
+                    this.ctx.rotate(it.rot);
+                    this.ctx.font = "45px Arial";
+                    this.ctx.textAlign = "center";
+                    this.ctx.textBaseline = "middle";
+                    this.ctx.fillText(it.char, 0, 0);
+                    this.ctx.restore();
+                });
+                this.ctx.restore();
+
+                document.getElementById('game-score').innerText = this.score;
+            },
+
+            loop() {
+                if(!this.isPlaying) return;
+                this.update();
+                this.draw();
+                requestAnimationFrame(() => this.loop());
+            },
+
+            handleTouch(tx, ty) {
+                this.items.forEach((it, i) => {
+                    const d = Math.hypot(it.x - tx, it.y - ty);
+                    if(d < 60) {
+                        this.score += it.p;
+                        this.createParticles(it.x, it.y, it.color);
+                        if(it.t === 'bomb') {
+                            this.shake = 20;
+                            vibrate(100);
+                        } else {
+                            this.shake = 5;
+                            vibrate(20);
+                        }
+                        this.items.splice(i, 1);
+                    }
+                });
+            },
+
+            end() {
+                this.isPlaying = false;
+                document.getElementById('game-view').style.display = 'none';
+                if(this.score < 0) this.score = 0;
+                state.balance += this.score;
+                notify(`Oyun bitti! +${this.score} $ANIMEBTC kazandın!`, "var(--pink)");
+                updateUI();
+            }
+        };
+
+        /* --- UI & PAGE LOGIC --- */
+        function switchPage(id, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+            if(id === 'mine') renderCards();
+        }
+
+        function renderCards() {
+            const list = document.getElementById('card-list');
+            list.innerHTML = '';
+            state.cards.forEach(c => {
+                const price = Math.floor(c.basePrice * Math.pow(1.6, c.lvl));
+                const profit = Math.floor(c.baseProfit * Math.pow(1.3, c.lvl));
+                list.innerHTML += `
+                    <div class="item-card" onclick="upgradeCard(${c.id})">
+                        <span class="card-lvl">LVL ${c.lvl}</span>
+                        <div style="font-size: 24px; margin: 5px 0;">${c.icon}</div>
+                        <h4 class="card-name">${c.name}</h4>
+                        <div class="card-profit">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5H7z"/></svg>
+                            +${profit}/sa
+                        </div>
+                        <div class="card-price">
+                            <span style="color: var(--gold)">💰</span> ${price.toLocaleString()}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function upgradeCard(id) {
+            const c = state.cards.find(x => x.id === id);
+            const price = Math.floor(c.basePrice * Math.pow(1.6, c.lvl));
+            if(state.balance >= price) {
+                state.balance -= price;
+                c.lvl++;
+                calculateProfit();
+                renderCards();
+                updateUI();
+                notify(`${c.name} seviye atladı!`, "var(--up)");
+            } else {
+                notify("Yetersiz bakiye!", "var(--red)");
+            }
+        }
+
+        function calculateProfit() {
+            let total = 0;
+            state.cards.forEach(c => {
+                if(c.lvl > 0) {
+                    total += Math.floor(c.baseProfit * Math.pow(1.3, c.lvl));
+                }
+            });
+            state.profit = total;
+        }
+
+        function updateUI() {
+            document.getElementById('header-balance').innerText = Math.floor(state.balance).toLocaleString();
+            document.getElementById('main-balance').innerText = Math.floor(state.balance).toLocaleString();
+            document.getElementById('profit-display').innerText = `+${state.profit.toLocaleString()}/sa`;
+        }
+
+        function notify(msg, color) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.background = color;
+            t.classList.add('active');
+            setTimeout(() => t.classList.remove('active'), 2500);
+        }
+
+        function vibrate(ms) {
+            if(navigator.vibrate) navigator.vibrate(ms);
+        }
+
+        /* --- PASİF GELİR MOTORU --- */
+        setInterval(() => {
+            if(state.profit > 0) {
+                state.balance += (state.profit / 3600);
+                updateUI();
+            }
+        }, 1000);
+
+        /* --- INPUTS --- */
+        window.addEventListener('touchstart', (e) => {
+            if(gameEngine.isPlaying) {
+                const t = e.touches[0];
+                gameEngine.handleTouch(t.clientX, t.clientY);
+            }
+        });
+
+        window.onload = () => {
+            calculateProfit();
+            updateUI();
+        };
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AnimeBtc Pro - Hamster & Blum</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
