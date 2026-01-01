@@ -1,208 +1,112 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AnimeBTC - Ultimate Tap To Earn</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #0b0d0f; --panel: #1c1f24; --panel-br: #2d3139; --gray: #85868b;
-            --gold: #f3ba2f; --ton-blue: #0088cc; --ton-soft: #96ccf3; --red: #ff4d4d; --green: #69c54a;
+<script>
+    let game = { bal:0, ton:0, en:500, maxEn:500, pwr:1, prof:0, lvls:{} };
+    const CARDS = [
+        {n:"Fan Token", p:50, c:500, i:"🎫"},
+        {n:"Staking", p:150, c:2000, i:"🥩"},
+        {n:"CEO Room", p:1000, c:25000, i:"👔"}
+    ];
+
+    function err(m) {
+        const b=document.getElementById('error-toast');
+        b.innerText=m;
+        b.style.display='block';
+        setTimeout(()=>b.style.display='none',2000);
+    }
+
+    function nav(id, el) {
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+        document.getElementById('p-'+id).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+        el.classList.add('active');
+        if(id==='mine') renderMine();
+    }
+
+    /* 🔥 TAP TO EARN – MOBİL + PC */
+    const tapBtn = document.getElementById('tap-btn');
+
+    function handleTap(x, y) {
+        if (game.en >= game.pwr) {
+            game.bal += game.pwr;
+            game.en -= game.pwr;
+            game.ton += 0.0002;
+            spawnPop(x, y);
+            updateUI();
+        } else {
+            err("Enerji Bitti! ⚡");
         }
+    }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: #fff; overflow: hidden; height: 100vh; user-select: none; }
+    // Mobil
+    tapBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const t = e.touches[0];
+        handleTap(t.clientX, t.clientY);
+    }, { passive: false });
 
-        /* --- HAVALI HATA --- */
-        #error-toast { position: fixed; top: 15%; left: 50%; transform: translateX(-50%); background: var(--red); color: #fff; padding: 12px 25px; border-radius: 50px; font-weight: 800; z-index: 10001; display: none; box-shadow: 0 0 20px rgba(255, 77, 77, 0.4); animation: shake 0.4s ease; }
-        @keyframes shake { 0%, 100% { transform: translateX(-50%); } 20% { transform: translateX(-55%); } 60% { transform: translateX(-45%); } }
+    // PC
+    tapBtn.addEventListener('click', (e) => {
+        handleTap(e.clientX, e.clientY);
+    });
 
-        /* --- ÜST PANEL (Görsel 46b4ba uyumlu) --- */
-        .top-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 15px; }
-        .s-box { background: #15181c; border-radius: 12px; padding: 10px 5px; text-align: center; border: 1px solid #24282e; }
-        .s-label { font-size: 9px; font-weight: 700; margin-bottom: 4px; }
-        .s-val { font-size: 11px; font-weight: 900; }
-        .t-tap { color: #eb8338; } .t-lvl { color: #6d79f4; } .t-profit { color: var(--green); }
+    function spawnPop(x, y) {
+        let f = document.createElement('div');
+        f.className='pop';
+        f.innerText=`+${game.pwr}`;
+        f.style.left=x+'px';
+        f.style.top=y+'px';
+        document.body.appendChild(f);
+        setTimeout(()=>f.remove(), 800);
+    }
 
-        .balance-hero { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 20px 0; font-size: 44px; font-weight: 900; }
-        .gold-coin { width: 42px; height: 42px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #000; font-size: 26px; }
+    function renderMine() {
+        document.getElementById('mine-grid').innerHTML = CARDS.map((c,i)=> {
+            let l=game.lvls[i]||0;
+            let pr=Math.floor(c.c*Math.pow(1.6, l));
+            return `<div class="m-card" onclick="buy(${i})">
+                <span class="c-icon">${c.i}</span>
+                <h4>${c.n}</h4>
+                <p style="font-size:10px; color:var(--gray)">Profit +${c.p}/h</p>
+                <p class="price">🟡 ${pr.toLocaleString()}</p>
+            </div>`;
+        }).join('');
+    }
 
-        /* --- VIEWPORT --- */
-        .viewport { height: calc(100vh - 200px); overflow-y: auto; padding: 0 15px 120px; scrollbar-width: none; }
-        .page { display: none; }
-        .page.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* --- TAP TO EARN ANA EKRAN --- */
-        .lvl-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; margin-bottom: 6px; }
-        .lvl-bar { background: #24282e; height: 10px; border-radius: 10px; width: 100%; margin-bottom: 30px; overflow: hidden; }
-        .lvl-fill { background: #3b3e44; height: 100%; width: 10%; transition: width 0.3s; }
-
-        .clicker-zone { display: flex; justify-content: center; position: relative; margin-top: 20px; }
-        .circle-outer { width: 310px; height: 310px; background: radial-gradient(circle, #3d44af 0%, #111429 70%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 60px rgba(61, 68, 175, 0.4); cursor: pointer; transition: transform 0.1s; }
-        .circle-outer:active { transform: scale(0.95); }
-        .hamster-img { width: 280px; height: 280px; border-radius: 50%; background: url('photo_2026-01-01_19-32-18.jpg') center/cover; border: 5px solid #1a1d3d; pointer-events: none; }
-
-        /* --- MINE SİSTEMİ --- */
-        .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
-        .m-card { background: var(--panel); border-radius: 20px; padding: 15px; border: 1px solid var(--panel-br); }
-        .m-card .c-icon { font-size: 24px; margin-bottom: 10px; display: block; }
-        .m-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 5px; }
-        .m-card .price { color: var(--gold); font-weight: 900; font-size: 14px; margin-top: 10px; }
-
-        /* --- ÇEKİM MODALI (Görsel 4799ed uyumlu) --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-card { background: #f3f4f6; color: #000; width: 100%; max-width: 380px; border-radius: 30px; padding: 25px; text-align: center; }
-        .w-input { background: #fff; width: 100%; border-radius: 12px; border: 1px solid #e5e5e7; margin-bottom: 12px; padding: 15px; display: flex; align-items: center; }
-        .w-input input { border: none; outline: none; width: 100%; font-size: 16px; color: #000; }
-        .btn-send { background: var(--ton-soft); color: #fff; width: 100%; padding: 18px; border-radius: 22px; border: none; font-weight: 800; font-size: 18px; cursor: pointer; }
-
-        /* --- HUD & NAV --- */
-        .hud { position: fixed; bottom: 105px; width: 100%; padding: 0 30px; display: flex; justify-content: space-between; align-items: center; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 95px; background: var(--panel); display: flex; justify-content: space-around; padding: 10px 5px 30px; border-top: 1px solid var(--panel-br); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--gray); font-size: 10px; font-weight: 700; flex: 1; cursor: pointer; }
-        .nav-item.active { color: #fff; }
-        .nav-item i { font-size: 24px; margin-bottom: 4px; font-style: normal; }
-
-        /* Uçan Puan Efekti */
-        .pop { position: absolute; font-weight: 900; font-size: 38px; color: #fff; pointer-events: none; animation: popUp 0.8s ease-out forwards; z-index: 10000; }
-        @keyframes popUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-160px); } }
-    </style>
-</head>
-<body>
-
-    <div id="error-toast">Yetersiz Enerji! ⚡</div>
-
-    <div class="top-stats">
-        <div class="s-box"><div class="s-label t-tap">Earn per tap</div><div class="s-val">🟡 +<span id="ui-pwr">1</span></div></div>
-        <div class="s-box"><div class="s-label t-lvl">Coins to level up</div><div class="s-val">5K</div></div>
-        <div class="s-box"><div class="s-label t-profit">Profit per hour</div><div class="s-val">🟡 +<span id="ui-prof">0</span></div></div>
-    </div>
-
-    <div class="balance-hero"><div class="gold-coin">$</div><span id="ui-bal">0</span></div>
-
-    <div class="viewport">
-        <section id="p-exchange" class="page active">
-            <div class="lvl-header"><span>Bronze</span><span>Level 1/10</span></div>
-            <div class="lvl-bar"><div class="lvl-fill" id="ui-lvl"></div></div>
-            <div class="clicker-zone">
-                <div class="circle-outer" id="tap-btn">
-                    <div class="hamster-img"></div>
-                </div>
-            </div>
-        </section>
-
-        <section id="p-mine" class="page">
-            <h2 style="margin-bottom:15px">Geliştirme Pazarı</h2>
-            <div class="card-grid" id="mine-grid"></div>
-        </section>
-
-        <section id="p-airdrop" class="page" style="text-align:center">
-            <h2 style="margin:20px 0">Airdrop Tasks</h2>
-            <div style="background:var(--panel); padding:20px; border-radius:20px; text-align:left; border:1px solid var(--panel-br)">
-                <p style="color:var(--gray); font-size:12px">Withdrawable TON</p>
-                <h3 style="font-size:26px; color:var(--ton-soft); margin:10px 0 15px"><span id="ui-ton">0.0000</span> TON</h3>
-                <button onclick="openW()" style="width:100%; background:var(--ton-blue); color:#fff; border:none; padding:15px; border-radius:12px; font-weight:800; font-size:16px">Withdraw TON</button>
-            </div>
-        </section>
-    </div>
-
-    <div class="hud">
-        <div style="font-weight:900; font-size:18px">⚡ <span id="ui-en">500</span> / 500</div>
-        <div style="color:var(--gold); font-weight:900; cursor:pointer" onclick="boost()">🚀 Boost</div>
-    </div>
-
-    <div class="modal-overlay" id="modal">
-        <div class="modal-card">
-            <h2 style="font-size:18px; margin-bottom:10px">Enter your personal TON address</h2>
-            <p style="color:#8a8a8e; font-size:13px; margin-bottom:20px">Minimum send amount is 1,5 TON</p>
-            <div class="w-input"><input type="text" placeholder="Your TON address"></div>
-            <div class="w-input"><input type="number" placeholder="Amount" id="s-amt" oninput="updRec()"><span onclick="maxT()" style="color:var(--ton-blue); font-weight:800; cursor:pointer; margin-left:10px">MAX</span></div>
-            <p style="font-size:13px; margin:10px 0">Network fee: 0,3 TON</p>
-            <p style="font-weight:900; font-size:18px; margin-bottom:25px">Receive amount: <span id="r-amt">0</span> TON</p>
-            <button class="btn-send" id="s-btn" onclick="checkSend()">Send</button>
-            <button onclick="closeW()" style="background:none; border:none; margin-top:15px; color:var(--gray); cursor:pointer">Not yet</button>
-        </div>
-    </div>
-
-    <nav class="bottom-nav">
-        <div class="nav-item active" onclick="nav('exchange', this)"><i>🏛️</i>Exchange</div>
-        <div class="nav-item" onclick="nav('mine', this)"><i>⛏️</i>Mine</div>
-        <div class="nav-item" onclick="nav('airdrop', this)"><i>💎</i>Airdrop</div>
-    </nav>
-
-    <script>
-        let game = { bal:0, ton:0, en:500, maxEn:500, pwr:1, prof:0, lvls:{} };
-        const CARDS = [{n:"Fan Token", p:50, c:500, i:"🎫"}, {n:"Staking", p:150, c:2000, i:"🥩"}, {n:"CEO Room", p:1000, c:25000, i:"👔"}];
-
-        function err(m) { const b=document.getElementById('error-toast'); b.innerText=m; b.style.display='block'; setTimeout(()=>b.style.display='none',2000); }
-        
-        function nav(id, el) {
-            document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-            document.getElementById('p-'+id).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-            el.classList.add('active'); if(id==='mine') renderMine();
+    function buy(i) {
+        let l=game.lvls[i]||0;
+        let pr=Math.floor(CARDS[i].c*Math.pow(1.6, l));
+        if(game.bal>=pr) {
+            game.bal-=pr;
+            game.prof+=CARDS[i].p;
+            game.lvls[i]=l+1;
+            renderMine();
+            updateUI();
+        } else {
+            err("Yetersiz Bakiye! ❌");
         }
+    }
 
-        // --- TAP TO EARN MANTIĞI ---
-        document.getElementById('tap-btn').addEventListener('touchstart', (e)=> {
-            e.preventDefault();
-            if(game.en >= game.pwr) {
-                game.bal += game.pwr; game.en -= game.pwr; game.ton += 0.0002;
-                spawnPop(e.touches[0].clientX, e.touches[0].clientY);
-                updateUI();
-            } else { err("Enerji Bitti! ⚡"); }
-        });
-
-        function spawnPop(x, y) {
-            let f = document.createElement('div'); f.className='pop'; f.innerText=`+${game.pwr}`;
-            f.style.left=x+'px'; f.style.top=y+'px'; document.body.appendChild(f);
-            setTimeout(()=>f.remove(), 800);
+    function boost() {
+        if(game.en<game.maxEn) {
+            game.en=game.maxEn;
+            err("Enerji Fullendi! 🚀");
+            updateUI();
         }
+    }
 
-        function renderMine() {
-            document.getElementById('mine-grid').innerHTML = CARDS.map((c,i)=> {
-                let l=game.lvls[i]||0; let pr=Math.floor(c.c*Math.pow(1.6, l));
-                return `<div class="m-card" onclick="buy(${i})">
-                    <span class="c-icon">${c.i}</span>
-                    <h4>${c.n}</h4>
-                    <p style="font-size:10px; color:var(--gray)">Profit +${c.p}/h</p>
-                    <p class="price">🟡 ${pr.toLocaleString()}</p>
-                </div>`;
-            }).join('');
-        }
+    function updateUI() {
+        document.getElementById('ui-bal').innerText = Math.floor(game.bal).toLocaleString();
+        document.getElementById('ui-en').innerText = Math.floor(game.en);
+        document.getElementById('ui-ton').innerText = game.ton.toFixed(4);
+        document.getElementById('ui-prof').innerText = game.prof.toLocaleString();
+        document.getElementById('ui-lvl').style.width =
+            Math.min((game.bal/5000)*100, 100)+'%';
+    }
 
-        function buy(i) {
-            let l=game.lvls[i]||0; let pr=Math.floor(CARDS[i].c*Math.pow(1.6, l));
-            if(game.bal>=pr) { game.bal-=pr; game.prof+=CARDS[i].p; game.lvls[i]=l+1; renderMine(); updateUI(); }
-            else { err("Yetersiz Bakiye! ❌"); }
-        }
-
-        function boost() { if(game.en<game.maxEn) { game.en=game.maxEn; err("Enerji Fullendi! 🚀"); updateUI(); } }
-        function openW() { document.getElementById('modal').style.display='flex'; }
-        function closeW() { document.getElementById('modal').style.display='none'; }
-        function maxT() { document.getElementById('s-amt').value=game.ton; updRec(); }
-        function updRec() {
-            let v=parseFloat(document.getElementById('s-amt').value)||0;
-            document.getElementById('r-amt').innerText = v>0.3?(v-0.3).toFixed(2):0;
-            document.getElementById('s-btn').style.background = v>=1.5?"#0088cc":"#96ccf3";
-        }
-        function checkSend() {
-            let v=parseFloat(document.getElementById('s-amt').value)||0;
-            if(v<1.5) err("Min 1,5 TON Gerekli! ⚠️"); else if(v>game.ton) err("Yetersiz TON! 💎"); else err("Ağ Hatası! 🌐");
-        }
-
-        function updateUI() {
-            document.getElementById('ui-bal').innerText = Math.floor(game.bal).toLocaleString();
-            document.getElementById('ui-en').innerText = Math.floor(game.en);
-            document.getElementById('ui-ton').innerText = game.ton.toFixed(4);
-            document.getElementById('ui-prof').innerText = game.prof.toLocaleString();
-            document.getElementById('ui-lvl').style.width = Math.min((game.bal/5000)*100, 100)+'%';
-        }
-
-        setInterval(()=>{ if(game.en<game.maxEn) game.en+=1; if(game.prof>0) game.bal+=game.prof/3600; updateUI(); }, 1000);
+    setInterval(()=>{
+        if(game.en<game.maxEn) game.en+=1;
+        if(game.prof>0) game.bal+=game.prof/3600;
         updateUI();
-    </script>
-</body>
-</html>
+    }, 1000);
+
+    updateUI();
+</script>
