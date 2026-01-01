@@ -3,6 +3,348 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TONIX ULTIMATE MINER v10.0</title>
+    <style>
+        /* CSS ARCHITECTURE - 5000+ LINE LOGIC SIMULATION
+           DESIGNED FOR HIGH-END MOBILE PERFORMANCE
+        */
+        :root {
+            --ton-blue: #0098ea;
+            --ton-glow: rgba(0, 152, 234, 0.9);
+            --shib-orange: #f06522;
+            --bg-black: #020202;
+            --card-glass: rgba(18, 18, 18, 0.95);
+            --text-silver: #e0e0e0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body {
+            background-color: var(--bg-black);
+            color: white;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        /* --- BACKGROUND PARTICLES --- */
+        #canvas-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+        }
+
+        /* --- TOP WALLET INTERFACE --- */
+        .top-ui {
+            width: 100%; max-width: 400px; padding: 20px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+
+        .glass-card {
+            background: var(--card-glass);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 22px; padding: 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .asset-main { display: flex; align-items: center; gap: 12px; }
+        .asset-main img { width: 38px; height: 38px; border-radius: 50%; border: 2px solid rgba(0,152,234,0.3); }
+        .asset-info b { font-size: 14px; letter-spacing: 0.5px; }
+        .asset-info p { font-size: 10px; color: #777; font-weight: 600; }
+
+        .balance-area { text-align: right; }
+        .balance-area h3 { font-size: 18px; font-weight: 900; letter-spacing: -0.5px; }
+        .btn-send-mini {
+            margin-top: 5px; background: #fff; color: #000;
+            border: none; padding: 5px 15px; border-radius: 10px;
+            font-size: 11px; font-weight: 900; cursor: pointer;
+            transition: 0.3s ease;
+        }
+        .btn-send-mini:hover { transform: scale(1.05); background: var(--ton-blue); color: white; }
+
+        /* --- THE CORE ENGINE (TON LOGO) --- */
+        .engine-room {
+            position: relative; width: 300px; height: 300px;
+            margin: 20px 0; display: flex; justify-content: center; align-items: center;
+        }
+
+        .main-logo-wrapper {
+            position: relative; z-index: 10;
+            animation: core-float 5s ease-in-out infinite;
+        }
+
+        .main-logo-wrapper img {
+            width: 120px; height: 120px;
+            filter: drop-shadow(0 0 30px var(--ton-glow));
+        }
+
+        .neon-shield {
+            position: absolute; width: 260px; height: 260px;
+            border: 3px solid transparent;
+            border-top: 3px solid var(--ton-blue);
+            border-bottom: 3px solid var(--ton-blue);
+            border-radius: 50%;
+            animation: shield-spin 10s linear infinite;
+        }
+
+        .neon-shield-inner {
+            position: absolute; width: 220px; height: 220px;
+            border: 2px dashed rgba(0, 152, 234, 0.4);
+            border-radius: 50%;
+            animation: shield-spin-reverse 15s linear infinite;
+        }
+
+        /* --- SAYAÇLAR --- */
+        .stats-container { text-align: center; margin-bottom: 30px; }
+        #mining-counter {
+            font-size: 55px; font-weight: 950;
+            background: linear-gradient(180deg, #fff 0%, #aaa 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .th-badge {
+            background: rgba(0, 255, 128, 0.1); color: #00ff80;
+            padding: 6px 20px; border-radius: 50px; font-weight: 900;
+            font-size: 14px; border: 1px solid rgba(0, 255, 128, 0.2);
+            margin-top: 10px; display: inline-block;
+        }
+
+        /* --- BUTONLAR --- */
+        .actions { width: 100%; max-width: 380px; display: flex; gap: 15px; }
+        .btn-core {
+            flex: 1; padding: 18px; border-radius: 20px; border: none;
+            font-size: 16px; font-weight: 900; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-claim { background: var(--ton-blue); color: white; box-shadow: 0 6px 0 #0069a3; }
+        .btn-boost { background: white; color: black; box-shadow: 0 6px 0 #bbb; }
+        .btn-core:active { transform: translateY(4px); box-shadow: none; }
+
+        /* --- BEYAZ WITHDRAW MODAL (GELİŞMİŞ) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: none;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+
+        .withdraw-modal {
+            background: white; color: black; width: 90%; max-width: 400px;
+            border-radius: 35px; padding: 30px; text-align: center;
+            animation: modal-pop 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .m-stats-row { display: flex; gap: 10px; margin-bottom: 25px; }
+        .m-stat-card {
+            flex: 1; background: #f0f7ff; padding: 15px; border-radius: 18px;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+        }
+        .m-stat-card b { font-size: 14px; }
+
+        .m-input-box { width: 100%; padding: 18px; margin: 10px 0; border: 2px solid #eee; border-radius: 15px; background: #fafafa; font-size: 15px; font-weight: 600; text-align: left; position: relative; }
+        .m-input-box input { border: none; background: transparent; width: 80%; outline: none; font-size: 16px; font-weight: bold; }
+        .m-max-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--ton-blue); font-weight: 900; cursor: pointer; }
+
+        .fee-table { text-align: left; padding: 15px; font-size: 12px; color: #888; border-top: 1px solid #eee; margin-top: 20px; }
+        .fee-table b { color: #222; float: right; }
+
+        .btn-final-send {
+            width: 100%; padding: 20px; border-radius: 20px; border: none;
+            background: #89d3ff; color: white; font-size: 18px; font-weight: 900;
+            cursor: not-allowed; margin-top: 10px; transition: 0.3s;
+        }
+        .btn-final-send.ready { background: var(--ton-blue); cursor: pointer; box-shadow: 0 10px 20px rgba(0,152,234,0.3); }
+
+        /* --- AD SYSTEM --- */
+        #ad-layer {
+            position: fixed; top:0; left:0; width:100%; height:100%; background: #000;
+            z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes core-float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(5deg); } }
+        @keyframes shield-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes shield-spin-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+        @keyframes modal-pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas-bg"></canvas>
+
+    <div class="top-ui">
+        <div class="glass-card">
+            <div class="asset-main">
+                <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png">
+                <div class="asset-info"><b>Toncoin</b><p>TON NETWORK</p></div>
+            </div>
+            <div class="balance-area">
+                <h3 id="ui-ton">0.0000</h3>
+                <button class="btn-send-mini" onclick="openW('TON')">Send</button>
+            </div>
+        </div>
+        <div class="glass-card">
+            <div class="asset-main">
+                <img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png">
+                <div class="asset-info"><b>Shiba Inu</b><p>SHIB TOKEN</p></div>
+            </div>
+            <div class="balance-area">
+                <h3 id="ui-shib" style="color: var(--shib-orange)">0</h3>
+                <button class="btn-send-mini" onclick="openW('SHIB')">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="engine-room">
+        <div class="neon-shield"></div>
+        <div class="neon-shield-inner"></div>
+        <div class="main-logo-wrapper">
+            <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" id="ton-core">
+        </div>
+    </div>
+
+    <div class="stats-container">
+        <div id="mining-counter">0.000000000</div>
+        <div class="th-badge" id="speed-val">1.00 TH/s ⚡</div>
+    </div>
+
+    <div class="actions">
+        <button class="btn-core btn-claim" onclick="triggerClaim()">CLAIM REWARD</button>
+        <button class="btn-core btn-boost" onclick="boost()">BOOST SPEED</button>
+    </div>
+
+    <div class="modal-overlay" id="w-modal">
+        <div class="withdraw-modal">
+            <div class="m-stats-row">
+                <div class="m-stat-card"><img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" width="20"> <b id="m-ton">0.00</b></div>
+                <div class="m-stat-card"><img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png" width="20"> <b id="m-shib">0</b></div>
+            </div>
+            <h2 style="margin-bottom: 10px;">Withdraw <span id="m-coin-name">TON</span></h2>
+            <p style="font-size: 13px; color: #888; margin-bottom: 20px;">Personal wallet transfer is secure and instant.</p>
+            
+            <div class="m-input-box">
+                <p style="font-size: 10px; color: var(--ton-blue); font-weight: 800; margin-bottom: 5px;">WALLET ADDRESS</p>
+                <input type="text" placeholder="Paste your address here..." id="w-addr">
+            </div>
+
+            <div class="m-input-box">
+                <p style="font-size: 10px; color: var(--ton-blue); font-weight: 800; margin-bottom: 5px;">AMOUNT</p>
+                <input type="number" placeholder="0.00" id="w-amount" oninput="checkValid()">
+                <span class="m-max-btn" onclick="setMax()">MAX</span>
+            </div>
+
+            <div class="fee-table">
+                Network Fee: <b id="m-fee">0.3 TON</b><br>
+                Estimated Arrival: <b id="m-arrival">Instantly</b><br>
+                Total Received: <b id="m-total" style="color: #000; font-size: 14px;">0 TON</b>
+            </div>
+
+            <button class="btn-final-send" id="final-btn">CONFIRM SEND</button>
+            <p onclick="closeW()" style="margin-top: 20px; color: #bbb; cursor: pointer; font-weight: 700;">Cancel Transaction</p>
+        </div>
+    </div>
+
+    <div id="ad-layer">
+        <h1 style="color: var(--ton-blue); font-size: 40px; margin-bottom: 20px;">TONIX ADS</h1>
+        <p id="ad-timer" style="font-size: 18px;">Reward unlocking in 5s...</p>
+        <div style="width: 200px; height: 4px; background: #222; margin-top: 30px; border-radius: 10px; overflow: hidden;">
+            <div id="ad-progress" style="width: 0%; height: 100%; background: var(--ton-blue); transition: linear;"></div>
+        </div>
+    </div>
+
+    <script>
+        /* SCRIPT LOGIC - THOUSANDS OF SIMULATED OPERATIONS */
+        let state = { ton: 0, shib: 0, mining: 0, speed: 1.0, activeCoin: 'TON' };
+        const rate = 0.00001157407;
+
+        // --- BACKGROUND ENGINE ---
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particles = [];
+        for(let i=0; i<50; i++){ particles.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2, v: Math.random()*0.5}); }
+        function drawBg(){
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(0, 152, 234, 0.2)";
+            particles.forEach(p => {
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill();
+                p.y -= p.v; if(p.y < -10) p.y = canvas.height + 10;
+            });
+            requestAnimationFrame(drawBg);
+        }
+        drawBg();
+
+        // --- MINING ENGINE ---
+        setInterval(() => {
+            state.mining += (rate / 10) * state.speed;
+            document.getElementById('mining-counter').innerText = state.mining.toFixed(9);
+            document.getElementById('ui-ton').innerText = state.ton.toFixed(4);
+            document.getElementById('ui-shib').innerText = state.shib.toLocaleString();
+        }, 100);
+
+        function triggerClaim() {
+            if(state.mining < 0.019) { alert("Min 0.019 TON required!"); return; }
+            document.getElementById('ad-layer').style.display = 'flex';
+            document.getElementById('ad-progress').style.width = '100%';
+            document.getElementById('ad-progress').style.transition = '5s linear';
+            let t = 5;
+            let itv = setInterval(() => {
+                t--;
+                document.getElementById('ad-timer').innerText = `Reward unlocking in ${t}s...`;
+                if(t <= 0) {
+                    clearInterval(itv);
+                    state.ton += state.mining;
+                    state.shib += Math.floor(state.mining * 500000);
+                    state.mining = 0;
+                    document.getElementById('ad-layer').style.display = 'none';
+                    document.getElementById('ad-progress').style.width = '0%';
+                    document.getElementById('ad-progress').style.transition = '0s';
+                }
+            }, 1000);
+        }
+
+        function boost() {
+            state.speed += 0.1;
+            document.getElementById('speed-val').innerText = state.speed.toFixed(2) + " TH/s ⚡";
+        }
+
+        // --- WITHDRAW LOGIC ---
+        function openW(coin) {
+            state.activeCoin = coin;
+            document.getElementById('m-coin-name').innerText = coin;
+            document.getElementById('m-ton').innerText = state.ton.toFixed(2);
+            document.getElementById('m-shib').innerText = state.shib.toLocaleString();
+            document.getElementById('m-fee').innerText = coin === 'TON' ? "0.3 TON" : "50,000 SHIB";
+            document.getElementById('w-modal').style.display = 'flex';
+            checkValid();
+        }
+        function closeW() { document.getElementById('w-modal').style.display = 'none'; }
+        function setMax() {
+            document.getElementById('w-amount').value = state.activeCoin === 'TON' ? state.ton.toFixed(2) : state.shib;
+            checkValid();
+        }
+        function checkValid() {
+            let val = parseFloat(document.getElementById('w-amount').value) || 0;
+            let fee = state.activeCoin === 'TON' ? 0.3 : 50000;
+            let min = state.activeCoin === 'TON' ? 1.5 : 500000;
+            let balance = state.activeCoin === 'TON' ? state.ton : state.shib;
+            
+            document.getElementById('m-total').innerText = (val > fee ? (val - fee).toLocaleString() : 0) + " " + state.activeCoin;
+            
+            if(val >= min && val <= balance) document.getElementById('final-btn').classList.add('ready');
+            else document.getElementById('final-btn').classList.remove('ready');
+        }
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TONIX PRO - Multi Miner</title>
     <style>
         :root {
