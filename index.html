@@ -3,255 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TONIX - Pro Miner Engine</title>
+    <title>TONIX - Pro Miner App</title>
     <style>
         :root {
             --ton-blue: #0098ea;
-            --shib-orange: #f06522;
             --bg-black: #050505;
             --card-bg: #121212;
-            --neon-glow: 0 0 25px rgba(0, 152, 234, 0.6);
             --modal-bg: #ffffff;
+            --neon-shadow: 0 0 20px rgba(0, 152, 234, 0.7), inset 0 0 10px rgba(0, 152, 234, 0.5);
         }
 
         body {
             background-color: var(--bg-black);
             color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
             margin: 0;
-            min-height: 100vh;
+            padding: 20px;
         }
 
-        /* --- CÜZDAN PANELİ --- */
-        .wallet-container {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 25px;
-        }
-
-        .asset-card {
+        /* --- ÜST PANEL (CÜZDAN) --- */
+        .wallet-card {
+            width: 100%; max-width: 380px;
             background: var(--card-bg);
-            border-radius: 18px;
+            border-radius: 20px;
             padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid #1e1e1e;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; border: 1px solid #1e1e1e;
         }
 
-        .asset-main { display: flex; align-items: center; gap: 12px; }
-        .asset-icon { width: 38px; height: 38px; border-radius: 50%; }
+        .asset-box { display: flex; align-items: center; gap: 12px; }
+        .asset-icon { width: 35px; height: 35px; border-radius: 50%; }
         .asset-info p { margin: 0; font-size: 14px; font-weight: bold; }
         .asset-info span { font-size: 11px; color: #777; }
 
-        .asset-right { text-align: right; }
-        .asset-right h3 { margin: 0; font-size: 17px; font-weight: 800; }
         .btn-send-trigger {
-            margin-top: 4px;
-            padding: 4px 12px;
-            background: #f0f0f0;
-            color: #111;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 900;
-            cursor: pointer;
-            border: none;
+            background: #f5f5f5; color: #111; border: none;
+            padding: 8px 16px; border-radius: 10px;
+            font-size: 13px; font-weight: 800; cursor: pointer;
         }
 
-        /* --- AGAM İŞTE DÜZELTİLEN O EFSANE FAN --- */
-        .fan-container {
-            position: relative;
-            width: 310px;
-            height: 310px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 20px 0;
+        /* --- 11 KANATLI GERÇEKÇİ FAN (GÖRSELDEKİ GİBİ) --- */
+        .miner-stage {
+            position: relative; width: 320px; height: 320px;
+            display: flex; justify-content: center; align-items: center;
+            margin: 30px 0;
         }
 
-        /* Dış Mavi Parlayan Halka */
-        .neon-outer-ring {
-            position: absolute;
-            width: 290px;
-            height: 290px;
-            border-radius: 50%;
-            border: 4px solid var(--ton-blue);
-            box-shadow: var(--neon-glow), inset var(--neon-glow);
-            z-index: 1;
+        .neon-circle {
+            position: absolute; width: 300px; height: 300px;
+            border-radius: 50%; border: 4px solid var(--ton-blue);
+            box-shadow: var(--neon-shadow); z-index: 1;
         }
 
-        /* 11 Kanatlı Pervane Grubu */
-        .blade-assembly {
-            position: relative;
-            width: 260px;
-            height: 260px;
-            z-index: 3;
-            animation: fan-spin 0.45s linear infinite;
+        .fan-hub {
+            position: absolute; width: 75px; height: 75px;
+            background: radial-gradient(circle, #fff, #a0a0a0, #444);
+            border-radius: 50%; z-index: 10;
+            display: flex; justify-content: center; align-items: center;
+            border: 2px solid #222; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
         }
 
-        /* Her bir kanatın kavisli yapısı */
+        .fan-blades-wrap {
+            width: 270px; height: 270px; z-index: 5;
+            animation: spin 0.4s linear infinite;
+        }
+
+        /* Kavisli 11 Kanat Yapısı */
         .blade {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 115px;
-            height: 55px;
+            position: absolute; top: 50%; left: 50%;
+            width: 120px; height: 60px;
             background: linear-gradient(135deg, #005a8d 0%, var(--ton-blue) 100%);
-            border-radius: 50% 5% 50% 5%; /* Kavisli görsel yapısı */
+            border-radius: 40% 10% 40% 10%;
             transform-origin: 0% 50%;
-            box-shadow: inset 2px 2px 10px rgba(0,0,0,0.5);
-            opacity: 0.95;
-            border: 0.5px solid rgba(255,255,255,0.1);
+            opacity: 0.95; box-shadow: inset 2px 2px 8px rgba(0,0,0,0.4);
         }
 
-        /* Gümüş Metalik Orta Göbek */
-        .center-hub {
-            position: absolute;
-            width: 70px;
-            height: 70px;
-            background: radial-gradient(circle, #ffffff 0%, #a0a0a0 45%, #444 100%);
-            border-radius: 50%;
-            z-index: 10;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 2px solid #222;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.7);
-        }
+        /* --- SAYAÇ VE BUTONLAR --- */
+        #counter { font-size: 45px; font-weight: 900; margin: 10px 0; font-family: monospace; }
+        .speed-badge { color: #00ff00; font-weight: bold; margin-bottom: 25px; font-size: 16px; }
 
-        .ton-logo-inner {
-            width: 32px;
-            filter: drop-shadow(0 0 5px var(--ton-blue));
-        }
-
-        /* --- SAYAC VE DURUM --- */
-        .stats-wrap { text-align: center; margin-top: 15px; }
-        .counter { font-size: 44px; font-weight: 900; font-family: 'Courier New', monospace; letter-spacing: -1px; }
-        .speed-badge { 
-            color: #00ff00; font-weight: bold; font-size: 16px; 
-            background: rgba(0,255,0,0.1); padding: 4px 15px; border-radius: 20px;
-            display: inline-block; margin-top: 8px;
-        }
-
-        /* --- WITHDRAW MODAL (GÖRSELDEKİ BEYAZ EKRAN) --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: none;
-            justify-content: center; align-items: center; z-index: 1000;
-        }
-
-        .withdraw-box {
-            background: var(--modal-bg); color: #111;
-            width: 90%; max-width: 380px; border-radius: 25px;
-            padding: 25px; text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        .m-header-balances { display: flex; gap: 10px; margin-bottom: 20px; }
-        .m-bal-item { 
-            flex: 1; background: #f1f8ff; padding: 10px; border-radius: 12px;
-            font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;
-        }
-
-        .m-input {
-            width: 100%; padding: 16px; margin: 10px 0;
-            border: 1px solid #eee; border-radius: 15px;
-            background: #fafafa; font-size: 15px; outline: none;
-        }
-
-        .btn-send-final {
-            width: 100%; padding: 18px; background: var(--ton-blue);
-            color: white; border: none; border-radius: 18px;
-            font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;
-        }
-
-        /* --- ANIMASYONLAR --- */
-        @keyframes fan-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-        .btn-group {
-            display: flex; gap: 15px; width: 100%; max-width: 400px; margin-top: 25px;
-        }
+        .btn-row { display: flex; gap: 15px; width: 100%; max-width: 380px; }
         .btn-main {
-            flex: 1; padding: 20px; border-radius: 18px; border: none;
-            font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.2s;
+            flex: 1; padding: 18px; border-radius: 15px; border: none;
+            font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;
         }
         .btn-claim { background: var(--ton-blue); color: white; box-shadow: 0 5px 0 #006da8; }
         .btn-boost { background: white; color: black; box-shadow: 0 5px 0 #ccc; }
         .btn-main:active { transform: translateY(3px); box-shadow: none; }
 
+        /* --- WITHDRAW MODAL (GÖRSELDEKİ EKRAN) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: none;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--modal-bg); color: #111;
+            width: 90%; max-width: 380px; border-radius: 25px;
+            padding: 25px; text-align: center; animation: pop 0.3s ease;
+        }
+
+        .m-header { display: flex; gap: 10px; margin-bottom: 20px; }
+        .m-stat { flex: 1; background: #f0f7ff; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+        .m-input-box { width: 100%; padding: 16px; margin: 8px 0; border: 1px solid #eee; border-radius: 15px; background: #fafafa; font-size: 15px; outline: none; box-sizing: border-box; }
+
+        .btn-send-final { width: 100%; padding: 18px; background: #89d3ff; color: white; border-radius: 18px; border: none; font-size: 16px; font-weight: bold; margin-top: 15px; cursor: pointer; }
+
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div class="wallet-container">
-        <div class="asset-card">
-            <div class="asset-main">
-                <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="asset-icon">
-                <div class="asset-info"><p>Toncoin</p><span>Balance TON</span></div>
-            </div>
-            <div class="asset-right">
-                <h3 id="w-ton">0.0000</h3>
-                <button class="btn-send-trigger" onclick="openModal('TON')">Send</button>
-            </div>
+    <div class="wallet-card">
+        <div class="asset-box">
+            <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="asset-icon">
+            <div class="asset-info"><p>Toncoin</p><span id="bal-ton-txt">0.00 TON</span></div>
         </div>
-        <div class="asset-card">
-            <div class="asset-main">
-                <img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png" class="asset-icon">
-                <div class="asset-info"><p>Shiba Inu</p><span>Balance SHIB</span></div>
-            </div>
-            <div class="asset-right">
-                <h3 id="w-shib" style="color:var(--shib-orange)">0</h3>
-                <button class="btn-send-trigger" onclick="openModal('SHIB')">Send</button>
-            </div>
-        </div>
+        <button class="btn-send-trigger" onclick="openModal('TON')">Send</button>
     </div>
 
-    <div class="fan-container">
-        <div class="neon-outer-ring"></div>
-        <div class="center-hub">
-            <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="ton-logo-inner">
+    <div class="wallet-card">
+        <div class="asset-box">
+            <img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png" class="asset-icon">
+            <div class="asset-info"><p>Shiba Inu</p><span id="bal-shib-txt">0 SHIB</span></div>
         </div>
-        <div class="blade-assembly" id="fan-blades">
+        <button class="btn-send-trigger" onclick="openModal('SHIB')">Send</button>
+    </div>
+
+    <div class="miner-stage">
+        <div class="neon-circle"></div>
+        <div class="fan-hub">
+            <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" width="30">
+        </div>
+        <div class="fan-blades-wrap" id="blade-container">
             </div>
     </div>
 
-    <div class="stats-wrap">
-        <div class="counter" id="mining-display">0.000000000</div>
-        <div class="speed-badge" id="speed-text">1.00 TH/s ⚡</div>
-    </div>
+    <div id="counter">0.000000000</div>
+    <div class="speed-badge" id="speed-val">1.00 TH/s ⚡</div>
 
-    <div class="btn-group">
+    <div class="btn-row">
         <button class="btn-main btn-claim" onclick="claim()">CLAIM</button>
         <button class="btn-main btn-boost" onclick="boost()">BOOST +0.10</button>
     </div>
 
-    <div class="modal-overlay" id="withdrawModal">
-        <div class="withdraw-box">
-            <div class="m-header-balances">
-                <div class="m-bal-item"><img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" width="16"> <span id="m-ton">0</span></div>
-                <div class="m-bal-item"><img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png" width="16"> <span id="m-shib">0</span></div>
+    <div id="modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="m-header">
+                <div class="m-stat"><img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" width="16"> <span id="m-ton">0</span></div>
+                <div class="m-stat"><img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png" width="16"> <span id="m-shib">0</span></div>
             </div>
-            <h3 style="margin:0">Enter your personal <span id="m-coin-name">TON</span> address</h3>
-            <p style="font-size:12px; color:#888; margin-top:5px;">This amount will be sent to the compatible wallet address</p>
             
-            <p style="font-weight:bold; font-size:14px; margin-top:20px;">Minimum send amount is <span id="m-min">1.5 TON</span></p>
+            <h3 style="margin:0">Enter your personal <span id="m-name">TON</span> address</h3>
+            <p style="font-size:12px; color:#888; margin: 5px 0 20px 0;">This amount will be sent to the compatible wallet address</p>
             
-            <input type="text" class="m-input" placeholder="Your address">
+            <p style="font-weight:bold; font-size:14px; text-align:left; margin-bottom:8px;">Minimum send amount is <span id="m-min">1.5 TON</span></p>
+            
+            <input type="text" class="m-input-box" placeholder="Your address">
             <div style="position:relative">
-                <input type="number" class="m-input" placeholder="Amount">
+                <input type="number" class="m-input-box" placeholder="Amount">
                 <span style="position:absolute; right:15px; top:25px; color:var(--ton-blue); font-weight:bold; cursor:pointer">MAX</span>
             </div>
 
-            <div style="text-align:left; font-size:13px; color:#999; margin:10px 5px;">
+            <div style="text-align:left; font-size:13px; color:#999; margin:15px 5px;">
                 Network fee: <span id="m-fee">0.3 TON</span><br>
-                <b>Receive amount: 0</b>
+                <b style="color:#111">Receive amount: 0</b>
             </div>
 
             <button class="btn-send-final">Send</button>
@@ -260,49 +182,48 @@
     </div>
 
     <script>
-        let ton = 0.0; let shib = 0; let mining = 0; let speed = 1.0;
-        const rate = 0.00001157407; // 1 TH/s = 1 TON/Day
+        let ton = 0; let shib = 0; let mining = 0; let speed = 1.0;
+        const rate = 0.00001157407;
 
-        // 11 Kanat Üretici
-        const fan = document.getElementById('fan-blades');
+        // 11 Kanat Üretimi (Görseldeki kavisle birebir)
+        const container = document.getElementById('blade-container');
         for(let i=0; i<11; i++) {
-            let blade = document.createElement('div');
-            blade.className = 'blade';
-            blade.style.transform = `rotate(${i * (360/11)}deg)`;
-            fan.appendChild(blade);
+            let b = document.createElement('div');
+            b.className = 'blade';
+            b.style.transform = `rotate(${i * (360/11)}deg)`;
+            container.appendChild(b);
         }
 
-        function update() {
+        setInterval(() => {
             mining += (rate * speed) / 10;
-            document.getElementById('mining-display').innerText = mining.toFixed(9);
-        }
-        setInterval(update, 100);
+            document.getElementById('counter').innerText = mining.toFixed(9);
+        }, 100);
 
         function claim() {
             if(mining >= 0.019) {
                 ton += mining; shib += Math.floor(mining * 100000);
                 mining = 0; updateUI();
-                alert("Claim Successful!");
-            } else { alert("Minimum 0.019 TON needed!"); }
+                alert("Claim Success!");
+            } else { alert("Min 0.019 TON required!"); }
         }
 
         function boost() {
             speed += 0.10;
-            document.getElementById('speed-text').innerText = speed.toFixed(2) + " TH/s ⚡";
-            let animSpeed = 0.45 / speed;
-            fan.style.animationDuration = (animSpeed > 0.05 ? animSpeed : 0.05) + "s";
+            document.getElementById('speed-val').innerText = speed.toFixed(2) + " TH/s ⚡";
+            let s = 0.4 / speed;
+            container.style.animationDuration = (s > 0.05 ? s : 0.05) + "s";
         }
 
         function updateUI() {
-            document.getElementById('w-ton').innerText = ton.toFixed(4);
-            document.getElementById('w-shib').innerText = shib.toLocaleString();
+            document.getElementById('bal-ton-txt').innerText = ton.toFixed(4) + " TON";
+            document.getElementById('bal-shib-txt').innerText = shib.toLocaleString() + " SHIB";
             document.getElementById('m-ton').innerText = ton.toFixed(2);
             document.getElementById('m-shib').innerText = shib;
         }
 
         function openModal(type) {
-            document.getElementById('withdrawModal').style.display = 'flex';
-            document.getElementById('m-coin-name').innerText = type;
+            document.getElementById('modal').style.display = 'flex';
+            document.getElementById('m-name').innerText = type;
             if(type === 'TON') {
                 document.getElementById('m-min').innerText = "1.5 TON";
                 document.getElementById('m-fee').innerText = "0.3 TON";
@@ -312,7 +233,7 @@
             }
         }
 
-        function closeModal() { document.getElementById('withdrawModal').style.display = 'none'; }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
     </script>
 </body>
 </html>
