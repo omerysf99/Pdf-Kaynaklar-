@@ -3,354 +3,365 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONIX - Ultimate Miner PRO</title>
+    <title>TONIX PRO - Elite Anime Miner</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
-        /* --- DİNAMİK TASARIM MİMARİSİ --- */
+        /* --- DİNAMİK TASARIM SİSTEMİ (CSS VARIABLES) --- */
         :root {
             --primary: #0098ea;
             --primary-dark: #007bbd;
-            --primary-glow: rgba(0, 152, 234, 0.5);
-            --shib: #f06522;
+            --primary-glow: rgba(0, 152, 234, 0.4);
             --bg-deep: #050505;
-            --card-glass: rgba(18, 18, 18, 0.9);
+            --card-glass: rgba(18, 18, 18, 0.95);
             --white: #ffffff;
-            --gray: #888;
+            --gray: #8e8e93;
+            --success: #34c759;
+            --warning: #ffcc00;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        
+        /* --- GENEL SIFIRLAMA --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             background-color: var(--bg-deep);
             color: var(--white);
             font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
+            overflow: hidden; /* Scroll engelleme (SPA hissi için) */
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* --- ARKA PLAN EFEKTİ --- */
+        #star-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
+
+        /* --- ANA KONTEYNER --- */
+        .app-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* --- SAYFA YAPISI --- */
+        .page {
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            height: calc(100% - 85px);
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+        }
+        .page.active { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- HEADER --- */
+        .header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-pill {
+            background: var(--card-glass);
+            padding: 8px 15px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .user-pill img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--primary); }
+
+        /* --- MADENCİLİK SAYFASI (HOME) --- */
+        .mining-core {
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
-            padding-bottom: 100px;
+            justify-content: center;
         }
 
-        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
-
-        /* --- ÜST PANEL: CÜZDANLAR --- */
-        .header-section { width: 100%; max-width: 440px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        
-        .wallet-card {
-            background: var(--card-glass);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 24px; padding: 18px;
-            display: flex; justify-content: space-between; align-items: center;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        .engine-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin-bottom: 30px;
         }
 
-        .asset-info { display: flex; align-items: center; gap: 14px; }
-        .asset-info img { width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; }
-        .asset-info div b { display: block; font-size: 15px; letter-spacing: 0.3px; }
-        .asset-info div span { font-size: 11px; color: var(--gray); font-weight: 600; }
-
-        .asset-balance { text-align: right; }
-        .asset-balance h3 { font-size: 18px; font-weight: 900; margin-bottom: 4px; }
-        .btn-send {
-            background: var(--white); color: #000; border: none;
-            padding: 6px 16px; border-radius: 12px; font-size: 12px; font-weight: 900;
-            cursor: pointer; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .btn-send:hover { transform: scale(1.1); background: var(--primary); color: white; }
-
-        /* --- ANA MOTOR (LOGO) --- */
-        .core-engine {
-            position: relative; width: 320px; height: 320px;
-            margin: 10px 0; display: flex; justify-content: center; align-items: center;
+        /* ANA ANIME GÖRSELİ */
+        .main-character {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: 4px solid var(--primary);
+            object-fit: cover;
+            z-index: 5;
+            box-shadow: 0 0 50px var(--primary-glow);
+            animation: characterFloat 4s ease-in-out infinite;
         }
 
         .orbit-ring {
-            position: absolute; border: 2px solid transparent; border-radius: 50%;
-            animation: rotate 10s linear infinite;
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            border-top-color: transparent;
+            opacity: 0.3;
         }
-        .orbit-1 { width: 260px; height: 260px; border-top: 2px solid var(--primary); border-bottom: 2px solid var(--primary); opacity: 0.4; }
-        .orbit-2 { width: 220px; height: 220px; border-left: 2px solid var(--primary); border-right: 2px solid var(--primary); animation-duration: 6s; opacity: 0.6; }
+        .ring-1 { animation: rotate 10s linear infinite; }
+        .ring-2 { width: 80%; height: 80%; top: 10%; left: 10%; border-bottom-color: transparent; animation: rotate 6s linear reverse infinite; }
 
-        .main-logo {
-            width: 150px; height: 150px; z-index: 10;
-            border-radius: 50%; object-fit: cover;
-            border: 3px solid var(--primary);
-            filter: drop-shadow(0 0 30px var(--primary-glow));
-            animation: pulse-core 4s ease-in-out infinite;
-        }
-
-        /* --- MADENCİLİK BİLGİLERİ --- */
-        .stats-box { text-align: center; margin-bottom: 30px; }
-        #mining-display {
-            font-size: 50px; font-weight: 900; font-family: 'JetBrains Mono', monospace;
-            background: linear-gradient(180deg, #fff 0%, #999 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .speed-pill {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(0, 255, 128, 0.1); color: #00ff80;
-            padding: 8px 24px; border-radius: 50px; font-weight: 900;
-            font-size: 15px; border: 1px solid rgba(0, 255, 128, 0.2); margin-top: 10px;
-        }
-
-        /* --- AKSİYON BUTONLARI --- */
-        .controls { width: 100%; max-width: 400px; display: flex; gap: 15px; padding: 0 20px; }
-        .btn-main {
-            flex: 1; padding: 20px; border-radius: 22px; border: none;
-            font-size: 17px; font-weight: 900; cursor: pointer; transition: 0.2s;
-        }
-        .btn-claim { background: var(--primary); color: white; box-shadow: 0 6px 0 var(--primary-dark); }
-        .btn-boost { background: var(--white); color: black; box-shadow: 0 6px 0 #bbb; }
-        .btn-main:active { transform: translateY(4px); box-shadow: none; }
-
-        /* --- PROFESYONEL WITHDRAW MODAL --- */
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 2000;
-        }
-        .modal {
-            background: var(--white); color: #111; width: 92%; max-width: 420px;
-            border-radius: 40px; padding: 35px; text-align: center;
-            animation: modal-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .modal-top-info { display: flex; gap: 12px; margin-bottom: 30px; }
-        .stat-chip {
-            flex: 1; background: #f4f8fb; padding: 15px; border-radius: 20px;
-            display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 900;
-        }
-        .stat-chip img { border-radius: 50%; object-fit: cover; }
-        .input-wrap { text-align: left; margin-bottom: 18px; position: relative; }
-        .input-wrap label { font-size: 12px; font-weight: 900; color: #aaa; margin-left: 10px; text-transform: uppercase; }
-        .input-field {
-            width: 100%; padding: 18px; border-radius: 20px; border: 2.5px solid #f0f0f0;
-            background: #fafafa; font-size: 16px; font-weight: 700; margin-top: 6px; transition: 0.3s;
-        }
-        .input-field:focus { border-color: var(--primary); background: #fff; }
-        .max-trigger { position: absolute; right: 20px; bottom: 18px; color: var(--primary); font-weight: 900; cursor: pointer; }
-
-        .fee-info { background: #fdfdfd; padding: 20px; border-radius: 20px; text-align: left; font-size: 12px; color: #888; border: 1px solid #f0f0f0; }
-        .fee-info b { color: #111; float: right; }
-
-        .btn-submit {
-            width: 100%; padding: 22px; border-radius: 22px; border: none;
-            background: #daeeff; color: white; font-size: 18px; font-weight: 900;
-            margin-top: 20px; cursor: pointer; transition: 0.3s;
-        }
-        .btn-submit.ready { background: var(--primary); box-shadow: 0 10px 25px var(--primary-glow); }
-
-        /* --- ALT TAB BAR --- */
-        .tab-bar {
-            position: fixed; bottom: 0; width: 100%; height: 85px;
-            background: rgba(12, 12, 12, 0.98); backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex; justify-content: space-around; align-items: center; z-index: 1000;
-        }
-        .tab-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #555; text-decoration: none; cursor: pointer; }
-        .tab-btn.active { color: var(--primary); }
-        .tab-btn svg { width: 26px; height: 26px; fill: currentColor; }
-        .tab-btn span { font-size: 11px; font-weight: 700; }
-
-        /* --- ANIMASYONLAR --- */
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes pulse-core { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px var(--primary-glow)); } 50% { transform: scale(1.1); filter: drop-shadow(0 0 40px var(--primary-glow)); } }
-        @keyframes modal-up { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes characterFloat { 0%, 100% { transform: translate(-50%, -55%); } 50% { transform: translate(-50%, -45%); } }
 
-        /* --- REKLAM KATMANI --- */
-        #ad-box { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        /* --- SAYI GÖSTERGESİ --- */
+        .balance-display { text-align: center; margin-bottom: 40px; }
+        .balance-display h1 { font-family: 'JetBrains Mono'; font-size: 42px; font-weight: 900; letter-spacing: -2px; }
+        .balance-display span { color: var(--gray); font-size: 14px; text-transform: uppercase; font-weight: 800; }
+
+        /* --- BUTONLAR --- */
+        .action-row { display: flex; gap: 15px; width: 100%; }
+        .btn {
+            flex: 1;
+            padding: 18px;
+            border-radius: 20px;
+            border: none;
+            font-size: 16px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 6px 0 var(--primary-dark); }
+        .btn-secondary { background: var(--white); color: black; box-shadow: 0 6px 0 #ccc; }
+        .btn:active { transform: translateY(4px); box-shadow: none; }
+
+        /* --- ALT MENÜ (TAB BAR) --- */
+        .tab-bar {
+            height: 85px;
+            background: rgba(10, 10, 10, 0.98);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding: 0 10px;
+        }
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: #555;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .tab-item.active { color: var(--primary); }
+        .tab-item svg { width: 24px; height: 24px; fill: currentColor; }
+        .tab-item span { font-size: 10px; font-weight: 700; }
+
+        /* --- MODAL (ÇEKİM) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 1000;
+            display: none; justify-content: center; align-items: flex-end;
+        }
+        .modal-content {
+            background: white; color: black;
+            width: 100%; max-width: 480px;
+            border-radius: 30px 30px 0 0;
+            padding: 30px;
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        /* --- LİSTE ELEMANLARI (GÖREVLER) --- */
+        .task-card {
+            background: var(--card-glass);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 15px; border-radius: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px;
+        }
+        .task-info { display: flex; gap: 15px; align-items: center; }
+        .task-icon { width: 45px; height: 45px; background: rgba(0,152,234,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-weight: 900; }
+        
+        /* --- SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 0; background: transparent; }
     </style>
 </head>
 <body>
 
-    <canvas id="bg-canvas"></canvas>
+    <canvas id="star-canvas"></canvas>
 
-    <div class="header-section">
-        <div class="wallet-card">
-            <div class="asset-info">
-                <img src="https://i.ibb.co/Xfq9r9p/anime-girl.png">
-                <div><b>Toncoin</b><span>TON NETWORK</span></div>
+    <div class="app-container">
+        <header class="header">
+            <div class="user-pill">
+                <img src="photo_2026-01-01_19-32-18.jpg">
+                <span id="username">@omer_miner</span>
             </div>
-            <div class="asset-balance">
-                <h3 id="top-ton">0.0000</h3>
-                <button class="btn-send" onclick="openModal('TON')">Send</button>
+            <div id="connection-status" style="color: var(--success); font-size: 12px; font-weight: 900;">• ON-CHAIN</div>
+        </header>
+
+        <div id="home" class="page active">
+            <div class="mining-core">
+                <div class="engine-container">
+                    <div class="orbit-ring ring-1"></div>
+                    <div class="orbit-ring ring-2"></div>
+                    <img src="photo_2026-01-01_19-32-18.jpg" class="main-character">
+                </div>
+
+                <div class="balance-display">
+                    <span id="coin-label">Unclaimed TON</span>
+                    <h1 id="mining-val">0.000000</h1>
+                    <div style="background: rgba(52, 199, 89, 0.1); color: var(--success); padding: 5px 15px; border-radius: 50px; font-size: 12px; font-weight: 900; display: inline-block;">
+                        1.25 TH/s ACTIVE ⚡
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    <button class="btn btn-primary" onclick="handleClaim()">CLAIM</button>
+                    <button class="btn btn-secondary" onclick="openPage('tasks')">BOOST</button>
+                </div>
             </div>
         </div>
-        <div class="wallet-card">
-            <div class="asset-info">
-                <img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png">
-                <div><b>Shiba Inu</b><span>SHIB TOKEN</span></div>
+
+        <div id="wallet" class="page">
+            <h2 style="font-size: 28px; margin-bottom: 20px;">My Wallet</h2>
+            <div class="task-card" style="background: linear-gradient(135deg, #0098ea 0%, #005a8b 100%); border: none;">
+                <div>
+                    <span style="color: rgba(255,255,255,0.7); font-size: 12px;">Main Balance</span>
+                    <h2 style="font-size: 32px; font-family: 'JetBrains Mono';" id="main-bal">0.00 TON</h2>
+                </div>
+                <button class="btn" style="background: white; color: black; padding: 10px 20px; font-size: 12px;" onclick="openWithdraw()">SEND</button>
             </div>
-            <div class="asset-balance">
-                <h3 id="top-shib" style="color:var(--shib)">0</h3>
-                <button class="btn-send" onclick="openModal('SHIB')">Send</button>
+            <h4 style="margin: 20px 0 10px; color: var(--gray);">History</h4>
+            <div id="history-list">
+                <div class="task-card"><div class="task-info"><b>Welcome Bonus</b></div><div style="color:var(--success)">+0.50 TON</div></div>
             </div>
         </div>
+
+        <div id="tasks" class="page">
+            <h2 style="font-size: 28px; margin-bottom: 20px;">Daily Tasks</h2>
+            <div class="task-card">
+                <div class="task-info">
+                    <div class="task-icon">TG</div>
+                    <div><b>Join Community</b><br><small>+0.25 TON</small></div>
+                </div>
+                <button class="btn btn-primary" style="padding: 10px 20px; font-size: 12px;">GO</button>
+            </div>
+            <div class="task-card">
+                <div class="task-info">
+                    <div class="task-icon">X</div>
+                    <div><b>Follow on X</b><br><small>+0.15 TON</small></div>
+                </div>
+                <button class="btn btn-primary" style="padding: 10px 20px; font-size: 12px;">GO</button>
+            </div>
+        </div>
+
+        <nav class="tab-bar">
+            <div class="tab-item active" onclick="openPage('home', this)">
+                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                <span>MINING</span>
+            </div>
+            <div class="tab-item" onclick="openPage('tasks', this)">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l3.59-3.58L17 12l-5 5z"/></svg>
+                <span>TASKS</span>
+            </div>
+            <div class="tab-item" onclick="openPage('wallet', this)">
+                <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                <span>WALLET</span>
+            </div>
+        </nav>
     </div>
 
-    <div class="core-engine">
-        <div class="orbit-ring orbit-1"></div>
-        <div class="orbit-ring orbit-2"></div>
-        <img src="https://i.ibb.co/Xfq9r9p/anime-girl.png" class="main-logo">
-    </div>
-
-    <div class="stats-box">
-        <div id="mining-display">0.000000000</div>
-        <div class="speed-pill" id="speed-tag">1.00 TH/s ⚡</div>
-    </div>
-
-    <div class="controls">
-        <button class="btn-main btn-claim" onclick="runClaim()">CLAIM REWARD</button>
-        <button class="btn-main btn-boost" onclick="runBoost()">BOOST</button>
-    </div>
-
-    <div class="overlay" id="withdraw-overlay">
-        <div class="modal">
-            <div class="modal-top-info">
-                <div class="stat-chip"><img src="https://i.ibb.co/Xfq9r9p/anime-girl.png" width="20" height="20"> <span id="m-stat-ton">0.00</span></div>
-                <div class="stat-chip" style="background:#fff5f0;"><img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png" width="20"> <span id="m-stat-shib">0</span></div>
-            </div>
-
-            <h2 style="font-weight: 900; margin-bottom: 5px; font-size: 24px;">Send <span id="m-target">TON</span></h2>
-            <p style="color: #888; font-size: 14px; margin-bottom: 25px;">Personal wallet transfer is secure.</p>
-
-            <div class="input-wrap">
-                <label>Wallet Address</label>
-                <input type="text" class="input-field" placeholder="Paste address here..." id="inp-addr">
-            </div>
-
-            <div class="input-wrap">
-                <label>Amount</label>
-                <input type="number" class="input-field" placeholder="0.00" id="inp-amt" oninput="liveCheck()">
-                <span class="max-trigger" onclick="pushMax()">MAX</span>
-            </div>
-
-            <div class="fee-info">
-                Network Fee: <b id="m-fee">0.3 TON</b><br>
-                Minimum Limit: <b id="m-min">1.5 TON</b><br>
-                You will receive: <b id="m-receive" style="color:#000; font-size:15px;">0 TON</b>
-            </div>
-
-            <button class="btn-submit" id="btn-final" onclick="executeWithdraw()">SEND NOW</button>
-            <p style="margin-top: 20px; color: #ccc; cursor: pointer; font-weight: 800;" onclick="closeModal()">CLOSE</p>
+    <div class="modal-overlay" id="withdraw-modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 10px;">Withdraw TON</h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Minimal transfer is 2.5 TON.</p>
+            <input type="text" placeholder="Wallet Address" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px;">
+            <input type="number" placeholder="Amount" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 25px;">
+            <button class="btn btn-primary" style="width: 100%;" onclick="alert('Insufficient Balance!')">CONFIRM</button>
+            <p style="text-align: center; margin-top: 15px; font-weight: 800; cursor: pointer;" onclick="closeWithdraw()">CANCEL</p>
         </div>
     </div>
-
-    <div id="ad-box">
-        <h1 style="color: var(--primary); font-size: 40px; font-weight: 900;">TONIX ADS</h1>
-        <p id="ad-timer" style="color: #555; font-size: 18px; margin-top: 10px;">Loading rewards in 5s...</p>
-        <div style="width: 200px; height: 4px; background: #222; margin-top: 40px; border-radius: 10px; overflow: hidden;">
-            <div id="ad-progress" style="width: 0%; height: 100%; background: var(--primary); transition: 5s linear;"></div>
-        </div>
-    </div>
-
-    <nav class="tab-bar">
-        <div class="tab-btn"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
-        <div class="tab-btn"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Friends</span></div>
-        <div class="tab-btn active"><svg viewBox="0 0 24 24"><path d="M13 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V9l-7-7zm0 1.5L18.5 9H13V3.5z"/></svg><span>Mining</span></div>
-        <div class="tab-btn"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l3.59-3.58L17 12l-5 5z"/></svg><span>Tasks</span></div>
-        <div class="tab-btn"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg><span>Help</span></div>
-    </nav>
 
     <script>
-        /* --- CORE SYSTEM VARIABLES --- */
-        let db = { ton: 0, shib: 0, mining: 0, speed: 1.0, activeCoin: 'TON' };
-        const baseIncome = 0.00001157;
+        /* --- GLOBAL DATA --- */
+        let state = {
+            mining: 0,
+            wallet: 0.50,
+            rate: 0.0000142, // Saniyede kazanılan miktar
+            lastSync: Date.now()
+        };
 
-        // --- BG PARTICLES ---
-        const canvas = document.getElementById('bg-canvas');
+        /* --- ENGINE: MINING --- */
+        function updateMining() {
+            state.mining += state.rate / 10;
+            document.getElementById('mining-val').innerText = state.mining.toFixed(6);
+            requestAnimationFrame(updateMining);
+        }
+        updateMining();
+
+        /* --- UI: NAVIGATION --- */
+        function openPage(pageId, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            if(el) el.classList.add('active');
+            
+            if(pageId === 'wallet') {
+                document.getElementById('main-bal').innerText = state.wallet.toFixed(2) + " TON";
+            }
+        }
+
+        /* --- UI: ACTIONS --- */
+        function handleClaim() {
+            if(state.mining < 0.005) {
+                alert("Min claim amount is 0.005 TON");
+                return;
+            }
+            state.wallet += state.mining;
+            state.mining = 0;
+            alert("Reward claimed successfully!");
+        }
+
+        function openWithdraw() { document.getElementById('withdraw-modal').style.display = 'flex'; }
+        function closeWithdraw() { document.getElementById('withdraw-modal').style.display = 'none'; }
+
+        /* --- BACKGROUND: STARS --- */
+        const canvas = document.getElementById('star-canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        let particles = [];
-        for(let i=0; i<60; i++) particles.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, r: Math.random()*1.5, v: Math.random()*0.4});
-        
-        function drawBg() {
-            ctx.clearRect(0,0,canvas.width, canvas.height); ctx.fillStyle = "rgba(255,255,255,0.15)";
-            particles.forEach(p => {
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
-                p.y -= p.v; if(p.y < -10) p.y = canvas.height + 10;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let stars = Array(100).fill().map(() => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 1.5,
+            speed: Math.random() * 0.5 + 0.1
+        }));
+
+        function drawStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "white";
+            stars.forEach(s => {
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+                s.y -= s.speed;
+                if(s.y < 0) s.y = canvas.height;
             });
-            requestAnimationFrame(drawBg);
+            requestAnimationFrame(drawStars);
         }
-        drawBg();
-
-        // --- MINING ENGINE ---
-        setInterval(() => {
-            db.mining += (baseIncome / 10) * db.speed;
-            document.getElementById('mining-display').innerText = db.mining.toFixed(9);
-            document.getElementById('top-ton').innerText = db.ton.toFixed(4);
-            document.getElementById('top-shib').innerText = db.shib.toLocaleString();
-        }, 100);
-
-        function runClaim() {
-            if(db.mining < 0.019) return alert("Min 0.019 TON required to claim!");
-            const ad = document.getElementById('ad-box');
-            ad.style.display = 'flex';
-            document.getElementById('ad-progress').style.width = '100%';
-            let sec = 5;
-            let timer = setInterval(() => {
-                sec--;
-                document.getElementById('ad-timer').innerText = `Loading rewards in ${sec}s...`;
-                if(sec <= 0) {
-                    clearInterval(timer);
-                    db.ton += db.mining;
-                    db.shib += Math.floor(db.mining * 500000);
-                    db.mining = 0;
-                    ad.style.display = 'none';
-                    document.getElementById('ad-progress').style.width = '0%';
-                }
-            }, 1000);
-        }
-
-        function runBoost() {
-            db.speed += 0.20;
-            document.getElementById('speed-tag').innerText = db.speed.toFixed(2) + " TH/s ⚡";
-        }
-
-        // --- WITHDRAWAL LOGIC ---
-        function openModal(coin) {
-            db.activeCoin = coin;
-            document.getElementById('m-target').innerText = coin;
-            document.getElementById('m-stat-ton').innerText = db.ton.toFixed(2);
-            document.getElementById('m-stat-shib').innerText = db.shib.toLocaleString();
-            
-            const fee = coin === 'TON' ? "0.3 TON" : "50,000 SHIB";
-            const min = coin === 'TON' ? "1.5 TON" : "500,000 SHIB";
-            document.getElementById('m-fee').innerText = fee;
-            document.getElementById('m-min').innerText = min;
-            
-            document.getElementById('withdraw-overlay').style.display = 'flex';
-            liveCheck();
-        }
-
-        function closeModal() { document.getElementById('withdraw-overlay').style.display = 'none'; }
-
-        function pushMax() {
-            document.getElementById('inp-amt').value = db.activeCoin === 'TON' ? db.ton.toFixed(2) : db.shib;
-            liveCheck();
-        }
-
-        function liveCheck() {
-            let val = parseFloat(document.getElementById('inp-amt').value) || 0;
-            let feeNum = db.activeCoin === 'TON' ? 0.3 : 50000;
-            let minNum = db.activeCoin === 'TON' ? 1.5 : 500000;
-            let bal = db.activeCoin === 'TON' ? db.ton : db.shib;
-            
-            let rec = val > feeNum ? (val - feeNum) : 0;
-            document.getElementById('m-receive').innerText = rec.toLocaleString() + " " + db.activeCoin;
-            
-            let btn = document.getElementById('btn-final');
-            if(val >= minNum && val <= bal) btn.classList.add('ready');
-            else btn.classList.remove('ready');
-        }
-
-        function executeWithdraw() {
-            if(!document.getElementById('btn-final').classList.contains('ready')) return;
-            let val = parseFloat(document.getElementById('inp-amt').value);
-            if(db.activeCoin === 'TON') db.ton -= val; else db.shib -= val;
-            alert("Transfer request received! Processing via Blockchain...");
-            closeModal();
-        }
+        drawStars();
     </script>
 </body>
 </html>
