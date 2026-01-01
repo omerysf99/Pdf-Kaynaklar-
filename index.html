@@ -3,44 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AnimeBtc: Ultimate Pro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@400;900&display=swap" rel="stylesheet">
+    <title>AnimeBtc: Sudden Death Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;900&display=swap" rel="stylesheet">
     <style>
-        :root { --pink: #ff4d94; --gold: #ffcc00; --up: #00ff80; --bg: #050505; }
+        :root { --pink: #ff4d94; --gold: #ffcc00; --bg: #050505; --red: #ff3b30; }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
 
-        /* --- UI COMPONENTS --- */
-        .header { height: 80px; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1a1a1a; background: rgba(0,0,0,0.8); }
-        .stat { display: flex; flex-direction: column; align-items: center; }
-        .stat-label { font-size: 10px; color: #888; font-weight: 900; }
-        .stat-value { font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 14px; }
+        /* UI */
+        .header { height: 70px; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 2px solid #111; }
+        .stat-val { font-family: 'Orbitron'; color: var(--gold); font-size: 14px; }
+        
+        .page { position: absolute; inset: 70px 0 80px 0; padding: 20px; overflow-y: auto; display: none; }
+        .page.active { display: block; }
 
-        .page { position: absolute; inset: 80px 0 80px 0; padding: 20px; overflow-y: auto; display: none; }
-        .page.active { display: block; animation: fadeIn 0.3s; }
-
-        /* --- CARDS --- */
-        .card-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .card { background: #111; border: 1px solid #222; border-radius: 20px; padding: 15px; position: relative; }
-        .card:active { transform: scale(0.95); }
-        .card-lvl { position: absolute; top: 10px; right: 10px; font-size: 10px; color: var(--pink); font-weight: 900; }
-        .card-price { margin-top: 10px; font-weight: 900; color: var(--gold); }
-
-        /* --- BLUM GAME --- */
-        #game-layer { position: fixed; inset: 0; background: black; z-index: 1000; display: none; }
+        /* GAME */
+        #game-layer { position: fixed; inset: 0; background: radial-gradient(circle, #1a0505 0%, #000 100%); z-index: 1000; display: none; }
         #game-canvas { width: 100%; height: 100%; }
-        .game-info { position: absolute; top: 40px; width: 100%; text-align: center; pointer-events: none; }
-        #score-text { font-size: 60px; font-family: 'Orbitron'; font-weight: 900; }
+        .hud { position: absolute; top: 30px; width: 100%; text-align: center; pointer-events: none; }
+        #score-ui { font-size: 70px; font-family: 'Orbitron'; text-shadow: 0 0 20px var(--pink); }
 
-        /* --- NAV --- */
+        /* CARDS */
+        .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { background: #111; padding: 15px; border-radius: 20px; border: 1px solid #222; text-align: center; }
+        .card:active { transform: scale(0.95); }
+
+        /* NAV */
         .nav { position: fixed; bottom: 0; width: 100%; height: 80px; background: #000; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #111; }
-        .nav-item { color: #444; font-size: 12px; font-weight: 900; display: flex; flex-direction: column; align-items: center; }
+        .nav-item { color: #444; font-size: 11px; font-weight: 900; }
         .nav-item.active { color: var(--pink); }
 
-        .play-btn { width: 150px; height: 150px; border-radius: 50%; background: var(--pink); border: none; color: white; font-weight: 900; font-size: 24px; box-shadow: 0 0 40px rgba(255,77,148,0.4); margin: 50px auto; display: block; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--pink); padding: 10px 20px; border-radius: 50px; font-weight: 900; display: none; z-index: 2000; }
+        .big-play { width: 130px; height: 130px; border-radius: 50%; background: var(--pink); color: white; border: none; font-weight: 900; font-size: 20px; box-shadow: 0 0 40px rgba(255, 77, 148, 0.4); margin: 60px auto; display: block; }
+        
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--pink); padding: 12px 25px; border-radius: 50px; font-weight: 900; display: none; z-index: 2000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
@@ -48,161 +43,162 @@
 <div id="toast"></div>
 
 <header class="header">
-    <div class="stat"><span class="stat-label">SAATLİK KAZANÇ</span><span class="stat-value" id="profit-ui">+0</span></div>
-    <div class="stat"><span class="stat-label">BAKİYE</span><span class="stat-value" id="balance-ui" style="color:white">0</span></div>
+    <div><p style="font-size:10px;color:#555">SAATLİK</p><span class="stat-val" id="p-ui">+0</span></div>
+    <div style="text-align:right"><p style="font-size:10px;color:#555">BAKİYE</p><span class="stat-val" id="b-ui">0</span></div>
 </header>
 
 <div id="game-layer">
-    <div class="game-info"><div id="score-text">0</div><div id="timer-text">30s</div></div>
+    <div class="hud"><div id="score-ui">0</div><div id="timer-ui">30s</div></div>
     <canvas id="game-canvas"></canvas>
 </div>
 
 <main id="home" class="page active">
-    <div style="text-align: center; margin-top: 40px;">
-        <h1 style="font-size: 48px; font-family: 'Orbitron';" id="main-balance-ui">0</h1>
-        <p style="color: #888; font-weight: 900; letter-spacing: 2px;">$ANIMEBTC</p>
-        <button class="play-btn" onclick="game.start()">OYNA</button>
+    <div style="text-align: center; margin-top: 30px;">
+        <h1 style="font-size: 50px; font-family: 'Orbitron';" id="main-b-ui">0</h1>
+        <p style="color: #444; font-weight: 900; letter-spacing: 3px;">$ANIMEBTC</p>
+        <button class="big-play" onclick="game.init()">PLAY</button>
     </div>
 </main>
 
 <main id="mine" class="page">
-    <div class="card-container" id="cards-list"></div>
+    <div class="card-grid" id="card-list"></div>
 </main>
 
 <nav class="nav">
-    <div class="nav-item active" onclick="showPage('home', this)"><span>GİRİŞ</span></div>
-    <div class="nav-item" onclick="showPage('mine', this)"><span>MİNE</span></div>
+    <div class="nav-item active" onclick="tab('home', this)">ANA SAYFA</div>
+    <div class="nav-item" onclick="tab('mine', this)">KARTLAR</div>
 </nav>
 
 <script>
-    /* --- DATA MANAGEMENT --- */
-    let user = JSON.parse(localStorage.getItem('animeBtcUser')) || {
-        balance: 0,
-        profit: 0,
-        lastOnline: Date.now(),
+    let db = JSON.parse(localStorage.getItem('animeData')) || {
+        bal: 0, profit: 0, last: Date.now(),
         cards: [
-            { id: 1, name: "Grafik Tablet", lvl: 0, basePrice: 100, baseProfit: 5 },
-            { id: 2, name: "Yapay Zeka", lvl: 0, basePrice: 500, baseProfit: 25 },
-            { id: 3, name: "Render Farm", lvl: 0, basePrice: 2500, baseProfit: 120 }
+            { id: 1, n: "Giriş Seviye GPU", lvl: 0, p: 150, g: 10 },
+            { id: 2, n: "Asic Miner V1", lvl: 0, p: 800, g: 55 },
+            { id: 3, n: "Anime Sunucu", lvl: 0, p: 4000, g: 250 }
         ]
     };
 
-    function save() { localStorage.setItem('animeBtcUser', JSON.stringify(user)); }
+    const save = () => localStorage.setItem('animeData', JSON.stringify(db));
 
-    /* --- GAME ENGINE --- */
     const game = {
         canvas: document.getElementById('game-canvas'),
         ctx: document.getElementById('game-canvas').getContext('2d'),
-        items: [], score: 0, active: false,
-        start() {
-            this.active = true; this.score = 0; this.items = [];
+        items: [], score: 0, running: false, timer: 30,
+        
+        init() {
+            this.running = true; this.score = 0; this.items = []; this.timer = 30;
             document.getElementById('game-layer').style.display = 'block';
             this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight;
-            let time = 30;
-            const t = setInterval(() => {
-                time--; document.getElementById('timer-text').innerText = time + "s";
-                if(time <= 0) { clearInterval(t); this.end(); }
+            this.tick();
+            this.clock = setInterval(() => {
+                this.timer--;
+                document.getElementById('timer-ui').innerText = this.timer + "s";
+                if(this.timer <= 0) this.over("Süre Bitti!");
             }, 1000);
-            this.loop();
         },
+
         spawn() {
-            if(Math.random() < 0.05) {
-                this.items.push({ x: Math.random()*this.canvas.width, y: -50, type: Math.random() < 0.1 ? '💣' : '🌸', s: Math.random()*3+2 });
+            if(Math.random() < 0.06) {
+                this.items.push({ 
+                    x: Math.random() * (this.canvas.width - 40) + 20, 
+                    y: -50, 
+                    t: Math.random() < 0.15 ? '💣' : '🌸', 
+                    v: Math.random() * 3 + 3 
+                });
             }
         },
-        loop() {
-            if(!this.active) return;
-            this.ctx.clearRect(0,0,this.canvas.width, this.canvas.height);
+
+        tick() {
+            if(!this.running) return;
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.spawn();
-            this.items.forEach((it, i) => {
-                it.y += it.s;
-                this.ctx.font = "40px Arial";
-                this.ctx.fillText(it.type, it.x, it.y);
-                if(it.y > this.canvas.height) this.items.splice(i,1);
+            this.items.forEach((item, i) => {
+                item.y += item.v;
+                this.ctx.font = "45px Arial";
+                this.ctx.fillText(item.t, item.x, item.y);
+                if(item.y > this.canvas.height) this.items.splice(i, 1);
             });
-            requestAnimationFrame(() => this.loop());
+            requestAnimationFrame(() => this.tick());
         },
-        end() {
-            this.active = false; document.getElementById('game-layer').style.display = 'none';
-            user.balance += this.score; ui.notify(`+${this.score} Puan!`); ui.update(); save();
+
+        over(msg) {
+            this.running = false;
+            clearInterval(this.clock);
+            document.getElementById('game-layer').style.display = 'none';
+            db.bal += this.score;
+            notify(msg + " +" + this.score);
+            refresh(); save();
         }
     };
 
-    /* --- UI ENGINE --- */
-    const ui = {
-        update() {
-            document.getElementById('balance-ui').innerText = Math.floor(user.balance).toLocaleString();
-            document.getElementById('main-balance-ui').innerText = Math.floor(user.balance).toLocaleString();
-            document.getElementById('profit-ui').innerText = "+" + user.profit + "/sa";
-        },
-        notify(m) {
-            const t = document.getElementById('toast');
-            t.innerText = m; t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 2000);
-        },
-        renderCards() {
-            const list = document.getElementById('cards-list'); list.innerHTML = '';
-            user.cards.forEach(c => {
-                let cost = Math.floor(c.basePrice * Math.pow(1.5, c.lvl));
-                list.innerHTML += `<div class="card" onclick="buyCard(${c.id})">
-                    <span class="card-lvl">Lv ${c.lvl}</span>
-                    <div style="font-weight:900">${c.name}</div>
-                    <div style="color:var(--up); font-size:11px">+${c.baseProfit * (c.lvl+1)}/sa</div>
-                    <div class="card-price">💰 ${cost}</div>
-                </div>`;
-            });
-        }
-    };
-
-    function buyCard(id) {
-        let c = user.cards.find(x => x.id === id);
-        let cost = Math.floor(c.basePrice * Math.pow(1.5, c.lvl));
-        if(user.balance >= cost) {
-            user.balance -= cost; c.lvl++;
-            user.profit += c.baseProfit * c.lvl;
-            ui.update(); ui.renderCards(); save();
-        } else { ui.notify("Fakir misin kanka?"); }
+    function handleTouch(e) {
+        if(!game.running) return;
+        const tx = e.touches[0].clientX; const ty = e.touches[0].clientY;
+        game.items.forEach((it, i) => {
+            if(Math.hypot(it.x - tx, it.y - ty) < 65) {
+                if(it.t === '🌸') {
+                    game.score += 1; // Çiçek +1 Puan
+                    document.getElementById('score-ui').innerText = game.score;
+                    game.items.splice(i, 1); // Çiçek kaybolur
+                } else {
+                    game.over("BOOM! Patladın!"); // Bombaya basınca oyun biter
+                }
+            }
+        });
     }
 
-    function showPage(p, el) {
+    function refresh() {
+        document.getElementById('b-ui').innerText = Math.floor(db.bal).toLocaleString();
+        document.getElementById('main-b-ui').innerText = Math.floor(db.bal).toLocaleString();
+        document.getElementById('p-ui').innerText = "+" + db.profit + "/sa";
+    }
+
+    function tab(p, el) {
         document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
         document.getElementById(p).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
         el.classList.add('active');
-        if(p === 'mine') ui.renderCards();
-    }
-
-    /* --- PASİF GELİR --- */
-    setInterval(() => {
-        if(user.profit > 0) { user.balance += (user.profit/3600); ui.update(); }
-    }, 1000);
-
-    /* --- OFFLINE KAZANÇ --- */
-    window.onload = () => {
-        let diff = (Date.now() - user.lastOnline) / 1000;
-        let offlineGain = (user.profit / 3600) * diff;
-        if(offlineGain > 1) {
-            user.balance += offlineGain;
-            ui.notify(`Sen yokken ${Math.floor(offlineGain)} kazandın!`);
-        }
-        user.lastOnline = Date.now();
-        ui.update();
-    };
-
-    window.onbeforeunload = () => { user.lastOnline = Date.now(); save(); };
-
-    window.addEventListener('touchstart', (e) => {
-        if(game.active) {
-            const tx = e.touches[0].clientX; const ty = e.touches[0].clientY;
-            game.items.forEach((it, i) => {
-                if(Math.hypot(it.x - tx, it.y - ty) < 60) {
-                    if(it.type === '🌸') { game.score++; } else { game.score = Math.max(0, game.score - 10); }
-                    game.items.splice(i,1); document.getElementById('score-text').innerText = game.score;
-                }
+        if(p === 'mine') {
+            const list = document.getElementById('card-list'); list.innerHTML = '';
+            db.cards.forEach(c => {
+                let cost = Math.floor(c.p * Math.pow(1.6, c.lvl));
+                list.innerHTML += `<div class="card" onclick="buy(${c.id})">
+                    <p style="font-size:10px;color:var(--pink)">LVL ${c.lvl}</p>
+                    <p style="font-weight:900;margin:5px 0">${c.n}</p>
+                    <p style="color:var(--up);font-size:11px">+${c.g * (c.lvl+1)}/sa</p>
+                    <p style="color:var(--gold);margin-top:10px">💰 ${cost}</p>
+                </div>`;
             });
         }
-    });
+    }
 
+    function buy(id) {
+        let c = db.cards.find(x => x.id === id);
+        let cost = Math.floor(c.p * Math.pow(1.6, c.lvl));
+        if(db.bal >= cost) {
+            db.bal -= cost; db.profit += c.g; c.lvl++;
+            tab('mine', document.querySelectorAll('.nav-item')[1]); refresh(); save();
+        } else { notify("Yetersiz Bakiye!"); }
+    }
+
+    function notify(m) {
+        const t = document.getElementById('toast');
+        t.innerText = m; t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 2500);
+    }
+
+    setInterval(() => { if(db.profit > 0) { db.bal += (db.profit/3600); refresh(); } }, 1000);
+
+    window.onload = () => {
+        let off = (Date.now() - db.last) / 1000;
+        let gain = (db.profit / 3600) * off;
+        if(gain > 1) { db.bal += gain; notify("Çevrimdışı kazanç: " + Math.floor(gain)); }
+        db.last = Date.now(); refresh();
+    };
+
+    window.addEventListener('touchstart', handleTouch);
+    window.onbeforeunload = () => { db.last = Date.now(); save(); };
 </script>
 </body>
 </html>
