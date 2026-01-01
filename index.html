@@ -3,261 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AnimeBTC - Wallet Edition</title>
+    <title>AnimeBTC - Wallet Connect</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0b0d0f; --panel: #1c1f24; --panel-br: #2d3139; --gray: #85868b;
             --gold: #f3ba2f; --ton-blue: #0088cc; --red: #ff4d4d; --green: #69c54a;
+            --input-bg: #f5f5f5;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: #fff; overflow: hidden; height: 100vh; user-select: none; }
 
-        /* --- TOAST --- */
-        #toast { position: fixed; top: 15%; left: 50%; transform: translateX(-50%); background: var(--red); color: #fff; padding: 12px 25px; border-radius: 50px; font-weight: 800; z-index: 100000; display: none; }
+        /* --- WITHDRAW MODAL (GÖRSELDEKİ ARAYÜZ) --- */
+        #withdraw-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .w-card { background: #fff; color: #333; width: 100%; max-width: 380px; border-radius: 24px; padding: 25px; text-align: center; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .w-card h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; color: #000; }
+        .w-card p.subtitle { font-size: 13px; color: var(--gray); margin-bottom: 5px; }
+        .w-card .min-info { font-size: 14px; font-weight: 700; margin-bottom: 20px; color: #000; }
 
-        /* --- HEADER STATS --- */
-        .header { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; }
-        .stat-card { background: #15181c; border-radius: 12px; padding: 8px; text-align: center; border: 1px solid #24282e; }
-        .stat-label { font-size: 9px; color: var(--gray); font-weight: 700; margin-bottom: 2px; }
-        .stat-val { font-size: 11px; font-weight: 900; }
+        .input-group { background: var(--input-bg); border-radius: 12px; margin-bottom: 12px; padding: 12px 15px; display: flex; align-items: center; border: 1px solid #e0e0e0; }
+        .input-group select, .input-group input { background: transparent; border: none; width: 100%; outline: none; font-size: 14px; color: #000; font-weight: 600; }
+        .input-group .max-btn { color: var(--ton-blue); font-weight: 800; font-size: 12px; cursor: pointer; padding-left: 10px; }
+        
+        .fee-info { font-size: 13px; color: var(--gray); margin: 15px 0 5px; }
+        .receive-info { font-size: 16px; font-weight: 800; color: #666; margin-bottom: 25px; }
 
-        .balance-section { text-align: center; margin: 10px 0; }
-        .coin-display { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 40px; font-weight: 900; }
-        .main-coin { width: 40px; height: 40px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #000; font-size: 22px; }
+        .btn-send { background: #96ccf3; color: white; width: 100%; padding: 16px; border-radius: 18px; border: none; font-weight: 800; font-size: 16px; margin-bottom: 10px; cursor: pointer; }
+        .btn-notyet { background: #fff; color: #000; width: 100%; padding: 16px; border-radius: 18px; border: 1px solid #e0e0e0; font-weight: 800; font-size: 16px; cursor: pointer; }
 
-        /* --- VIEWPORT --- */
-        .viewport { height: calc(100vh - 190px); overflow-y: auto; padding: 0 15px 120px; }
-        .page { display: none; }
-        .page.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* --- WALLET PAGE --- */
+        .balance-item { background: var(--panel); border: 1px solid var(--panel-br); padding: 20px; border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .token-data { display: flex; align-items: center; gap: 15px; }
+        .icon-circle { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; }
+        .ton-icon { background: var(--ton-blue); }
+        .abtc-icon { background: var(--gold); color: #000; }
+        .val-text .label { font-size: 12px; color: var(--gray); font-weight: 700; }
+        .val-text .amount { font-size: 22px; font-weight: 900; }
+        .wallet-btn { background: rgba(255,255,255,0.05); width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--panel-br); }
+        .wallet-btn:active { transform: scale(0.9); }
 
-        /* --- CLICK AREA --- */
-        .click-area { display: flex; justify-content: center; margin-top: 40px; position: relative; }
-        .circle { width: 280px; height: 280px; background: radial-gradient(circle, #3d44af 0%, #111429 80%); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.05s; box-shadow: 0 0 50px rgba(61, 68, 175, 0.4); }
-        .circle:active { transform: scale(0.95); }
-        .hamster { width: 250px; height: 250px; border-radius: 50%; background: url('photo_2026-01-01_19-32-18.jpg') center/cover; border: 5px solid #1a1d3d; pointer-events: none; }
-
-        /* --- WALLET (AIRDROP) SECTION --- */
-        .wallet-container { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
-        .balance-card { background: var(--panel); border: 1px solid var(--panel-br); padding: 20px; border-radius: 20px; text-align: left; }
-        .balance-card .label { color: var(--gray); font-size: 12px; font-weight: 700; margin-bottom: 5px; }
-        .balance-card .amount { font-size: 28px; font-weight: 900; display: flex; align-items: center; gap: 10px; }
-        .token-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; }
-        .icon-ton { background: var(--ton-blue); color: #fff; }
-        .icon-abtc { background: var(--gold); color: #000; }
-
-        /* --- GRID & CARDS --- */
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
-        .card { background: var(--panel); border-radius: 15px; padding: 15px; border: 1px solid var(--panel-br); }
-        .card h4 { font-size: 13px; margin: 8px 0 4px; }
-        .card .cost { color: var(--gold); font-weight: 800; font-size: 13px; margin-top: 10px; }
-
-        /* --- NAV --- */
-        .footer-info { position: fixed; bottom: 100px; width: 100%; padding: 0 25px; display: flex; justify-content: space-between; align-items: center; }
+        /* --- UI HELPERS --- */
+        .viewport { height: calc(100vh - 180px); overflow-y: auto; padding: 20px 15px; }
+        .page { display: none; } .page.active { display: block; }
         .nav { position: fixed; bottom: 0; width: 100%; height: 90px; background: var(--panel); display: flex; justify-content: space-around; padding: 10px 5px 25px; border-top: 1px solid var(--panel-br); }
         .nav-btn { flex: 1; text-align: center; color: var(--gray); font-size: 10px; font-weight: 700; cursor: pointer; }
         .nav-btn.active { color: #fff; }
         .nav-btn i { font-size: 22px; display: block; margin-bottom: 4px; font-style: normal; }
-
-        /* --- ANIMATIONS --- */
-        .fly-coin { position: fixed; width: 20px; height: 20px; background: var(--gold); border-radius: 50%; z-index: 9999; pointer-events: none; transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1); }
-        .tap-pop { position: absolute; font-weight: 900; font-size: 30px; color: white; pointer-events: none; animation: tapPop 0.7s forwards; }
-        @keyframes tapPop { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
 <body>
 
-    <div id="toast">Yetersiz Bakiye!</div>
+    <div id="withdraw-modal">
+        <div class="w-card">
+            <h3>Enter your personal TON address</h3>
+            <p class="subtitle">This amount will be sent to the TON compatible</p>
+            <p class="subtitle">wallet address</p>
+            <p class="min-info">Minimum send amount is 1,5 TON</p>
 
-    <div class="header">
-        <div class="stat-card"><div class="stat-label">TAP EARN</div><div class="stat-val">🟡 +<span id="pwr">1</span></div></div>
-        <div class="stat-card"><div class="stat-label">LVL UP</div><div class="stat-val">50.0K</div></div>
-        <div class="stat-card"><div class="stat-label">PROFIT/H</div><div class="stat-val" style="color:var(--green)">🟡 +<span id="prof">0</span></div></div>
-    </div>
+            <div class="input-group">
+                <span style="margin-right:10px;">💎</span>
+                <select><option>TON</option></select>
+            </div>
 
-    <div class="balance-section">
-        <div class="coin-display"><div class="main-coin" id="target-coin">$</div><span id="bal">0</span></div>
+            <div class="input-group">
+                <input type="text" placeholder="Your TON address">
+            </div>
+
+            <div class="input-group">
+                <input type="number" placeholder="Amount" id="send-amount">
+                <span class="max-btn" onclick="setMax()">MAX</span>
+            </div>
+
+            <p class="fee-info">Network fee: 0,3 TON</p>
+            <p class="receive-info">Receive amount: <span id="receive-val">0</span> TON</p>
+
+            <button class="btn-send" onclick="closeModal()">Send</button>
+            <button class="btn-notyet" onclick="closeModal()">Not yet</button>
+        </div>
     </div>
 
     <div class="viewport">
-        <section id="p-exchange" class="page active">
-            <div class="click-area">
-                <div class="circle" onmousedown="tap(event)" ontouchstart="tap(event)">
-                    <div class="hamster"></div>
-                </div>
-            </div>
-        </section>
+        <section id="p-wallet" class="page active">
+            <h2 style="margin-bottom: 25px; text-align: center;">My Assets</h2>
 
-        <section id="p-mine" class="page">
-            <h3 style="margin:10px 0;">Mining Cards</h3>
-            <div class="grid" id="mine-grid"></div>
-        </section>
-
-        <section id="p-boost" class="page">
-            <h3 style="margin:10px 0;">Boosters</h3>
-            <div class="card" onclick="fullEn()" style="margin-bottom:15px; display:flex; align-items:center; gap:15px;">
-                <div style="font-size:30px;">⚡</div>
-                <div><h4>Full Energy</h4><p style="color:var(--gray); font-size:12px;"><span id="f-avail">6</span>/6 Available</p></div>
-            </div>
-            <div class="grid">
-                <div class="card" onclick="upMt()"><div>👆</div><h4>Multitap</h4><p class="cost">🟡 <span id="mt-cost">500</span></p></div>
-                <div class="card" onclick="upEl()"><div>🔋</div><h4>Energy Limit</h4><p class="cost">🟡 <span id="el-cost">1000</span></p></div>
-            </div>
-        </section>
-
-        <section id="p-airdrop" class="page">
-            <h2 style="margin:10px 0; text-align:center;">Wallet</h2>
-            
-            <div class="wallet-container">
-                <div class="balance-card">
-                    <div class="label">TON Balance</div>
-                    <div class="amount">
-                        <div class="token-icon icon-ton">T</div>
-                        <span id="ton-bal">0.0000</span>
+            <div class="balance-item">
+                <div class="token-data">
+                    <div class="icon-circle ton-icon">💎</div>
+                    <div class="val-text">
+                        <p class="label">TON COIN</p>
+                        <p class="amount"><span id="ton-display">0.8540</span></p>
                     </div>
                 </div>
+                <div class="wallet-btn" onclick="openModal()">👛</div>
+            </div>
 
-                <div class="balance-card">
-                    <div class="label">AnimeBTC Balance</div>
-                    <div class="amount">
-                        <div class="token-icon icon-abtc">A</div>
-                        <span id="abtc-bal">0</span>
+            <div class="balance-item">
+                <div class="token-data">
+                    <div class="icon-circle abtc-icon">A</div>
+                    <div class="val-text">
+                        <p class="label">AnimeBTC</p>
+                        <p class="amount"><span id="abtc-display">10,000</span></p>
                     </div>
                 </div>
-
-                <button onclick="showToast('Minimum 1.5 TON Gerekli!')" style="width:100%; background:var(--ton-blue); color:white; border:none; padding:18px; border-radius:15px; font-weight:800; font-size:16px; margin-top:10px;">Connect Wallet</button>
+                <div class="wallet-btn" onclick="openModal()">👛</div>
             </div>
         </section>
-    </div>
 
-    <div class="footer-info">
-        <div style="font-weight:900; font-size:18px;">⚡ <span id="en">500</span> / <span id="max-en">500</span></div>
-        <div style="color:var(--gold); font-weight:800; cursor:pointer;" onclick="nav('boost', 'btn-boost')">BOOST 🚀</div>
-    </div>
+        </div>
 
     <nav class="nav">
-        <div class="nav-btn active" onclick="nav('exchange', this)"><i>🏛️</i>Exchange</div>
-        <div class="nav-btn" onclick="nav('mine', this)"><i>⛏️</i>Mine</div>
-        <div id="btn-boost" class="nav-btn" onclick="nav('boost', this)"><i>🚀</i>Boost</div>
-        <div class="nav-btn" onclick="nav('airdrop', this)"><i>💎</i>Wallet</div>
+        <div class="nav-btn" onclick="location.reload()"><i>🏛️</i>Exchange</div>
+        <div class="nav-btn active"><i>💎</i>Wallet</div>
+        <div class="nav-btn"><i>🚀</i>Boost</div>
     </nav>
 
     <script>
-        let game = {
-            bal: 10000, // Başlangıç 10k hediyesi dahil
-            ton: 0,
-            en: 500, maxEn: 500, pwr: 1, prof: 0,
-            fAvail: 6,
-            lvls: { mt: 1, el: 1, mine: [0, 0, 0] }
-        };
+        let currentTon = 0.8540;
 
-        const MINE_DATA = [
-            {n:"Fan Token", p:100, c:1000, i:"🎬"},
-            {n:"Stake Pool", p:500, c:6000, i:"🥩"},
-            {n:"Mining Rig", p:2000, c:25000, i:"🏭"}
-        ];
-
-        function showToast(m) {
-            const t = document.getElementById('toast');
-            t.innerText = m; t.style.display = 'block';
-            setTimeout(() => t.style.display='none', 2000);
+        function openModal() {
+            document.getElementById('withdraw-modal').style.display = 'flex';
         }
 
-        function nav(id, el) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('p-' + id).classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
-            if(typeof el === 'string') document.getElementById(el).classList.add('active');
-            else el.classList.add('active');
-            if(id === 'airdrop') updateUI();
+        function closeModal() {
+            document.getElementById('withdraw-modal').style.display = 'none';
         }
 
-        function tap(e) {
-            if(e.type==='touchstart') e.preventDefault();
-            if(game.en >= game.pwr) {
-                game.bal += game.pwr; game.en -= game.pwr;
-                game.ton += 0.00005; // Tık başına küçük TON artışı
-                let x = e.type==='touchstart'?e.touches[0].clientX : e.clientX;
-                let y = e.type==='touchstart'?e.touches[0].clientY : e.clientY;
-                fx(x, y); updateUI();
-            } else showToast("Enerji Bitti!");
+        function setMax() {
+            document.getElementById('send-amount').value = currentTon;
+            updateReceive();
         }
 
-        function fx(x, y) {
-            const p = document.createElement('div'); p.className='tap-pop'; p.innerText=`+${game.pwr}`;
-            p.style.left=(x-15)+'px'; p.style.top=(y-30)+'px';
-            document.body.appendChild(p); setTimeout(()=>p.remove(), 700);
-
-            const c = document.createElement('div'); c.className='fly-coin';
-            c.style.left=x+'px'; c.style.top=y+'px';
-            document.body.appendChild(c);
-            const target = document.getElementById('target-coin').getBoundingClientRect();
-            setTimeout(() => {
-                c.style.transform=`translate(${target.left - x + 10}px, ${target.top - y + 10}px) scale(0.2)`;
-                c.style.opacity='0';
-            }, 50);
-            setTimeout(()=>c.remove(), 600);
+        function updateReceive() {
+            let val = document.getElementById('send-amount').value;
+            let receive = val > 0.3 ? (val - 0.3).toFixed(4) : 0;
+            document.getElementById('receive-val').innerText = receive;
         }
 
-        function renderMine() {
-            document.getElementById('mine-grid').innerHTML = MINE_DATA.map((item, i) => {
-                let cost = Math.floor(item.c * Math.pow(1.5, game.lvls.mine[i]));
-                return `<div class="card" onclick="buyMine(${i})">
-                    <div style="font-size:20px;">${item.i}</div>
-                    <h4>${item.n}</h4>
-                    <p style="font-size:10px; color:var(--gray)">Profit: +${item.p}/h</p>
-                    <p class="cost">🟡 ${cost.toLocaleString()}</p>
-                </div>`;
-            }).join('');
-        }
-
-        function buyMine(i) {
-            let cost = Math.floor(MINE_DATA[i].c * Math.pow(1.5, game.lvls.mine[i]));
-            if(game.bal >= cost) {
-                game.bal -= cost; game.prof += MINE_DATA[i].p; game.lvls.mine[i]++;
-                renderMine(); updateUI();
-            } else showToast("Bakiye Yetersiz!");
-        }
-
-        function upMt() {
-            let c = Math.floor(500 * Math.pow(2, game.lvls.mt - 1));
-            if(game.bal >= c) { game.bal -= c; game.lvls.mt++; game.pwr++; updateUI(); } 
-            else showToast("Bakiye Yetersiz!");
-        }
-
-        function upEl() {
-            let c = Math.floor(1000 * Math.pow(2, game.lvls.el - 1));
-            if(game.bal >= c) { game.bal -= c; game.lvls.el++; game.maxEn += 500; game.en = game.maxEn; updateUI(); } 
-            else showToast("Bakiye Yetersiz!");
-        }
-
-        function fullEn() {
-            if(game.fAvail > 0) { game.en = game.maxEn; game.fAvail--; updateUI(); }
-            else showToast("Hak Kalmadı!");
-        }
-
-        function updateUI() {
-            document.getElementById('bal').innerText = Math.floor(game.bal).toLocaleString();
-            document.getElementById('abtc-bal').innerText = Math.floor(game.bal).toLocaleString();
-            document.getElementById('ton-bal').innerText = game.ton.toFixed(4);
-            document.getElementById('en').innerText = Math.floor(game.en);
-            document.getElementById('max-en').innerText = game.maxEn;
-            document.getElementById('pwr').innerText = game.pwr;
-            document.getElementById('prof').innerText = game.prof.toLocaleString();
-            document.getElementById('mt-cost').innerText = Math.floor(500 * Math.pow(2, game.lvls.mt - 1)).toLocaleString();
-            document.getElementById('el-cost').innerText = Math.floor(1000 * Math.pow(2, game.lvls.el - 1)).toLocaleString();
-            document.getElementById('f-avail').innerText = game.fAvail;
-        }
-
-        setInterval(() => {
-            if(game.en < game.maxEn) game.en = Math.min(game.en + 1, game.maxEn);
-            if(game.prof > 0) game.bal += game.prof / 3600;
-            updateUI();
-        }, 1000);
-
-        renderMine();
-        updateUI();
+        document.getElementById('send-amount').addEventListener('input', updateReceive);
     </script>
 </body>
 </html>
