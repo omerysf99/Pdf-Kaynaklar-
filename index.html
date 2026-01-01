@@ -3,362 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AnimeBtc OS: Enterprise Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;800&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>AnimeBtc: Hamster Empire</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --p: #ff4d94; --g: #ffcc00; --bg: #030303; --card: #0a0a0a; --up: #00ffa3; --red: #ff3b30;
-            --font-main: 'Inter', sans-serif; --font-mono: 'JetBrains Mono', monospace;
+            --p: #ff4d94; --g: #ffcc00; --bg: #000; --card: #151515; --up: #00ffa3;
+            --font-main: 'Inter', sans-serif;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: #fff; font-family: var(--font-main); overflow: hidden; height: 100vh; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: var(--font-main); }
+        body { background: var(--bg); color: #fff; overflow: hidden; height: 100vh; }
 
-        /* --- ADVANCED UI ENGINE --- */
-        #app-shell { height: 100vh; display: flex; flex-direction: column; position: relative; }
-        
-        .top-bar { 
-            height: 90px; padding: 20px; display: flex; justify-content: space-between; align-items: flex-end;
-            background: linear-gradient(to bottom, #000, transparent); z-index: 10;
-        }
+        /* --- UI LAYOUT --- */
+        .top-stats { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #080808; border-bottom: 1px solid #1a1a1a; }
+        .stat-box { background: #111; padding: 10px; border-radius: 12px; text-align: center; border: 1px solid #222; }
+        .stat-label { font-size: 10px; color: #666; font-weight: 800; text-transform: uppercase; }
+        .stat-val { font-size: 14px; color: var(--up); font-weight: 900; }
 
-        .balance-group { text-align: center; flex: 1; }
-        .main-ticker { font-family: var(--font-mono); font-size: 38px; font-weight: 800; color: #fff; letter-spacing: -2px; }
-        .profit-badge { 
-            display: inline-flex; align-items: center; background: rgba(0,255,163,0.1); 
-            color: var(--up); padding: 4px 12px; border-radius: 50px; font-size: 11px; font-weight: 800;
-        }
-
-        .viewport { flex: 1; overflow-y: auto; padding: 20px; position: relative; padding-bottom: 120px; }
-        .view { display: none; animation: viewTransition 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .viewport { height: calc(100vh - 175px); overflow-y: auto; padding: 20px; position: relative; }
+        .view { display: none; }
         .view.active { display: block; }
 
-        /* --- GAME ENGINE OVERLAY --- */
-        #game-engine-overlay { 
-            position: fixed; inset: 0; background: #000; z-index: 9999; display: none; 
-            cursor: crosshair; touch-action: none;
-        }
-        #game-canvas { width: 100%; height: 100%; }
-        .game-ui-layer { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            pointer-events: none; padding: 40px 20px; display: flex; flex-direction: column; align-items: center;
-        }
-        .live-score { font-family: var(--font-mono); font-size: 80px; opacity: 0.8; }
-        .sudden-death-warning { color: var(--red); font-weight: 900; font-size: 12px; letter-spacing: 2px; }
-
-        /* --- CARD ARCHITECTURE --- */
-        .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .mk-card { 
-            background: var(--card); border: 1px solid #1a1a1a; border-radius: 24px; padding: 16px;
-            transition: 0.2s; position: relative; overflow: hidden;
-        }
-        .mk-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--p);
-        }
-        .mk-card:active { transform: scale(0.96); border-color: var(--p); }
-        .mk-card-title { font-size: 13px; font-weight: 700; color: #eee; margin: 8px 0; }
-        .mk-card-stats { font-size: 11px; color: var(--up); font-weight: 800; }
-        .mk-card-price { margin-top: 15px; font-family: var(--font-mono); font-weight: 800; color: var(--g); border-top: 1px solid #1a1a1a; padding-top: 10px; }
-
-        /* --- BOTTOM NAVIGATION --- */
-        .nav-dock { 
-            position: fixed; bottom: 20px; left: 20px; right: 20px; height: 75px; 
-            background: rgba(15,15,15,0.95); backdrop-filter: blur(20px);
-            border-radius: 25px; border: 1px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 1000;
-        }
-        .nav-link { color: #555; text-align: center; transition: 0.3s; }
-        .nav-link.active { color: var(--p); transform: translateY(-5px); }
-        .nav-link svg { width: 24px; height: 24px; }
-        .nav-link span { display: block; font-size: 10px; font-weight: 800; margin-top: 4px; }
-
-        /* --- ANIMATIONS & FX --- */
-        @keyframes viewTransition { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* --- CLICKER SECTION --- */
+        .click-area { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .balance-hero { font-size: 48px; font-weight: 900; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
         
-        .play-trigger {
-            width: 160px; height: 160px; background: var(--p); border-radius: 50%; border: none;
-            color: #fff; font-weight: 900; font-size: 24px; cursor: pointer;
-            box-shadow: 0 0 60px rgba(255,77,148,0.3); margin: 60px auto; display: block;
-            position: relative;
+        .hamster-btn {
+            width: 280px; height: 280px; background: radial-gradient(circle, #222 0%, #000 100%);
+            border-radius: 50%; border: 8px solid #1a1a1a; position: relative;
+            cursor: pointer; box-shadow: 0 0 50px rgba(255, 77, 148, 0.1);
+            transition: transform 0.05s; display: flex; align-items: center; justify-content: center;
         }
-        .play-trigger::after {
-            content: ''; position: absolute; inset: -10px; border: 2px solid var(--p); border-radius: 50%;
-            animation: ripple 2s infinite;
-        }
-        @keyframes ripple { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.4); opacity: 0; } }
+        .hamster-btn:active { transform: scale(0.95); }
+        .hamster-btn img { width: 180px; pointer-events: none; }
 
-        #fx-toast {
-            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
-            padding: 16px 32px; background: var(--p); border-radius: 20px; font-weight: 900;
-            z-index: 10000; transition: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        .energy-info { width: 100%; max-width: 300px; margin-top: 40px; }
+        .energy-bar { width: 100%; height: 12px; background: #222; border-radius: 10px; overflow: hidden; margin-top: 8px; }
+        .energy-fill { height: 100%; background: linear-gradient(90deg, var(--g), #ffae00); transition: width 0.1s; }
+
+        /* --- UPGRADES --- */
+        .card-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { background: var(--card); border-radius: 20px; padding: 15px; border: 1px solid #222; position: relative; }
+        .card:active { transform: scale(0.97); }
+        .card-lvl { font-size: 10px; color: var(--p); font-weight: 900; }
+        .card-name { font-size: 14px; margin: 8px 0; font-weight: 800; }
+        .card-profit { font-size: 11px; color: var(--up); font-weight: 700; }
+        .card-price { margin-top: 12px; font-weight: 900; color: var(--g); display: flex; align-items: center; gap: 4px; border-top: 1px solid #222; padding-top: 10px; }
+
+        /* --- NAV --- */
+        .nav { position: fixed; bottom: 0; width: 100%; height: 85px; background: #000; border-top: 1px solid #111; display: flex; justify-content: space-around; align-items: center; }
+        .nav-link { color: #444; text-align: center; font-size: 11px; font-weight: 800; }
+        .nav-link.active { color: var(--p); }
+
+        /* --- FLOATING TEXT --- */
+        .floating-text {
+            position: absolute; color: white; font-size: 24px; font-weight: 900;
+            pointer-events: none; animation: floatUp 0.6s ease-out forwards;
         }
-        #fx-toast.visible { top: 30px; }
+        @keyframes floatUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-100px); opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="fx-toast">HATA</div>
-
-    <div id="app-shell">
-        <header class="top-bar">
-            <div class="balance-group">
-                <div class="profit-badge" id="profit-ui">🚀 +0/hr</div>
-                <div class="main-ticker" id="main-balance">0</div>
-            </div>
-        </header>
-
-        <main class="viewport">
-            <section id="home" class="view active">
-                <div style="text-align: center;">
-                    <button class="play-trigger" id="game-start-node">BAŞLAT</button>
-                    <p style="color: #666; font-size: 12px; margin-top: 20px; font-weight: 700;">DİKKAT: BOMBALAR OYUNU BİTİRİR!</p>
-                </div>
-            </section>
-
-            <section id="mine" class="view">
-                <div class="card-grid" id="market-node"></div>
-            </section>
-        </main>
-
-        <nav class="nav-dock">
-            <div class="nav-link active" onclick="Router.go('home', this)">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-                <span>GİRİŞ</span>
-            </div>
-            <div class="nav-link" onclick="Router.go('mine', this)">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-                <span>MADEN</span>
-            </div>
-        </nav>
-    </div>
-
-    <div id="game-engine-overlay">
-        <div class="game-ui-layer">
-            <div class="sudden-death-warning">SUDDEN DEATH MODE</div>
-            <div class="live-score" id="game-score-node">0</div>
-            <div style="font-family: var(--font-mono); color: var(--p);" id="game-clock-node">30s</div>
+    <div class="top-stats">
+        <div class="stat-box">
+            <div class="stat-label">Tık Başı Kazanç</div>
+            <div class="stat-val" id="tap-ui">+1</div>
         </div>
-        <canvas id="game-canvas"></canvas>
+        <div class="stat-box">
+            <div class="stat-label">Saatlik Kazanç</div>
+            <div class="stat-val" id="profit-ui">+0</div>
+        </div>
     </div>
+
+    <main class="viewport">
+        <section id="exchange" class="view active">
+            <div class="click-area">
+                <div class="balance-hero">
+                    <span style="color:var(--g)">💰</span>
+                    <span id="balance-main">0</span>
+                </div>
+                
+                <div class="hamster-btn" id="clicker-node">
+                    <img src="https://img.icons8.com/clouds/200/anime.png" alt="coin">
+                </div>
+
+                <div class="energy-info">
+                    <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:900">
+                        <span>⚡ <span id="energy-curr">1000</span> / 1000</span>
+                        <span style="color:var(--p)">BOOST</span>
+                    </div>
+                    <div class="energy-bar"><div class="energy-fill" id="energy-bar"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="mine" class="view">
+            <h2 style="margin-bottom:20px; font-weight:900">Maden & Geliştirme</h2>
+            <div class="card-list" id="market-node"></div>
+        </section>
+    </main>
+
+    <nav class="nav">
+        <div class="nav-link active" onclick="Router.go('exchange', this)"><span>EXCHANGE</span></div>
+        <div class="nav-link" onclick="Router.go('mine', this)"><span>MINE</span></div>
+    </nav>
 
     <script>
-        /**
-         * @namespace Core
-         * @description Veri ve Devlet Yönetimi
-         */
-        const Core = {
-            data: {
-                balance: 0,
-                profit: 0,
-                lastTick: Date.now(),
-                cards: [
-                    { id: 1, name: "Basic Miner V1", level: 0, basePrice: 100, baseProfit: 4, icon: "⚡" },
-                    { id: 2, name: "Gpu Rig Array", level: 0, basePrice: 750, baseProfit: 22, icon: "🔧" },
-                    { id: 3, name: "Neural Link", level: 0, basePrice: 5000, baseProfit: 140, icon: "🧠" },
-                    { id: 4, name: "Anime Factory", level: 0, basePrice: 25000, baseProfit: 600, icon: "🏢" }
-                ]
-            },
-
-            init() {
-                const saved = localStorage.getItem('anime_engine_v3');
-                if(saved) this.data = JSON.parse(saved);
-                this.startPassiveIncome();
-                this.checkOfflineEarnings();
-                UI.refresh();
-            },
-
-            save() {
-                this.data.lastTick = Date.now();
-                localStorage.setItem('anime_engine_v3', JSON.stringify(this.data));
-            },
-
-            startPassiveIncome() {
-                setInterval(() => {
-                    if(this.data.profit > 0) {
-                        this.data.balance += (this.data.profit / 3600);
-                        UI.refresh();
-                    }
-                }, 1000);
-            },
-
-            checkOfflineEarnings() {
-                const now = Date.now();
-                const diff = (now - this.data.lastTick) / 1000;
-                const gain = (this.data.profit / 3600) * diff;
-                if(gain > 1) {
-                    this.data.balance += gain;
-                    UI.toast(`Yokluğunda ${Math.floor(gain)} kazandın!`);
-                }
-            }
+        const state = {
+            balance: 0,
+            profit: 0,
+            tapPower: 1,
+            energy: 1000,
+            maxEnergy: 1000,
+            cards: [
+                { id: 1, n: "Tıklama Çubuğu", lvl: 0, cost: 50, gain: 1, type: 'tap' },
+                { id: 2, n: "Anime Fan Grubu", lvl: 0, cost: 250, gain: 10, type: 'profit' },
+                { id: 3, n: "Cosplay Mağazası", lvl: 0, cost: 1200, gain: 55, type: 'profit' },
+                { id: 4, n: "Manga Yayıncı", lvl: 0, cost: 5000, gain: 180, type: 'profit' },
+                { id: 5, n: "V-Tuber Ajansı", lvl: 0, cost: 20000, gain: 450, type: 'profit' }
+            ]
         };
 
-        /**
-         * @namespace UI
-         * @description Arayüz Kontrolörü
-         */
-        const UI = {
-            refresh() {
-                document.getElementById('main-balance').innerText = Math.floor(Core.data.balance).toLocaleString();
-                document.getElementById('profit-ui').innerText = `🚀 +${Core.data.profit}/hr`;
-            },
-
-            toast(msg) {
-                const t = document.getElementById('fx-toast');
-                t.innerText = msg;
-                t.classList.add('visible');
-                setTimeout(() => t.classList.remove('visible'), 2500);
-            },
-
-            renderMarket() {
-                const node = document.getElementById('market-node');
-                node.innerHTML = Core.data.cards.map(card => {
-                    const price = Math.floor(card.basePrice * Math.pow(1.65, card.level));
-                    return `
-                        <div class="mk-card" onclick="Business.upgrade(${card.id})">
-                            <div class="card-lvl">LVL ${card.level}</div>
-                            <div style="font-size: 24px;">${card.icon}</div>
-                            <div class="mk-card-title">${card.name}</div>
-                            <div class="mk-card-stats">+${card.baseProfit * (card.level + 1)}/hr</div>
-                            <div class="mk-card-price">💰 ${price.toLocaleString()}</div>
-                        </div>
-                    `;
-                }).join('');
-            }
-        };
-
-        /**
-         * @namespace Business
-         * @description Ekonomi Mantığı
-         */
-        const Business = {
-            upgrade(id) {
-                const card = Core.data.cards.find(c => c.id === id);
-                const price = Math.floor(card.basePrice * Math.pow(1.65, card.level));
-                
-                if(Core.data.balance >= price) {
-                    Core.data.balance -= price;
-                    card.level++;
-                    Core.data.profit += card.baseProfit * card.level;
-                    UI.renderMarket();
-                    UI.refresh();
-                    Core.save();
-                    UI.toast(`${card.name} yükseltildi!`);
-                } else {
-                    UI.toast("BAKİYE YETERSİZ!");
-                }
-            }
-        };
-
-        /**
-         * @namespace Engine
-         * @description Blum-Style Game Engine
-         */
         const Engine = {
-            canvas: document.getElementById('game-canvas'),
-            ctx: null,
-            active: false,
-            score: 0,
-            entities: [],
-            clock: 30,
-
-            start() {
-                this.ctx = this.canvas.getContext('2d');
-                this.canvas.width = window.innerWidth;
-                this.canvas.height = window.innerHeight;
-                this.active = true;
-                this.score = 0;
-                this.clock = 30;
-                this.entities = [];
+            init() {
+                const saved = localStorage.getItem('hamster_data');
+                if(saved) Object.assign(state, JSON.parse(saved));
                 
-                document.getElementById('game-engine-overlay').style.display = 'block';
-                this.run();
-                
-                this.timer = setInterval(() => {
-                    this.clock--;
-                    document.getElementById('game-clock-node').innerText = this.clock + "s";
-                    if(this.clock <= 0) this.stop("SÜRE DOLDU!");
-                }, 1000);
+                this.bindEvents();
+                this.startLoops();
+                this.updateUI();
             },
 
-            stop(reason) {
-                this.active = false;
-                clearInterval(this.timer);
-                document.getElementById('game-engine-overlay').style.display = 'none';
-                Core.data.balance += this.score;
-                UI.toast(`${reason} Skor: ${this.score}`);
-                UI.refresh();
-                Core.save();
+            bindEvents() {
+                document.getElementById('clicker-node').addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.handleTap(e.touches[0].clientX, e.touches[0].clientY);
+                });
             },
 
-            spawn() {
-                if(Math.random() < 0.07) {
-                    this.entities.push({
-                        x: Math.random() * (this.canvas.width - 50) + 25,
-                        y: -60,
-                        type: Math.random() < 0.12 ? '💣' : '🌸',
-                        speed: Math.random() * 3 + 4,
-                        size: 50
-                    });
+            handleTap(x, y) {
+                if(state.energy >= state.tapPower) {
+                    state.balance += state.tapPower;
+                    state.energy -= state.tapPower;
+                    this.spawnText(x, y, `+${state.tapPower}`);
+                    this.updateUI();
                 }
             },
 
-            run() {
-                if(!this.active) return;
-                this.ctx.clearRect(0,0,this.canvas.width, this.canvas.height);
-                this.spawn();
-
-                this.entities.forEach((ent, i) => {
-                    ent.y += ent.speed;
-                    this.ctx.font = ent.size + "px Arial";
-                    this.ctx.textAlign = "center";
-                    this.ctx.fillText(ent.type, ent.x, ent.y);
-                    if(ent.y > this.canvas.height + 100) this.entities.splice(i, 1);
-                });
-
-                requestAnimationFrame(() => this.run());
+            spawnText(x, y, text) {
+                const el = document.createElement('div');
+                el.className = 'floating-text';
+                el.style.left = `${x}px`;
+                el.style.top = `${y}px`;
+                el.innerText = text;
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 600);
             },
 
-            hit(ex, ey) {
-                this.entities.forEach((ent, i) => {
-                    const dist = Math.hypot(ent.x - ex, ent.y - ey);
-                    if(dist < 60) {
-                        if(ent.type === '🌸') {
-                            this.score += 1; // Puan Ekle
-                            document.getElementById('game-score-node').innerText = this.score;
-                            this.entities.splice(i, 1); // Çiçek Kaybolur
-                        } else {
-                            this.stop("BOMBA! PATLADIN!"); // Oyun Biter
-                        }
+            startLoops() {
+                // Pasif Kazanç
+                setInterval(() => {
+                    if(state.profit > 0) {
+                        state.balance += (state.profit / 3600);
+                        this.updateUI();
                     }
-                });
+                }, 1000);
+
+                // Enerji Yenileme
+                setInterval(() => {
+                    if(state.energy < state.maxEnergy) {
+                        state.energy = Math.min(state.maxEnergy, state.energy + 3);
+                        this.updateUI();
+                    }
+                }, 1000);
+
+                // Otomatik Kayıt
+                setInterval(() => {
+                    localStorage.setItem('hamster_data', JSON.stringify(state));
+                }, 5000);
+            },
+
+            updateUI() {
+                document.getElementById('balance-main').innerText = Math.floor(state.balance).toLocaleString();
+                document.getElementById('profit-ui').innerText = `+${state.profit}/sa`;
+                document.getElementById('tap-ui').innerText = `+${state.tapPower}`;
+                document.getElementById('energy-curr').innerText = state.energy;
+                document.getElementById('energy-bar').style.width = `${(state.energy / state.maxEnergy) * 100}%`;
             }
         };
 
-        /**
-         * @namespace Router
-         * @description Sayfa Yönetimi
-         */
         const Router = {
             go(target, el) {
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
                 document.getElementById(target).classList.add('active');
                 document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
                 el.classList.add('active');
-                if(target === 'mine') UI.renderMarket();
+                if(target === 'mine') this.renderMarket();
+            },
+
+            renderMarket() {
+                const node = document.getElementById('market-node');
+                node.innerHTML = state.cards.map(c => {
+                    const price = Math.floor(c.cost * Math.pow(1.6, c.lvl));
+                    return `
+                        <div class="card" onclick="upgradeCard(${c.id})">
+                            <div class="card-lvl">LVL ${c.lvl}</div>
+                            <div class="card-name">${c.n}</div>
+                            <div class="card-profit">+${c.gain * (c.lvl+1)} / ${c.type === 'tap' ? 'tık' : 'sa'}</div>
+                            <div class="card-price">💰 ${price.toLocaleString()}</div>
+                        </div>
+                    `;
+                }).join('');
             }
         };
 
-        /* --- EVENT BINDING --- */
-        document.getElementById('game-start-node').addEventListener('click', () => Engine.start());
-        
-        window.addEventListener('touchstart', (e) => {
-            if(Engine.active) {
-                const t = e.touches[0];
-                Engine.hit(t.clientX, t.clientY);
+        function upgradeCard(id) {
+            const c = state.cards.find(x => x.id === id);
+            const price = Math.floor(c.cost * Math.pow(1.6, c.lvl));
+            
+            if(state.balance >= price) {
+                state.balance -= price;
+                c.lvl++;
+                if(c.type === 'tap') state.tapPower += c.gain;
+                else state.profit += (c.gain * c.lvl);
+                
+                Router.renderMarket();
+                Engine.updateUI();
             }
-        });
+        }
 
-        window.onload = () => Core.init();
-        window.onbeforeunload = () => Core.save();
+        window.onload = () => Engine.init();
     </script>
 </body>
 </html>
