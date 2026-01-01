@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AnimeBtc Miner PRO - Wallet Update</title>
+    <title>AnimeBtc Miner ELITE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -12,8 +12,7 @@
             --bg: #050505;
             --card: rgba(18, 18, 18, 0.95);
             --text: #ffffff;
-            --gray: #8e8e93;
-            --modal-bg: #f8f9fa;
+            --error: #ff3b30;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
@@ -21,9 +20,17 @@
 
         .app { height: 100%; display: flex; flex-direction: column; max-width: 450px; margin: 0 auto; position: relative; }
 
-        /* SAYFA SİSTEMİ */
-        .page { display: none; padding: 20px; height: calc(100% - 90px); overflow-y: auto; }
-        .page.active { display: flex; flex-direction: column; }
+        /* --- ANIMASYONLU UYARI PANELI --- */
+        #notification {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 400px; background: rgba(255, 59, 48, 0.95);
+            color: white; padding: 15px; border-radius: 15px; text-align: center;
+            font-weight: 800; z-index: 9999; backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(255, 59, 48, 0.3);
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        #notification.active { top: 20px; }
 
         /* HEADER */
         .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -31,6 +38,9 @@
         .user-pill img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--anime-pink); }
 
         /* MINING CORE */
+        .page { display: none; padding: 20px; height: calc(100% - 90px); overflow-y: auto; }
+        .page.active { display: flex; flex-direction: column; }
+
         .mining-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .visual-container { position: relative; width: 240px; height: 240px; margin-bottom: 25px; }
         .main-char { 
@@ -42,41 +52,33 @@
         }
         .orbit { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 2px solid var(--anime-pink); border-radius: 50%; opacity: 0.2; border-top-color: transparent; animation: spin 8s linear infinite; }
 
-        /* BALANCES & CARDS */
+        /* BALANCES */
         .balance-card { background: var(--card); padding: 20px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .wallet-icon { width: 45px; height: 45px; background: rgba(255,255,255,0.05); border-radius: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-        .wallet-icon:active { transform: scale(0.9); }
-        .wallet-icon svg { width: 24px; height: 24px; fill: white; }
+        .wallet-icon { width: 45px; height: 45px; background: rgba(255,255,255,0.05); border-radius: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-        /* WITHDRAW MODAL (Görseldeki Tasarım) */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
-        .modal-content { background: var(--modal-bg); width: 100%; max-width: 380px; border-radius: 25px; padding: 25px; color: #333; text-align: center; }
-        .modal-content h3 { font-size: 18px; font-weight: 800; margin-bottom: 10px; color: #000; }
-        .modal-content p { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.4; }
-        
+        /* WITHDRAW MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .modal-content { background: #f8f9fa; width: 100%; max-width: 380px; border-radius: 25px; padding: 25px; color: #333; text-align: center; animation: zoomIn 0.3s ease-out; }
+        @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
         .input-group { background: #fff; border-radius: 15px; padding: 12px 15px; margin-bottom: 15px; display: flex; align-items: center; border: 1px solid #eee; }
-        .input-group input { border: none; outline: none; width: 100%; font-size: 15px; font-weight: 600; color: #000; }
-        .input-group .max-btn { color: var(--ton-blue); font-weight: 800; font-size: 12px; cursor: pointer; }
+        .input-group input { border: none; outline: none; width: 100%; font-size: 15px; font-weight: 600; }
 
-        .currency-select { background: #fff; border-radius: 15px; padding: 12px 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
-        .currency-select div { display: flex; align-items: center; gap: 10px; font-weight: 700; }
-        .currency-logo { width: 24px; height: 24px; border-radius: 50%; }
+        .btn-send { background: var(--ton-blue); color: white; border: none; padding: 16px; border-radius: 15px; width: 100%; font-weight: 800; font-size: 16px; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 152, 234, 0.3); }
 
-        .btn-send { background: #90caf9; color: white; border: none; padding: 16px; border-radius: 15px; width: 100%; font-weight: 800; font-size: 16px; margin-top: 10px; cursor: pointer; }
-        .btn-send.active { background: var(--ton-blue); }
-        .btn-notyet { background: #fff; color: #000; border: 1px solid #eee; padding: 16px; border-radius: 15px; width: 100%; font-weight: 800; font-size: 16px; margin-top: 10px; cursor: pointer; }
-
-        /* TAB BAR */
+        /* NAVBAR */
         .tabs { height: 90px; background: #0a0a0a; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); }
-        .tab { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #444; cursor: pointer; }
+        .tab { display: flex; flex-direction: column; align-items: center; color: #444; }
         .tab.active { color: var(--anime-pink); }
-        .tab svg { width: 24px; height: 24px; fill: currentColor; }
+        .tab svg { width: 26px; height: 26px; fill: currentColor; }
 
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes float { 0%, 100% { transform: translate(-50%, -52%); } 50% { transform: translate(-50%, -48%); } }
+        @keyframes float { 0%, 100% { transform: translate(-50%, -53%); } 50% { transform: translate(-50%, -47%); } }
     </style>
 </head>
 <body>
+
+    <div id="notification">Lütfen geçerli bir miktar girin!</div>
 
     <div class="app">
         <header class="header">
@@ -84,7 +86,7 @@
                 <img src="photo_2026-01-01_19-32-18.jpg">
                 <span>@omer_anime</span>
             </div>
-            <div style="color: var(--anime-pink); font-weight: 900; font-size: 12px;">$AnimeBtc NODE</div>
+            <div style="color: var(--anime-pink); font-weight: 900; font-size: 12px;">$ABTC NODE</div>
         </header>
 
         <div id="home" class="page active">
@@ -93,21 +95,20 @@
                     <div class="orbit"></div>
                     <img src="photo_2026-01-01_19-32-18.jpg" class="main-char">
                 </div>
-                <div class="counter-box">
-                    <h1 id="mining-val">0.000000</h1>
-                    <small style="color: #00ff80; font-weight: 800;">⚡ 2.40 GH/s ACTIVE</small>
+                <div class="counter-box" style="text-align: center; margin-bottom: 20px;">
+                    <h1 id="mining-val" style="font-family: 'JetBrains Mono'; color: var(--anime-pink); font-size: 40px;">0.000000</h1>
+                    <small style="color: #00ff80; font-weight: 800;">⚡ MINING ACTIVE</small>
                 </div>
-                <button class="btn-send active" style="border-radius:20px;" onclick="collectAnime()">COLLECT $AnimeBtc</button>
+                <button class="btn-send" style="background:var(--anime-pink); border-radius:20px;" onclick="collectAnime()">COLLECT ASSETS</button>
             </div>
         </div>
 
         <div id="wallet" class="page">
-            <h2 style="margin-bottom: 20px;">My Assets</h2>
-            
+            <h2 style="margin-bottom: 20px;">Wallet</h2>
             <div class="balance-card">
                 <div>
-                    <span style="font-size: 12px; color: var(--gray);">$AnimeBtc Balance</span>
-                    <h2 id="bal-anime" style="font-family: 'JetBrains Mono'; color: var(--anime-pink);">0 $ABTC</h2>
+                    <span style="font-size: 11px; color: var(--gray); font-weight: 800;">ANIMEBTC</span>
+                    <h2 id="bal-anime" style="font-family: 'JetBrains Mono'; color: var(--anime-pink);">5500.00 $ABTC</h2>
                 </div>
                 <div class="wallet-icon" onclick="openWithdraw('ABTC')">
                     <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
@@ -116,8 +117,8 @@
 
             <div class="balance-card">
                 <div>
-                    <span style="font-size: 12px; color: var(--gray);">TON Balance</span>
-                    <h2 id="bal-ton" style="font-family: 'JetBrains Mono'; color: var(--ton-blue);">0.00 TON</h2>
+                    <span style="font-size: 11px; color: var(--gray); font-weight: 800;">TONCOIN</span>
+                    <h2 id="bal-ton" style="font-family: 'JetBrains Mono'; color: var(--ton-blue);">5.50 TON</h2>
                 </div>
                 <div class="wallet-icon" onclick="openWithdraw('TON')">
                     <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89-2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
@@ -126,105 +127,68 @@
         </div>
 
         <nav class="tabs">
-            <div class="tab active" onclick="nav('home', this)">
-                <svg viewBox="0 0 24 24"><path d="M13 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V9l-7-7zm0 1.5L18.5 9H13V3.5z"/></svg>
-            </div>
-            <div class="tab" onclick="nav('wallet', this)">
-                <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
-            </div>
+            <div class="tab active" onclick="nav('home', this)"><svg viewBox="0 0 24 24"><path d="M12 3L4 9v12h5v-7h6v7h5V9z"/></svg></div>
+            <div class="tab" onclick="nav('wallet', this)"><svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></div>
         </nav>
     </div>
 
     <div class="modal-overlay" id="withdrawModal">
         <div class="modal-content">
-            <h3 id="modalTitle">Enter your personal TON address</h3>
-            <p id="modalSub">This amount will be sent to the TON compatible wallet address</p>
-            
-            <div class="currency-select">
-                <div>
-                    <img id="modalIcon" src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="currency-logo">
-                    <span id="modalCoinName">TON</span>
-                </div>
-                <span>▼</span>
-            </div>
-
-            <div class="input-group">
-                <input type="text" placeholder="Your TON address" id="addrInput">
-            </div>
-
-            <div class="input-group">
-                <input type="number" placeholder="Amount" id="amountInput">
-                <span class="max-btn" onclick="setMax()">MAX</span>
-            </div>
-
-            <p style="margin-bottom:10px; font-weight:700;">Receive amount: <span id="receiveAmt">0</span> <span id="receiveCoin">TON</span></p>
-
-            <button class="btn-send active" id="sendBtn" onclick="processWithdraw()">Send</button>
-            <button class="btn-notyet" onclick="closeModal()">Not yet</button>
+            <h3 id="modalTitle" style="margin-bottom:15px;">Withdraw</h3>
+            <div class="input-group"><input type="text" placeholder="Wallet Address"></div>
+            <div class="input-group"><input type="number" placeholder="Amount" id="amountInput"></div>
+            <button class="btn-send" onclick="processWithdraw()">Send</button>
+            <p style="margin-top:15px; font-size:12px; color:#888; cursor:pointer;" onclick="closeModal()">Cancel</p>
         </div>
     </div>
 
     <script>
-        let user = { anime: 1500, ton: 5.50, currentMining: 0, activeCoin: 'TON' };
+        // İSTEDİĞİN BAŞLANGIÇ BAKİYELERİ
+        let user = { anime: 5500.0, ton: 5.50, mining: 0, activeCoin: '' };
 
-        // Mining Loop
         setInterval(() => {
-            user.currentMining += 0.000035;
-            document.getElementById('mining-val').innerText = user.currentMining.toFixed(6);
+            user.mining += 0.000045;
+            document.getElementById('mining-val').innerText = user.mining.toFixed(6);
         }, 100);
+
+        function showNote(text, color = '#ff3b30') {
+            const n = document.getElementById('notification');
+            n.innerText = text;
+            n.style.background = color;
+            n.classList.add('active');
+            setTimeout(() => n.classList.remove('active'), 3000);
+        }
 
         function openWithdraw(coin) {
             user.activeCoin = coin;
-            const modal = document.getElementById('withdrawModal');
-            const title = document.getElementById('modalTitle');
-            const coinName = document.getElementById('modalCoinName');
-            const coinIcon = document.getElementById('modalIcon');
-            const receiveCoin = document.getElementById('receiveCoin');
-
-            if(coin === 'ABTC') {
-                title.innerText = "Withdraw $AnimeBtc";
-                coinName.innerText = "AnimeBtc";
-                coinIcon.src = "photo_2026-01-01_19-32-18.jpg";
-                receiveCoin.innerText = "$ABTC";
-                document.getElementById('modalSub').innerText = "Çekimler 2026 4. çeyrekte aktif olacaktır.";
-            } else {
-                title.innerText = "Enter your personal TON address";
-                coinName.innerText = "TON";
-                coinIcon.src = "https://cryptologos.cc/logos/toncoin-ton-logo.png";
-                receiveCoin.innerText = "TON";
-                document.getElementById('modalSub').innerText = "This amount will be sent to the TON compatible wallet address";
-            }
-            modal.style.display = 'flex';
+            document.getElementById('modalTitle').innerText = coin === 'TON' ? "Withdraw TON" : "Withdraw AnimeBtc";
+            document.getElementById('withdrawModal').style.display = 'flex';
         }
 
         function processWithdraw() {
             if(user.activeCoin === 'ABTC') {
-                alert("Uyarı: $AnimeBtc çekimleri 2026 4. çeyrekte başlayacaktır.");
+                showNote("Hata: Çekimler 2026 4. Çeyrekte açılacaktır!");
+                closeModal();
+                return;
+            }
+            const amt = parseFloat(document.getElementById('amountInput').value);
+            if(!amt || amt < 1.5) {
+                showNote("Hata: Minimum çekim 1.5 TON!");
+            } else if(amt > user.ton) {
+                showNote("Hata: Yetersiz TON bakiyesi!");
             } else {
-                const amt = document.getElementById('amountInput').value;
-                if(amt >= 1.5 && amt <= user.ton) {
-                    alert(amt + " TON çekim talebi alındı!");
-                    user.ton -= parseFloat(amt);
-                    updateUI();
-                    closeModal();
-                } else {
-                    alert("Minimum çekim 1.5 TON olmalı ve yeterli bakiye bulunmalı.");
-                }
+                user.ton -= amt;
+                updateUI();
+                showNote("Başarılı: Çekim talebi iletildi!", "#34c759");
+                closeModal();
             }
         }
 
-        function setMax() {
-            document.getElementById('amountInput').value = user.activeCoin === 'TON' ? user.ton : user.anime;
-            document.getElementById('receiveAmt').innerText = document.getElementById('amountInput').value;
-        }
-
-        function closeModal() { document.getElementById('withdrawModal').style.display = 'none'; }
-
         function collectAnime() {
-            user.anime += user.currentMining;
-            user.currentMining = 0;
+            user.anime += user.mining;
+            user.mining = 0;
             updateUI();
-            alert("Collected!");
+            showNote("Bakiyeye eklendi!", "#0098ea");
         }
 
         function updateUI() {
@@ -232,18 +196,13 @@
             document.getElementById('bal-ton').innerText = user.ton.toFixed(2) + " TON";
         }
 
+        function closeModal() { document.getElementById('withdrawModal').style.display = 'none'; }
         function nav(id, el) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             el.classList.add('active');
-            updateUI();
         }
-        
-        // Input dinleyici (Receive miktarını güncellemek için)
-        document.getElementById('amountInput').addEventListener('input', function(e) {
-            document.getElementById('receiveAmt').innerText = e.target.value || 0;
-        });
 
         updateUI();
     </script>
