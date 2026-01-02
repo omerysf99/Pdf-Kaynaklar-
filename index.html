@@ -3,265 +3,337 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Idle Miner Tycoon Clone</title>
+    <title>Idle Miner Ultimate</title>
     <style>
         :root {
-            --bg-sky: #4fa3e3;
-            --earth: #8b4513;
-            --tunnel: #3d2b1f;
-            --gold: #ffd700;
+            --sky: #3498db;
+            --grass: #2ecc71;
+            --dirt-light: #a0522d;
+            --dirt-dark: #5d2e16;
+            --gold: #f1c40f;
+            --iron: #bdc3c7;
         }
 
         body {
             margin: 0;
-            background-color: var(--bg-sky);
-            font-family: 'Arial', sans-serif;
+            background: #222;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             color: white;
             overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
+            user-select: none;
         }
 
-        /* Üst Panel */
-        #top-bar {
-            height: 60px;
-            background: rgba(0,0,0,0.7);
+        /* Üst Header - Modern Tasarım */
+        #ui-header {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid var(--gold);
+            border-radius: 25px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--gold);
-            z-index: 100;
-            position: sticky;
-            top: 0;
+            justify-content: space-around;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        /* Oyun Alanı Konteynırı */
-        #game-container {
-            flex: 1;
+        .stat-item { display: flex; align-items: center; gap: 8px; font-weight: bold; }
+
+        /* Dünya Katmanları */
+        #world {
             display: flex;
             flex-direction: column;
+            width: 100%;
             position: relative;
         }
 
-        /* Yeryüzü ve Depo */
         #surface {
-            height: 120px;
-            background: #4caf50;
+            height: 200px;
+            background: linear-gradient(to bottom, var(--sky) 70%, var(--grass) 70%);
             position: relative;
-            border-bottom: 5px solid #2e7d32;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+            padding-right: 20px;
         }
 
-        .warehouse {
-            position: absolute;
-            right: 20px;
-            bottom: 0;
-            width: 80px;
-            height: 100px;
-            background: #555;
-            border: 3px solid #333;
+        .warehouse-container {
+            width: 100px;
+            height: 120px;
+            background: #444;
+            border: 4px solid #222;
+            border-bottom: none;
+            position: relative;
             text-align: center;
         }
 
-        /* Maden Şaftı (Dikey Yapı) */
-        #shaft-container {
-            background-color: var(--earth);
-            min-height: 600px;
+        .worker-surface {
+            position: absolute;
+            bottom: 0;
+            right: 110px;
+            font-size: 2rem;
+            animation: walk 3s infinite alternate;
+        }
+
+        /* Maden Yapısı */
+        #underground {
+            background: repeating-linear-gradient(var(--dirt-light), var(--dirt-dark) 500px);
             position: relative;
-            padding-left: 80px; /* Asansör boşluğu */
+            padding-left: 80px;
         }
 
         /* Asansör Yolu */
-        #elevator-shaft {
+        #elevator-path {
             position: absolute;
             left: 0;
             top: 0;
             bottom: 0;
-            width: 70px;
-            background: #222;
-            border-right: 4px solid #444;
+            width: 75px;
+            background: rgba(0,0,0,0.4);
+            border-right: 4px solid #333;
+            z-index: 10;
         }
 
-        #elevator {
-            width: 60px;
-            height: 50px;
-            background: #e74c3c;
+        #elevator-car {
             position: absolute;
+            width: 65px;
+            height: 80px;
+            background: #c0392b;
             left: 5px;
-            top: 0;
-            transition: top 2s linear;
+            border-radius: 5px;
+            border: 3px solid #8e44ad;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
-            border-radius: 5px;
+            transition: top 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+            z-index: 11;
         }
 
-        /* Maden Katları */
-        .mine-floor {
-            height: 100px;
-            background: var(--tunnel);
+        /* Maden Katı */
+        .shaft {
+            height: 150px;
             margin: 20px 10px;
-            border-radius: 0 10px 10px 0;
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #444;
+        }
+
+        .shaft-info {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: rgba(0,0,0,0.6);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+        }
+
+        .shaft-content {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            border-bottom: 4px solid #000;
+            width: 100%;
+            padding: 20px;
+            gap: 20px;
         }
 
-        .miner { font-size: 2rem; cursor: pointer; }
-        .floor-stats { font-size: 0.9rem; }
+        .worker-unit {
+            font-size: 2.5rem;
+            position: relative;
+            cursor: pointer;
+            filter: drop-shadow(0 0 5px gold);
+        }
 
-        .upgrade-btn {
-            background: var(--gold);
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
+        .progress-container {
+            flex-grow: 1;
+            height: 25px;
+            background: #111;
+            border-radius: 12px;
+            border: 2px solid #555;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #f1c40f, #e67e22);
+            transition: width 0.1s;
+        }
+
+        .upgrade-card {
+            width: 80px;
+            background: #2ecc71;
+            color: #000;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             font-weight: bold;
+            font-size: 0.8rem;
             cursor: pointer;
         }
 
         /* Animasyonlar */
-        @keyframes collect {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+        @keyframes walk {
+            from { transform: translateX(0); }
+            to { transform: translateX(-100px); }
         }
-        .collecting { animation: collect 0.3s ease; }
 
+        .tap-effect {
+            position: absolute;
+            color: var(--gold);
+            font-weight: bold;
+            pointer-events: none;
+            animation: popUp 0.6s ease-out forwards;
+        }
+
+        @keyframes popUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="top-bar">💰 <span id="total-money">0</span></div>
+    <div id="ui-header">
+        <div class="stat-item">💰 <span id="money">0</span></div>
+        <div class="stat-item">⚡ <span id="mps">0</span>/s</div>
+    </div>
 
-    <div id="game-container">
+    <div id="world">
         <div id="surface">
-            <div class="warehouse">
-                🏢<br>DEPO
-                <div id="warehouse-gold" style="font-size: 0.8rem; color: gold;">0</div>
+            <div class="worker-surface">🏃‍♂️</div>
+            <div class="warehouse-container">
+                <div style="margin-top:20px">📦</div>
+                <div id="warehouse-load" style="color:var(--gold); font-weight:bold">0</div>
             </div>
         </div>
 
-        <div id="shaft-container">
-            <div id="elevator-shaft">
-                <div id="elevator">🏗️ <span id="elev-load">0</span></div>
+        <div id="underground">
+            <div id="elevator-path">
+                <div id="elevator-car">
+                    <span>📦</span>
+                    <b id="elev-val">0</b>
+                </div>
             </div>
 
-            <div class="mine-floor" id="floor-1">
-                <div class="miner" onclick="mine(1)">⛏️</div>
-                <div class="floor-stats">
-                    Kat 1 (Seviye <span id="lvl-1">1</span>)<br>
-                    Stok: <span id="stock-1">0</span>
+            <div class="shaft">
+                <div class="shaft-info">KAT 1 - LVL <span id="lvl1">1</span></div>
+                <div class="shaft-content">
+                    <div class="worker-unit" onclick="manualMine(1)">👷‍♂️</div>
+                    <div class="progress-container">
+                        <div id="bar1" class="progress-fill"></div>
+                    </div>
                 </div>
-                <button class="upgrade-btn" onclick="upgrade(1)">Geliştir ($50)</button>
+                <div class="upgrade-card" onclick="upgrade(1)">
+                    Yükselt<br><span id="cost1">$25</span>
+                </div>
             </div>
 
-            <div class="mine-floor" id="floor-2">
-                <div class="miner" onclick="mine(2)">⛏️</div>
-                <div class="floor-stats">
-                    Kat 2 (Seviye <span id="lvl-2">1</span>)<br>
-                    Stok: <span id="stock-2">0</span>
+            <div class="shaft">
+                <div class="shaft-info">KAT 2 - LVL <span id="lvl2">1</span></div>
+                <div class="shaft-content">
+                    <div class="worker-unit" onclick="manualMine(2)">👨‍🏭</div>
+                    <div class="progress-container">
+                        <div id="bar2" class="progress-fill"></div>
+                    </div>
                 </div>
-                <button class="upgrade-btn" onclick="upgrade(2)">Geliştir ($200)</button>
+                <div class="upgrade-card" onclick="upgrade(2)" style="background:#3498db">
+                    Yükselt<br><span id="cost2">$150</span>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        let gameState = {
-            money: 0,
-            warehouseGold: 0,
-            elevatorLoad: 0,
-            floors: {
-                1: { level: 1, stock: 0, cost: 50, power: 5 },
-                2: { level: 1, stock: 0, cost: 200, power: 20 }
-            }
+        let money = 0;
+        let elevatorLoad = 0;
+        
+        let floors = {
+            1: { lvl: 1, cost: 25, power: 10, stock: 0, speed: 3000, currentPos: 0 },
+            2: { lvl: 1, cost: 150, power: 50, stock: 0, speed: 5000, currentPos: 0 }
         };
 
-        // 1. Madencilik (Tıklayarak altın çıkar)
-        function mine(floorId) {
-            const floor = gameState.floors[floorId];
-            floor.stock += floor.power;
-            updateUI();
+        // Otomatik Üretim Döngüsü
+        function startFloor(id) {
+            setInterval(() => {
+                let bar = document.getElementById(`bar${id}`);
+                floors[id].currentPos += 2;
+                if(floors[id].currentPos >= 100) {
+                    floors[id].currentPos = 0;
+                    floors[id].stock += floors[id].power;
+                }
+                bar.style.width = floors[id].currentPos + "%";
+            }, 50);
         }
 
-        // 2. Geliştirme
-        function upgrade(floorId) {
-            const floor = gameState.floors[floorId];
-            if (gameState.money >= floor.cost) {
-                gameState.money -= floor.cost;
-                floor.level++;
-                floor.power += Math.floor(floor.power * 0.5);
-                floor.cost = Math.floor(floor.cost * 1.8);
+        // Asansör Mantığı
+        const elev = document.getElementById('elevator-car');
+        const elevVal = document.getElementById('elev-val');
+        let elevState = 'moving';
+
+        async function elevatorCycle() {
+            // Kat 1'e git
+            elev.style.top = "240px";
+            await wait(1500);
+            elevatorLoad += floors[1].stock;
+            floors[1].stock = 0;
+            updateUI();
+
+            // Kat 2'ye git
+            elev.style.top = "410px";
+            await wait(1500);
+            elevatorLoad += floors[2].stock;
+            floors[2].stock = 0;
+            updateUI();
+
+            // Yüzeye dön
+            elev.style.top = "110px";
+            await wait(2000);
+            money += elevatorLoad;
+            elevatorLoad = 0;
+            updateUI();
+            
+            elevatorCycle();
+        }
+
+        function upgrade(id) {
+            if(money >= floors[id].cost) {
+                money -= floors[id].cost;
+                floors[id].lvl++;
+                floors[id].power += Math.floor(floors[id].power * 0.6);
+                floors[id].cost = Math.floor(floors[id].cost * 2.2);
                 updateUI();
             }
         }
 
-        // 3. Asansör Döngüsü (Otomatik)
-        const elevatorEl = document.getElementById('elevator');
-        let elevatorPos = "top";
-
-        function moveElevator() {
-            if (elevatorPos === "top") {
-                // Aşağı in
-                elevatorEl.style.top = "150px"; // Kat 1 hizası
-                setTimeout(() => {
-                    // Kat 1'den al
-                    let take = gameState.floors[1].stock;
-                    gameState.elevatorLoad += take;
-                    gameState.floors[1].stock = 0;
-                    
-                    // Kat 2'ye in
-                    elevatorEl.style.top = "270px"; 
-                    setTimeout(() => {
-                        let take2 = gameState.floors[2].stock;
-                        gameState.elevatorLoad += take2;
-                        gameState.floors[2].stock = 0;
-                        
-                        // Yukarı çık
-                        elevatorPos = "bottom";
-                        moveElevator();
-                    }, 2000);
-                }, 2000);
-            } else {
-                // Yüzeye çık
-                elevatorEl.style.top = "0px";
-                setTimeout(() => {
-                    // Depoya boşalt ve paraya çevir
-                    gameState.money += gameState.elevatorLoad;
-                    gameState.elevatorLoad = 0;
-                    elevatorPos = "top";
-                    updateUI();
-                    moveElevator();
-                }, 2000);
-            }
-        }
-
         function updateUI() {
-            document.getElementById('total-money').innerText = Math.floor(gameState.money).toLocaleString();
-            document.getElementById('elev-load').innerText = gameState.elevatorLoad;
+            document.getElementById('money').innerText = Math.floor(money);
+            document.getElementById('elev-val').innerText = elevatorLoad;
+            document.getElementById('warehouse-load').innerText = elevatorLoad;
             
-            for (let i in gameState.floors) {
-                document.getElementById(`stock-${i}`).innerText = gameState.floors[i].stock;
-                document.getElementById(`lvl-${i}`).innerText = gameState.floors[i].level;
-                // Buton yazılarını güncellemek için querySelector kullanılabilir
+            for(let id in floors) {
+                document.getElementById(`lvl${id}`).innerText = floors[id].lvl;
+                document.getElementById(`cost${id}`).innerText = "$" + floors[id].cost;
             }
+            document.getElementById('mps').innerText = (floors[1].power + floors[2].power);
         }
+
+        const wait = ms => new Promise(res => setTimeout(res, ms));
 
         // Başlat
-        moveElevator();
-        
-        // Pasif Üretim (Her saniye stok birikir)
-        setInterval(() => {
-            gameState.floors[1].stock += (gameState.floors[1].level * 1);
-            gameState.floors[2].stock += (gameState.floors[2].level * 2);
-            updateUI();
-        }, 1000);
-
+        startFloor(1);
+        startFloor(2);
+        elevatorCycle();
     </script>
 </body>
 </html>
