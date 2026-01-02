@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONux Miner - 0.01 Limit</title>
+    <title>TONux Miner Bot</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; user-select: none; }
@@ -11,7 +11,7 @@
 
         #game-container { width: 100%; max-width: 450px; background: #fff; position: relative; display: flex; flex-direction: column; }
 
-        /* Üst Bakiye Alanı */
+        /* Üst Bakiye Kutucukları */
         .header-stats { padding: 15px; display: flex; flex-direction: column; gap: 8px; }
         .stat-item { background: #fff; border: 1px solid #e0e8f0; border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .stat-info { display: flex; align-items: center; gap: 10px; }
@@ -19,27 +19,33 @@
         .stat-label { font-size: 11px; color: #888; font-weight: 600; }
         .stat-value { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
 
-        /* Mining Alanı */
+        /* Ana Mining Alanı (Dönen Fan) */
         .miner-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .fan-container { width: 240px; height: 240px; cursor: pointer; transition: transform 0.1s; }
+        .fan-container { width: 240px; height: 240px; position: relative; cursor: pointer; transition: transform 0.1s; }
         .fan-container:active { transform: scale(0.95); }
-        .fan-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; animation: spin 3s linear infinite; }
+        .fan-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; animation: spin 3s linear infinite; box-shadow: 0 0 30px rgba(0, 123, 255, 0.2); }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* Bakiye Gösterimi: 0.00 Formatı */
+        /* Bakiye Göstergesi (Senin istediğin 0.00 formatı) */
         .mining-power { margin-top: 25px; text-align: center; }
-        .ton-balance-large { font-size: 40px; font-weight: 900; color: #000; font-variant-numeric: tabular-nums; }
-        .min-claim-info { font-size: 12px; color: #ff4d4d; font-weight: 700; margin-top: 5px; }
+        .ton-balance-large { font-size: 38px; font-weight: 900; color: #000; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
+        .ghs-info { font-size: 15px; color: #007bff; font-weight: 800; margin-top: 5px; background: #eef6ff; padding: 5px 15px; border-radius: 20px; display: inline-block; }
+        .min-claim-warn { font-size: 11px; color: #ff4d4d; font-weight: 600; margin-top: 8px; opacity: 0; transition: 0.3s; }
 
-        /* Butonlar */
+        /* Aksiyon Butonları */
         .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 15px 25px 15px; }
-        .btn { border: none; border-radius: 16px; padding: 16px; font-weight: 800; font-size: 15px; cursor: pointer; color: #fff; transition: 0.2s; }
+        .btn { border: none; border-radius: 16px; padding: 16px; font-weight: 800; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: #fff; transition: transform 0.1s, opacity 0.3s; }
+        .btn:active { transform: scale(0.95); }
         .btn-claim { background: #4da3ff; box-shadow: 0 4px 0 #3a82ce; }
         .btn-boost { background: #5db7f5; box-shadow: 0 4px 0 #4a9bd4; }
-        .btn:disabled { background: #ccc; box-shadow: 0 4px 0 #999; cursor: not-allowed; }
 
+        /* Alt Nav */
         .bottom-nav { background: #fff; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 12px 0; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #888; font-weight: 700; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #888; font-weight: 700; cursor: pointer; }
+        .nav-item.active { color: #007bff; }
+
+        .plus-one { position: absolute; color: #007bff; font-size: 24px; font-weight: 900; animation: float 0.8s forwards; pointer-events: none; z-index: 100; }
+        @keyframes float { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
 <body>
@@ -49,7 +55,13 @@
         <div class="stat-item">
             <div class="stat-info">
                 <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="stat-icon">
-                <div><p class="stat-label">Cüzdan</p><p class="stat-value"><span id="wallet-ton">0.00</span> TON</p></div>
+                <div><p class="stat-label">Cüzdan Bakiyesi</p><p class="stat-value"><span id="wallet-ton">0.00</span> TON</p></div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-info">
+                <img src="tonux.jpg" class="stat-icon" onerror="this.src='https://via.placeholder.com/32'">
+                <div><p class="stat-label">TONIX Puanı</p><p class="stat-value"><span id="tonix-bal">0</span> TX</p></div>
             </div>
         </div>
     </div>
@@ -60,32 +72,32 @@
         </div>
         <div class="mining-power">
             <p class="ton-balance-large" id="main-ton">0.00</p>
-            <p style="font-size:14px; font-weight:800; color:#007bff;">1 GH/s ⚡</p>
-            <p class="min-claim-info">Min Claim: 0.01 TON</p>
+            <p class="ghs-info"><span id="power">1</span> GH/s ⚡</p>
+            <p id="claim-warn" class="min-claim-warn">Minimum Claim: 0.01 TON</p>
         </div>
     </div>
 
     <div class="action-btns">
-        <button class="btn btn-claim" id="claim-btn" onclick="claimCoins()">💰 Claim</button>
+        <button class="btn btn-claim" id="btn-claim" onclick="claimCoins()">💰 Claim</button>
         <button class="btn btn-boost">🚀 Boost</button>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item">🏠<br>Home</div>
-        <div class="nav-item">⛏️<br>Mine</div>
-        <div class="nav-item">👥<br>Friends</div>
-        <div class="nav-item">💰<br>Wallet</div>
+        <div class="nav-item active"><span>🏠</span>Home</div>
+        <div class="nav-item"><span>⛏️</span>Mine</div>
+        <div class="nav-item"><span>👥</span>Friends</div>
+        <div class="nav-item"><span>💰</span>Wallet</div>
     </div>
 </div>
 
 <script>
     let currentTon = 0.00000000;
     let walletTotal = 0.00000000;
+    let tonix = 0;
     let power = 1; // Başlangıç 1 GH/s
 
-    // Senin Matematiğin: 24 saatte 1 TON
     const TICK_RATE = 10; 
-    const PRODUCTION_STEP = 0.00000011574; 
+    const PRODUCTION_STEP = 0.00000011574; // 1 GH/s için salise başı üretim
 
     setInterval(() => {
         currentTon += (power * PRODUCTION_STEP);
@@ -93,35 +105,50 @@
     }, TICK_RATE);
 
     function tapFan(e) {
+        tonix += 1;
+        const plus = document.createElement('div');
+        plus.innerText = '+1';
+        plus.className = 'plus-one';
+        plus.style.left = e.clientX + 'px';
+        plus.style.top = e.clientY + 'px';
+        document.body.appendChild(plus);
+        setTimeout(() => plus.remove(), 800);
+        updateUI();
         if(navigator.vibrate) navigator.vibrate(10);
     }
 
     function claimCoins() {
-        // Minimum claim sınırı: 0.01 TON
+        // Minimum Claim Sınırı: 0.01 TON
         if(currentTon >= 0.01) {
             walletTotal += currentTon;
             currentTon = 0;
             updateUI();
-            alert("Başarıyla " + walletTotal.toFixed(2) + " TON toplandı!");
+            alert("Başarıyla toplandı!");
         } else {
-            alert("Yetersiz bakiye! Minimum 0.01 TON birikmelidir.");
+            // Uyarıyı göster
+            const warn = document.getElementById('claim-warn');
+            warn.style.opacity = "1";
+            setTimeout(() => warn.style.opacity = "0", 2000);
         }
     }
 
     function updateUI() {
-        // Bakiyeyi senin istediğin gibi 0.00 (veya daha hassas) formatında gösterir
-        // Daha akıcı görünmesi için virgülden sonra 4 hane bırakılmıştır
+        // Ana bakiyeyi 0.00 formatında ama akışı görmek için 4 hane gösteriyoruz
         document.getElementById('main-ton').innerText = currentTon.toFixed(4);
+        // Cüzdan bakiyesi net 0.00
         document.getElementById('wallet-ton').innerText = walletTotal.toFixed(2);
-        
-        // Butonun aktiflik durumunu kontrol et
-        const btn = document.getElementById('claim-btn');
+        document.getElementById('tonix-bal').innerText = Math.floor(tonix).toLocaleString();
+        document.getElementById('power').innerText = power;
+
+        // Buton durumu (0.01 altındaysa soluk görünür)
+        const btn = document.getElementById('btn-claim');
         if(currentTon < 0.01) {
-            btn.style.opacity = "0.5";
+            btn.style.opacity = "0.6";
         } else {
             btn.style.opacity = "1";
         }
     }
 </script>
+
 </body>
 </html>
