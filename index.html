@@ -3,157 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hamster Kombat Clone</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Idle Miner Tycoon Clone</title>
     <style>
+        :root {
+            --bg-color: #2c3e50;
+            --gold: #f1c40f;
+            --panel: #34495e;
+        }
+
         body {
-            background-color: #000;
+            background-color: var(--bg-color);
             color: white;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
             height: 100vh;
-            margin: 0;
             overflow: hidden;
             user-select: none;
         }
 
-        #score-container {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 20px;
+        /* Üst Panel: Para Durumu */
+        #header {
+            background: rgba(0,0,0,0.5);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid var(--gold);
         }
 
-        #hamster-button {
-            width: 250px;
-            height: 250px;
-            background: radial-gradient(circle, #f39c12, #d35400);
-            border-radius: 50%;
-            border: 8px solid #f1c40f;
-            cursor: pointer;
+        #balance {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        #income-rate {
+            font-size: 0.9rem;
+            color: #bdc3c7;
+        }
+
+        /* Orta Alan: Maden Animasyonu */
+        #mine-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .mine-shaft {
+            width: 120px;
+            height: 120px;
+            background: #7f8c8d;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 5rem;
-            transition: transform 0.1s ease;
-            box-shadow: 0 0 30px rgba(243, 156, 18, 0.5);
+            font-size: 4rem;
+            cursor: pointer;
+            transition: transform 0.1s;
+            z-index: 2;
         }
 
-        #hamster-button:active {
-            transform: scale(0.95);
+        .mine-shaft:active { transform: scale(0.9); }
+
+        /* Alt Panel: Geliştirmeler */
+        #shop-panel {
+            background: var(--panel);
+            padding: 15px;
+            max-height: 40%;
+            overflow-y: auto;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
         }
 
-        #energy-container {
-            margin-top: 30px;
-            width: 80%;
-            text-align: center;
-        }
-
-        #energy-bar-bg {
-            width: 100%;
-            height: 20px;
-            background-color: #333;
+        .upgrade-item {
+            background: #2c3e50;
+            margin-bottom: 10px;
+            padding: 12px;
             border-radius: 10px;
-            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--gold);
         }
 
-        #energy-bar-fill {
-            width: 100%;
-            height: 100%;
-            background-color: #f1c40f;
-            border-radius: 10px;
-            transition: width 0.2s ease;
-        }
+        .upgrade-info h4 { margin: 0; font-size: 1rem; }
+        .upgrade-info p { margin: 2px 0 0; font-size: 0.8rem; color: #bdc3c7; }
 
-        .floating-text {
-            position: absolute;
-            color: #f1c40f;
+        .buy-btn {
+            background: var(--gold);
+            color: #000;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
             font-weight: bold;
-            font-size: 1.5rem;
-            pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
+            cursor: pointer;
         }
 
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-100px); }
+        .buy-btn:disabled {
+            background: #7f8c8d;
+            opacity: 0.5;
+        }
+
+        .floating-coin {
+            position: absolute;
+            color: var(--gold);
+            font-weight: bold;
+            animation: moveUp 1s forwards;
+            pointer-events: none;
+        }
+
+        @keyframes moveUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100px); opacity: 0; }
         }
     </style>
 </head>
 <body>
 
-    <div id="score-container">0</div>
+    <div id="header">
+        <div id="balance">$ 0</div>
+        <div id="income-rate">Saniyelik Kazanç: $ 0</div>
+    </div>
 
-    <div id="hamster-button">🐹</div>
+    <div id="mine-area">
+        <div class="mine-shaft" id="click-area">⛏️</div>
+    </div>
 
-    <div id="energy-container">
-        <div>Enerji: <span id="energy-text">1000</span> / 1000</div>
-        <div id="energy-bar-bg">
-            <div id="energy-bar-fill"></div>
+    <div id="shop-panel">
+        <div class="upgrade-item">
+            <div class="upgrade-info">
+                <h4>Acemi Madenci</h4>
+                <p>Kazanç: +$1/sn | Maliyet: $15</p>
+            </div>
+            <button class="buy-btn" onclick="buyUpgrade(0)">Satın Al</button>
+        </div>
+
+        <div class="upgrade-item">
+            <div class="upgrade-info">
+                <h4>Sondaj Makinesi</h4>
+                <p>Kazanç: +$8/sn | Maliyet: $100</p>
+            </div>
+            <button class="buy-btn" onclick="buyUpgrade(1)">Satın Al</button>
+        </div>
+
+        <div class="upgrade-item">
+            <div class="upgrade-info">
+                <h4>Altın Fabrikası</h4>
+                <p>Kazanç: +$45/sn | Maliyet: $500</p>
+            </div>
+            <button class="buy-btn" onclick="buyUpgrade(2)">Satın Al</button>
         </div>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand(); // Uygulamayı tam ekran yapar
+        let balance = 0;
+        let autoIncome = 0;
 
-        let score = 0;
-        let energy = 1000;
-        const maxEnergy = 1000;
+        const upgrades = [
+            { name: "Madenci", cost: 15, income: 1, count: 0 },
+            { name: "Sondaj", cost: 100, income: 8, count: 0 },
+            { name: "Fabrika", cost: 500, income: 45, count: 0 }
+        ];
 
-        const scoreEl = document.getElementById('score-container');
-        const energyTextEl = document.getElementById('energy-text');
-        const energyFillEl = document.getElementById('energy-bar-fill');
-        const button = document.getElementById('hamster-button');
+        const balanceEl = document.getElementById('balance');
+        const incomeEl = document.getElementById('income-rate');
+        const clickArea = document.getElementById('click-area');
+        const buttons = document.querySelectorAll('.buy-btn');
 
-        // Tıklama Fonksiyonu
-        button.addEventListener('touchstart', (e) => {
-            if (energy > 0) {
-                // Skoru artır
-                score++;
-                scoreEl.innerText = score.toLocaleString();
-
-                // Enerjiyi azalt
-                energy--;
-                updateEnergyUI();
-
-                // Efekt oluştur
-                createFloatingText(e.touches[0].clientX, e.touches[0].clientY);
-                
-                // Haptic feedback (Telegram özelliği)
-                if (tg.HapticFeedback) {
-                    tg.HapticFeedback.impactOccurred('medium');
-                }
-            }
+        // Manuel Tıklama
+        clickArea.addEventListener('click', (e) => {
+            addMoney(1);
+            showCoinEffect(e.clientX, e.clientY);
         });
 
-        function updateEnergyUI() {
-            energyTextEl.innerText = energy;
-            const percentage = (energy / maxEnergy) * 100;
-            energyFillEl.style.width = percentage + '%';
+        function addMoney(amount) {
+            balance += amount;
+            updateUI();
         }
 
-        function createFloatingText(x, y) {
-            const text = document.createElement('div');
-            text.innerText = "+1";
-            text.className = 'floating-text';
-            text.style.left = x + 'px';
-            text.style.top = y + 'px';
-            document.body.appendChild(text);
+        function buyUpgrade(index) {
+            const item = upgrades[index];
+            if (balance >= item.cost) {
+                balance -= item.cost;
+                item.count++;
+                autoIncome += item.income;
+                item.cost = Math.floor(item.cost * 1.5); // Fiyat artışı
+                
+                // UI Güncelleme (Fiyatı göster)
+                const desc = document.querySelectorAll('.upgrade-info p')[index];
+                desc.innerText = `Kazanç: +${item.income}/sn | Maliyet: $${item.cost}`;
+                
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            balanceEl.innerText = "$ " + Math.floor(balance).toLocaleString();
+            incomeEl.innerText = `Saniyelik Kazanç: $ ${autoIncome}`;
             
-            setTimeout(() => text.remove(), 800);
+            // Butonların aktiflik durumu
+            upgrades.forEach((item, i) => {
+                buttons[i].disabled = balance < item.cost;
+            });
         }
 
-        // Enerji Yenileme (Saniyede 1)
+        function showCoinEffect(x, y) {
+            const coin = document.createElement('div');
+            coin.innerText = "+$1";
+            coin.className = 'floating-coin';
+            coin.style.left = x + 'px';
+            coin.style.top = y + 'px';
+            document.body.appendChild(coin);
+            setTimeout(() => coin.remove(), 1000);
+        }
+
+        // Pasif Gelir Döngüsü (Her 1 saniyede)
         setInterval(() => {
-            if (energy < maxEnergy) {
-                energy++;
-                updateEnergyUI();
+            if (autoIncome > 0) {
+                addMoney(autoIncome);
             }
         }, 1000);
 
+        // İlk çalıştırma
+        updateUI();
     </script>
 </body>
 </html>
