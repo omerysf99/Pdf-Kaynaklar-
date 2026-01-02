@@ -3,466 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Koalas - Dogs Style</title>
+    <title>Koalas Arcade - Elite Checking</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         
         body { 
             background-color: #000; color: white; font-family: 'Inter', sans-serif; 
             margin: 0; padding: 0; overflow: hidden; height: 100vh;
         }
 
-        /* --- DOGS STYLE CHECKING --- */
-        #dogs-checking {
+        /* --- GELİŞMİŞ CHECKING EKRANI --- */
+        #checking-screen {
             position: fixed; inset: 0; background: #000; z-index: 10000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 24px; text-align: center;
+            padding: 30px;
+        }
+
+        .scan-line {
+            width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #2d8cf0, transparent);
+            position: absolute; top: 0; left: 0; animation: scan 3s infinite linear; opacity: 0.5;
+        }
+
+        @keyframes scan {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+
+        .check-box {
+            width: 100%; max-width: 320px; background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 20px;
+            margin-top: 40px;
         }
 
         .check-item {
-            opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            margin-bottom: 20px; width: 100%; max-width: 300px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px; opacity: 0; transform: translateX(-10px); transition: 0.5s ease;
         }
-        .check-item.active { opacity: 1; transform: translateY(0); }
-        .check-label { color: #888; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
-        .check-value { color: #fff; font-weight: 900; font-size: 24px; margin-top: 4px; }
+        .check-item.active { opacity: 1; transform: translateX(0); }
 
-        /* --- REWARD SCREEN --- */
-        #reward-screen {
+        .status-dot { width: 6px; height: 6px; background: #2d8cf0; border-radius: 50%; box-shadow: 0 0 10px #2d8cf0; }
+        
+        /* --- PROGRESS BAR --- */
+        .progress-container { width: 100%; height: 4px; background: #111; border-radius: 10px; margin-top: 10px; overflow: hidden; }
+        .progress-bar { width: 0%; height: 100%; background: #2d8cf0; transition: width 0.3s ease; }
+
+        /* --- REWARD & WALLET --- */
+        #reward-screen, #wallet-screen {
             position: fixed; inset: 0; background: #000; z-index: 9999;
-            display: none; flex-direction: column; align-items: center; justify-content: space-between;
-            padding: 80px 24px 40px; text-align: center;
+            display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px;
         }
 
-        /* --- WALLET INPUT SCREEN --- */
-        #wallet-input-screen {
-            position: fixed; inset: 0; background: #000; z-index: 9998;
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            padding: 24px;
-        }
+        #main-app { display: none; height: 100vh; overflow-y: auto; opacity: 0; transition: 1s; }
+        .header-img { height: 250px; background: url('Koalas.jpg') center top/cover; position: relative; }
+        .app-content { background: #000; border-radius: 35px 35px 0 0; margin-top: -45px; position: relative; padding: 30px 20px 100px; }
 
-        /* --- DASHBOARD --- */
-        #main-app { display: none; height: 100vh; overflow-y: auto; opacity: 0; transition: 0.8s; }
-        .header-image { height: 230px; background: url('Koalas.jpg') center top/cover; position: relative; }
-        .app-container { background: #000; border-radius: 32px 32px 0 0; margin-top: -40px; position: relative; padding: 24px 20px 120px; }
-
-        /* --- MODAL --- */
-        .modal-overlay { 
-            display: none; position: fixed; inset: 0; z-index: 10001; 
-            background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); 
-            align-items: center; justify-content: center;
-        }
-        .modal-overlay.active { display: flex; }
-
-        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; border-top: 1px solid #111; display: flex; justify-content: space-around; padding: 12px 0 32px; z-index: 1000; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #444; font-size: 10px; font-weight: 700; }
-        .nav-item.active { color: #fff; }
+        .btn-primary { background: #fff; color: #000; padding: 18px; border-radius: 20px; font-weight: 900; width: 100%; font-size: 16px; transition: 0.2s; }
+        .btn-primary:active { transform: scale(0.96); }
     </style>
 </head>
 <body>
 
-    <div id="dogs-checking">
-        <div class="mb-12">
-            <img src="Koalas.jpg" class="w-32 h-32 rounded-full mx-auto mb-8 border-4 border-white/5">
-            <h2 class="text-3xl font-black italic tracking-tighter">WHO ARE YOU?</h2>
-        </div>
+    <div id="checking-screen">
+        <div class="scan-line"></div>
         
-        <div id="check-container">
-            <div id="c1" class="check-item"><p class="check-label">Account Age</p><p class="check-value">Checking...</p></div>
-            <div id="c2" class="check-item"><p class="check-label">Activity Level</p><p class="check-value">Checking...</p></div>
-            <div id="c3" class="check-item"><p class="check-label">Koala Status</p><p class="check-value">Checking...</p></div>
+        <div class="text-center relative">
+            <div class="w-24 h-24 rounded-3xl bg-zinc-900 mx-auto flex items-center justify-center mb-6 border border-white/10 rotate-3">
+                <img src="Koalas.jpg" class="w-20 h-20 rounded-2xl">
+            </div>
+            <h1 class="text-3xl font-black tracking-tighter italic">ANALYZING PROFILE</h1>
+            <p class="text-zinc-500 text-sm mt-1 font-bold">PLEASE WAIT A MOMENT</p>
+        </div>
+
+        <div class="check-box">
+            <div id="item1" class="check-item">
+                <div class="flex items-center gap-3">
+                    <div class="status-dot"></div>
+                    <span class="text-zinc-400 font-bold text-xs uppercase">Telegram Age</span>
+                </div>
+                <span id="val1" class="text-white font-black text-sm italic">Scanning...</span>
+            </div>
+            <div id="item2" class="check-item">
+                <div class="flex items-center gap-3">
+                    <div class="status-dot"></div>
+                    <span class="text-zinc-400 font-bold text-xs uppercase">Account Status</span>
+                </div>
+                <span id="val2" class="text-white font-black text-sm italic">Waiting...</span>
+            </div>
+            <div id="item3" class="check-item">
+                <div class="flex items-center gap-3">
+                    <div class="status-dot"></div>
+                    <span class="text-zinc-400 font-bold text-xs uppercase">Activity Score</span>
+                </div>
+                <span id="val3" class="text-white font-black text-sm italic">Waiting...</span>
+            </div>
+            
+            <div class="progress-container">
+                <div id="main-progress" class="progress-bar"></div>
+            </div>
         </div>
     </div>
 
     <div id="reward-screen">
-        <div>
-            <h2 class="text-xl font-bold text-zinc-500 uppercase tracking-widest mb-2">You are a Legend!</h2>
-            <h1 class="text-7xl font-black italic mb-4" id="final-puan">0</h1>
-            <p class="text-zinc-500 font-bold">$KOALA tokens rewarded</p>
+        <div class="text-center">
+            <h2 class="text-zinc-500 font-black text-sm uppercase tracking-widest mb-4">Verification Success</h2>
+            <div class="text-8xl font-black italic tracking-tighter mb-4" id="final-reward-val">0</div>
+            <p class="text-zinc-400 font-bold text-lg mb-12 italic">KOALA POINTS EARNED</p>
+            
+            <div class="bg-zinc-900/50 p-6 rounded-3xl border border-white/5 mb-10">
+                <p class="text-zinc-500 text-xs font-bold uppercase mb-2">Account Badge</p>
+                <p class="text-blue-500 font-black italic">LEGENDARY KOALA MEMBER</p>
+            </div>
         </div>
-        <img src="Koalas.jpg" class="w-48 h-48 rounded-full mx-auto opacity-50 grayscale">
-        <button onclick="showWalletInput()" class="w-full bg-white text-black py-5 rounded-2xl font-black text-lg active:scale-95 transition-all">
-            CLAIM REWARD
-        </button>
+        <button onclick="showWallet()" class="btn-primary">CONTINUE</button>
     </div>
 
-    <div id="wallet-input-screen">
+    <div id="wallet-screen">
         <div class="w-full max-w-sm text-center">
-            <div class="w-20 h-20 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-8 text-blue-500 text-3xl">
-                <i class="fa-solid fa-wallet"></i>
-            </div>
-            <h2 class="text-3xl font-black italic mb-4">WALLET</h2>
-            <p class="text-zinc-500 font-medium mb-8">Paste your TON address to link your rewards to your account.</p>
+            <h2 class="text-3xl font-black italic mb-2 tracking-tighter uppercase">Set Wallet</h2>
+            <p class="text-zinc-500 text-sm mb-10">Paste your TON address to link your $KOALA</p>
             
-            <input type="text" id="user-wallet-addr" placeholder="UQBINP...nB-g" 
-                   class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-5 px-6 text-sm font-mono text-blue-400 focus:border-blue-500 outline-none mb-6">
+            <input type="text" id="wallet-input" placeholder="Paste TON Address (UQ...)" 
+                   class="w-full bg-zinc-900/80 border border-zinc-800 rounded-2xl py-5 px-6 text-sm font-mono text-blue-400 focus:border-blue-500 outline-none mb-6">
             
-            <button onclick="startApp()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg active:scale-95 transition-all">
-                CONFIRM & START
-            </button>
+            <button onclick="launchApp()" class="btn-primary" style="background: #2d8cf0; color: #fff;">COMPLETE SETUP</button>
         </div>
     </div>
 
     <div id="main-app">
-        <div class="header-image">
+        <div class="header-img">
             <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
         </div>
-
-        <div class="app-container">
+        <div class="app-content">
             <div class="flex justify-between items-start mb-8">
                 <div>
-                    <h1 id="app-balance" class="text-6xl font-black tracking-tighter mb-2 italic">0</h1>
-                    <p class="text-zinc-500 font-bold text-sm">
-                        $KOALA • <span id="app-address" class="text-blue-500 font-mono text-[11px]">NOT SET</span>
-                    </p>
+                    <h1 id="app-balance" class="text-6xl font-black tracking-tighter mb-1 italic">0</h1>
+                    <p class="text-zinc-500 text-sm font-bold">$KOALA • <span id="app-addr" class="text-blue-500 font-mono text-[10px]">ADDRESS</span></p>
                 </div>
-                <img src="Koalas.jpg" class="w-12 h-12 rounded-full border-2 border-white/10">
+                <img src="Koalas.jpg" class="w-12 h-12 rounded-full border border-white/10">
             </div>
 
-            <button onclick="openModal()" class="w-full bg-blue-600 h-16 rounded-2xl font-black text-sm flex items-center justify-center gap-3 mb-10">
-                <i class="fa-solid fa-play"></i> GET MORE $KOALA
+            <button onclick="alert('Ad feature ready!')" class="w-full bg-zinc-900 border border-white/5 h-16 rounded-2xl font-black text-sm flex items-center justify-center gap-3 mb-10">
+                <i class="fa-solid fa-bolt text-yellow-400"></i> GET MORE $KOALA
             </button>
 
-            <div class="bg-zinc-900/50 border border-white/5 rounded-[28px] p-6 flex items-center justify-between mb-8">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-xl font-black italic">T</div>
-                    <div><p class="font-bold text-sm">$TON Balance</p><p class="text-xs text-zinc-500">0.00 TON</p></div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-zinc-800"></i>
-            </div>
-
+            <p class="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">CEX Missions</p>
             <div class="grid grid-cols-2 gap-4">
-                <div class="bg-[#00f0ff] p-5 h-32 rounded-[28px] flex flex-col justify-between text-black">
-                    <span class="font-black italic text-lg tracking-tighter uppercase">Bitget</span>
-                    <button class="bg-black text-white py-2 rounded-xl text-[10px] font-black uppercase">Start</button>
+                <div class="bg-blue-600 p-6 h-32 rounded-[30px] flex flex-col justify-between">
+                    <span class="font-black italic text-lg uppercase tracking-tighter">Bitget</span>
+                    <button class="bg-black/20 text-white py-2 rounded-xl text-[10px] font-black">START</button>
                 </div>
-                <div class="bg-[#4d6aff] p-5 h-32 rounded-[28px] flex flex-col justify-between">
-                    <span class="font-black italic text-lg tracking-tighter uppercase">Gate.io</span>
-                    <button class="bg-black text-white py-2 rounded-xl text-[10px] font-black uppercase">Start</button>
+                <div class="bg-zinc-800 p-6 h-32 rounded-[30px] flex flex-col justify-between border border-white/5">
+                    <span class="font-black italic text-lg uppercase tracking-tighter">Gate.io</span>
+                    <button class="bg-white text-black py-2 rounded-xl text-[10px] font-black">START</button>
                 </div>
             </div>
-        </div>
-
-        <nav class="nav-bar">
-            <div class="nav-item active"><i class="fa-solid fa-house text-2xl"></i><span>Home</span></div>
-            <div class="nav-item"><i class="fa-solid fa-bolt text-2xl"></i><span>Tasks</span></div>
-            <div class="nav-item"><i class="fa-solid fa-user-group text-2xl"></i><span>Frens</span></div>
-        </nav>
-    </div>
-
-    <div id="ad-modal" class="modal-overlay">
-        <div class="bg-[#111] p-10 rounded-[40px] border border-white/10 text-center w-[90%] max-w-sm">
-            <div class="text-6xl mb-6">🎬</div>
-            <h3 class="text-2xl font-black mb-4 italic uppercase">Earn Reward</h3>
-            <p class="text-zinc-500 text-sm mb-10 px-4">Watch a quick 5s ad to get 1 $KOALA token.</p>
-            <button onclick="watchAd()" id="ad-btn" class="w-full bg-blue-600 py-5 rounded-2xl font-black mb-4">WATCH AD</button>
-            <button onclick="closeModal()" class="text-zinc-600 font-bold text-xs uppercase tracking-widest">Later</button>
         </div>
     </div>
 
     <script>
-        let balance = 0;
-        let userAddress = "";
-        const randomPuan = Math.floor(Math.random() * 9001) + 1000;
+        const rewardPuan = Math.floor(Math.random() * 9000) + 1000;
+        let addr = "";
 
-        // --- DOGS CHECKING ANIMATION ---
-        window.onload = () => {
+        // --- CHECKING SEQUENCE ---
+        window.addEventListener('DOMContentLoaded', () => {
             const steps = [
-                { id: 'c1', val: '4 Years', time: 1000 },
-                { id: 'c2', val: 'Elite', time: 2200 },
-                { id: 'c3', val: 'Verified', time: 3400 }
+                { id: 'item1', valId: 'val1', text: '5 Years', progress: 33 },
+                { id: 'item2', valId: 'val2', text: 'Verified Account', progress: 66 },
+                { id: 'item3', valId: 'val3', text: '98% Active', progress: 100 }
             ];
 
-            steps.forEach(step => {
+            steps.forEach((step, index) => {
                 setTimeout(() => {
-                    const el = document.getElementById(step.id);
-                    el.classList.add('active');
+                    document.getElementById(step.id).classList.add('active');
+                    document.getElementById('main-progress').style.width = step.progress + '%';
+                    
                     setTimeout(() => {
-                        el.querySelector('.check-value').innerText = step.val;
-                        el.querySelector('.check-value').style.color = '#fff';
+                        document.getElementById(step.valId).innerText = step.text;
+                        if(index === steps.length - 1) finishChecking();
                     }, 600);
-                }, step.time);
+                }, (index + 1) * 1500);
             });
+        });
 
+        function finishChecking() {
             setTimeout(() => {
-                document.getElementById('dogs-checking').style.display = 'none';
+                document.getElementById('checking-screen').style.display = 'none';
                 document.getElementById('reward-screen').style.display = 'flex';
-                document.getElementById('final-puan').innerText = randomPuan.toLocaleString();
-            }, 5500);
-        };
-
-        function showWalletInput() {
-            document.getElementById('reward-screen').style.display = 'none';
-            document.getElementById('wallet-input-screen').style.display = 'flex';
+                document.getElementById('final-reward-val').innerText = rewardPuan.toLocaleString();
+            }, 1000);
         }
 
-        function startApp() {
-            const input = document.getElementById('user-wallet-addr').value.trim();
-            if(input.length > 15) {
-                userAddress = input;
-                balance = randomPuan;
+        function showWallet() {
+            document.getElementById('reward-screen').style.display = 'none';
+            document.getElementById('wallet-screen').style.display = 'flex';
+        }
+
+        function launchApp() {
+            const val = document.getElementById('wallet-input').value;
+            if(val.length > 10) {
+                addr = val;
+                document.getElementById('app-balance').innerText = rewardPuan.toLocaleString();
+                document.getElementById('app-addr').innerText = addr.slice(0,6) + '...' + addr.slice(-4);
                 
-                document.getElementById('app-balance').innerText = balance.toLocaleString();
-                document.getElementById('app-address').innerText = userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
-                
-                document.getElementById('wallet-input-screen').style.display = 'none';
+                document.getElementById('wallet-screen').style.display = 'none';
                 document.getElementById('main-app').style.display = 'block';
                 setTimeout(() => document.getElementById('main-app').style.opacity = '1', 50);
             } else {
-                alert("Please enter a valid TON address.");
+                alert("Please enter your TON address.");
             }
-        }
-
-        // --- MODAL & AD LOGIC ---
-        function openModal() { document.getElementById('ad-modal').classList.add('active'); }
-        function closeModal() { document.getElementById('ad-modal').classList.remove('active'); }
-
-        function watchAd() {
-            const btn = document.getElementById('ad-btn');
-            btn.disabled = true; btn.innerText = "WAITING... 5S";
-            setTimeout(() => {
-                balance += 1;
-                document.getElementById('app-balance').innerText = balance.toLocaleString();
-                btn.disabled = false; btn.innerText = "WATCH AD";
-                closeModal();
-            }, 5000);
-        }
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Koalas - Dogs Style</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        
-        body { 
-            background-color: #000; color: white; font-family: 'Inter', sans-serif; 
-            margin: 0; padding: 0; overflow: hidden; height: 100vh;
-        }
-
-        /* --- DOGS STYLE CHECKING --- */
-        #dogs-checking {
-            position: fixed; inset: 0; background: #000; z-index: 10000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 24px; text-align: center;
-        }
-
-        .check-item {
-            opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            margin-bottom: 20px; width: 100%; max-width: 300px;
-        }
-        .check-item.active { opacity: 1; transform: translateY(0); }
-        .check-label { color: #888; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
-        .check-value { color: #fff; font-weight: 900; font-size: 24px; margin-top: 4px; }
-
-        /* --- REWARD SCREEN --- */
-        #reward-screen {
-            position: fixed; inset: 0; background: #000; z-index: 9999;
-            display: none; flex-direction: column; align-items: center; justify-content: space-between;
-            padding: 80px 24px 40px; text-align: center;
-        }
-
-        /* --- WALLET INPUT SCREEN --- */
-        #wallet-input-screen {
-            position: fixed; inset: 0; background: #000; z-index: 9998;
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            padding: 24px;
-        }
-
-        /* --- DASHBOARD --- */
-        #main-app { display: none; height: 100vh; overflow-y: auto; opacity: 0; transition: 0.8s; }
-        .header-image { height: 230px; background: url('Koalas.jpg') center top/cover; position: relative; }
-        .app-container { background: #000; border-radius: 32px 32px 0 0; margin-top: -40px; position: relative; padding: 24px 20px 120px; }
-
-        /* --- MODAL --- */
-        .modal-overlay { 
-            display: none; position: fixed; inset: 0; z-index: 10001; 
-            background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); 
-            align-items: center; justify-content: center;
-        }
-        .modal-overlay.active { display: flex; }
-
-        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; border-top: 1px solid #111; display: flex; justify-content: space-around; padding: 12px 0 32px; z-index: 1000; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #444; font-size: 10px; font-weight: 700; }
-        .nav-item.active { color: #fff; }
-    </style>
-</head>
-<body>
-
-    <div id="dogs-checking">
-        <div class="mb-12">
-            <img src="Koalas.jpg" class="w-32 h-32 rounded-full mx-auto mb-8 border-4 border-white/5">
-            <h2 class="text-3xl font-black italic tracking-tighter">WHO ARE YOU?</h2>
-        </div>
-        
-        <div id="check-container">
-            <div id="c1" class="check-item"><p class="check-label">Account Age</p><p class="check-value">Checking...</p></div>
-            <div id="c2" class="check-item"><p class="check-label">Activity Level</p><p class="check-value">Checking...</p></div>
-            <div id="c3" class="check-item"><p class="check-label">Koala Status</p><p class="check-value">Checking...</p></div>
-        </div>
-    </div>
-
-    <div id="reward-screen">
-        <div>
-            <h2 class="text-xl font-bold text-zinc-500 uppercase tracking-widest mb-2">You are a Legend!</h2>
-            <h1 class="text-7xl font-black italic mb-4" id="final-puan">0</h1>
-            <p class="text-zinc-500 font-bold">$KOALA tokens rewarded</p>
-        </div>
-        <img src="Koalas.jpg" class="w-48 h-48 rounded-full mx-auto opacity-50 grayscale">
-        <button onclick="showWalletInput()" class="w-full bg-white text-black py-5 rounded-2xl font-black text-lg active:scale-95 transition-all">
-            CLAIM REWARD
-        </button>
-    </div>
-
-    <div id="wallet-input-screen">
-        <div class="w-full max-w-sm text-center">
-            <div class="w-20 h-20 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-8 text-blue-500 text-3xl">
-                <i class="fa-solid fa-wallet"></i>
-            </div>
-            <h2 class="text-3xl font-black italic mb-4">WALLET</h2>
-            <p class="text-zinc-500 font-medium mb-8">Paste your TON address to link your rewards to your account.</p>
-            
-            <input type="text" id="user-wallet-addr" placeholder="UQBINP...nB-g" 
-                   class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-5 px-6 text-sm font-mono text-blue-400 focus:border-blue-500 outline-none mb-6">
-            
-            <button onclick="startApp()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg active:scale-95 transition-all">
-                CONFIRM & START
-            </button>
-        </div>
-    </div>
-
-    <div id="main-app">
-        <div class="header-image">
-            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-        </div>
-
-        <div class="app-container">
-            <div class="flex justify-between items-start mb-8">
-                <div>
-                    <h1 id="app-balance" class="text-6xl font-black tracking-tighter mb-2 italic">0</h1>
-                    <p class="text-zinc-500 font-bold text-sm">
-                        $KOALA • <span id="app-address" class="text-blue-500 font-mono text-[11px]">NOT SET</span>
-                    </p>
-                </div>
-                <img src="Koalas.jpg" class="w-12 h-12 rounded-full border-2 border-white/10">
-            </div>
-
-            <button onclick="openModal()" class="w-full bg-blue-600 h-16 rounded-2xl font-black text-sm flex items-center justify-center gap-3 mb-10">
-                <i class="fa-solid fa-play"></i> GET MORE $KOALA
-            </button>
-
-            <div class="bg-zinc-900/50 border border-white/5 rounded-[28px] p-6 flex items-center justify-between mb-8">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-xl font-black italic">T</div>
-                    <div><p class="font-bold text-sm">$TON Balance</p><p class="text-xs text-zinc-500">0.00 TON</p></div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-zinc-800"></i>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-[#00f0ff] p-5 h-32 rounded-[28px] flex flex-col justify-between text-black">
-                    <span class="font-black italic text-lg tracking-tighter uppercase">Bitget</span>
-                    <button class="bg-black text-white py-2 rounded-xl text-[10px] font-black uppercase">Start</button>
-                </div>
-                <div class="bg-[#4d6aff] p-5 h-32 rounded-[28px] flex flex-col justify-between">
-                    <span class="font-black italic text-lg tracking-tighter uppercase">Gate.io</span>
-                    <button class="bg-black text-white py-2 rounded-xl text-[10px] font-black uppercase">Start</button>
-                </div>
-            </div>
-        </div>
-
-        <nav class="nav-bar">
-            <div class="nav-item active"><i class="fa-solid fa-house text-2xl"></i><span>Home</span></div>
-            <div class="nav-item"><i class="fa-solid fa-bolt text-2xl"></i><span>Tasks</span></div>
-            <div class="nav-item"><i class="fa-solid fa-user-group text-2xl"></i><span>Frens</span></div>
-        </nav>
-    </div>
-
-    <div id="ad-modal" class="modal-overlay">
-        <div class="bg-[#111] p-10 rounded-[40px] border border-white/10 text-center w-[90%] max-w-sm">
-            <div class="text-6xl mb-6">🎬</div>
-            <h3 class="text-2xl font-black mb-4 italic uppercase">Earn Reward</h3>
-            <p class="text-zinc-500 text-sm mb-10 px-4">Watch a quick 5s ad to get 1 $KOALA token.</p>
-            <button onclick="watchAd()" id="ad-btn" class="w-full bg-blue-600 py-5 rounded-2xl font-black mb-4">WATCH AD</button>
-            <button onclick="closeModal()" class="text-zinc-600 font-bold text-xs uppercase tracking-widest">Later</button>
-        </div>
-    </div>
-
-    <script>
-        let balance = 0;
-        let userAddress = "";
-        const randomPuan = Math.floor(Math.random() * 9001) + 1000;
-
-        // --- DOGS CHECKING ANIMATION ---
-        window.onload = () => {
-            const steps = [
-                { id: 'c1', val: '4 Years', time: 1000 },
-                { id: 'c2', val: 'Elite', time: 2200 },
-                { id: 'c3', val: 'Verified', time: 3400 }
-            ];
-
-            steps.forEach(step => {
-                setTimeout(() => {
-                    const el = document.getElementById(step.id);
-                    el.classList.add('active');
-                    setTimeout(() => {
-                        el.querySelector('.check-value').innerText = step.val;
-                        el.querySelector('.check-value').style.color = '#fff';
-                    }, 600);
-                }, step.time);
-            });
-
-            setTimeout(() => {
-                document.getElementById('dogs-checking').style.display = 'none';
-                document.getElementById('reward-screen').style.display = 'flex';
-                document.getElementById('final-puan').innerText = randomPuan.toLocaleString();
-            }, 5500);
-        };
-
-        function showWalletInput() {
-            document.getElementById('reward-screen').style.display = 'none';
-            document.getElementById('wallet-input-screen').style.display = 'flex';
-        }
-
-        function startApp() {
-            const input = document.getElementById('user-wallet-addr').value.trim();
-            if(input.length > 15) {
-                userAddress = input;
-                balance = randomPuan;
-                
-                document.getElementById('app-balance').innerText = balance.toLocaleString();
-                document.getElementById('app-address').innerText = userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
-                
-                document.getElementById('wallet-input-screen').style.display = 'none';
-                document.getElementById('main-app').style.display = 'block';
-                setTimeout(() => document.getElementById('main-app').style.opacity = '1', 50);
-            } else {
-                alert("Please enter a valid TON address.");
-            }
-        }
-
-        // --- MODAL & AD LOGIC ---
-        function openModal() { document.getElementById('ad-modal').classList.add('active'); }
-        function closeModal() { document.getElementById('ad-modal').classList.remove('active'); }
-
-        function watchAd() {
-            const btn = document.getElementById('ad-btn');
-            btn.disabled = true; btn.innerText = "WAITING... 5S";
-            setTimeout(() => {
-                balance += 1;
-                document.getElementById('app-balance').innerText = balance.toLocaleString();
-                btn.disabled = false; btn.innerText = "WATCH AD";
-                closeModal();
-            }, 5000);
         }
     </script>
 </body>
