@@ -3,128 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Block</title>
+    <title>Lucky Block - Brainrot Edition</title>
     <style>
         body {
-            background-color: #1a1a1a;
-            color: white;
+            background-color: #000;
+            color: #fff;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            font-family: 'Arial Black', sans-serif;
         }
 
-        .container {
-            text-align: center;
+        /* Sarsıntı Efekti (Shake) */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
         }
+
+        /* Büyüme ve Parlama */
+        @keyframes brainrot-open {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.5); filter: brightness(3) contrast(2); }
+            100% { transform: scale(0); filter: brightness(5); opacity: 0; }
+        }
+
+        .container { text-align: center; z-index: 2; }
 
         #lucky-block {
             cursor: pointer;
-            transition: transform 0.2s;
-            width: 250px;
-            height: 250px;
+            width: 300px;
+            height: 300px;
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
 
+        /* Hover durumunda hafif titreme */
         #lucky-block:hover {
-            transform: scale(1.05) rotate(2deg);
-        }
-
-        #lucky-block:active {
-            transform: scale(0.95);
+            animation: shake 0.5s infinite;
         }
 
         img {
             max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.3));
+            transition: all 0.1s ease;
         }
+
+        /* Animasyon sınıfları */
+        .shaking { animation: shake 0.1s infinite !important; }
+        .exploding { animation: brainrot-open 0.4s forwards !important; }
 
         #result {
-            margin-top: 20px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            min-height: 40px;
-            color: #ffd700;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 5rem;
+            color: #0f0;
+            text-shadow: 0 0 20px #0f0, 0 0 40px #fff;
+            z-index: 10;
+            text-align: center;
+            width: 100%;
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
+        #result.show { transform: translate(-50%, -50%) scale(1.2); }
+
         .btn-reset {
-            margin-top: 30px;
-            padding: 10px 20px;
-            background: #444;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: #ff003c;
             color: white;
             border: none;
-            border-radius: 5px;
+            font-weight: bold;
             cursor: pointer;
             display: none;
+            box-shadow: 0 0 20px #ff003c;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Şansını Dene!</h1>
     <div id="lucky-block" onclick="openBlock()">
-        <img src="kapali.png" id="block-img" alt="Lucky Block">
+        <img src="secret.jpg" id="block-img" alt="Secret Block">
     </div>
     
-    <div id="result"></div>
-    
-    <button class="btn-reset" id="reset-btn" onclick="resetGame()">Tekrar Dene</button>
+    <button class="btn-reset" id="reset-btn" onclick="resetGame()">YENİDEN DENE</button>
 </div>
 
-<script>
-    // Görsel isimlerini buraya yazın
-    const imgKapali = "kapali.png"; 
-    const imgAcik = "acik.png";
+<div id="result"></div>
 
+<script>
     function openBlock() {
-        const blockImg = document.getElementById('block-img');
+        const block = document.getElementById('lucky-block');
+        const img = document.getElementById('block-img');
         const resultDiv = document.getElementById('result');
         const resetBtn = document.getElementById('reset-btn');
-        const blockContainer = document.getElementById('lucky-block');
 
-        // Kutuyu aç (Görseli değiştir)
-        blockImg.src = imgAcik;
-        blockContainer.style.pointerEvents = "none"; // Tekrar tıklanmasın
-
-        // Ödül Belirleme Mantığı
-        const rand = Math.random();
-        let reward = "";
-
-        if (rand < 0.33) {
-            // 0.001$ - 0.01$ arası USDT (3 basamaklı)
-            const amount = (Math.random() * (0.01 - 0.001) + 0.001).toFixed(3);
-            reward = amount + " USDT";
-        } else if (rand < 0.66) {
-            // 1 - 1000 arası DOGE
-            const amount = Math.floor(Math.random() * 1000) + 1;
-            reward = amount + " DOGE";
-        } else {
-            // 1 - 999 arası NOT
-            const amount = Math.floor(Math.random() * 999) + 1;
-            reward = amount + " NOT Coin";
-        }
-
-        // Sonucu Yazdır
+        // 1. Aşama: Hızlı Sarsıntı
+        block.classList.add('shaking');
+        
+        // 2. Aşama: "Brainrot" Patlaması (300ms sonra)
         setTimeout(() => {
-            resultDiv.innerText = "TEBRİKLER: " + reward;
-            resetBtn.style.display = "inline-block";
-        }, 300);
+            block.classList.remove('shaking');
+            block.classList.add('exploding');
+            
+            // Ödül Belirle
+            const rand = Math.random();
+            let reward = "";
+            if (rand < 0.33) {
+                reward = (Math.random() * (0.01 - 0.001) + 0.001).toFixed(3) + " USDT";
+            } else if (rand < 0.66) {
+                reward = Math.floor(Math.random() * 1000) + 1 + " DOGE";
+            } else {
+                reward = Math.floor(Math.random() * 999) + 1 + " NOT";
+            }
+
+            // 3. Aşama: Sonucu Ekrana Fırlat
+            setTimeout(() => {
+                resultDiv.innerText = reward;
+                resultDiv.classList.add('show');
+                resetBtn.style.display = "inline-block";
+                document.body.style.backgroundColor = "#fff"; // Anlık parlama çakması
+                setTimeout(() => { document.body.style.backgroundColor = "#000"; }, 100);
+            }, 300);
+
+        }, 400);
     }
 
     function resetGame() {
-        document.getElementById('block-img').src = imgKapali;
-        document.getElementById('result').innerText = "";
-        document.getElementById('reset-btn').style.display = "none";
-        document.getElementById('lucky-block').style.pointerEvents = "auto";
+        const block = document.getElementById('lucky-block');
+        const resultDiv = document.getElementById('result');
+        const resetBtn = document.getElementById('reset-btn');
+
+        block.classList.remove('exploding');
+        resultDiv.classList.remove('show');
+        resetBtn.style.display = "none";
+        block.style.pointerEvents = "auto";
     }
 </script>
 
