@@ -3,57 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONux Miner</title>
+    <title>TONux Miner Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; user-select: none; }
         body { background-color: #f4f7f9; color: #1a1a1a; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
 
-        #game-container { width: 100%; max-width: 450px; background: #fff; position: relative; display: flex; flex-direction: column; }
+        #game-container { width: 100%; max-width: 450px; background: #fff; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+
+        /* --- SAYFA YÖNETİMİ --- */
+        .page { display: none; flex: 1; flex-direction: column; overflow-y: auto; }
+        .page.active { display: flex; }
 
         /* --- ÜST BAKİYE SEKMELERİ --- */
-        .header-stats { padding: 15px; display: flex; flex-direction: column; gap: 8px; }
-        .stat-item { background: #fff; border: 1px solid #e0e8f0; border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .header-stats { padding: 15px; display: flex; flex-direction: column; gap: 8px; background: #fff; z-index: 10; }
+        .stat-item { background: #fff; border: 1px solid #e0e8f0; border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; }
         .stat-info { display: flex; align-items: center; gap: 10px; }
-        .stat-icon { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid #eee; }
-        .stat-label { font-size: 11px; color: #888; font-weight: 600; }
-        .stat-value { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
-        .wallet-btn { background: #4da3ff; border: none; border-radius: 8px; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; }
+        .stat-icon { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+        .stat-value { font-size: 14px; font-weight: 800; }
 
-        /* --- ANA MİNER VE FAN ALANI --- */
+        /* --- ANA SAYFA (HOME) --- */
         .miner-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        .ton-balance-large { font-size: 48px; font-weight: 900; color: #000; margin-bottom: 5px; }
+        .ghs-info { font-size: 18px; color: #007bff; font-weight: 800; margin-bottom: 25px; }
         
-        /* Ana Dijital Bakiye (Büyük Yazı) */
-        .ton-balance-large { font-size: 42px; font-weight: 900; color: #000; font-variant-numeric: tabular-nums; letter-spacing: -1px; margin-bottom: 5px; }
-        .ghs-info { font-size: 16px; color: #007bff; font-weight: 800; margin-bottom: 25px; }
-
-        /* Fan Kutusu */
-        .fan-box { width: 260px; height: 260px; display: flex; justify-content: center; align-items: center; position: relative; }
-        .fan-img { 
-            width: 100%; 
-            height: 100%; 
-            border-radius: 50%; 
-            object-fit: contain; 
-            transform-origin: center; 
-            animation: spin 3s linear infinite; 
-            filter: drop-shadow(0 0 15px rgba(0, 123, 255, 0.2));
-        }
+        .fan-box { width: 260px; height: 260px; display: flex; justify-content: center; align-items: center; }
+        .fan-img { width: 100%; height: 100%; border-radius: 50%; object-fit: contain; animation: spin 3s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* --- AKSİYON BUTONLARI --- */
-        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 15px 15px 15px; }
-        .btn { border: none; border-radius: 16px; padding: 16px; font-weight: 800; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: #fff; transition: transform 0.1s; }
+        /* --- BUTONLAR --- */
+        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
+        .btn { border: none; border-radius: 16px; padding: 16px; font-weight: 800; font-size: 15px; cursor: pointer; color: #fff; text-align: center; }
         .btn-claim { background: #4da3ff; box-shadow: 0 4px 0 #3a82ce; }
         .btn-boost { background: #5db7f5; box-shadow: 0 4px 0 #4a9bd4; }
-        .btn:active { transform: scale(0.95); }
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #333; }
 
-        /* --- ALT NAVİGASYON SEKMELERİ --- */
+        /* --- BOOST PENCERESİ (MODAL) --- */
+        #boost-modal { 
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: flex-end; 
+        }
+        .modal-content { 
+            background: #fff; width: 100%; border-radius: 25px 25px 0 0; padding: 30px 20px; 
+            transform: translateY(100%); transition: transform 0.3s ease;
+        }
+        .modal-active .modal-content { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .upgrade-item { 
+            background: #f8fafd; border: 1px solid #e0e8f0; border-radius: 15px; 
+            padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* --- ALT NAVİGASYON --- */
         .bottom-nav { background: #fff; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 12px 0; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #888; font-weight: 700; cursor: pointer; gap: 4px; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #888; font-weight: 700; cursor: pointer; }
         .nav-item.active { color: #007bff; }
-        .nav-icon { font-size: 20px; }
-
-        .min-claim-warn { font-size: 11px; color: #999; margin-top: 10px; }
+        .nav-icon { font-size: 20px; margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -61,93 +66,110 @@
 <div id="game-container">
     <div class="header-stats">
         <div class="stat-item">
-            <div class="stat-info">
-                <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="stat-icon">
-                <div><p class="stat-label">Balance</p><p class="stat-value"><span id="wallet-ton">0.00</span> TON</p></div>
-            </div>
-            <button class="wallet-btn">👛</button>
+            <div class="stat-info"><img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="stat-icon"><div><p class="stat-value"><span id="wallet-ton">0.00</span> TON</p></div></div>
         </div>
         <div class="stat-item">
-            <div class="stat-info">
-                <img src="tonux.jpg" class="stat-icon" onerror="this.src='https://via.placeholder.com/32/007bff/fff?text=T'">
-                <div><p class="stat-label">Balance</p><p class="stat-value"><span id="tonix-bal">500</span> TONIX</p></div>
+            <div class="stat-info"><img src="tonux.jpg" class="stat-icon" onerror="this.src='https://via.placeholder.com/32/007bff/fff?text=T'"><div><p class="stat-value"><span id="tonix-bal">500</span> TONIX</p></div></div>
+        </div>
+    </div>
+
+    <div id="page-home" class="page active">
+        <div class="miner-section">
+            <p class="ton-balance-large" id="main-ton">0.0000</p>
+            <p class="ghs-info" id="ghs-display">1 GH/s ⚡</p>
+            <div class="fan-box"><img src="tonux.jpg" class="fan-img" onerror="this.src='https://via.placeholder.com/260/007bff/fff?text=FAN'"></div>
+            <p style="font-size:11px; color:#999; margin-top:10px;">Min. Claim: 0.01 TON</p>
+        </div>
+        <div class="action-btns">
+            <button class="btn btn-claim" onclick="claimCoins()">💰 Claim</button>
+            <button class="btn btn-boost" onclick="openBoost()">🚀 Boost</button>
+        </div>
+    </div>
+
+    <div id="page-wallet" class="page"><div class="miner-section"><h2>Wallet</h2><p>Cüzdan İşlemleri Yakında!</p></div></div>
+    <div id="page-friends" class="page"><div class="miner-section"><h2>Friends</h2><p>Arkadaşlarını Davet Et!</p></div></div>
+    <div id="page-missions" class="page"><div class="miner-section"><h2>Missions</h2><p>Görevleri Tamamla, TONIX Kazan!</p></div></div>
+
+    <div id="boost-modal" onclick="closeBoost(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>🚀 Upgrade Speed</h3>
+                <button onclick="closeBoost()" style="border:none; background:none; font-size:20px;">✕</button>
             </div>
-            <button class="wallet-btn">👛</button>
+            <div class="upgrade-item">
+                <div><p><b>Super Fan</b></p><small>+1 GH/s Power</small></div>
+                <button class="btn btn-boost" style="padding:8px 15px;" onclick="buyUpgrade(1, 100)">100 TONIX</button>
+            </div>
+            <div class="upgrade-item">
+                <div><p><b>Turbo Engine</b></p><small>+5 GH/s Power</small></div>
+                <button class="btn btn-boost" style="padding:8px 15px;" onclick="buyUpgrade(5, 450)">450 TONIX</button>
+            </div>
         </div>
-    </div>
-
-    <div class="miner-section">
-        <p class="ton-balance-large" id="main-ton">0.0000</p>
-        <p class="ghs-info">1 GH/s ⚡</p>
-        
-        <div class="fan-box">
-            <img src="tonux.jpg" id="fan-img" class="fan-img" onerror="this.src='https://via.placeholder.com/260/007bff/fff?text=FAN'">
-        </div>
-        
-        <p class="min-claim-warn">Minimum Claim: 0.01 TON</p>
-    </div>
-
-    <div class="action-btns">
-        <button class="btn btn-claim" onclick="claimCoins()">💰 Claim</button>
-        <button class="btn btn-boost">🚀 Boost</button>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item">
-            <span class="nav-icon">👛</span>
-            <span>Wallet</span>
-        </div>
-        <div class="nav-item">
-            <span class="nav-icon">👥</span>
-            <span>Friends</span>
-        </div>
-        <div class="nav-item active">
-            <span class="nav-icon">🏠</span>
-            <span>Home</span>
-        </div>
-        <div class="nav-item">
-            <span class="nav-icon">🎯</span>
-            <span>Missions</span>
-        </div>
-        <div class="nav-item">
-            <span class="nav-icon">⚙️</span>
-            <span>More</span>
-        </div>
+        <div class="nav-item" onclick="showPage('wallet', this)"><span class="nav-icon">👛</span><span>Wallet</span></div>
+        <div class="nav-item" onclick="showPage('friends', this)"><span class="nav-icon">👥</span><span>Friends</span></div>
+        <div class="nav-item active" onclick="showPage('home', this)"><span class="nav-icon">🏠</span><span>Home</span></div>
+        <div class="nav-item" onclick="showPage('missions', this)"><span class="nav-icon">🎯</span><span>Missions</span></div>
     </div>
 </div>
 
 <script>
-    let currentTon = 0.00000000;
+    let currentTon = 0.0000;
     let walletTotal = 0.00;
     let tonix = 500;
-    const power = 1; // Herkese başlangıçta 1 GH/s
+    let power = 1;
 
-    /* MATEMATİK KURALLARI:
-       1 GH/s = 24 saatte 1 TON
-       1 GH/s = 1 salisede (10ms) 0.00000011574 TON
-    */
-    const productionStep = 0.00000011574;
+    // MATEMATİK: 1 GH/s = 24 saatte 1 TON
+    function updateMining() {
+        let productionPerTick = (0.00000011574 * power);
+        currentTon += productionPerTick;
+        document.getElementById('main-ton').innerText = currentTon.toFixed(4);
+    }
+    setInterval(updateMining, 10);
 
-    setInterval(() => {
-        currentTon += productionStep;
-        updateUI();
-    }, 10);
+    // SAYFA GEÇİŞLERİ
+    function showPage(pageId, element) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('page-' + pageId).classList.add('active');
+        element.classList.add('active');
+    }
+
+    // BOOST PENCERESİ
+    function openBoost() {
+        let modal = document.getElementById('boost-modal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('modal-active'), 10);
+    }
+    function closeBoost() {
+        let modal = document.getElementById('boost-modal');
+        modal.classList.remove('modal-active');
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    function buyUpgrade(addPower, cost) {
+        if(tonix >= cost) {
+            tonix -= cost;
+            power += addPower;
+            document.getElementById('tonix-bal').innerText = tonix;
+            document.getElementById('ghs-display').innerText = power + " GH/s ⚡";
+            alert("Upgrade Başarılı! Yeni Güç: " + power + " GH/s");
+        } else {
+            alert("Yetersiz TONIX!");
+        }
+    }
 
     function claimCoins() {
         if(currentTon >= 0.01) {
             walletTotal += currentTon;
             currentTon = 0;
-            updateUI();
-            alert("TON cüzdana aktarıldı!");
+            document.getElementById('wallet-ton').innerText = walletTotal.toFixed(2);
+            alert("TON toplandı!");
         } else {
-            alert("Minimum claim limitine (0.01 TON) ulaşılmadı.");
+            alert("Minimum limit 0.01 TON!");
         }
-    }
-
-    function updateUI() {
-        document.getElementById('main-ton').innerText = currentTon.toFixed(4);
-        document.getElementById('wallet-ton').innerText = walletTotal.toFixed(2);
-        document.getElementById('tonix-bal').innerText = tonix;
     }
 </script>
 
