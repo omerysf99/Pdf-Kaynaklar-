@@ -3,233 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ChatGPT Clicker - Pro Boost</title>
+    <title>ChatGPT Clicker - Real Mechanics</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --gold: #f3ba2f;
-            --bg-dark: #000000;
-            --panel-bg: #1a1a1a;
-        }
-
-        body {
-            margin: 0;
-            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow: hidden;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        :root { --gold: #f3ba2f; --bg: #000; --panel: #1a1a1a; }
+        body { margin: 0; background: radial-gradient(circle, #1a1a1a, #000); color: white; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; align-items: center; overflow: hidden; user-select: none; }
+        
         /* Üst Panel */
-        .header { text-align: center; margin-top: 50px; z-index: 10; }
-        .balance-group { display: flex; align-items: center; justify-content: center; gap: 15px; font-size: 3.5rem; font-weight: 800; }
-        .balance-group img { width: 45px; height: 45px; }
+        .header { margin-top: 40px; text-align: center; }
+        .balance { display: flex; align-items: center; gap: 10px; font-size: 3rem; font-weight: 800; }
+        .balance img { width: 40px; }
 
-        /* Ana Tıklama Alanı */
+        /* Oyun Alanı */
         #tap-page { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
-        .coin-wrapper { position: relative; width: 280px; height: 280px; margin-bottom: 40px; }
-        
-        .main-coin {
-            width: 100%; height: 100%; border-radius: 50%;
-            background-color: transparent; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: transform 0.05s;
-            box-shadow: 0 0 50px rgba(243, 186, 47, 0.1);
-        }
+        .coin-btn { width: 260px; height: 260px; border-radius: 50%; cursor: pointer; transition: transform 0.05s; position: relative; box-shadow: 0 0 30px rgba(243,186,47,0.1); }
+        .coin-btn img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; pointer-events: none; }
+        .coin-btn:active { transform: scale(0.94); }
 
-        .main-coin img {
-            width: 100%; height: 100%; object-fit: cover;
-            border-radius: 50%; pointer-events: none;
-            /* Beyaz kenarları temizlemek için hafif içe basma */
-            transform: scale(1.01); 
-        }
+        /* Enerji */
+        .stats { width: 80%; margin-bottom: 100px; }
+        .energy-txt { text-align: center; font-weight: bold; margin-bottom: 8px; font-size: 1.2rem; }
+        .progress { width: 100%; height: 12px; background: #222; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
+        .bar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--gold), #ff9800); transition: width 0.1s; }
 
-        .main-coin:active { transform: scale(0.94); }
-
-        /* Enerji Barı */
-        .stats-container { width: 85%; max-width: 400px; margin-bottom: 100px; }
-        .energy-text { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.3rem; font-weight: bold; margin-bottom: 12px; }
-        .progress-bg { width: 100%; height: 14px; background: #222; border-radius: 20px; overflow: hidden; border: 1px solid #333; }
-        .progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #f3ba2f, #ff9800); transition: width 0.1s linear; }
-
-        /* Alt Navigasyon */
-        .bottom-nav { position: fixed; bottom: 20px; width: 92%; background: rgba(20, 20, 20, 0.95); display: grid; grid-template-columns: repeat(5, 1fr); padding: 12px 0; border-radius: 20px; border: 1px solid #333; z-index: 100; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #777; font-size: 0.75rem; cursor: pointer; }
+        /* Menü */
+        .nav { position: fixed; bottom: 20px; width: 90%; background: rgba(20,20,20,0.95); display: grid; grid-template-columns: repeat(5, 1fr); padding: 12px 0; border-radius: 20px; border: 1px solid #333; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; color: #666; cursor: pointer; }
         .nav-item.active { color: var(--gold); }
+        .nav-item i { font-size: 1.4rem; margin-bottom: 4px; }
 
-        /* Boost Paneli ve Listeler */
-        .full-page-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 50; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; }
-        .panel-header { font-size: 2rem; font-weight: bold; text-align: center; margin: 40px 0; }
-        
-        .boost-card {
-            background: var(--panel-bg); padding: 20px; border-radius: 18px; margin-bottom: 15px;
-            display: flex; align-items: center; gap: 15px; border: 1px solid #222;
-        }
-        .boost-icon { width: 50px; height: 50px; background: #333; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--gold); }
+        /* Paneller */
+        .panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 50; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; }
+        .boost-card { background: var(--panel); padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; }
         .boost-info { flex: 1; }
-        .boost-info b { display: block; font-size: 1.1rem; }
-        .boost-info span { color: #888; font-size: 0.9rem; }
+        .btn { background: var(--gold); border: none; padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .btn:disabled { background: #333; color: #777; }
+
+        /* Reklam Overlay */
+        #ad-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index: 200; display:none; flex-direction:column; align-items:center; justify-content:center; }
         
-        .btn-action { background: var(--gold); color: black; border: none; padding: 10px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-action:disabled { background: #444; color: #888; }
-
-        .float-text { position: absolute; color: white; font-size: 2.2rem; font-weight: 900; pointer-events: none; animation: floatAway 0.6s ease-out forwards; z-index: 200; }
-        @keyframes floatAway { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
-
-        /* Tapping Guru Görsel Efekt */
-        .guru-active { box-shadow: 0 0 80px rgba(255, 0, 0, 0.4) !important; border: 2px solid red; }
+        .float-val { position: absolute; color: white; font-size: 2rem; font-weight: bold; animation: float 0.6s ease-out forwards; pointer-events: none; }
+        @keyframes float { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
+        .guru-fx { box-shadow: 0 0 50px red !important; border: 2px solid red; }
     </style>
 </head>
 <body>
 
+    <div id="ad-overlay">
+        <h2>Reklam İzleniyor...</h2>
+        <div id="ad-timer" style="font-size: 3rem; color: var(--gold);">15</div>
+    </div>
+
     <div class="header">
-        <div class="balance-group">
-            <img src="https://cryptologos.cc/logos/solana-sol-logo.png" alt="coin">
-            <span id="balance">0</span>
+        <div class="balance">
+            <img src="https://cryptologos.cc/logos/solana-sol-logo.png">
+            <span id="bal">0</span>
         </div>
-        <div id="status-msg" style="color: var(--gold); height: 20px; font-size: 0.9rem; margin-top: 5px;"></div>
+        <div id="msg" style="color: var(--gold); margin-top: 5px; height: 20px;"></div>
     </div>
 
     <div id="tap-page">
-        <div class="coin-wrapper">
-            <div class="main-coin" id="coin-btn">
-                <img src="chatgpt.jpg" alt="ChatGPT Coin">
-            </div>
+        <div class="coin-btn" id="coin">
+            <img src="chatgpt.jpg">
         </div>
-        <div class="stats-container">
-            <div class="energy-text">⚡ <span id="energy-current">0</span> / <span id="energy-max">1000</span></div>
-            <div class="progress-bg"><div class="progress-fill" id="energy-bar"></div></div>
+        <div class="stats">
+            <div class="energy-txt">⚡ <span id="e-cur">0</span> / 1000</div>
+            <div class="progress"><div class="bar" id="e-bar"></div></div>
         </div>
     </div>
 
-    <div id="boost-panel" class="full-page-panel">
-        <div class="panel-header">Boosters</div>
-        
+    <div id="boost-panel" class="panel">
+        <h1 style="text-align:center">Boosters</h1>
         <div class="boost-card">
-            <div class="boost-icon"><i class="fas fa-fire"></i></div>
-            <div class="boost-info"><b>Tapping Guru</b><span>Tıklama başı x5 kazan (20sn)</span></div>
-            <button class="btn-action" onclick="activateGuru(this)">Uygula</button>
+            <i class="fas fa-fire fa-2x" style="color:red"></i>
+            <div class="boost-info"><b>Tapping Guru</b><br><span id="guru-timer">24 Saatte bir kullanılabilir</span></div>
+            <button class="btn" id="guru-btn" onclick="useGuru()">Uygula</button>
         </div>
-
         <div class="boost-card">
-            <div class="boost-icon"><i class="fas fa-bolt"></i></div>
-            <div class="boost-info"><b>Full Tank</b><span>Enerjiyi anında doldur</span></div>
-            <button class="btn-action" onclick="fullTank(this)">Doldur</button>
-        </div>
-
-        <div class="boost-card" style="opacity: 0.5;">
-            <div class="boost-icon"><i class="fas fa-arrow-up"></i></div>
-            <div class="boost-info"><b>Multitap</b><span>Tıklama başına +1 (Yakında)</span></div>
-            <button class="btn-action" disabled>Kilitli</button>
+            <i class="fas fa-bolt fa-2x" style="color:var(--gold)"></i>
+            <div class="boost-info"><b>Full Tank</b><br><span>15sn reklam izle, doldur</span></div>
+            <button class="btn" onclick="useFullTank()">İzle</button>
         </div>
     </div>
 
-    <div id="ref-panel" class="full-page-panel"><div class="panel-header">Arkadaşlar</div></div>
-    <div id="task-panel" class="full-page-panel"><div class="panel-header">Görevler</div></div>
-    <div id="stats-panel" class="full-page-panel"><div class="panel-header">İstatistikler</div></div>
-
-    <nav class="bottom-nav">
-        <div class="nav-item" onclick="showPanel('ref-panel', this)"><i class="fas fa-users"></i><span>Ref</span></div>
-        <div class="nav-item" onclick="showPanel('task-panel', this)"><i class="fas fa-tasks"></i><span>Task</span></div>
-        <div class="nav-item active" onclick="showPanel('tap-page', this)"><i class="fas fa-hand-pointer"></i><span>Tap</span></div>
-        <div class="nav-item" onclick="showPanel('boost-panel', this)"><i class="fas fa-fire"></i><span>Boost</span></div>
-        <div class="nav-item" onclick="showPanel('stats-panel', this)"><i class="fas fa-chart-line"></i><span>Stats</span></div>
+    <nav class="nav">
+        <div class="nav-item" onclick="openP('tap-page',this)"><i class="fas fa-users"></i>Ref</div>
+        <div class="nav-item" onclick="openP('tap-page',this)"><i class="fas fa-tasks"></i>Task</div>
+        <div class="nav-item active" onclick="openP('tap-page',this)"><i class="fas fa-hand-pointer"></i>Tap</div>
+        <div class="nav-item" onclick="openP('boost-panel',this)"><i class="fas fa-fire"></i>Boost</div>
+        <div class="nav-item" onclick="openP('tap-page',this)"><i class="fas fa-chart-line"></i>Stats</div>
     </nav>
 
     <script>
-        let balance = 0;
-        let energy = 0;
-        let maxEnergy = 1000;
-        let tapValue = 1;
-        let isGuru = false;
+        let balance = 0, energy = 0, isGuru = false;
+        const balEl = document.getElementById('bal'), eCurEl = document.getElementById('e-cur'), eBarEl = document.getElementById('e-bar');
 
-        const balanceEl = document.getElementById('balance');
-        const energyEl = document.getElementById('energy-current');
-        const barEl = document.getElementById('energy-bar');
-        const coinBtn = document.getElementById('coin-btn');
-        const statusMsg = document.getElementById('status-msg');
-
-        // Tıklama Mekanizması
-        coinBtn.addEventListener('pointerdown', (e) => {
+        // Tıklama
+        document.getElementById('coin').addEventListener('pointerdown', (e) => {
             if (energy >= 1) {
-                // Enerji düşür, bakiye artır
-                energy -= 1;
-                let gain = isGuru ? tapValue * 5 : tapValue;
+                energy--;
+                let gain = isGuru ? 5 : 1;
                 balance += gain;
-
-                updateUI();
-                createFloatText(e.clientX, e.clientY, gain);
-                if(navigator.vibrate) navigator.vibrate(30);
-            } else {
-                statusMsg.innerText = "Enerji bitti!";
-                setTimeout(() => statusMsg.innerText = "", 2000);
+                update();
+                fx(e.clientX, e.clientY, gain);
             }
         });
 
-        function updateUI() {
-            balanceEl.innerText = balance.toLocaleString();
-            energyEl.innerText = energy;
-            barEl.style.width = (energy / maxEnergy * 100) + '%';
+        function update() {
+            balEl.innerText = balance.toLocaleString();
+            eCurEl.innerText = energy;
+            eBarEl.style.width = (energy / 1000 * 100) + '%';
         }
 
-        function createFloatText(x, y, val) {
-            const ft = document.createElement('div');
-            ft.className = 'float-text';
-            ft.innerText = `+${val}`;
-            ft.style.left = `${x - 20}px`;
-            ft.style.top = `${y - 40}px`;
-            if(isGuru) ft.style.color = "#ff4444";
-            document.body.appendChild(ft);
-            setTimeout(() => ft.remove(), 600);
+        // --- BOOSTLAR ---
+        
+        function useFullTank() {
+            document.getElementById('ad-overlay').style.display = 'flex';
+            let timeLeft = 15;
+            let timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('ad-timer').innerText = timeLeft;
+                if(timeLeft <= 0) {
+                    clearInterval(timer);
+                    document.getElementById('ad-overlay').style.display = 'none';
+                    energy = 1000;
+                    update();
+                    openP('tap-page', document.querySelectorAll('.nav-item')[2]);
+                }
+            }, 1000);
         }
 
-        // --- BOOST FONKSİYONLARI ---
-
-        function fullTank(btn) {
-            energy = maxEnergy;
-            updateUI();
-            btn.disabled = true;
-            btn.innerText = "Kullanıldı";
-            showPanel('tap-page', document.querySelectorAll('.nav-item')[2]);
-        }
-
-        function activateGuru(btn) {
+        function useGuru() {
             isGuru = true;
-            btn.disabled = true;
-            btn.innerText = "Aktif!";
-            coinBtn.classList.add('guru-active');
-            
-            showPanel('tap-page', document.querySelectorAll('.nav-item')[2]);
-            statusMsg.innerText = "GURU MODU: x5 KAZANÇ!";
+            document.getElementById('coin').classList.add('guru-fx');
+            document.getElementById('guru-btn').disabled = true;
+            openP('tap-page', document.querySelectorAll('.nav-item')[2]);
+            document.getElementById('msg').innerText = "GURU AKTİF (x5)";
 
             setTimeout(() => {
                 isGuru = false;
-                coinBtn.classList.remove('guru-active');
-                statusMsg.innerText = "";
-                btn.innerText = "Bitti";
+                document.getElementById('coin').classList.remove('guru-fx');
+                document.getElementById('msg').innerText = "";
+                startGuruCooldown();
             }, 20000); // 20 saniye sürer
         }
 
-        function showPanel(id, el) {
-            document.querySelectorAll('.full-page-panel').forEach(p => p.style.display = 'none');
+        function startGuruCooldown() {
+            let cooldown = 24 * 60 * 60; // 24 saat
+            let cTimer = setInterval(() => {
+                cooldown--;
+                let h = Math.floor(cooldown / 3600), m = Math.floor((cooldown % 3600) / 60), s = cooldown % 60;
+                document.getElementById('guru-timer').innerText = `Kalan: ${h}:${m}:${s}`;
+                if(cooldown <= 0) {
+                    clearInterval(cTimer);
+                    document.getElementById('guru-btn').disabled = false;
+                    document.getElementById('guru-timer').innerText = "Kullanılabilir";
+                }
+            }, 1000);
+        }
+
+        function openP(id, el) {
+            document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
             document.getElementById('tap-page').style.display = 'none';
             document.getElementById(id).style.display = 'flex';
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
         }
 
-        // Enerji Yenilenmesi
-        setInterval(() => {
-            if(energy < maxEnergy) {
-                energy += 1;
-                updateUI();
-            }
-        }, 1000);
+        function fx(x, y, v) {
+            const f = document.createElement('div');
+            f.className = 'float-val';
+            f.innerText = `+${v}`;
+            f.style.left = x + 'px'; f.style.top = y + 'px';
+            document.body.appendChild(f);
+            setTimeout(() => f.remove(), 600);
+        }
+
+        setInterval(() => { if(energy < 1000) { energy++; update(); } }, 2000);
     </script>
 </body>
 </html>
