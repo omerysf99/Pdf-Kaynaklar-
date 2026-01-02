@@ -3,157 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Koalas - Telegram Verification</title>
+    <title>Koalas - DOGS Style Airdrop</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body, html { margin: 0; padding: 0; background-color: #000; color: white; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
-
-        /* Telegram Check Screen (Sadece 1 Kere Gözükür) */
-        #check-screen {
-            position: fixed; inset: 0; background: #000; z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 30px; text-align: center;
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
+        
+        body, html { 
+            margin: 0; padding: 0; background-color: #000; color: white; 
+            font-family: 'Space Grotesk', sans-serif; overflow: hidden; height: 100vh; 
         }
 
-        .check-item {
-            width: 100%; max-width: 300px; background: #111; border: 1px solid #222;
-            padding: 15px; border-radius: 18px; display: flex; align-items: center; gap: 15px;
-            margin-bottom: 12px; opacity: 0; transform: translateY(20px);
+        /* DOGS Style Intro Screen */
+        #dogs-intro {
+            position: fixed; inset: 0; background: #000; z-index: 10000;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            padding: 60px 24px;
         }
 
-        .check-item.done { opacity: 1; transform: translateY(0); transition: 0.5s ease; }
-
-        .loading-dots::after {
-            content: '.'; animation: dots 1.5s steps(5, end) infinite;
+        .check-list { width: 100%; margin-top: 40px; }
+        
+        .check-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 0; border-bottom: 1px solid #1a1a1a;
+            opacity: 0; transform: translateY(10px); transition: 0.5s all;
         }
-        @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60% { content: '...'; } }
+        .check-row.visible { opacity: 1; transform: translateY(0); }
 
-        /* Dashboard Styles */
-        .glass-card { background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 20px; }
-        .wallet-btn { background: linear-gradient(135deg, #007aff, #0051ff); border-radius: 20px; padding: 16px; width: 100%; display: flex; align-items: center; justify-content: space-between; font-weight: 900; }
-        .game-btn { background: linear-gradient(135deg, #151515, #0a0a0a); border: 1px solid #222; border-radius: 20px; padding: 15px; display: flex; align-items: center; gap: 15px; }
+        .status-success { color: #fff; font-weight: bold; }
+        .status-loading { color: #444; }
+
+        /* Dashboard Glow */
+        .koala-glow {
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .cta-button {
+            background: #fff; color: #000; font-weight: 700; width: 100%;
+            padding: 18px; border-radius: 16px; font-size: 18px;
+            transition: 0.2s;
+        }
+        .cta-button:active { transform: scale(0.98); background: #eee; }
     </style>
 </head>
 <body>
 
-    <div id="check-screen">
-        <div class="mb-8">
-            <img src="Koalas.jpg" class="w-24 h-24 rounded-3xl mx-auto border-4 border-blue-600 shadow-2xl shadow-blue-600/30">
-            <h1 class="text-3xl font-black mt-4 italic">CHECKING...</h1>
-            <p class="text-zinc-500 text-sm font-bold mt-1">Telegram hesabınız analiz ediliyor</p>
+    <div id="dogs-intro">
+        <div class="text-center">
+            <img src="Koalas.jpg" class="w-28 h-28 rounded-full mx-auto grayscale hover:grayscale-0 transition-all duration-700">
+            <h1 class="text-4xl font-bold mt-6 tracking-tight">Who are you, Koala?</h1>
+            <p class="text-zinc-500 mt-2">Checking your Telegram account...</p>
         </div>
 
-        <div class="w-full space-y-3">
-            <div id="check1" class="check-item">
-                <div class="text-blue-500 text-xl"><i class="fa-brands fa-telegram"></i></div>
-                <div class="text-left flex-1">
-                    <p class="text-[10px] text-zinc-500 font-bold uppercase">Account Age</p>
-                    <p class="font-black text-sm" id="age-val">Hesap Yaşı Hesaplanıyor<span class="loading-dots"></span></p>
-                </div>
-                <div id="icon1" class="hidden text-green-500"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="check-list">
+            <div id="row1" class="check-row">
+                <span class="text-zinc-400">Account age</span>
+                <span id="val1" class="status-loading">Checking...</span>
             </div>
-
-            <div id="check2" class="check-item">
-                <div class="text-purple-500 text-xl"><i class="fa-solid fa-gem"></i></div>
-                <div class="text-left flex-1">
-                    <p class="text-[10px] text-zinc-500 font-bold uppercase">Telegram Status</p>
-                    <p class="font-black text-sm" id="status-val">Analiz ediliyor<span class="loading-dots"></span></p>
-                </div>
-                <div id="icon2" class="hidden text-green-500"><i class="fa-solid fa-circle-check"></i></div>
+            <div id="row2" class="check-row">
+                <span class="text-zinc-400">Telegram Premium</span>
+                <span id="val2" class="status-loading">Checking...</span>
             </div>
-
-            <div id="check3" class="check-item">
-                <div class="text-orange-500 text-xl"><i class="fa-solid fa-shield-halved"></i></div>
-                <div class="text-left flex-1">
-                    <p class="text-[10px] text-zinc-500 font-bold uppercase">Verification</p>
-                    <p class="font-black text-sm" id="verify-val">Kontrol ediliyor<span class="loading-dots"></span></p>
-                </div>
-                <div id="icon3" class="hidden text-green-500"><i class="fa-solid fa-circle-check"></i></div>
+            <div id="row3" class="check-row">
+                <span class="text-zinc-400">Activity level</span>
+                <span id="val3" class="status-loading">Checking...</span>
             </div>
         </div>
 
-        <button id="continue-btn" onclick="hideCheckScreen()" class="hidden mt-10 bg-white text-black w-full max-w-[300px] py-4 rounded-2xl font-black text-lg transition-all active:scale-95">
-            DEVAM ET
-        </button>
+        <div id="result-box" class="hidden w-full text-center scale-90 opacity-0 transition-all duration-500">
+            <p class="text-zinc-500 text-sm uppercase tracking-widest mb-1">You are eligible for</p>
+            <h2 class="text-6xl font-bold mb-8">4,250 <span class="text-2xl">$KOALA</span></h2>
+            <button onclick="enterApp()" class="cta-button">Join the Community</button>
+        </div>
     </div>
 
-    <div id="main-dashboard" class="hidden">
-        <div class="relative w-full h-[35vh]">
-            <img src="Koalas.jpg" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-            <h1 class="absolute bottom-10 left-6 text-5xl font-black italic tracking-tighter">KOALAS</h1>
+    <div id="app" class="hidden opacity-0 transition-opacity duration-1000 p-6">
+        <div class="flex justify-between items-center mb-10">
+            <h1 class="text-3xl font-bold italic">KOALAS</h1>
+            <div id="ton-connect" class="scale-90"></div>
         </div>
 
-        <div class="px-5 -mt-8 relative z-10 pb-32">
-            <div class="glass-card mb-5">
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 class="text-4xl font-black italic" id="pts-display">2,500</h2>
-                        <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Koalas Balance</p>
-                    </div>
-                    <img src="Koalas.jpg" class="w-12 h-12 rounded-xl border border-white/10">
-                </div>
-                
-                <button id="ton-connect-trigger" class="wallet-btn">
-                    <div class="flex items-center gap-3"><i class="fa-solid fa-wallet"></i><span id="wallet-label">CONNECT WALLET</span></div>
-                    <i class="fa-solid fa-chevron-right text-xs opacity-50"></i>
-                </button>
-            </div>
+        <div class="bg-zinc-900/50 p-8 rounded-[32px] text-center koala-glow mb-8">
+            <p class="text-zinc-500 font-bold text-sm uppercase tracking-[0.2em] mb-2">Total Balance</p>
+            <h2 class="text-6xl font-bold tracking-tighter mb-6">4,250</h2>
+            <button class="bg-white/10 text-white px-6 py-2 rounded-full text-xs font-bold border border-white/5">
+                Withdraw to TON
+            </button>
+        </div>
 
-            <h3 class="text-xs font-black uppercase tracking-[0.3em] text-zinc-500 mb-4 px-2 italic text-center">ARCADES</h3>
-            
-            <div class="grid gap-3">
-                <div class="game-btn"><div class="w-12 h-12 bg-purple-600/20 rounded-xl flex items-center justify-center text-2xl">⛏️</div>
-                    <div class="flex-1"><h4 class="font-black italic text-lg">TON MINER</h4><p class="text-[10px] text-zinc-500 font-bold">REKLAMLI KAZANÇ</p></div>
-                    <i class="fa-solid fa-play text-blue-500"></i>
+        <h3 class="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-4">Missions & Games</h3>
+        <div class="space-y-4">
+            <div class="bg-zinc-900 p-5 rounded-2xl flex items-center justify-between border border-white/5">
+                <div class="flex items-center gap-4">
+                    <span class="text-3xl">⛏️</span>
+                    <div>
+                        <p class="font-bold">TON Miner</p>
+                        <p class="text-[10px] text-zinc-500">Mine $KOALA gems</p>
+                    </div>
                 </div>
-                <div class="game-btn"><div class="w-12 h-12 bg-orange-600/20 rounded-xl flex items-center justify-center text-2xl">🎰</div>
-                    <div class="flex-1"><h4 class="font-black italic text-lg">777 SLOTS</h4><p class="text-[10px] text-zinc-500 font-bold">JACKPOT ŞANSI</p></div>
-                    <i class="fa-solid fa-play text-blue-500"></i>
+                <i class="fa-solid fa-chevron-right text-zinc-700"></i>
+            </div>
+            <div class="bg-zinc-900 p-5 rounded-2xl flex items-center justify-between border border-white/5">
+                <div class="flex items-center gap-4">
+                    <span class="text-3xl">🎰</span>
+                    <div>
+                        <p class="font-bold">777 Slots</p>
+                        <p class="text-[10px] text-zinc-500">Spin for jackpot</p>
+                    </div>
                 </div>
+                <i class="fa-solid fa-chevron-right text-zinc-700"></i>
             </div>
         </div>
     </div>
 
     <script>
-        // Check Animasyonu Başlat
-        window.onload = () => {
-            const steps = [
-                { id: "check1", val: "age-val", text: "4 Yıllık Hesap (+1500 PTS)", icon: "icon1" },
-                { id: "check2", val: "status-val", text: "Premium Üye (+1000 PTS)", icon: "icon2" },
-                { id: "check3", val: "verify-val", text: "İnsan Doğrulaması Başarılı", icon: "icon3" }
+        // Animasyon Sıralaması
+        document.addEventListener('DOMContentLoaded', () => {
+            const sequence = [
+                { row: 'row1', val: 'val1', text: '4 Years' },
+                { row: 'row2', val: 'val2', text: 'Active' },
+                { row: 'row3', val: 'val3', text: 'Legendary' }
             ];
 
-            steps.forEach((step, index) => {
+            sequence.forEach((item, i) => {
                 setTimeout(() => {
-                    document.getElementById(step.id).classList.add('done');
+                    document.getElementById(item.row).classList.add('visible');
                     setTimeout(() => {
-                        document.getElementById(step.val).innerText = step.text;
-                        document.getElementById(step.val).classList.add('text-green-500');
-                        document.getElementById(step.icon).classList.remove('hidden');
-                        if(index === 2) document.getElementById('continue-btn').classList.remove('hidden');
-                    }, 1000);
-                }, index * 1200);
+                        document.getElementById(item.val).innerText = item.text;
+                        document.getElementById(item.val).className = 'status-success';
+                        
+                        if(i === sequence.length - 1) showFinalResult();
+                    }, 800);
+                }, i * 1000);
             });
-        };
+        });
 
-        function hideCheckScreen() {
-            document.getElementById('check-screen').style.opacity = '0';
+        function showFinalResult() {
             setTimeout(() => {
-                document.getElementById('check-screen').style.display = 'none';
-                document.getElementById('main-dashboard').classList.remove('hidden');
-                document.getElementById('main-dashboard').style.overflowY = "auto";
+                document.querySelector('.check-list').style.display = 'none';
+                const res = document.getElementById('result-box');
+                res.classList.remove('hidden');
+                setTimeout(() => {
+                    res.style.opacity = '1';
+                    res.style.transform = 'scale(1)';
+                }, 50);
             }, 500);
         }
 
-        // TON Connect
+        function enterApp() {
+            const intro = document.getElementById('dogs-intro');
+            const app = document.getElementById('app');
+            
+            intro.style.transition = '0.8s';
+            intro.style.opacity = '0';
+            setTimeout(() => {
+                intro.style.display = 'none';
+                app.classList.remove('hidden');
+                setTimeout(() => app.style.opacity = '1', 50);
+            }, 800);
+        }
+
+        // TON Connect UI
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json'
+            manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json',
+            buttonRootId: 'ton-connect'
         });
-        document.getElementById('ton-connect-trigger').onclick = () => tonConnectUI.openModal();
     </script>
 </body>
 </html>
