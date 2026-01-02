@@ -17,7 +17,7 @@
             overflow-x: hidden;
         }
 
-        /* Hero Section - Koalas.jpg */
+        /* Hero Section */
         .hero-section {
             position: relative;
             width: 100%;
@@ -48,7 +48,7 @@
             background: linear-gradient(to bottom, transparent, #000);
         }
 
-        /* Dashboard Kartı */
+        /* Dashboard */
         .content-container {
             position: relative;
             margin-top: -75px; 
@@ -61,7 +61,6 @@
             border-radius: 30px;
             padding: 26px;
             border: 1px solid #1c1c1c;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
         }
 
         .custom-connect-btn {
@@ -76,11 +75,9 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            transition: transform 0.1s;
         }
-        .custom-connect-btn:active { transform: scale(0.97); }
 
-        /* Alt Menü */
+        /* Nav Bar */
         .nav-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background: rgba(0,0,0,0.98); border-top: 1px solid #121212;
@@ -89,6 +86,9 @@
         }
         .nav-item { text-align: center; color: #444; font-size: 10px; font-weight: 700; }
         .nav-item.active { color: #007aff; }
+
+        /* Ton Logo */
+        .ton-icon { width: 24px; height: 24px; }
     </style>
 </head>
 <body>
@@ -96,12 +96,6 @@
     <div id="app">
         <div class="hero-section">
             <h1 class="koalas-header">KOALAS</h1>
-            <div class="absolute top-10 left-0 w-full px-5 flex justify-between items-center z-20">
-                <div class="bg-black/60 backdrop-blur-xl px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
-                    <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                    <span class="text-[10px] font-black uppercase tracking-widest italic">Home Page</span>
-                </div>
-            </div>
         </div>
 
         <div class="content-container">
@@ -125,17 +119,15 @@
                     <p class="text-[#333] text-[10px] font-black uppercase mb-4 tracking-widest italic">Asset Balance</p>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-white/20 shadow-lg">
-                                <img src="https://ton.org/download/ton_symbol.svg" class="w-6 h-6" alt="TON">
+                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-white/20">
+                                <img src="https://ton.org/download/ton_symbol.svg" class="ton-icon" alt="TON">
                             </div>
                             <div>
                                 <p class="font-black text-[16px] italic">#TON</p>
-                                <p class="text-[#555] text-xs font-bold">0 #TON</p>
+                                <p id="ton-balance" class="text-[#555] text-xs font-bold">0 #TON</p>
                             </div>
                         </div>
-                        <div id="payment-btn" class="w-11 h-11 bg-[#1a1a1a] rounded-xl flex items-center justify-center border border-white/5 active:bg-zinc-800">
-                            <i class="fa-solid fa-paper-plane text-[#007aff] text-xs"></i>
-                        </div>
+                        <div id="wallet-address" class="text-[10px] text-zinc-600 font-mono hidden"></div>
                     </div>
                 </div>
             </div>
@@ -150,39 +142,46 @@
     </div>
 
     <script>
-        // TON Connect Başlatma
+        // TON Connect UI Başlatma
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button-root'
         });
 
-        // Cüzdan Bağlama/Kesme
         const customBtn = document.getElementById('custom-connect-btn');
+        const btnText = document.getElementById('btn-text');
+        const addressText = document.getElementById('wallet-address');
+
+        // Butona Basınca Cüzdan Bağlama
         customBtn.onclick = async () => {
-            if (tonConnectUI.connected) await tonConnectUI.disconnect();
-            else await tonConnectUI.openModal();
+            if (tonConnectUI.connected) {
+                await tonConnectUI.disconnect();
+            } else {
+                await tonConnectUI.openModal();
+            }
         };
 
-        // Ödeme Alma Tetikleyici
-        document.getElementById('payment-btn').onclick = async () => {
-            if (!tonConnectUI.connected) { await tonConnectUI.openModal(); return; }
-            const tx = {
-                validUntil: Math.floor(Date.now() / 1000) + 60,
-                messages: [{ address: "UQC123456789...", amount: "50000000" }] // Örnek 0.05 TON
-            };
-            try { await tonConnectUI.sendTransaction(tx); } catch(e) {}
-        };
-
-        // Cüzdan Bağlantı Durumu
-        tonConnectUI.onStatusChange(w => {
-            document.getElementById('btn-text').innerText = w ? "Connected" : "Connect Wallet";
-            customBtn.style.background = w ? "#1a1a1a" : "#007aff";
+        // Bağlantı Durumu Değiştiğinde
+        tonConnectUI.onStatusChange(wallet => {
+            if (wallet) {
+                const addr = wallet.account.address;
+                const shortAddr = addr.slice(0, 4) + "..." + addr.slice(-4);
+                btnText.innerText = "Connected: " + shortAddr;
+                customBtn.style.background = "#1a1a1a";
+                addressText.innerText = shortAddr;
+                addressText.classList.remove('hidden');
+                // Bakiyeyi simüle et veya API'den çek
+                document.getElementById('ton-balance').innerText = "0 #TON";
+            } else {
+                btnText.innerText = "Connect Wallet";
+                customBtn.style.background = "#007aff";
+                addressText.classList.add('hidden');
+                document.getElementById('ton-balance').innerText = "0 #TON";
+            }
         });
 
-        // Uygulama Açıldığında Puanı Belirle
         window.onload = () => {
-            const pts = Math.floor(Math.random() * 9001) + 1000;
-            document.getElementById('final-points').innerText = pts.toLocaleString();
+            document.getElementById('final-points').innerText = Math.floor(Math.random() * 9000 + 1000).toLocaleString();
         };
     </script>
 </body>
