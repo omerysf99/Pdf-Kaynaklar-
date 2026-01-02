@@ -3,93 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONux Miner - Clean</title>
+    <title>TONux Miner - Düzgün Fan</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
-        body { background: #f0f2f5; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; user-select: none; }
+        body { background: #ffffff; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
 
         #game-container { 
             width: 100%; 
             max-width: 450px; 
-            background: #ffffff; 
-            position: relative; 
-            height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 50px;
+            padding: 40px 20px;
+            position: relative;
         }
 
         /* Bakiye Alanı */
-        .balance-section { text-align: center; margin-bottom: 30px; }
-        #main-balance { font-size: 42px; font-weight: 900; color: #1a1a1a; font-variant-numeric: tabular-nums; }
-        .ghs-info { color: #007bff; font-weight: 800; font-size: 18px; margin-top: 5px; }
-
-        /* Fan Alanı */
-        .fan-container { width: 250px; height: 250px; margin: 20px 0; cursor: pointer; }
-        .fan-img { 
-            width: 100%; height: 100%; border-radius: 50%; 
-            animation: spin 3s linear infinite; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+        .balance-container { text-align: center; margin-bottom: 40px; }
+        #main-balance { font-size: 48px; font-weight: 800; color: #000; letter-spacing: -1px; }
+        .speed-badge { 
+            display: inline-block; 
+            color: #007bff; 
+            font-weight: 700; 
+            font-size: 18px; 
+            margin-top: 5px; 
         }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* --- FAN DÜZELTME ALANI --- */
+        .fan-box {
+            width: 280px;
+            height: 280px;
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Fanın yamuk durmaması için dikeyde ortalar */
+            position: relative;
+        }
+
+        .fan-img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; /* Görselin yamulmasını önler */
+            border-radius: 50%;
+            animation: spin 3s linear infinite; /* Kesintisiz düzgün dönüş */
+        }
+
+        @keyframes spin { 
+            from { transform: rotate(0deg); } 
+            to { transform: rotate(360deg); } 
+        }
 
         /* Claim Butonu */
         .claim-btn {
-            width: 80%;
-            padding: 20px;
+            width: 100%;
+            max-width: 350px;
+            padding: 18px;
             border: none;
-            border-radius: 15px;
+            border-radius: 18px;
             background: #007bff;
             color: white;
             font-size: 20px;
-            font-weight: 800;
+            font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,123,255,0.3);
             margin-top: auto;
-            margin-bottom: 50px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0,123,255,0.2);
+            transition: transform 0.1s;
         }
-        .claim-btn:active { transform: scale(0.98); }
+        .claim-btn:active { transform: scale(0.96); }
 
-        .min-text { font-size: 12px; color: #888; margin-top: 10px; }
+        .min-limit { font-size: 13px; color: #999; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div class="balance-section">
+    <div class="balance-container">
         <div id="main-balance">0.0000</div>
-        <div class="ghs-info">1 GH/s ⚡</div>
+        <div class="speed-badge">1 GH/s ⚡</div>
     </div>
 
-    <div class="fan-container">
-        <img src="tonux.jpg" class="fan-img" onerror="this.src='https://via.placeholder.com/250'">
+    <div class="fan-box">
+        <img src="tonux.jpg" class="fan-img" onerror="this.src='https://via.placeholder.com/280/007bff/ffffff?text=FAN'">
     </div>
 
-    <button class="claim-btn" onclick="doClaim()">💰 CLAIM TON</button>
-    <p class="min-text">Minimum Claim: 0.01 TON</p>
+    <button class="claim-btn" onclick="processClaim()">💰 CLAIM TON</button>
+    <p class="min-limit">Minimum Claim: 0.01 TON</p>
 </div>
 
 <script>
     let currentTon = 0.00000000;
-    let power = 1; // Başlangıç 1 GH/s
+    const power = 1; // Başlangıç gücü
 
-    /* Matematiksel Kurallar:
-       1 GH/s = 24 saatte 1 TON
-       1 GH/s = 1 salisede 0.00000011574 TON
+    /* Matematik: 24 saatte 1 TON
+       1 saniyede = 0.00001157...
+       10 milisaniyede = 0.00000011574
     */
+    const productionTick = 0.00000011574;
+
     setInterval(() => {
-        currentTon += (power * 0.00000011574);
+        currentTon += productionTick;
+        // Ekranda 4 hane gösteriyoruz
         document.getElementById('main-balance').innerText = currentTon.toFixed(4);
     }, 10);
 
-    function doClaim() {
-        if(currentTon >= 0.01) { // Min Claim 0.01 TON
+    function processClaim() {
+        if(currentTon >= 0.01) { // 0.01 TON sınırı
             alert("Success! Claimed: " + currentTon.toFixed(4) + " TON");
             currentTon = 0;
             if(navigator.vibrate) navigator.vibrate(50);
         } else {
-            alert("Min claim limit is 0.01 TON!");
+            alert("Minimum claim limit is 0.01 TON!");
         }
     }
 </script>
