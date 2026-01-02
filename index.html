@@ -2,157 +2,129 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONux Miner - Pro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Block</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; user-select: none; }
-        body { background-color: #f4f7f9; color: #1a1a1a; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
-        #game-container { width: 100%; max-width: 450px; background: #fff; position: relative; display: flex; flex-direction: column; }
+        body {
+            background-color: #1a1a1a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-        /* --- SAYFA YÖNETİMİ --- */
-        .page { display: none; flex: 1; flex-direction: column; overflow-y: auto; padding: 25px; padding-bottom: 120px; }
-        .page.active { display: flex; }
+        .container {
+            text-align: center;
+        }
 
-        /* --- MODAL (WITHDRAW) --- */
-        .modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-box { background: #f4f7f9; width: 90%; border-radius: 28px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+        #lucky-block {
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 250px;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        /* --- ÜST PANEL --- */
-        .header-stats { padding: 15px; display: flex; flex-direction: column; gap: 8px; }
-        .stat-item { background: #fff; border-radius: 16px; padding: 15px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #eee; }
-        .stat-info { display: flex; align-items: center; gap: 12px; }
-        .stat-icon { width: 35px; height: 35px; }
-        .wallet-btn { width: 50px; height: 45px; background: #4da3ff; border: none; border-radius: 12px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        #lucky-block:hover {
+            transform: scale(1.05) rotate(2deg);
+        }
 
-        /* --- ANA EKRAN --- */
-        .miner-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .ton-balance-large { font-size: 56px; font-weight: 900; letter-spacing: -2px; color: #000; margin-bottom: 5px; }
-        .ghs-info { color: #007bff; font-weight: 800; font-size: 22px; margin-bottom: 25px; }
-        .fan-box { width: 240px; height: 240px; margin-bottom: 30px; }
-        .fan-img { width: 100%; height: 100%; animation: spin 3s linear infinite; border-radius: 50%; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        #lucky-block:active {
+            transform: scale(0.95);
+        }
 
-        /* --- BUTONLAR --- */
-        .btn-blue { width: 100%; background: #4da3ff; color: #fff; border: none; padding: 22px; border-radius: 22px; font-weight: 800; font-size: 20px; cursor: pointer; }
-        .btn-white { width: 100%; background: #fff; color: #333; border: 1px solid #ddd; padding: 18px; border-radius: 20px; font-weight: 700; margin-top: 12px; }
+        img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.3));
+        }
 
-        /* --- DEV ALT NAV --- */
-        .bottom-nav { background: #fff; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 10px 0; position: absolute; bottom: 0; width: 100%; height: 100px; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; color: #888; font-weight: 800; cursor: pointer; }
-        .nav-item.active { color: #007bff; }
-        .nav-icon { font-size: 32px; margin-bottom: 4px; }
-        .nav-text { font-size: 13px; }
+        #result {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            min-height: 40px;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
 
-        /* --- LİSTE ÖGELERİ --- */
-        .list-card { background: #f8fbff; padding: 20px; border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eef2f7; }
+        .btn-reset {
+            margin-top: 30px;
+            padding: 10px 20px;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="withdraw-modal" class="modal-overlay">
-        <div class="modal-box">
-            <h3 style="text-align:center; font-weight:900; margin-bottom:15px; font-size:22px;">Withdraw TON</h3>
-            <p style="text-align:center; color:#888; font-size:14px; margin-bottom:20px;">Min: 1.5 TON | Fee: 0.3 TON</p>
-            <input type="text" placeholder="TON Address" style="width:100%; padding:18px; border-radius:15px; border:1px solid #ddd; margin-bottom:15px; text-align:center;">
-            <button class="btn-blue" onclick="alert('Bakiye Yetersiz!')">Send TON</button>
-            <button class="btn-white" onclick="toggleModal(false)">Close</button>
-        </div>
+<div class="container">
+    <h1>Şansını Dene!</h1>
+    <div id="lucky-block" onclick="openBlock()">
+        <img src="kapali.png" id="block-img" alt="Lucky Block">
     </div>
-
-    <div class="header-stats">
-        <div class="stat-item">
-            <div class="stat-info">
-                <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="stat-icon">
-                <div><p style="font-size:12px;color:#999;">TON Balance</p><p style="font-size:18px; font-weight:900;"><span id="wallet-ton">0.00</span></p></div>
-            </div>
-            <button class="wallet-btn" onclick="toggleModal(true)">👛</button>
-        </div>
-    </div>
-
-    <div id="page-home" class="page active">
-        <div class="miner-section">
-            <p class="ton-balance-large" id="mine-val">0.0000</p>
-            <p class="ghs-info" id="ghs-display">1.00 GH/s ⚡</p>
-            <div class="fan-box"><img src="tonux.jpg" class="fan-img" onerror="this.src='https://via.placeholder.com/240/007bff/fff?text=FAN'"></div>
-            <button class="btn-blue" onclick="claim()">💰 CLAIM TON</button>
-            <p style="font-size:12px; color:#999; margin-top:15px;">Saatte 1 TON Kazanırsın!</p>
-        </div>
-    </div>
-
-    <div id="page-friends" class="page">
-        <h2 style="margin-bottom:25px; font-weight:900; font-size:28px;">Friends</h2>
-        <div class="list-card">
-            <div><p style="font-weight:900;">Invite Link</p><p style="font-size:13px; color:#007bff;">t.me/tonux_bot?ref=user</p></div>
-            <button style="background:#000; color:#fff; border:none; padding:12px 20px; border-radius:12px; font-weight:800;" onclick="alert('Kopyalandı!')">Copy</button>
-        </div>
-        <div style="text-align:center; margin-top:30px;"><p style="color:#666;">Arkadaşların kazandıkça %10 bonus alırsın!</p></div>
-    </div>
-
-    <div id="page-missions" class="page">
-        <h2 style="margin-bottom:25px; font-weight:900; font-size:28px;">Missions</h2>
-        <div class="list-card">
-            <div><p style="font-weight:900;">Telegram Task</p><p style="font-size:13px; color:#888;">+0.10 GH/s</p></div>
-            <button style="background:#4da3ff; color:#fff; border:none; padding:12px 20px; border-radius:12px; font-weight:800;" onclick="addTask(0.10)">Join</button>
-        </div>
-        <div class="list-card">
-            <div><p style="font-weight:900;">Daily Video</p><p style="font-size:13px; color:#888;">+0.05 GH/s</p></div>
-            <button style="background:#4da3ff; color:#fff; border:none; padding:12px 20px; border-radius:12px; font-weight:800;" onclick="addTask(0.05)">Watch</button>
-        </div>
-    </div>
-
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="showPage('home')">
-            <span class="nav-icon">🏠</span><span class="nav-text">Home</span>
-        </div>
-        <div class="nav-item" onclick="showPage('friends')">
-            <span class="nav-icon">👥</span><span class="nav-text">Friends</span>
-        </div>
-        <div class="nav-item" onclick="showPage('missions')">
-            <span class="nav-icon">🎯</span><span class="nav-text">Missions</span>
-        </div>
-        <div class="nav-item" onclick="toggleModal(true)">
-            <span class="nav-icon">👛</span><span class="nav-text">Wallet</span>
-        </div>
-    </div>
+    
+    <div id="result"></div>
+    
+    <button class="btn-reset" id="reset-btn" onclick="resetGame()">Tekrar Dene</button>
 </div>
 
 <script>
-    let mineVal = 0.0000;
-    let walletVal = 0.00;
-    let power = 1.00;
+    // Görsel isimlerini buraya yazın
+    const imgKapali = "kapali.png"; 
+    const imgAcik = "acik.png";
 
-    /* Saatte 1 TON = Saniyede 0.0002777 TON */
-    setInterval(() => {
-        let secondGain = power / 3600;
-        mineVal += secondGain / 10; // 100ms'de bir güncelleniyor
-        document.getElementById('mine-val').innerText = mineVal.toFixed(4);
-    }, 100);
+    function openBlock() {
+        const blockImg = document.getElementById('block-img');
+        const resultDiv = document.getElementById('result');
+        const resetBtn = document.getElementById('reset-btn');
+        const blockContainer = document.getElementById('lucky-block');
 
-    function showPage(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById('page-' + pageId).classList.add('active');
-        event.currentTarget.classList.add('active');
+        // Kutuyu aç (Görseli değiştir)
+        blockImg.src = imgAcik;
+        blockContainer.style.pointerEvents = "none"; // Tekrar tıklanmasın
+
+        // Ödül Belirleme Mantığı
+        const rand = Math.random();
+        let reward = "";
+
+        if (rand < 0.33) {
+            // 0.001$ - 0.01$ arası USDT (3 basamaklı)
+            const amount = (Math.random() * (0.01 - 0.001) + 0.001).toFixed(3);
+            reward = amount + " USDT";
+        } else if (rand < 0.66) {
+            // 1 - 1000 arası DOGE
+            const amount = Math.floor(Math.random() * 1000) + 1;
+            reward = amount + " DOGE";
+        } else {
+            // 1 - 999 arası NOT
+            const amount = Math.floor(Math.random() * 999) + 1;
+            reward = amount + " NOT Coin";
+        }
+
+        // Sonucu Yazdır
+        setTimeout(() => {
+            resultDiv.innerText = "TEBRİKLER: " + reward;
+            resetBtn.style.display = "inline-block";
+        }, 300);
     }
 
-    function toggleModal(show) {
-        document.getElementById('withdraw-modal').style.display = show ? 'flex' : 'none';
-    }
-
-    function addTask(gain) {
-        power += gain;
-        document.getElementById('ghs-display').innerText = power.toFixed(2) + " GH/s ⚡";
-        alert("Güç Artırıldı!");
-    }
-
-    function claim() {
-        if(mineVal >= 0.01) {
-            walletVal += mineVal;
-            mineVal = 0;
-            document.getElementById('wallet-ton').innerText = walletVal.toFixed(2);
-        } else { alert("Minimum claim: 0.01 TON"); }
+    function resetGame() {
+        document.getElementById('block-img').src = imgKapali;
+        document.getElementById('result').innerText = "";
+        document.getElementById('reset-btn').style.display = "none";
+        document.getElementById('lucky-block').style.pointerEvents = "auto";
     }
 </script>
 
