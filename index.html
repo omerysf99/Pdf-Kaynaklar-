@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONux - Integrated Miner</title>
+    <title>TONux Miner - Unified View</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', Courier, monospace; }
         body { background: #000; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
 
+        /* Ana arka plan görselin */
         #game-container { 
             width: 100%; 
             max-width: 450px; 
@@ -16,96 +17,119 @@
             height: 100vh;
         }
 
-        /* --- GÖRÜNMEZ BAKİYE GÖSTERGESİ --- */
-        .live-balance-box {
+        /* --- BİRLEŞTİRİLMİŞ BAKİYE ALANI --- */
+        /* Görseldeki bakiye kutusunun tam üzerine gelecek şekilde ayarlandı */
+        .unified-balance-container {
             position: absolute;
-            top: 20%; /* Görselindeki bakiye alanına göre ayarla */
+            top: 15%; /* Görselindeki bakiye kutusunun yüksekliği */
             left: 50%;
             transform: translateX(-50%);
-            color: #fff;
             text-align: center;
-            z-index: 5;
-            pointer-events: none; /* Üstüne tıklanmasın, altındaki butona geçsin */
-        }
-
-        #main-balance {
-            font-size: 32px;
-            font-weight: 900;
-            text-shadow: 0 0 15px rgba(0, 123, 255, 1), 0 0 5px #000;
-            font-variant-numeric: tabular-nums;
-        }
-
-        /* --- GÖRÜNMEZ CLAIM BUTONU (HOTSPOT) --- */
-        #claim-area {
-            position: absolute;
-            top: 60%; /* Görselindeki butona denk gelen yükseklik */
-            left: 10%;
             width: 80%;
-            height: 12%;
-            /* border: 2px solid cyan; */ /* Koordinatı ayarlarken bunu aç, yerini gör kanka */
-            cursor: pointer;
+            pointer-events: none;
             z-index: 10;
         }
 
-        /* Efektler */
-        .claim-text {
-            position: absolute;
-            color: #00ff00;
+        /* Üstteki bakiye (Kutu içindeki küçük yazı) */
+        .top-sub-balance {
+            font-size: 14px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2px;
+            letter-spacing: 1px;
+        }
+
+        /* Alttaki ana bakiye (Büyük dijital gösterge) */
+        .main-digital-balance {
+            font-size: 38px;
             font-weight: 900;
-            font-size: 24px;
-            animation: floatClaim 1s forwards;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(0, 162, 255, 0.8), 0 0 5px #000;
+            font-variant-numeric: tabular-nums; /* Rakamların kaymasını engeller */
+        }
+
+        .ghs-tag {
+            font-size: 16px;
+            color: #00d2ff;
+            font-weight: 800;
+            margin-top: 5px;
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+        }
+
+        /* --- GÖRÜNMEZ CLAIM BUTONU --- */
+        /* Görseldeki 'Claim' butonunun tam üzerine gelecek şeffaf alan */
+        #invisible-claim-btn {
+            position: absolute;
+            bottom: 18%; /* Görseldeki butonun yerine göre ayarla */
+            left: 10%;
+            width: 80%;
+            height: 10%;
+            /* border: 2px solid lime; */ /* Yerini bulmak için bunu açabilirsin kanka */
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        /* Claim Efekti */
+        .claim-popup {
+            position: absolute;
+            color: #00ff88;
+            font-weight: 900;
+            font-size: 26px;
+            animation: floatOut 1s forwards;
             pointer-events: none;
             z-index: 100;
         }
-        @keyframes floatClaim { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(1.5); } }
-
+        @keyframes floatOut { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: translateY(-120px) scale(1.4); } }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div class="live-balance-box">
-        <p style="font-size: 12px; font-weight: 800; opacity: 0.8; letter-spacing: 2px;">EARNED TON</p>
-        <div id="main-balance">0.00000000</div>
-        <p id="ghs-display" style="color: #00d2ff; font-weight: 700;">1 GH/s ⚡</p>
+    <div class="unified-balance-container">
+        <div class="top-sub-balance" id="sub-val">0.00000000</div>
+        <div class="main-digital-balance" id="main-val">0.00000000</div>
+        <div class="ghs-tag">1 GH/s ⚡</div>
     </div>
 
-    <div id="claim-area" onclick="claim(event)"></div>
+    <div id="invisible-claim-btn" onclick="doClaim(event)"></div>
 </div>
 
 <script>
-    // Başlangıç Değerleri
-    let earnedTon = 0.00000000;
-    let walletBalance = 0;
-    let power = 1; // Herkese 1 GH/s başlangıç
+    let currentTon = 0.00000000;
+    let power = 1; // Başlangıç 1 GH/s
 
-    // Senin Matematiğin: 1 GH/s = Salise başı 0.00000011574 TON
-    const TICK_RATE = 10; // 10 milisaniye (1 salise)
-    const PROD_PER_TICK = 0.00000011574; 
+    /* Senin Formülün:
+       1 GH/s = 24 saatte 1 TON
+       1 GH/s = 1 saniyede 0.00001157
+       1 GH/s = 1 salisede (10ms) 0.00000011574
+    */
+    const TICK_MS = 10; 
+    const PRODUCTION_STEP = 0.00000011574; 
 
-    // Sürekli Kazım Döngüsü
+    // Madencilik Döngüsü
     setInterval(() => {
-        earnedTon += (power * PROD_PER_TICK);
-        document.getElementById('main-balance').innerText = earnedTon.toFixed(8);
-    }, TICK_RATE);
+        currentTon += (power * PRODUCTION_STEP);
+        const formatted = currentTon.toFixed(8);
+        
+        // Her iki bakiyeyi de aynı anda güncelle
+        document.getElementById('sub-val').innerText = formatted;
+        document.getElementById('main-val').innerText = formatted;
+    }, TICK_MS);
 
-    function claim(e) {
-        if (earnedTon > 0.00001) { // Çok küçükse claim yapmasın
-            // Efekt
-            const effect = document.createElement('div');
-            effect.innerText = '+' + earnedTon.toFixed(4) + ' Claimed!';
-            effect.className = 'claim-text';
-            effect.style.left = e.clientX + 'px';
-            effect.style.top = e.clientY + 'px';
-            document.body.appendChild(effect);
-            setTimeout(() => effect.remove(), 1000);
+    function doClaim(e) {
+        if(currentTon > 0.0001) {
+            // Görsel efekt
+            const pop = document.createElement('div');
+            pop.innerText = '+' + currentTon.toFixed(5) + ' TON';
+            pop.className = 'claim-popup';
+            pop.style.left = e.clientX + 'px';
+            pop.style.top = e.clientY + 'px';
+            document.body.appendChild(pop);
+            setTimeout(() => pop.remove(), 1000);
 
-            // Cüzdana aktarma simülasyonu
-            walletBalance += earnedTon;
-            earnedTon = 0;
-            
-            if(navigator.vibrate) navigator.vibrate(50);
-            console.log("Yeni Cüzdan Bakiyesi: ", walletBalance);
+            // Sıfırla
+            currentTon = 0;
+            if(navigator.vibrate) navigator.vibrate(40);
         }
     }
 </script>
