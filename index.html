@@ -17,7 +17,7 @@
             overflow: hidden;
         }
 
-        /* Hero Section */
+        /* --- DASHBOARD STİLLERİ --- */
         .hero-section {
             position: relative;
             width: 100%;
@@ -48,7 +48,6 @@
             background: linear-gradient(to bottom, transparent, #000);
         }
 
-        /* Dashboard Card */
         .content-container {
             position: relative;
             margin-top: -75px; 
@@ -77,13 +76,19 @@
             gap: 10px;
         }
 
-        /* Analiz Ekranı Fix */
+        /* --- LOADING / CHECKING SİSTEMİ --- */
         #loading-screen {
             position: fixed; inset: 0; background: black; z-index: 1000;
             display: flex; flex-direction: column; justify-content: center; padding: 40px;
+            transition: opacity 0.6s ease;
         }
-        .bar-bg { background: #0f0f0f; height: 6px; border-radius: 10px; overflow: hidden; margin-bottom: 25px; }
-        .bar-fill { background: white; height: 100%; width: 0%; transition: width 0.3s ease-out; }
+        .bar-bg { background: #0f0f0f; height: 6px; border-radius: 10px; overflow: hidden; margin-bottom: 30px; }
+        .bar-fill { 
+            background: white; 
+            height: 100%; 
+            width: 0%; 
+            transition: width 0.1s linear; /* Daha akıcı dolum için linear yaptık */
+        }
 
         .nav-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
@@ -97,21 +102,21 @@
 <body>
 
     <div id="loading-screen">
-        <h1 class="text-3xl font-black mb-12 text-center italic tracking-widest">KOALAS</h1>
-        <div class="space-y-8">
-            <div id="step1" class="opacity-30 transition-opacity duration-500">
-                <div class="flex justify-between text-[11px] font-bold mb-2 uppercase tracking-widest">
+        <h1 class="text-3xl font-black mb-16 text-center italic tracking-widest">KOALAS</h1>
+        <div class="space-y-10">
+            <div id="step-container-1" class="opacity-20">
+                <div class="flex justify-between text-[11px] font-bold mb-3 uppercase tracking-[0.2em]">
                     <span>Checking Account Age</span>
-                    <span id="check1" class="text-white"></span>
+                    <span id="check-icon-1" class="text-white font-black"></span>
                 </div>
-                <div class="bar-bg"><div id="bar1" class="bar-fill"></div></div>
+                <div class="bar-bg"><div id="bar-1" class="bar-fill"></div></div>
             </div>
-            <div id="step2" class="opacity-30 transition-opacity duration-500">
-                <div class="flex justify-between text-[11px] font-bold mb-2 uppercase tracking-widest">
-                    <span>Calculating OG Points</span>
-                    <span id="check2" class="text-white"></span>
+            <div id="step-container-2" class="opacity-20">
+                <div class="flex justify-between text-[11px] font-bold mb-3 uppercase tracking-[0.2em]">
+                    <span>Validating OG Score</span>
+                    <span id="check-icon-2" class="text-white font-black"></span>
                 </div>
-                <div class="bar-bg"><div id="bar2" class="bar-fill"></div></div>
+                <div class="bar-bg"><div id="bar-2" class="bar-fill"></div></div>
             </div>
         </div>
     </div>
@@ -122,7 +127,7 @@
             <div class="absolute top-10 left-0 w-full px-5 flex justify-between items-center z-20">
                 <div class="bg-black/60 backdrop-blur-xl px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
                     <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                    <span class="text-[10px] font-black uppercase tracking-widest italic">Live</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest italic">Live Status</span>
                 </div>
             </div>
         </div>
@@ -173,74 +178,70 @@
     </div>
 
     <script>
-        // TON Connect
+        // --- TON CONNECT AYARLARI ---
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button-root'
         });
 
-        // Cüzdan Buton Fonksiyonu
-        const customBtn = document.getElementById('custom-connect-btn');
-        customBtn.onclick = async () => {
+        document.getElementById('custom-connect-btn').onclick = async () => {
             if (tonConnectUI.connected) await tonConnectUI.disconnect();
             else await tonConnectUI.openModal();
         };
 
-        // Ödeme Alma Fonksiyonu
         document.getElementById('payment-btn').onclick = async () => {
-            if (!tonConnectUI.connected) {
-                await tonConnectUI.openModal();
-                return;
-            }
-            const tx = {
-                validUntil: Math.floor(Date.now() / 1000) + 60,
-                messages: [{ address: "UQC123456789...", amount: "50000000" }] // 0.05 TON
-            };
+            if (!tonConnectUI.connected) { await tonConnectUI.openModal(); return; }
+            const tx = { validUntil: Math.floor(Date.now() / 1000) + 60, messages: [{ address: "UQC123456789...", amount: "50000000" }] };
             try { await tonConnectUI.sendTransaction(tx); } catch(e) {}
         };
 
-        // Cüzdan Durum Takibi
         tonConnectUI.onStatusChange(w => {
             document.getElementById('btn-text').innerText = w ? "Connected" : "Connect Wallet";
-            customBtn.style.background = w ? "#1a1a1a" : "#007aff";
         });
 
-        // ANIMASYON VE CHECKING DÜZELTME
-        async function run() {
+        // --- DÜZELTİLMİŞ ANALİZ FONKSİYONU ---
+        async function startApp() {
             // Puanı belirle
-            const points = Math.floor(Math.random() * 9001) + 1000;
-            document.getElementById('final-points').innerText = points.toLocaleString();
+            const pts = Math.floor(Math.random() * 9001) + 1000;
+            document.getElementById('final-points').innerText = pts.toLocaleString();
 
-            const steps = [
-                { bar: 'bar1', check: 'check1', container: 'step1' },
-                { bar: 'bar2', check: 'check2', container: 'step2' }
-            ];
-
-            for (let s of steps) {
-                document.getElementById(s.container).style.opacity = "1";
-                await new Promise(res => {
-                    let w = 0;
-                    let interval = setInterval(() => {
-                        w += 2;
-                        document.getElementById(s.bar).style.width = w + "%";
-                        if (w >= 100) {
+            const runStep = (stepNum) => {
+                return new Promise(resolve => {
+                    const container = document.getElementById(`step-container-${stepNum}`);
+                    const bar = document.getElementById(`bar-${stepNum}`);
+                    const icon = document.getElementById(`check-icon-${stepNum}`);
+                    
+                    container.style.opacity = "1"; // Aktif olanı parlat
+                    
+                    let width = 0;
+                    const interval = setInterval(() => {
+                        width += 2; // Dolma hızı
+                        bar.style.width = width + "%";
+                        
+                        if (width >= 100) {
                             clearInterval(interval);
-                            document.getElementById(s.check).innerText = "✔";
-                            setTimeout(res, 500); // Check işaretinden sonra bekleme
+                            icon.innerText = "✔"; // Onay işareti
+                            setTimeout(resolve, 600); // Diğer adıma geçmeden önce kısa bekleme
                         }
-                    }, 20);
+                    }, 25);
                 });
-            }
+            };
 
-            // Dashboard'a geçiş
-            document.getElementById('loading-screen').style.opacity = "0";
+            // Adımları sırayla çalıştır
+            await runStep(1);
+            await runStep(2);
+
+            // Ekranı kapat ve Dashboard'u aç
+            const loader = document.getElementById('loading-screen');
+            loader.style.opacity = "0";
+            
             setTimeout(() => {
-                document.getElementById('loading-screen').style.display = "none";
+                loader.style.display = "none";
                 document.getElementById('app').classList.remove('hidden');
-            }, 500);
+            }, 600);
         }
 
-        window.onload = run;
+        window.onload = startApp;
     </script>
 </body>
 </html>
