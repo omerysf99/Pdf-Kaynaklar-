@@ -3,134 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONux Miner - Unified View</title>
+    <title>TONux Miner Bot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', Courier, monospace; }
-        body { background: #000; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; user-select: none; }
+        body { background-color: #f4f7f9; color: #1a1a1a; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
 
-        /* Ana arka plan görselin */
-        #game-container { 
-            width: 100%; 
-            max-width: 450px; 
-            background: url('tonux.ana.jpg') center/cover no-repeat;
-            position: relative; 
-            height: 100vh;
-        }
+        #game-container { width: 100%; max-width: 450px; background: #fff; position: relative; display: flex; flex-direction: column; }
 
-        /* --- BİRLEŞTİRİLMİŞ BAKİYE ALANI --- */
-        /* Görseldeki bakiye kutusunun tam üzerine gelecek şekilde ayarlandı */
-        .unified-balance-container {
-            position: absolute;
-            top: 15%; /* Görselindeki bakiye kutusunun yüksekliği */
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            width: 80%;
-            pointer-events: none;
-            z-index: 10;
-        }
+        /* Üst Bakiye Kutucukları */
+        .header-stats { padding: 15px; display: flex; flex-direction: column; gap: 8px; }
+        .stat-item { background: #fff; border: 1px solid #e0e8f0; border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .stat-info { display: flex; align-items: center; gap: 10px; }
+        .stat-icon { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #007bff; object-fit: cover; }
+        .stat-label { font-size: 11px; color: #888; font-weight: 600; }
+        .stat-value { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
 
-        /* Üstteki bakiye (Kutu içindeki küçük yazı) */
-        .top-sub-balance {
-            font-size: 14px;
-            font-weight: 700;
-            color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 2px;
-            letter-spacing: 1px;
-        }
+        /* Ana Mining Alanı (Dönen Fan) */
+        .miner-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .fan-container { width: 240px; height: 240px; position: relative; cursor: pointer; transition: transform 0.1s; }
+        .fan-container:active { transform: scale(0.95); }
+        .fan-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; animation: spin 3s linear infinite; box-shadow: 0 0 30px rgba(0, 123, 255, 0.2); }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* Alttaki ana bakiye (Büyük dijital gösterge) */
-        .main-digital-balance {
-            font-size: 38px;
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 0 0 20px rgba(0, 162, 255, 0.8), 0 0 5px #000;
-            font-variant-numeric: tabular-nums; /* Rakamların kaymasını engeller */
-        }
+        /* Dijital Bakiye Göstergesi */
+        .mining-power { margin-top: 25px; text-align: center; }
+        .ton-balance-large { font-size: 38px; font-weight: 900; color: #000; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
+        .ghs-info { font-size: 15px; color: #007bff; font-weight: 800; margin-top: 5px; background: #eef6ff; padding: 5px 15px; border-radius: 20px; display: inline-block; }
 
-        .ghs-tag {
-            font-size: 16px;
-            color: #00d2ff;
-            font-weight: 800;
-            margin-top: 5px;
-            text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
-        }
+        /* Aksiyon Butonları */
+        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 15px 25px 15px; }
+        .btn { border: none; border-radius: 16px; padding: 16px; font-weight: 800; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: #fff; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-claim { background: #4da3ff; box-shadow: 0 4px 0 #3a82ce; }
+        .btn-boost { background: #5db7f5; box-shadow: 0 4px 0 #4a9bd4; }
 
-        /* --- GÖRÜNMEZ CLAIM BUTONU --- */
-        /* Görseldeki 'Claim' butonunun tam üzerine gelecek şeffaf alan */
-        #invisible-claim-btn {
-            position: absolute;
-            bottom: 18%; /* Görseldeki butonun yerine göre ayarla */
-            left: 10%;
-            width: 80%;
-            height: 10%;
-            /* border: 2px solid lime; */ /* Yerini bulmak için bunu açabilirsin kanka */
-            cursor: pointer;
-            z-index: 20;
-        }
+        /* Alt Nav */
+        .bottom-nav { background: #fff; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 12px 0; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #888; font-weight: 700; cursor: pointer; }
+        .nav-item.active { color: #007bff; }
 
-        /* Claim Efekti */
-        .claim-popup {
-            position: absolute;
-            color: #00ff88;
-            font-weight: 900;
-            font-size: 26px;
-            animation: floatOut 1s forwards;
-            pointer-events: none;
-            z-index: 100;
-        }
-        @keyframes floatOut { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: translateY(-120px) scale(1.4); } }
+        /* Tıklama Efekti */
+        .plus-one { position: absolute; color: #007bff; font-size: 24px; font-weight: 900; animation: float 0.8s forwards; pointer-events: none; z-index: 100; }
+        @keyframes float { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div class="unified-balance-container">
-        <div class="top-sub-balance" id="sub-val">0.00000000</div>
-        <div class="main-digital-balance" id="main-val">0.00000000</div>
-        <div class="ghs-tag">1 GH/s ⚡</div>
+    <div class="header-stats">
+        <div class="stat-item">
+            <div class="stat-info">
+                <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="stat-icon">
+                <div><p class="stat-label">Cüzdan Bakiyesi</p><p class="stat-value"><span id="wallet-ton">0.00000000</span> TON</p></div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-info">
+                <img src="tonux.jpg" class="stat-icon" onerror="this.src='https://via.placeholder.com/32'">
+                <div><p class="stat-label">TONIX Puanı</p><p class="stat-value"><span id="tonix-bal">0</span> TX</p></div>
+            </div>
+        </div>
     </div>
 
-    <div id="invisible-claim-btn" onclick="doClaim(event)"></div>
+    <div class="miner-section">
+        <div class="fan-container" onclick="tapFan(event)">
+            <img src="tonux.jpg" class="fan-img" onerror="this.src='https://via.placeholder.com/240'">
+        </div>
+        <div class="mining-power">
+            <p class="ton-balance-large" id="main-ton">0.00000000</p>
+            <p class="ghs-info"><span id="power">1</span> GH/s ⚡</p>
+        </div>
+    </div>
+
+    <div class="action-btns">
+        <button class="btn btn-claim" onclick="claimCoins()">💰 Claim</button>
+        <button class="btn btn-boost">🚀 Boost</button>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active"><span>🏠</span>Home</div>
+        <div class="nav-item"><span>⛏️</span>Mine</div>
+        <div class="nav-item"><span>👥</span>Friends</div>
+        <div class="nav-item"><span>💰</span>Wallet</div>
+    </div>
 </div>
 
 <script>
     let currentTon = 0.00000000;
+    let walletTotal = 0.00000000;
+    let tonix = 0;
     let power = 1; // Başlangıç 1 GH/s
 
-    /* Senin Formülün:
-       1 GH/s = 24 saatte 1 TON
-       1 GH/s = 1 saniyede 0.00001157
-       1 GH/s = 1 salisede (10ms) 0.00000011574
-    */
-    const TICK_MS = 10; 
+    /* 24 saatte 1 TON Matematiği
+       1 GH/s = 1 salisede (10ms) 0.00000011574 TON */
+    const TICK_RATE = 10; 
     const PRODUCTION_STEP = 0.00000011574; 
 
-    // Madencilik Döngüsü
+    // Sürekli Kazım Döngüsü
     setInterval(() => {
         currentTon += (power * PRODUCTION_STEP);
-        const formatted = currentTon.toFixed(8);
+        updateUI();
+    }, TICK_RATE);
+
+    function tapFan(e) {
+        tonix += 1;
         
-        // Her iki bakiyeyi de aynı anda güncelle
-        document.getElementById('sub-val').innerText = formatted;
-        document.getElementById('main-val').innerText = formatted;
-    }, TICK_MS);
+        // Tıklama Efekti
+        const plus = document.createElement('div');
+        plus.innerText = '+1';
+        plus.className = 'plus-one';
+        plus.style.left = e.clientX + 'px';
+        plus.style.top = e.clientY + 'px';
+        document.body.appendChild(plus);
+        setTimeout(() => plus.remove(), 800);
+        
+        updateUI();
+        if(navigator.vibrate) navigator.vibrate(10);
+    }
 
-    function doClaim(e) {
-        if(currentTon > 0.0001) {
-            // Görsel efekt
-            const pop = document.createElement('div');
-            pop.innerText = '+' + currentTon.toFixed(5) + ' TON';
-            pop.className = 'claim-popup';
-            pop.style.left = e.clientX + 'px';
-            pop.style.top = e.clientY + 'px';
-            document.body.appendChild(pop);
-            setTimeout(() => pop.remove(), 1000);
-
-            // Sıfırla
+    function claimCoins() {
+        if(currentTon > 0.00001) {
+            walletTotal += currentTon;
             currentTon = 0;
-            if(navigator.vibrate) navigator.vibrate(40);
+            updateUI();
+            alert("TON cüzdana aktarıldı!");
         }
+    }
+
+    function updateUI() {
+        const tonStr = currentTon.toFixed(8);
+        document.getElementById('main-ton').innerText = tonStr;
+        document.getElementById('wallet-ton').innerText = walletTotal.toFixed(8);
+        document.getElementById('tonix-bal').innerText = Math.floor(tonix).toLocaleString();
+        document.getElementById('power').innerText = power;
     }
 </script>
 
