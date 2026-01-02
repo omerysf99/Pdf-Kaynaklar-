@@ -3,202 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Koalas Home - Wallet Integrated</title>
+    <title>Koalas Game Center</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body, html { margin: 0; padding: 0; background-color: #000; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
         
-        body, html {
-            margin: 0; padding: 0; height: 100%;
-            font-family: 'Inter', sans-serif;
-            background-color: #000; color: white;
-            overflow-x: hidden;
-        }
+        /* Hero */
+        .hero { position: relative; width: 100%; height: 45vh; background: url('Koalas.jpg') center/cover; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 60px; }
+        .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, #000); }
+        .title { font-size: 3.5rem; font-weight: 900; font-style: italic; z-index: 10; text-shadow: 0 10px 30px rgba(0,0,0,0.8); }
 
-        /* Hero Image - Koalas.jpg */
-        .hero-section {
-            position: relative;
-            width: 100%; height: 50vh; 
-            background-image: url('Koalas.jpg');
-            background-size: cover; background-position: center;
-            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            padding-bottom: 90px;
-        }
+        /* Main Card */
+        .main-card { background: #111; border-radius: 30px; padding: 20px; border: 1px solid #1c1c1c; margin-top: -40px; position: relative; z-index: 20; }
+        
+        /* Wallet & Balance */
+        .connect-btn { background: #007aff; color: #fff; font-weight: 800; border-radius: 16px; width: 100%; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; margin: 15px 0; }
+        .ton-box { background: #1a1a1a; border-radius: 20px; padding: 15px; border: 1px solid #222; display: flex; align-items: center; justify-content: space-between; }
+        
+        /* Mini Games Section */
+        .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        .game-card { background: #151515; border-radius: 20px; padding: 15px; border: 1px solid #222; transition: 0.2s; position: relative; overflow: hidden; }
+        .game-card:active { transform: scale(0.95); }
+        .game-icon { font-size: 24px; margin-bottom: 8px; }
 
-        .koalas-header {
-            font-size: 3.8rem; font-weight: 900; text-transform: uppercase;
-            letter-spacing: -3px; text-shadow: 0 15px 40px rgba(0,0,0,0.9);
-            z-index: 5; font-style: italic;
-        }
-
-        .hero-section::after {
-            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 55%;
-            background: linear-gradient(to bottom, transparent, #000);
-        }
-
-        /* Dash Kart */
-        .content-container {
-            position: relative; margin-top: -70px; padding: 0 16px; z-index: 10;
-        }
-
-        .main-card {
-            background: #111; border-radius: 30px; padding: 26px;
-            border: 1px solid #1c1c1c; box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
-        }
-
-        /* Connect Button Styles */
-        .custom-connect-btn {
-            background: #007aff; color: white; font-weight: 800; border-radius: 16px;
-            width: 100%; padding: 16px; margin-top: 20px;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: all 0.3s ease;
-        }
-        .custom-connect-btn.connected { background: #1a1a1a; border: 1px solid #333; }
-        .custom-connect-btn:active { transform: scale(0.97); }
-
-        /* Notification Toast */
-        #toast {
-            position: fixed; top: 25px; left: 50%; transform: translateX(-50%) translateY(-100px);
-            background: #007aff; color: white; padding: 12px 24px; border-radius: 50px;
-            font-size: 13px; font-weight: 800; z-index: 1000; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        /* Nav Bar */
-        .nav-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(0,0,0,0.98); border-top: 1px solid #121212;
-            display: flex; justify-content: space-around; padding: 14px 0 30px 0; z-index: 100;
-        }
-        .nav-item { text-align: center; color: #444; font-size: 10px; font-weight: 700; }
+        /* Toast */
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #007aff; color: white; padding: 10px 20px; border-radius: 50px; font-weight: 800; transition: 0.4s; z-index: 1000; }
+        
+        /* Nav */
+        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #050505; border-top: 1px solid #111; display: flex; justify-content: space-around; padding: 15px 0 30px 0; }
+        .nav-item { color: #444; font-size: 10px; font-weight: 700; text-align: center; }
         .nav-item.active { color: #007aff; }
     </style>
 </head>
 <body>
 
-    <div id="toast">Adres Kaydedildi! ✔</div>
+    <div id="toast">Address Saved! ✔</div>
 
-    <div id="app">
-        <div class="hero-section">
-            <h1 class="koalas-header">KOALAS</h1>
-        </div>
+    <div class="hero">
+        <h1 class="title">KOALAS</h1>
+    </div>
 
-        <div class="content-container">
-            <div class="main-card">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h2 id="final-points" class="text-5xl font-black tracking-tighter">0</h2>
-                        <p class="text-[#888] text-[12px] font-black tracking-widest uppercase mt-1">Koalas Points</p>
-                    </div>
-                    <div class="w-12 h-12 rounded-2xl overflow-hidden border border-white/10 shadow-lg">
-                        <img src="Koalas.jpg" class="w-full h-full object-cover">
-                    </div>
+    <div class="px-4 pb-32">
+        <div class="main-card">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h2 id="final-points" class="text-4xl font-black tracking-tighter">0</h2>
+                    <p class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Koalas Balance</p>
                 </div>
-
-                <button id="custom-connect-btn" class="custom-connect-btn">
-                    <i id="btn-icon" class="fa-solid fa-wallet"></i> 
-                    <span id="btn-text">Connect Wallet</span>
-                </button>
-
-                <div class="mt-9">
-                    <p class="text-[#333] text-[10px] font-black uppercase mb-4 tracking-widest italic">Asset Balance</p>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-white/20 shadow-sm">
-                                <img src="https://ton.org/download/ton_symbol.svg" class="w-6 h-6" alt="TON">
-                            </div>
-                            <div>
-                                <p class="font-black text-[16px] italic">#TON</p>
-                                <p id="ton-balance" class="text-[#555] text-xs font-bold">0.00 #TON</p>
-                            </div>
-                        </div>
-                        <div class="w-11 h-11 bg-[#1a1a1a] rounded-xl flex items-center justify-center border border-white/5">
-                            <i class="fa-solid fa-paper-plane text-[#007aff] text-xs"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <p id="address-log" class="text-[9px] text-zinc-700 mt-5 text-center font-mono truncate px-4 italic"></p>
+                <div class="w-10 h-10 rounded-xl overflow-hidden border border-white/10"><img src="Koalas.jpg" class="object-cover w-full h-full"></div>
             </div>
+
+            <div class="ton-box">
+                <div class="flex items-center gap-3">
+                    <img src="https://ton.org/download/ton_symbol.svg" class="w-8 h-8">
+                    <div>
+                        <p class="text-xs font-black">TON Balance</p>
+                        <p id="ton-val" class="text-zinc-500 text-[11px] font-bold">0.00 TON</p>
+                    </div>
+                </div>
+                <div class="text-[9px] font-mono text-zinc-600" id="addr-short">Not Connected</div>
+            </div>
+
+            <button id="wallet-trigger" class="connect-btn">
+                <i class="fa-solid fa-wallet"></i>
+                <span id="btn-label">Connect Wallet</span>
+            </button>
         </div>
 
-        <div class="nav-bar">
-            <div class="nav-item active flex flex-col items-center"><i class="fa-solid fa-house-user text-xl mb-1"></i><p>Home</p></div>
-            <div class="nav-item flex flex-col items-center"><i class="fa-solid fa-medal text-xl mb-1"></i><p>Ranking</p></div>
-            <div class="nav-item flex flex-col items-center"><i class="fa-solid fa-bolt-lightning text-xl mb-1"></i><p>Earn</p></div>
-            <div class="nav-item flex flex-col items-center"><i class="fa-solid fa-user-group text-xl mb-1"></i><p>Friends</p></div>
+        <h3 class="mt-8 mb-4 px-2 text-xs font-black uppercase tracking-[0.2em] text-zinc-500 italic">Mini Games</h3>
+        <div class="games-grid">
+            <div class="game-card border-l-4 border-l-green-500" onclick="alert('Game Loading...')">
+                <div class="game-icon">🍃</div>
+                <h4 class="text-sm font-black">Euca Dash</h4>
+                <p class="text-[9px] text-zinc-500 font-bold">Catch leaves, win points!</p>
+            </div>
+            <div class="game-card border-l-4 border-l-blue-500" onclick="alert('Game Loading...')">
+                <div class="game-icon">🧗</div>
+                <h4 class="text-sm font-black">Koala Climb</h4>
+                <p class="text-[9px] text-zinc-500 font-bold">Reach the top of tree!</p>
+            </div>
+            <div class="game-card border-l-4 border-l-purple-500" onclick="alert('Game Loading...')">
+                <div class="game-icon">💎</div>
+                <h4 class="text-sm font-black">Ton Miner</h4>
+                <p class="text-[9px] text-zinc-500 font-bold">Dig for TON gems!</p>
+            </div>
+            <div class="game-card border-l-4 border-l-orange-500" onclick="alert('Game Loading...')">
+                <div class="game-icon">🎰</div>
+                <h4 class="text-sm font-black">Lucky Spin</h4>
+                <p class="text-[9px] text-zinc-500 font-bold">Spin for 1000 pts!</p>
+            </div>
         </div>
     </div>
 
+    <div class="nav-bar">
+        <div class="nav-item active"><i class="fa-solid fa-house text-xl mb-1"></i><p>Home</p></div>
+        <div class="nav-item"><i class="fa-solid fa-medal text-xl mb-1"></i><p>Ranking</p></div>
+        <div class="nav-item"><i class="fa-solid fa-bolt text-xl mb-1"></i><p>Earn</p></div>
+        <div class="nav-item"><i class="fa-solid fa-users text-xl mb-1"></i><p>Frens</p></div>
+    </div>
+
     <script>
-        // TON Connect Başlat
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json'
         });
 
-        const connectBtn = document.getElementById('custom-connect-btn');
-        const btnText = document.getElementById('btn-text');
-        const btnIcon = document.getElementById('btn-icon');
-        const addressLog = document.getElementById('address-log');
+        const walletBtn = document.getElementById('wallet-trigger');
+        const btnLabel = document.getElementById('btn-label');
+        const addrShort = document.getElementById('addr-short');
         const toast = document.getElementById('toast');
 
-        // Buton Tıklama Aksiyonu
-        connectBtn.onclick = async () => {
-            if (tonConnectUI.connected) {
-                await tonConnectUI.disconnect();
-            } else {
-                await tonConnectUI.openModal();
-            }
+        walletBtn.onclick = async () => {
+            if (tonConnectUI.connected) await tonConnectUI.disconnect();
+            else await tonConnectUI.openModal();
         };
 
-        // Cüzdan Durum Takibi ve Kayıt İşlemi
         tonConnectUI.onStatusChange(wallet => {
             if (wallet) {
-                // 1. Adresi al ve kısalt
-                const rawAddress = wallet.account.address;
-                const displayAddress = rawAddress.slice(0, 4) + "..." + rawAddress.slice(-4);
-                
-                // 2. LocalStorage'a Kaydet
-                localStorage.setItem('saved_ton_address', rawAddress);
-                
-                // 3. UI Güncelle
-                btnText.innerText = displayAddress;
-                connectBtn.classList.add('connected');
-                btnIcon.className = "fa-solid fa-check-circle text-green-500";
-                addressLog.innerText = "Kayıtlı Adres: " + rawAddress;
-                
-                // 4. Bildirimi Göster
+                const addr = wallet.account.address;
+                const short = addr.slice(0,4) + "..." + addr.slice(-4);
+                btnLabel.innerText = "Connected";
+                addrShort.innerText = short;
+                walletBtn.style.background = "#1a1a1a";
+                localStorage.setItem('saved_addr', addr);
                 showToast();
             } else {
-                // Cüzdan ayrıldığında temizle
-                localStorage.removeItem('saved_ton_address');
-                btnText.innerText = "Connect Wallet";
-                connectBtn.classList.remove('connected');
-                btnIcon.className = "fa-solid fa-wallet";
-                addressLog.innerText = "";
+                btnLabel.innerText = "Connect Wallet";
+                addrShort.innerText = "Not Connected";
+                walletBtn.style.background = "#007aff";
+                localStorage.removeItem('saved_addr');
             }
         });
 
-        // Bildirim Kutusu
         function showToast() {
             toast.style.transform = "translateX(-50%) translateY(0)";
-            setTimeout(() => {
-                toast.style.transform = "translateX(-50%) translateY(-100px)";
-            }, 3000);
+            setTimeout(() => { toast.style.transform = "translateX(-50%) translateY(-100px)"; }, 3000);
         }
 
-        // Sayfa Yüklendiğinde
         window.onload = () => {
-            // Puanı Rastgele Belirle
-            const pts = Math.floor(Math.random() * 9001) + 1000;
-            document.getElementById('final-points').innerText = pts.toLocaleString();
-
-            // Kayıtlı adres var mı kontrol et
-            const previouslySaved = localStorage.getItem('saved_ton_address');
-            if(previouslySaved) {
-                console.log("Daha önce kaydedilen adres bulundu:", previouslySaved);
-            }
+            document.getElementById('final-points').innerText = Math.floor(Math.random() * 5000 + 1000).toLocaleString();
         };
     </script>
 </body>
