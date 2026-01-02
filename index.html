@@ -3,85 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ChatGPT Clicker Pro - TON Airdrop</title>
+    <title>ChatGPT Pro Clicker</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
-        :root { --gold: #f3ba2f; --bg: #000; --panel: #111; --accent: #2d1b4d; }
+        :root { --gold: #f3ba2f; --bg: #000; --panel: #111; }
         
         body { 
-            margin: 0; 
-            background: radial-gradient(circle at center, #1a1a1a, #000); 
-            color: white; 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            overflow: hidden; 
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            margin: 0; background: radial-gradient(circle at center, #1a1a1a, #000); 
+            color: white; font-family: 'Inter', sans-serif; height: 100vh; 
+            display: flex; flex-direction: column; align-items: center; overflow: hidden; 
+            user-select: none; -webkit-tap-highlight-color: transparent;
         }
 
-        /* Üst Panel */
+        /* --- ÜST PANEL --- */
         .header { margin-top: 40px; text-align: center; z-index: 10; }
         .balance { display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 3.5rem; font-weight: 900; }
         .balance img { width: 45px; height: 45px; border-radius: 50%; box-shadow: 0 0 15px var(--gold); }
 
-        /* Ana Sayfa (Tap) */
+        /* --- ANA SAYFA VE ANİMASYONLU COIN --- */
         #tap-page { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
-        .coin-wrapper { position: relative; width: 280px; height: 280px; margin-bottom: 20px; }
+        .coin-wrapper { position: relative; width: 280px; height: 280px; margin-bottom: 20px; perspective: 1000px; }
+        
         .coin-btn { 
             width: 100%; height: 100%; border-radius: 50%; cursor: pointer; 
-            transition: transform 0.05s; overflow: hidden; border: 8px solid #222;
-            background: #000;
+            transition: transform 0.1s ease-out; overflow: hidden; border: 8px solid #222;
+            background: #000; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 50px rgba(0,0,0,1);
         }
         .coin-btn img { 
-            width: 100%; height: 100%; border-radius: 50%; object-fit: cover; 
-            pointer-events: none; transform: scale(1.05); /* Beyaz kenarları gizler */
+            width: 110%; height: 110%; object-fit: cover; pointer-events: none; transform: scale(1.05);
         }
-        .coin-btn:active { transform: scale(0.92); }
+        .coin-btn::after {
+            content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 60%);
+            opacity: 0; transition: opacity 0.1s; pointer-events: none;
+        }
+        .coin-btn:active::after { opacity: 1; }
 
         .stats-box { width: 85%; max-width: 400px; margin-bottom: 110px; }
-        .energy-txt { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .energy-txt { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 1.2rem; }
         .progress { width: 100%; height: 14px; background: #222; border-radius: 20px; overflow: hidden; border: 1px solid #333; }
-        .bar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--gold), #ff9800); transition: width 0.1s linear; }
+        .bar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--gold), #ff9800); }
 
-        /* Paneller */
+        /* --- PANELLER --- */
         .panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 50; display: none; flex-direction: column; padding: 25px; box-sizing: border-box; overflow-y: auto; padding-bottom: 120px; }
         .panel-title { font-size: 2.2rem; font-weight: 800; text-align: center; margin-top: 30px; color: var(--gold); }
-        .panel-sub { text-align: center; color: #888; margin-bottom: 30px; }
-
-        /* Kartlar */
+        .panel-sub { text-align: center; color: #888; margin-bottom: 25px; }
         .card { background: var(--panel); padding: 18px; border-radius: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 15px; border: 1px solid #222; }
         .card-icon { width: 50px; height: 50px; background: #222; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--gold); font-size: 1.5rem; }
-        .card-info { flex: 1; }
-        .card-info b { font-size: 1.05rem; display: block; }
-        .card-info span { font-size: 0.85rem; color: #00ff00; }
-        .btn-action { background: var(--gold); border: none; padding: 10px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-action { background: var(--gold); border: none; padding: 10px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; }
         .btn-action:disabled { background: #333; color: #777; }
 
-        /* Alt Menü */
-        .nav { position: fixed; bottom: 20px; width: 92%; background: rgba(15,15,15,0.98); display: grid; grid-template-columns: repeat(5, 1fr); padding: 12px 0; border-radius: 25px; border: 1px solid #333; z-index: 100; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 0.75rem; color: #555; cursor: pointer; transition: 0.3s; }
+        /* --- ALT MENÜ --- */
+        .nav { position: fixed; bottom: 20px; width: 92%; background: rgba(15,15,15,0.98); display: grid; grid-template-columns: repeat(5, 1fr); padding: 12px 0; border-radius: 25px; border: 1px solid #333; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 0.75rem; color: #555; cursor: pointer; transition: 0.2s; }
         .nav-item.active { color: var(--gold); transform: translateY(-3px); }
         .nav-item i { font-size: 1.5rem; margin-bottom: 4px; }
 
-        /* Reklam ve Guru Efektleri */
-        #ad-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index: 2000; display:none; flex-direction:column; align-items:center; justify-content:center; text-align: center; }
-        .guru-mode { box-shadow: 0 0 60px #ff0000 !important; border-color: #ff0000 !important; }
-        .float-val { position: absolute; color: white; font-size: 2.5rem; font-weight: 900; animation: float 0.7s ease-out forwards; pointer-events: none; z-index: 1000; }
-        @keyframes float { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-140px); } }
+        /* --- EFEKTLER --- */
+        .float-val { 
+            position: absolute; color: white; font-size: 2.8rem; font-weight: 900; pointer-events: none; z-index: 1000;
+            animation: float-up 0.8s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; 
+        }
+        @keyframes float-up { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-160px) scale(1.2); } }
         
-        #ton-connect-button { display: none; } /* Gizli SDK butonu */
+        #ad-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index: 2000; display:none; flex-direction:column; align-items:center; justify-content:center; }
+        .guru-mode { box-shadow: 0 0 60px #ff0000 !important; border-color: #ff0000 !important; }
+        #ton-connect-button { display: none; }
     </style>
 </head>
 <body>
 
     <div id="ad-overlay">
-        <i class="fas fa-play-circle fa-4x" style="color:var(--gold); margin-bottom:20px;"></i>
-        <h2>Reklam İzleniyor...</h2>
-        <div id="ad-timer" style="font-size: 5rem; font-weight: 900; color: var(--gold);">15</div>
+        <h2 style="color:var(--gold)">Enerji Dolduruluyor...</h2>
+        <div id="ad-timer" style="font-size: 5rem; font-weight: 900;">15</div>
     </div>
 
     <div id="ton-connect-button"></div>
@@ -96,71 +92,41 @@
 
     <div id="tap-page">
         <div class="coin-wrapper">
-            <div class="coin-btn" id="coin">
-                <img src="chatgpt.jpg">
-            </div>
+            <div class="coin-btn" id="coin"><img src="chatgpt.jpg"></div>
         </div>
         <div class="stats-box">
-            <div class="energy-txt"><i class="fas fa-bolt" style="color:var(--gold)"></i> <span id="e-cur">0</span> / 1000</div>
+            <div class="energy-txt">⚡ <span id="e-cur">0</span> / 1000</div>
             <div class="progress"><div class="bar" id="e-bar"></div></div>
         </div>
     </div>
 
     <div id="ref-panel" class="panel">
-        <div class="panel-title">Davet Et</div>
-        <div class="panel-sub">Arkadaşlarını çağır, birlikte kazanın!</div>
-        <div class="card">
-            <div class="card-icon"><i class="fas fa-user-plus"></i></div>
-            <div class="card-info"><b>Normal Arkadaş</b><span>+50,000 $CHAT</span></div>
-            <button class="btn-action">Kopyala</button>
-        </div>
-        <div class="card">
-            <div class="card-icon"><i class="fas fa-crown"></i></div>
-            <div class="card-info"><b>Premium Davet</b><span>+200,000 $CHAT</span></div>
-            <button class="btn-action">Davet</button>
-        </div>
+        <div class="panel-title">Referanslar</div>
+        <div class="panel-sub">Arkadaşlarını davet et ve kazan!</div>
+        <div class="card"><div class="card-icon"><i class="fas fa-users"></i></div><div style="flex:1"><b>Davet Linki</b><br><small>+50,000 $CHAT</small></div><button class="btn-action">Kopyala</button></div>
     </div>
 
     <div id="task-panel" class="panel">
         <div class="panel-title">Görevler</div>
-        <div class="panel-sub">Basit görevleri yap, servet kazan.</div>
-        <div class="card">
-            <div class="card-icon"><i class="fab fa-youtube"></i></div>
-            <div class="card-info"><b>YouTube Takibi</b><span>+100,000 $CHAT</span></div>
-            <button class="btn-action">Yap</button>
-        </div>
-        <div class="card">
-            <div class="card-icon"><i class="fab fa-telegram"></i></div>
-            <div class="card-info"><b>Telegram Kanalı</b><span>+50,000 $CHAT</span></div>
-            <button class="btn-action">Katıl</button>
-        </div>
+        <div class="panel-sub">Sosyal medyada bizi takip et.</div>
+        <div class="card"><div class="card-icon"><i class="fab fa-youtube"></i></div><div style="flex:1"><b>Abone Ol</b><br><small>+100,000 $CHAT</small></div><button class="btn-action">Yap</button></div>
     </div>
 
     <div id="boost-panel" class="panel">
-        <div class="panel-title">Boosters</div>
-        <div class="panel-sub">Kazancını katlayacak araçlar.</div>
-        <div class="card">
-            <div class="card-icon"><i class="fas fa-fire"></i></div>
-            <div class="card-info"><b>Tapping Guru</b><br><small id="guru-timer">24s Bekleme</small></div>
-            <button class="btn-action" id="guru-btn" onclick="useGuru()">Uygula</button>
-        </div>
-        <div class="card">
-            <div class="card-icon"><i class="fas fa-bolt"></i></div>
-            <div class="card-info"><b>Full Tank</b><br><small>15sn Reklam İzle</small></div>
-            <button class="btn-action" onclick="useFullTank()">Doldur</button>
-        </div>
+        <div class="panel-title">Takviyeler</div>
+        <div class="card"><div class="card-icon"><i class="fas fa-fire"></i></div><div style="flex:1"><b>Tapping Guru</b><br><small id="guru-timer">24s Bekleme</small></div><button class="btn-action" id="guru-btn" onclick="useGuru()">Uygula</button></div>
+        <div class="card"><div class="card-icon"><i class="fas fa-bolt"></i></div><div style="flex:1"><b>Full Tank</b><br><small>15sn Reklam İzle</small></div><button class="btn-action" onclick="useFullTank()">İzle</button></div>
     </div>
 
     <div id="airdrop-panel" class="panel">
         <div class="panel-title">Airdrop</div>
-        <div class="panel-sub">Gerçek TON cüzdanını bağla.</div>
-        <div class="card" style="background: linear-gradient(135deg, #0088cc 0%, #005588 100%); border:none;">
-            <div class="card-icon" style="background:rgba(255,255,255,0.1)"><img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" width="30"></div>
-            <div class="card-info">
-                <b id="wallet-status">Cüzdanı Bağla</b>
-                <span id="wallet-address" style="color:rgba(255,255,255,0.7); font-family:monospace; font-size:0.7rem;">Bağlantı yok</span>
+        <div class="panel-sub">Listeleme öncesi cüzdanını bağla.</div>
+        <div class="card" style="background: linear-gradient(135deg, #0088cc, #005588); border:none;">
+            <div class="card-info" style="padding:10px;">
+                <b id="wallet-status" style="font-size:1.2rem">Cüzdanı Bağla</b><br>
+                <small id="wallet-address" style="opacity:0.8">Henüz bağlı değil</small>
             </div>
-            <button class="btn-action" id="custom-ton-btn" style="background:white; color:#0088cc;">Bağla</button>
+            <button class="btn-action" id="custom-ton-btn" style="background:white; color:#0088cc;">BAĞLA</button>
         </div>
     </div>
 
@@ -190,18 +156,16 @@
 
         tonConnectUI.onStatusChange(wallet => {
             if (wallet) {
-                const addr = wallet.account.address;
-                walletStatus.innerText = "Bağlı";
-                walletAddress.innerText = addr.substring(0, 6) + "..." + addr.substring(addr.length - 4);
-                connectBtn.innerText = "Kes";
-                connectBtn.style.background = "#ff4444"; connectBtn.style.color = "white";
+                walletStatus.innerText = "BAĞLANDI";
+                walletAddress.innerText = wallet.account.address.substring(0,6) + "..." + wallet.account.address.substring(wallet.account.address.length-4);
+                connectBtn.innerText = "KES"; connectBtn.style.background = "#ff4444"; connectBtn.style.color = "white";
             } else {
-                walletStatus.innerText = "Cüzdanı Bağla"; walletAddress.innerText = "Bağlantı yok";
-                connectBtn.innerText = "Bağla"; connectBtn.style.background = "white"; connectBtn.style.color = "#0088cc";
+                walletStatus.innerText = "Cüzdanı Bağla"; walletAddress.innerText = "Henüz bağlı değil";
+                connectBtn.innerText = "BAĞLA"; connectBtn.style.background = "white"; connectBtn.style.color = "#0088cc";
             }
         });
 
-        // --- OYUN MANTIĞI ---
+        // --- OYUN ---
         let balance = 0, energy = 0, maxEnergy = 1000, isGuru = false;
         const balEl = document.getElementById('bal'), eCurEl = document.getElementById('e-cur'), eBarEl = document.getElementById('e-bar'), coinBtn = document.getElementById('coin');
 
@@ -210,13 +174,20 @@
                 energy--;
                 let gain = isGuru ? 5 : 1;
                 balance += gain;
-                updateUI();
+
+                // 3D TILT ANIMATION
+                const rect = coinBtn.getBoundingClientRect();
+                const xVal = (e.clientY - rect.top - rect.height/2) / (rect.height/2) * 25;
+                const yVal = (e.clientX - rect.left - rect.width/2) / (rect.width/2) * -25;
+                coinBtn.style.transform = `scale(0.95) rotateX(${xVal}deg) rotateY(${yVal}deg)`;
+
                 spawnFX(e.clientX, e.clientY, gain);
+                updateUI();
                 if(navigator.vibrate) navigator.vibrate(35);
-            } else {
-                showMsg("Enerji Yetersiz!");
             }
         });
+
+        coinBtn.addEventListener('pointerup', () => { setTimeout(() => { coinBtn.style.transform = 'scale(1) rotateX(0) rotateY(0)'; }, 50); });
 
         function updateUI() {
             balEl.innerText = balance.toLocaleString();
@@ -224,38 +195,20 @@
             eBarEl.style.width = (energy / maxEnergy * 100) + '%';
         }
 
-        // BOOSTLAR
         function useFullTank() {
             document.getElementById('ad-overlay').style.display = 'flex';
             let s = 15;
             let i = setInterval(() => {
-                s--;
-                document.getElementById('ad-timer').innerText = s;
-                if(s <= 0) {
-                    clearInterval(i); document.getElementById('ad-overlay').style.display = 'none';
-                    energy = maxEnergy; updateUI(); nav('tap-page', document.querySelectorAll('.nav-item')[2]);
-                }
+                s--; document.getElementById('ad-timer').innerText = s;
+                if(s <= 0) { clearInterval(i); document.getElementById('ad-overlay').style.display = 'none'; energy = maxEnergy; updateUI(); nav('tap-page', document.querySelectorAll('.nav-item')[2]); }
             }, 1000);
         }
 
         function useGuru() {
-            isGuru = true; coinBtn.classList.add('guru-mode');
-            document.getElementById('guru-btn').disabled = true;
+            isGuru = true; coinBtn.classList.add('guru-mode'); document.getElementById('guru-btn').disabled = true;
             nav('tap-page', document.querySelectorAll('.nav-item')[2]);
-            showMsg("GURU MODU: 5X AKTİF!");
-            setTimeout(() => {
-                isGuru = false; coinBtn.classList.remove('guru-mode'); showMsg("");
-                startGuruCD();
-            }, 20000);
-        }
-
-        function startGuruCD() {
-            let cd = 86400; // 24s
-            setInterval(() => {
-                cd--;
-                let h = Math.floor(cd/3600), m = Math.floor((cd%3600)/60), s = cd%60;
-                document.getElementById('guru-timer').innerText = `${h}:${m}:${s} kaldı`;
-            }, 1000);
+            document.getElementById('msg').innerText = "GURU MODU AKTİF!";
+            setTimeout(() => { isGuru = false; coinBtn.classList.remove('guru-mode'); document.getElementById('msg').innerText = ""; }, 20000);
         }
 
         function nav(id, el) {
@@ -268,14 +221,12 @@
 
         function spawnFX(x, y, v) {
             const f = document.createElement('div'); f.className = 'float-val'; f.innerText = `+${v}`;
-            f.style.left = x + 'px'; f.style.top = y + 'px'; if(isGuru) f.style.color = 'red';
-            document.body.appendChild(f); setTimeout(() => f.remove(), 700);
+            f.style.left = `${x-25}px`; f.style.top = `${y-50}px`; if(isGuru) f.style.color = '#ff4444';
+            document.body.appendChild(f); setTimeout(() => f.remove(), 800);
         }
 
-        function showMsg(t) { document.getElementById('msg').innerText = t; }
-
         setInterval(() => { if(energy < maxEnergy) { energy++; updateUI(); } }, 2000);
-        updateUI(); // Başlangıçta 0 göster
+        updateUI();
     </script>
 </body>
 </html>
