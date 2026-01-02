@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONux - Interactive Map</title>
+    <title>TONux - Integrated Miner</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
         body { background: #000; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
 
-        /* Ana Konteyner: Arka plan senin görselin */
         #game-container { 
             width: 100%; 
             max-width: 450px; 
@@ -17,66 +16,97 @@
             height: 100vh;
         }
 
-        /* --- GÖRÜNMEZ BUTONLAR (HOTSPOTS) --- */
-        .hotspot {
+        /* --- GÖRÜNMEZ BAKİYE GÖSTERGESİ --- */
+        .live-balance-box {
             position: absolute;
-            /* border: 2px solid red;  <-- Test aşamasında butonların yerini görmek için bunu açabilirsin */
+            top: 20%; /* Görselindeki bakiye alanına göre ayarla */
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            text-align: center;
+            z-index: 5;
+            pointer-events: none; /* Üstüne tıklanmasın, altındaki butona geçsin */
+        }
+
+        #main-balance {
+            font-size: 32px;
+            font-weight: 900;
+            text-shadow: 0 0 15px rgba(0, 123, 255, 1), 0 0 5px #000;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* --- GÖRÜNMEZ CLAIM BUTONU (HOTSPOT) --- */
+        #claim-area {
+            position: absolute;
+            top: 60%; /* Görselindeki butona denk gelen yükseklik */
+            left: 10%;
+            width: 80%;
+            height: 12%;
+            /* border: 2px solid cyan; */ /* Koordinatı ayarlarken bunu aç, yerini gör kanka */
             cursor: pointer;
             z-index: 10;
         }
 
-        /* Örnek: Görselin üst kısmındaki cüzdan alanı */
-        #btn-wallet {
-            top: 5%; left: 10%; width: 80%; height: 15%;
-        }
-
-        /* Örnek: Görselin tam ortasındaki tıklama alanı */
-        #btn-tap {
-            top: 25%; left: 15%; width: 70%; height: 45%;
-        }
-
-        /* Örnek: Görselin altındaki menü alanı */
-        #btn-menu {
-            bottom: 5%; left: 5%; width: 90%; height: 10%;
-        }
-
-        /* Tıklama Efekti (+1) */
-        .plus-one {
+        /* Efektler */
+        .claim-text {
             position: absolute;
-            color: #fff; font-size: 30px; font-weight: 900;
-            animation: float 0.8s forwards; pointer-events: none;
-            z-index: 100; text-shadow: 0 0 10px #007bff;
+            color: #00ff00;
+            font-weight: 900;
+            font-size: 24px;
+            animation: floatClaim 1s forwards;
+            pointer-events: none;
+            z-index: 100;
         }
-        @keyframes float { 0% { opacity: 1; } 100% { opacity: 0; transform: translateY(-100px); } }
+        @keyframes floatClaim { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(1.5); } }
+
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="btn-wallet" class="hotspot" onclick="openWallet()"></div>
-    <div id="btn-tap" class="hotspot" onclick="handleTap(event)"></div>
-    <div id="btn-menu" class="hotspot" onclick="openMenu()"></div>
+    <div class="live-balance-box">
+        <p style="font-size: 12px; font-weight: 800; opacity: 0.8; letter-spacing: 2px;">EARNED TON</p>
+        <div id="main-balance">0.00000000</div>
+        <p id="ghs-display" style="color: #00d2ff; font-weight: 700;">1 GH/s ⚡</p>
+    </div>
+
+    <div id="claim-area" onclick="claim(event)"></div>
 </div>
 
 <script>
-    function handleTap(e) {
-        // Tıklama fonksiyonu
-        const plus = document.createElement('div');
-        plus.innerText = '+1';
-        plus.className = 'plus-one';
-        plus.style.left = e.clientX + 'px';
-        plus.style.top = e.clientY + 'px';
-        document.body.appendChild(plus);
-        setTimeout(() => plus.remove(), 800);
-        console.log("Fan alanına tıklandı!");
-    }
+    // Başlangıç Değerleri
+    let earnedTon = 0.00000000;
+    let walletBalance = 0;
+    let power = 1; // Herkese 1 GH/s başlangıç
 
-    function openWallet() {
-        alert("Cüzdan Bölümü Açılıyor...");
-    }
+    // Senin Matematiğin: 1 GH/s = Salise başı 0.00000011574 TON
+    const TICK_RATE = 10; // 10 milisaniye (1 salise)
+    const PROD_PER_TICK = 0.00000011574; 
 
-    function openMenu() {
-        alert("Market/Geliştirme Menüsü Açılıyor...");
+    // Sürekli Kazım Döngüsü
+    setInterval(() => {
+        earnedTon += (power * PROD_PER_TICK);
+        document.getElementById('main-balance').innerText = earnedTon.toFixed(8);
+    }, TICK_RATE);
+
+    function claim(e) {
+        if (earnedTon > 0.00001) { // Çok küçükse claim yapmasın
+            // Efekt
+            const effect = document.createElement('div');
+            effect.innerText = '+' + earnedTon.toFixed(4) + ' Claimed!';
+            effect.className = 'claim-text';
+            effect.style.left = e.clientX + 'px';
+            effect.style.top = e.clientY + 'px';
+            document.body.appendChild(effect);
+            setTimeout(() => effect.remove(), 1000);
+
+            // Cüzdana aktarma simülasyonu
+            walletBalance += earnedTon;
+            earnedTon = 0;
+            
+            if(navigator.vibrate) navigator.vibrate(50);
+            console.log("Yeni Cüzdan Bakiyesi: ", walletBalance);
+        }
     }
 </script>
 
