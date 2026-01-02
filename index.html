@@ -19,64 +19,43 @@
 
         .hero-section {
             position: relative;
-            width: 100%;
-            height: 52vh; 
+            width: 100%; height: 52vh; 
             background-image: url('Koalas.jpg');
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
             padding-bottom: 100px;
         }
 
         .koalas-header {
-            font-size: 3.8rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -3px;
-            text-shadow: 0 15px 40px rgba(0,0,0,0.9);
-            z-index: 5;
-            font-style: italic;
+            font-size: 3.8rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: -3px; text-shadow: 0 15px 40px rgba(0,0,0,0.9);
+            z-index: 5; font-style: italic;
         }
 
         .hero-section::after {
-            content: '';
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 55%;
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 55%;
             background: linear-gradient(to bottom, transparent, #000);
         }
 
         .content-container {
-            position: relative;
-            margin-top: -75px; 
-            padding: 0 16px;
-            z-index: 10;
+            position: relative; margin-top: -75px; padding: 0 16px; z-index: 10;
         }
 
         .main-card {
-            background: #111;
-            border-radius: 30px;
-            padding: 26px;
-            border: 1px solid #1c1c1c;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+            background: #111; border-radius: 30px; padding: 26px;
+            border: 1px solid #1c1c1c; box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
         }
 
+        /* CONNECT BUTONU */
         .custom-connect-btn {
-            background: #007aff;
-            color: white;
-            font-weight: 800;
-            border-radius: 16px;
-            width: 100%;
-            padding: 16px;
-            margin-top: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: all 0.2s ease;
+            background: #007aff; color: white; font-weight: 800; border-radius: 16px;
+            width: 100%; padding: 16px; margin-top: 22px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; overflow: hidden;
         }
-        .custom-connect-btn:active { transform: scale(0.97); }
+        .custom-connect-btn:active { transform: scale(0.96); }
+        .connected-style { background: #1a1a1a !important; border: 1px solid #333; }
 
         .nav-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
@@ -86,9 +65,18 @@
         }
         .nav-item { text-align: center; color: #444; font-size: 10px; font-weight: 700; }
         .nav-item.active { color: #007aff; }
+
+        /* Başarı Bildirimi Animasyonu */
+        #save-toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: #007aff; color: white; padding: 10px 20px; border-radius: 50px;
+            font-size: 12px; font-weight: 800; transition: transform 0.5s ease; z-index: 2000;
+        }
     </style>
 </head>
 <body>
+
+    <div id="save-toast">Address Saved! ✔</div>
 
     <div id="app">
         <div class="hero-section">
@@ -96,7 +84,7 @@
             <div class="absolute top-10 left-0 w-full px-5 flex justify-between items-center z-20">
                 <div class="bg-black/60 backdrop-blur-xl px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
                     <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                    <span class="text-[10px] font-black uppercase tracking-widest italic">Home Page</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest italic">Live Session</span>
                 </div>
             </div>
         </div>
@@ -114,7 +102,7 @@
                 </div>
 
                 <button id="custom-connect-btn" class="custom-connect-btn">
-                    <i class="fa-solid fa-wallet"></i> 
+                    <i id="wallet-icon" class="fa-solid fa-wallet"></i> 
                     <span id="btn-text">Connect Wallet</span>
                 </button>
 
@@ -127,7 +115,7 @@
                             </div>
                             <div>
                                 <p class="font-black text-[16px] italic">#TON</p>
-                                <p class="text-[#555] text-xs font-bold">0 #TON</p>
+                                <p id="ton-balance-display" class="text-[#555] text-xs font-bold">0 #TON</p>
                             </div>
                         </div>
                         <div id="payment-btn" class="w-11 h-11 bg-[#1a1a1a] rounded-xl flex items-center justify-center border border-white/5 active:bg-zinc-800 cursor-pointer">
@@ -136,7 +124,7 @@
                     </div>
                 </div>
                 
-                <p id="saved-address" class="text-[9px] text-zinc-600 mt-4 text-center font-mono truncate px-4"></p>
+                <p id="addr-info" class="text-[9px] text-zinc-700 mt-5 text-center font-mono truncate px-2"></p>
             </div>
         </div>
 
@@ -149,6 +137,7 @@
     </div>
 
     <script>
+        // TON Connect Başlatma
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button-root'
@@ -156,42 +145,66 @@
 
         const customBtn = document.getElementById('custom-connect-btn');
         const btnText = document.getElementById('btn-text');
-        const savedAddrEl = document.getElementById('saved-address');
+        const walletIcon = document.getElementById('wallet-icon');
+        const addrInfo = document.getElementById('addr-info');
+        const toast = document.getElementById('save-toast');
 
-        // Cüzdan Bağlama ve Kaydetme Mantığı
+        // [1] Bağla Butonu Fonksiyonu
         customBtn.onclick = async () => {
             if (tonConnectUI.connected) {
                 await tonConnectUI.disconnect();
-                localStorage.removeItem('user_ton_address');
-                savedAddrEl.innerText = "";
+                localStorage.removeItem('koalas_saved_address');
             } else {
                 await tonConnectUI.openModal();
             }
         };
 
+        // [2] Durum Takibi ve Kaydetme
         tonConnectUI.onStatusChange(wallet => {
             if (wallet) {
-                // Adresi al
                 const address = wallet.account.address;
-                // Kısalt (Örn: EQA1...4f2D)
                 const shortAddr = address.slice(0, 4) + "..." + address.slice(-4);
                 
-                // Arayüzü güncelle
+                // UI Güncelle
                 btnText.innerText = shortAddr;
-                customBtn.style.background = "#1a1a1a";
-                savedAddrEl.innerText = "Saved: " + address;
+                customBtn.classList.add('connected-style');
+                walletIcon.className = "fa-solid fa-check-circle text-green-500";
+                addrInfo.innerText = "STORAGE: " + address;
 
-                // LocalStorage'a kaydet
-                localStorage.setItem('user_ton_address', address);
-                console.log("Adres Kaydedildi:", address);
+                // LOCAL STORAGE KAYDET
+                localStorage.setItem('koalas_saved_address', address);
+                
+                // Başarı Bildirimi Göster
+                showToast();
             } else {
+                // UI Sıfırla
                 btnText.innerText = "Connect Wallet";
-                customBtn.style.background = "#007aff";
-                savedAddrEl.innerText = "";
-                localStorage.removeItem('user_ton_address');
+                customBtn.classList.remove('connected-style');
+                walletIcon.className = "fa-solid fa-wallet";
+                addrInfo.innerText = "";
+                localStorage.removeItem('koalas_saved_address');
             }
         });
 
+        // Bildirim Fonksiyonu
+        function showToast() {
+            toast.style.transform = "translateX(-50%) translateY(0)";
+            setTimeout(() => {
+                toast.style.transform = "translateX(-50%) translateY(-100px)";
+            }, 3000);
+        }
+
+        // Sayfa Açıldığında Rastgele Puan
+        window.onload = () => {
+            const pts = Math.floor(Math.random() * 9001) + 1000;
+            document.getElementById('final-points').innerText = pts.toLocaleString();
+            
+            // Eğer zaten kayıtlı bir adres varsa konsola yaz (Debug)
+            const saved = localStorage.getItem('koalas_saved_address');
+            if(saved) console.log("Current Saved Address:", saved);
+        };
+
+        // Ödeme Alma Örneği
         document.getElementById('payment-btn').onclick = async () => {
             if (!tonConnectUI.connected) { await tonConnectUI.openModal(); return; }
             const tx = {
@@ -199,18 +212,6 @@
                 messages: [{ address: "UQC123456789...", amount: "50000000" }]
             };
             try { await tonConnectUI.sendTransaction(tx); } catch(e) {}
-        };
-
-        window.onload = () => {
-            // Puanı belirle
-            const pts = Math.floor(Math.random() * 9001) + 1000;
-            document.getElementById('final-points').innerText = pts.toLocaleString();
-
-            // Sayfa yüklendiğinde kayıtlı adres varsa göster
-            const saved = localStorage.getItem('user_ton_address');
-            if(saved) {
-                console.log("Kayıtlı adres bulundu:", saved);
-            }
         };
     </script>
 </body>
