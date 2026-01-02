@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Amine Kombat - Energy System</title>
+    <title>Amine Kombat - Full UI</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; user-select: none; }
@@ -11,7 +11,7 @@
 
         /* YÜKLEME EKRANI */
         #loading-screen {
-            position: fixed; width: 100%; height: 100%; z-index: 1000;
+            position: fixed; width: 100%; height: 100%; z-index: 2000;
             background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .loading-container { position: relative; width: 100%; max-width: 450px; }
@@ -20,43 +20,53 @@
             position: absolute; bottom: 50px; width: 100%;
             display: flex; flex-direction: column; align-items: center; pointer-events: none;
         }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #f3ba2f; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
         .on-ton { font-size: 75px; font-weight: 900; line-height: 1; text-shadow: 0px 4px 15px rgba(0,0,0,1); }
 
-        /* OYUN EKRANI */
+        /* OYUN ANA EKRANI */
         #game-screen {
             display: none; flex-direction: column; width: 100%; max-width: 450px; padding: 15px;
             background: linear-gradient(180deg, #1d2025 0%, #000000 100%);
+            position: relative;
         }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 15px 0; }
         .stat-card { background: #272a2f; padding: 8px; border-radius: 12px; text-align: center; border: 1px solid #333; }
         .stat-label { font-size: 9px; color: #888; text-transform: uppercase; }
         .stat-value { font-size: 11px; font-weight: 700; }
 
-        .score-container { text-align: center; margin-bottom: 20px; }
-        .coin-val { font-size: 44px; font-weight: 900; color: #f3ba2f; }
+        .score-container { text-align: center; margin-bottom: 10px; }
+        .coin-val { font-size: 48px; font-weight: 900; color: #fff; }
 
-        .tap-area { display: flex; justify-content: center; margin-top: 10px; }
+        .tap-area { display: flex; justify-content: center; margin-top: 5px; flex: 1; align-items: center; }
         .circle-outer {
-            width: 310px; height: 310px; border-radius: 50%;
+            width: 280px; height: 280px; border-radius: 50%;
             background: radial-gradient(circle, #3a3f47 0%, #111418 100%);
             display: flex; justify-content: center; align-items: center;
-            border: 15px solid #272a2f; box-shadow: 0 0 50px rgba(0,0,0,0.6);
+            border: 12px solid #272a2f; box-shadow: 0 0 40px rgba(0,0,0,0.6);
         }
         .amine-coin {
-            width: 260px; height: 260px; border-radius: 50%;
+            width: 240px; height: 240px; border-radius: 50%;
             background: url('Amine.co.jpg') center/cover no-repeat;
             cursor: pointer; transition: transform 0.05s;
         }
         .amine-coin:active { transform: scale(0.94); }
-        .amine-coin.disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(0.5); }
+        .amine-coin.disabled { filter: grayscale(1) brightness(0.5); cursor: not-allowed; }
 
-        .bottom-nav { margin-top: auto; padding-bottom: 20px; }
+        /* ENERJİ VE SEKMELER */
+        .bottom-section { margin-top: auto; padding-bottom: 10px; }
         .energy-info { display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
-        .bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; overflow: hidden; }
-        .bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #f3ba2f, #ffcc00); transition: width 0.2s; }
+        .bar-bg { width: 100%; height: 10px; background: #333; border-radius: 10px; margin-bottom: 15px; }
+        .bar-fill { height: 100%; background: #f3ba2f; border-radius: 10px; transition: width 0.2s; }
+
+        /* NAVİGASYON SEKMELERİ */
+        .nav-tabs {
+            display: flex; justify-content: space-around; background: #272a2f; 
+            padding: 10px 5px; border-radius: 15px; border: 1px solid #333;
+        }
+        .tab-item { display: flex; flex-direction: column; align-items: center; gap: 4px; opacity: 0.6; cursor: pointer; }
+        .tab-item.active { opacity: 1; color: #f3ba2f; }
+        .tab-icon { font-size: 18px; }
+        .tab-label { font-size: 10px; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -65,7 +75,6 @@
         <div class="loading-container">
             <img src="coins.hmstr.jpg" class="loading-img">
             <div class="overlay-content">
-                <div class="spinner"></div>
                 <div class="on-ton">on TON</div>
             </div>
         </div>
@@ -74,7 +83,7 @@
     <div id="game-screen">
         <div class="stats-grid">
             <div class="stat-card"><div class="stat-label">Earn per tap</div><div class="stat-value" style="color:#f3ba2f;">+1</div></div>
-            <div class="stat-card"><div class="stat-label">Coins to level up</div><div class="stat-value">25K</div></div>
+            <div class="stat-card"><div class="stat-label">Coins to level</div><div class="stat-value">50K</div></div>
             <div class="stat-card"><div class="stat-label">Profit per hour</div><div class="stat-value" style="color:#82ff82;">+0</div></div>
         </div>
 
@@ -88,12 +97,20 @@
             </div>
         </div>
 
-        <div class="bottom-nav">
+        <div class="bottom-section">
             <div class="energy-info">
                 <span>⚡ <span id="energy-val">1000</span> / 1000</span>
                 <span style="color: #f3ba2f;">Bronze ></span>
             </div>
             <div class="bar-bg"><div id="energy-bar" class="bar-fill" style="width: 100%;"></div></div>
+
+            <div class="nav-tabs">
+                <div class="tab-item active"><span class="tab-icon">🏠</span><span class="tab-label">Exchange</span></div>
+                <div class="tab-item"><span class="tab-icon">⛏️</span><span class="tab-label">Mine</span></div>
+                <div class="tab-item"><span class="tab-icon">👥</span><span class="tab-label">Friends</span></div>
+                <div class="tab-item"><span class="tab-icon">💰</span><span class="tab-label">Earn</span></div>
+                <div class="tab-item"><span class="tab-icon">💎</span><span class="tab-label">Airdrop</span></div>
+            </div>
         </div>
     </div>
 
@@ -102,7 +119,6 @@
         let energy = 1000;
         const maxEnergy = 1000;
 
-        // 4 saniye sonra oyunu başlat
         window.onload = function() {
             setTimeout(() => {
                 document.getElementById('loading-screen').style.display = 'none';
@@ -110,17 +126,16 @@
             }, 4000);
         };
 
-        // Tıklama fonksiyonu
         function tapAction(e) {
             if (energy > 0) {
                 score++;
-                energy--; // Her tıklamada 1 enerji gider
+                energy--; 
                 updateUI();
                 if (navigator.vibrate) navigator.vibrate(5);
             }
         }
 
-        // Enerji yenileme - 2 saniyede 1 artar
+        // Enerji 2 saniyede 1 artar
         setInterval(() => {
             if (energy < maxEnergy) {
                 energy++;
@@ -131,17 +146,11 @@
         function updateUI() {
             document.getElementById('coin-count').innerText = score.toLocaleString();
             document.getElementById('energy-val').innerText = energy;
-            
-            const energyPercent = (energy / maxEnergy) * 100;
-            document.getElementById('energy-bar').style.width = energyPercent + '%';
+            document.getElementById('energy-bar').style.width = (energy / maxEnergy * 100) + '%';
 
-            // Enerji 0 olunca görseli pasifleştir
             const btn = document.getElementById('tap-btn');
-            if (energy <= 0) {
-                btn.classList.add('disabled');
-            } else {
-                btn.classList.remove('disabled');
-            }
+            if (energy <= 0) btn.classList.add('disabled');
+            else btn.classList.remove('disabled');
         }
     </script>
 </body>
