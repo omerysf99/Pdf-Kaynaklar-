@@ -3,230 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Miner Tap To Earn</title>
+    <title>Miner Tap - Pro</title>
     <style>
         :root {
             --gold: #f1c40f;
             --blue: #3498db;
-            --dark-brown: #3d2b1f;
+            --dark: #1a0f07;
         }
 
         body {
-            margin: 0;
-            background: radial-gradient(circle, #4a2d13, #1a0f07);
-            color: white;
+            margin: 0; background: var(--dark); color: white;
             font-family: 'Arial Black', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            user-select: none;
-            touch-action: manipulation;
+            display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
 
-        /* Üst Puan Tablosu */
-        #header {
-            margin-top: 40px;
-            text-align: center;
-        }
+        /* --- SAYFA YÖNETİMİ --- */
+        .page { display: none; flex-direction: column; align-items: center; width: 100%; flex-grow: 1; padding-top: 40px; }
+        .active-page { display: flex; }
 
-        #score {
-            font-size: 3.5rem;
-            color: var(--gold);
-            text-shadow: 0 4px #000;
-            margin: 0;
-        }
-
-        /* Ana Tıklama Alanı */
-        #tap-container {
-            position: relative;
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-        }
-
+        /* --- ANA OYUN EKRANI --- */
+        #score { font-size: 3.5rem; color: var(--gold); text-shadow: 0 4px #000; margin: 10px 0; }
+        
         #main-character {
-            width: 280px;
-            height: 280px;
-            background: #2c3e50;
-            border: 10px solid var(--blue);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8rem;
-            cursor: pointer;
-            box-shadow: 0 0 50px rgba(52, 152, 219, 0.4);
-            transition: transform 0.05s active;
-            position: relative;
+            width: 260px; height: 260px; background: #2c3e50;
+            border: 10px solid var(--blue); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 8rem; cursor: pointer; position: relative;
+            box-shadow: 0 0 40px rgba(52, 152, 219, 0.3);
+            transition: transform 0.05s;
         }
+        #main-character:active { transform: scale(0.92); }
+        #main-character::after { content: "👨‍💼"; }
 
-        #main-character:active {
-            transform: scale(0.92);
+        /* --- GELİŞTİRME SAYFALARI --- */
+        .upgrade-list { width: 90%; margin-top: 20px; }
+        .upgrade-item {
+            background: rgba(255,255,255,0.1); padding: 15px;
+            margin-bottom: 10px; border-radius: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-left: 5px solid var(--blue);
         }
-
-        /* Karakter Detayı (Görseldeki mavi ceketli yönetici) */
-        #main-character::after {
-            content: "👨‍💼"; /* Mavi ceketli yönetici */
-            position: absolute;
+        .buy-btn {
+            background: var(--gold); border: none; padding: 10px 15px;
+            border-radius: 10px; font-weight: bold; cursor: pointer;
         }
+        .buy-btn:disabled { background: #555; opacity: 0.5; }
 
-        /* Enerji Barı */
-        #energy-box {
-            width: 80%;
-            margin-bottom: 50px;
-            text-align: center;
+        /* --- ALT MENÜ --- */
+        #nav {
+            height: 85px; background: #000; display: flex;
+            justify-content: space-around; align-items: center;
+            border-top: 3px solid var(--blue); z-index: 100;
         }
+        .nav-item { text-align: center; color: #7f8c8d; cursor: pointer; flex: 1; transition: 0.3s; }
+        .nav-item.active { color: var(--gold); transform: translateY(-5px); }
+        .nav-icon { font-size: 1.6rem; display: block; }
 
-        .energy-text {
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            display: block;
-        }
+        /* Enerji */
+        #energy-container { width: 80%; margin: 20px 0; }
+        .bar-bg { width: 100%; height: 20px; background: #111; border-radius: 10px; overflow: hidden; }
+        #bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #f1c40f, #e67e22); }
 
-        .bar-bg {
-            width: 100%;
-            height: 25px;
-            background: #111;
-            border-radius: 15px;
-            border: 2px solid #555;
-            overflow: hidden;
-        }
-
-        #bar-fill {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, #f1c40f, #e67e22);
-            transition: width 0.1s;
-        }
-
-        /* Tıklama Efekti (+1 Yazıları) */
-        .tap-ani {
-            position: absolute;
-            color: var(--gold);
-            font-size: 2rem;
-            font-weight: bold;
-            pointer-events: none;
-            animation: floatUp 0.7s ease-out forwards;
-            z-index: 100;
-        }
-
-        @keyframes floatUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-150px); opacity: 0; }
-        }
-
-        /* Alt Menü (Geliştirmeler) */
-        #footer-menu {
-            width: 100%;
-            height: 80px;
-            background: rgba(0,0,0,0.9);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 2px solid var(--blue);
-        }
-
-        .menu-item {
-            text-align: center;
-            font-size: 0.7rem;
-            color: #bdc3c7;
-        }
-
-        .menu-icon { font-size: 1.5rem; display: block; }
-
+        .tap-ani { position: absolute; color: var(--gold); font-size: 2rem; animation: float 0.7s forwards; pointer-events: none; }
+        @keyframes float { 0% { opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="header">
-        <p style="color: #bdc3c7; margin: 0;">TOPLAM MADEN</p>
+    <div id="game-page" class="page active-page">
+        <p style="color: #bdc3c7; margin: 0;">TOPLAM PUAN</p>
         <h1 id="score">0</h1>
-    </div>
+        
+        <div style="flex-grow: 1; display: flex; align-items: center;">
+            <div id="main-character" onpointerdown="handleTap(event)"></div>
+        </div>
 
-    <div id="tap-container">
-        <div id="main-character" onpointerdown="handleTap(event)">
-            </div>
-    </div>
-
-    <div id="energy-box">
-        <span class="energy-text">⚡ <span id="energy-val">1000</span> / 1000</span>
-        <div class="bar-bg">
-            <div id="bar-fill"></div>
+        <div id="energy-container">
+            <small>⚡ <span id="energy-val">1000</span> / <span id="max-energy-val">1000</span></small>
+            <div class="bar-bg"><div id="bar-fill"></div></div>
         </div>
     </div>
 
-    <div id="footer-menu">
-        <div class="menu-item"><span class="menu-icon">⛏️</span>Madenciler</div>
-        <div class="menu-item"><span class="menu-icon">👩‍✈️</span>Asansör</div>
-        <div class="menu-item" style="color: var(--gold)"><span class="menu-icon">💰</span>Borsa</div>
-        <div class="menu-item"><span class="menu-icon">⚙️</span>Ayarlar</div>
+    <div id="miner-page" class="page">
+        <h2>Madenciler</h2>
+        <div class="upgrade-list">
+            <div class="upgrade-item">
+                <div>
+                    <b>Keskin Kazma</b><br>
+                    <small>Tık Başı: +<span id="tap-power-val">1</span></small>
+                </div>
+                <button class="buy-btn" onclick="buyUpgrade('tap')">Geliştir <br> <span id="tap-cost">50</span> 💰</button>
+            </div>
+        </div>
     </div>
 
+    <div id="elev-page" class="page">
+        <h2>Asansör Sistemi</h2>
+        <div class="upgrade-list">
+            <div class="upgrade-item">
+                <div>
+                    <b>Enerji Bataryası</b><br>
+                    <small>Kapasite: +500</small>
+                </div>
+                <button class="buy-btn" onclick="buyUpgrade('energy')">Geliştir <br> <span id="energy-cost">100</span> 💰</button>
+            </div>
+        </div>
+    </div>
+
+    <nav id="nav">
+        <div class="nav-item active" onclick="showPage('game-page', this)">
+            <span class="nav-icon">💰</span>Borsa
+        </div>
+        <div class="nav-item" onclick="showPage('miner-page', this)">
+            <span class="nav-icon">⛏️</span>Madenciler
+        </div>
+        <div class="nav-item" onclick="showPage('elev-page', this)">
+            <span class="nav-icon">👩‍✈️</span>Asansör
+        </div>
+    </nav>
+
     <script>
-        let balance = 0;
-        let energy = 1000;
-        const maxEnergy = 1000;
-        const tapPower = 1;
+        let state = {
+            money: 0,
+            energy: 1000,
+            maxEnergy: 1000,
+            tapPower: 1,
+            costs: { tap: 50, energy: 100 }
+        };
 
-        const scoreEl = document.getElementById('score');
-        const energyValEl = document.getElementById('energy-val');
-        const energyBarEl = document.getElementById('bar-fill');
-        const tapContainer = document.getElementById('tap-container');
+        // --- SAYFA GEÇİŞ FONKSİYONU ---
+        function showPage(pageId, navEl) {
+            // Tüm sayfaları gizle
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
+            // Seçilen sayfayı göster
+            document.getElementById(pageId).classList.add('active-page');
+            
+            // Navigasyon stilini güncelle
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            navEl.classList.add('active');
+        }
 
+        // --- TIKLAMA MANTIĞI ---
         function handleTap(e) {
-            if (energy >= tapPower) {
-                // Skoru Artır
-                balance += tapPower;
-                energy -= tapPower;
-                
+            if (state.energy >= state.tapPower) {
+                state.money += state.tapPower;
+                state.energy -= state.tapPower;
                 updateUI();
-                createTapEffect(e.clientX, e.clientY);
+                createEffect(e.clientX, e.clientY);
+                if(window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            }
+        }
 
-                // Hafif titreşim (Telegram için)
-                if (window.Telegram && window.Telegram.WebApp) {
-                    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+        // --- GELİŞTİRME SATIN ALMA ---
+        function buyUpgrade(type) {
+            let cost = state.costs[type];
+            if (state.money >= cost) {
+                state.money -= cost;
+                if (type === 'tap') {
+                    state.tapPower += 1;
+                    state.costs.tap *= 2;
+                } else if (type === 'energy') {
+                    state.maxEnergy += 500;
+                    state.energy = state.maxEnergy;
+                    state.costs.energy *= 2;
                 }
+                updateUI();
             }
         }
 
         function updateUI() {
-            scoreEl.innerText = balance.toLocaleString();
-            energyValEl.innerText = energy;
-            const percent = (energy / maxEnergy) * 100;
-            energyBarEl.style.width = percent + "%";
+            document.getElementById('score').innerText = Math.floor(state.money).toLocaleString();
+            document.getElementById('energy-val').innerText = state.energy;
+            document.getElementById('max-energy-val').innerText = state.maxEnergy;
+            document.getElementById('tap-power-val').innerText = state.tapPower;
+            document.getElementById('tap-cost').innerText = state.costs.tap;
+            document.getElementById('energy-cost').innerText = state.costs.energy;
+            
+            let percent = (state.energy / state.maxEnergy) * 100;
+            document.getElementById('bar-fill').style.width = percent + "%";
+
+            // Buton kontrolü
+            document.querySelectorAll('.buy-btn').forEach(btn => {
+                let cost = parseInt(btn.querySelector('span').innerText);
+                btn.disabled = state.money < cost;
+            });
         }
 
-        function createTapEffect(x, y) {
-            const el = document.createElement('div');
-            el.className = 'tap-ani';
-            el.innerText = `+${tapPower}`;
-            el.style.left = `${x - 20}px`;
-            el.style.top = `${y - 20}px`;
-            document.body.appendChild(el);
-
-            setTimeout(() => {
-                el.remove();
-            }, 700);
+        function createEffect(x, y) {
+            const div = document.createElement('div');
+            div.className = 'tap-ani';
+            div.style.left = x + 'px'; div.style.top = y + 'px';
+            div.innerText = "+" + state.tapPower;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 700);
         }
 
-        // Enerji Yenileme (Saniyede 2 enerji)
+        // Enerji Yenileme
         setInterval(() => {
-            if (energy < maxEnergy) {
-                energy += 2;
-                if (energy > maxEnergy) energy = maxEnergy;
+            if (state.energy < state.maxEnergy) {
+                state.energy = Math.min(state.energy + 3, state.maxEnergy);
                 updateUI();
             }
         }, 1000);
 
-        // Telegram tam ekran modu
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.expand();
-            window.Telegram.WebApp.ready();
-        }
+        updateUI();
     </script>
 </body>
 </html>
