@@ -17,7 +17,6 @@
             overflow-x: hidden;
         }
 
-        /* Hero Section - Koalas.jpg */
         .hero-section {
             position: relative;
             width: 100%;
@@ -48,7 +47,6 @@
             background: linear-gradient(to bottom, transparent, #000);
         }
 
-        /* Dashboard Kartı */
         .content-container {
             position: relative;
             margin-top: -75px; 
@@ -76,11 +74,10 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            transition: transform 0.1s;
+            transition: all 0.2s ease;
         }
         .custom-connect-btn:active { transform: scale(0.97); }
 
-        /* Alt Menü */
         .nav-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background: rgba(0,0,0,0.98); border-top: 1px solid #121212;
@@ -133,11 +130,13 @@
                                 <p class="text-[#555] text-xs font-bold">0 #TON</p>
                             </div>
                         </div>
-                        <div id="payment-btn" class="w-11 h-11 bg-[#1a1a1a] rounded-xl flex items-center justify-center border border-white/5 active:bg-zinc-800">
+                        <div id="payment-btn" class="w-11 h-11 bg-[#1a1a1a] rounded-xl flex items-center justify-center border border-white/5 active:bg-zinc-800 cursor-pointer">
                             <i class="fa-solid fa-paper-plane text-[#007aff] text-xs"></i>
                         </div>
                     </div>
                 </div>
+                
+                <p id="saved-address" class="text-[9px] text-zinc-600 mt-4 text-center font-mono truncate px-4"></p>
             </div>
         </div>
 
@@ -150,39 +149,68 @@
     </div>
 
     <script>
-        // TON Connect Başlatma
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button-root'
         });
 
-        // Cüzdan Bağlama/Kesme
         const customBtn = document.getElementById('custom-connect-btn');
+        const btnText = document.getElementById('btn-text');
+        const savedAddrEl = document.getElementById('saved-address');
+
+        // Cüzdan Bağlama ve Kaydetme Mantığı
         customBtn.onclick = async () => {
-            if (tonConnectUI.connected) await tonConnectUI.disconnect();
-            else await tonConnectUI.openModal();
+            if (tonConnectUI.connected) {
+                await tonConnectUI.disconnect();
+                localStorage.removeItem('user_ton_address');
+                savedAddrEl.innerText = "";
+            } else {
+                await tonConnectUI.openModal();
+            }
         };
 
-        // Ödeme Alma Tetikleyici
+        tonConnectUI.onStatusChange(wallet => {
+            if (wallet) {
+                // Adresi al
+                const address = wallet.account.address;
+                // Kısalt (Örn: EQA1...4f2D)
+                const shortAddr = address.slice(0, 4) + "..." + address.slice(-4);
+                
+                // Arayüzü güncelle
+                btnText.innerText = shortAddr;
+                customBtn.style.background = "#1a1a1a";
+                savedAddrEl.innerText = "Saved: " + address;
+
+                // LocalStorage'a kaydet
+                localStorage.setItem('user_ton_address', address);
+                console.log("Adres Kaydedildi:", address);
+            } else {
+                btnText.innerText = "Connect Wallet";
+                customBtn.style.background = "#007aff";
+                savedAddrEl.innerText = "";
+                localStorage.removeItem('user_ton_address');
+            }
+        });
+
         document.getElementById('payment-btn').onclick = async () => {
             if (!tonConnectUI.connected) { await tonConnectUI.openModal(); return; }
             const tx = {
                 validUntil: Math.floor(Date.now() / 1000) + 60,
-                messages: [{ address: "UQC123456789...", amount: "50000000" }] // Örnek 0.05 TON
+                messages: [{ address: "UQC123456789...", amount: "50000000" }]
             };
             try { await tonConnectUI.sendTransaction(tx); } catch(e) {}
         };
 
-        // Cüzdan Bağlantı Durumu
-        tonConnectUI.onStatusChange(w => {
-            document.getElementById('btn-text').innerText = w ? "Connected" : "Connect Wallet";
-            customBtn.style.background = w ? "#1a1a1a" : "#007aff";
-        });
-
-        // Uygulama Açıldığında Puanı Belirle
         window.onload = () => {
+            // Puanı belirle
             const pts = Math.floor(Math.random() * 9001) + 1000;
             document.getElementById('final-points').innerText = pts.toLocaleString();
+
+            // Sayfa yüklendiğinde kayıtlı adres varsa göster
+            const saved = localStorage.getItem('user_ton_address');
+            if(saved) {
+                console.log("Kayıtlı adres bulundu:", saved);
+            }
         };
     </script>
 </body>
