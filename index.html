@@ -3,197 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Koalas Casino & Miner</title>
+    <title>Koalas Arcade - Visual Wallet</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body, html { margin: 0; padding: 0; background-color: #000; color: white; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
-        
-        /* Slot Machine Styles */
-        .slot-container { display: flex; gap: 10px; justify-content: center; margin: 30px 0; }
-        .slot-reel { width: 80px; height: 120px; background: #1a1a1a; border: 3px solid #333; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 50px; overflow: hidden; }
-        .spinning { animation: reelSpin 0.1s infinite linear; }
-        @keyframes reelSpin { 0% { transform: translateY(-10px); } 100% { transform: translateY(10px); } }
+        body, html { margin: 0; padding: 0; background-color: #000; color: white; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
 
-        /* Reklam Overlay */
-        #ad-overlay { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        /* GÖRSEL CONNECT BUTONU */
+        .visual-wallet-btn {
+            background: linear-gradient(135deg, #007aff 0%, #0051ff 100%);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 18px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 122, 255, 0.3);
+        }
 
-        /* Game UI */
-        #game-view { position: fixed; inset: 0; background: radial-gradient(circle, #1a1a1a, #000); z-index: 3000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .gem { position: absolute; font-size: 55px; cursor: pointer; filter: drop-shadow(0 0 15px #007aff); transition: transform 0.1s; z-index: 100; }
-        .gem:active { transform: scale(1.5); }
+        .visual-wallet-btn:active { transform: scale(0.96); }
+
+        .btn-glow {
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+            animation: rotateGlow 6s linear infinite;
+        }
+
+        @keyframes rotateGlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .wallet-icon-container {
+            width: 50px; height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+        }
+
+        /* Ana Kart Tasarımı */
+        .main-card {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 35px;
+            padding: 25px;
+            margin-top: -50px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="ad-overlay">
-        <div class="text-blue-500 text-6xl mb-6"><i class="fa-solid fa-rectangle-ad"></i></div>
-        <h2 class="text-2xl font-black mb-2">REKLAM İZLENİYOR</h2>
-        <p class="text-zinc-500 mb-8">Koalas Kazandırıyor... <span id="ad-timer">5</span>s</p>
-        <div class="w-48 h-1 bg-zinc-800 rounded-full overflow-hidden">
-            <div id="ad-progress" class="h-full bg-blue-600 w-0 transition-all"></div>
-        </div>
+    <div class="relative w-full h-[40vh]">
+        <img src="Koalas.jpg" class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+        <h1 class="absolute bottom-16 left-0 w-full text-center text-5xl font-black italic tracking-tighter">KOALAS</h1>
     </div>
 
-    <div id="game-view">
-        <div class="absolute top-10 right-6 text-3xl opacity-50" onclick="exitGame()">✕</div>
-        
-        <div id="slot-area" class="hidden text-center">
-            <h2 class="text-4xl font-black italic mb-8 text-orange-500">777 JACKPOT</h2>
-            <div class="slot-container">
-                <div id="reel1" class="slot-reel">💎</div>
-                <div id="reel2" class="slot-reel">💎</div>
-                <div id="reel3" class="slot-reel">💎</div>
-            </div>
-            <button id="slot-btn" onclick="spinSlot()" class="mt-8 bg-orange-600 px-12 py-4 rounded-2xl font-black text-xl shadow-lg shadow-orange-900/40">SPIN (200 Pts)</button>
-        </div>
-
-        <div id="miner-area" class="hidden w-full h-full relative">
-            <div class="absolute top-20 w-full text-center">
-                <div class="text-xs font-bold text-blue-400 tracking-widest uppercase mb-2">Koalas Kazandırıyor!</div>
-                <div id="miner-timer" class="text-5xl font-black italic">60s</div>
-                <div class="text-2xl mt-2 font-bold text-zinc-500">Skor: <span id="m-score">0</span></div>
-            </div>
-            <div id="miner-target" class="w-full h-full"></div>
-        </div>
-    </div>
-
-    <div class="p-6 pt-12">
-        <div class="flex justify-between items-center mb-8">
-            <div>
-                <p class="text-zinc-500 text-xs font-bold tracking-widest uppercase">Balance</p>
-                <h1 id="total-balance" class="text-5xl font-black italic">5,000</h1>
-            </div>
-            <img src="Koalas.jpg" class="w-16 h-16 rounded-3xl border-2 border-zinc-800">
-        </div>
-
-        <div class="grid gap-4">
-            <div class="bg-zinc-900 p-5 rounded-3xl border border-zinc-800 flex items-center gap-4" onclick="startMinerWithAd()">
-                <div class="text-4xl">⛏️</div>
-                <div class="flex-1">
-                    <h3 class="font-black italic text-lg leading-tight">TON MINER</h3>
-                    <p class="text-[10px] text-blue-500 font-bold">1 REKLAM İZLE - 1 DK KAZAN</p>
+    <div class="px-5">
+        <div class="main-card">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-1">Available Points</p>
+                    <h2 id="total-pts" class="text-5xl font-black italic tracking-tighter">12,450</h2>
                 </div>
-                <i class="fa-solid fa-play-circle text-2xl opacity-20"></i>
+                <div class="relative">
+                    <img src="Koalas.jpg" class="w-14 h-14 rounded-2xl border-2 border-blue-600 shadow-lg shadow-blue-600/20">
+                    <div class="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-black"></div>
+                </div>
             </div>
 
-            <div class="bg-zinc-900 p-5 rounded-3xl border border-zinc-800 flex items-center gap-4" onclick="openSlot()">
-                <div class="text-4xl">🎰</div>
-                <div class="flex-1">
-                    <h3 class="font-black italic text-lg leading-tight">777 SLOTS</h3>
-                    <p class="text-[10px] text-orange-500 font-bold">ŞANSINI DENE, JACKPOT YAP!</p>
+            <button id="connect-btn" class="visual-wallet-btn group">
+                <div class="btn-glow"></div>
+                <div class="flex items-center gap-4 z-10">
+                    <div class="wallet-icon-container">
+                        <i class="fa-solid fa-wallet text-white group-hover:rotate-12 transition-transform"></i>
+                    </div>
+                    <div class="text-left">
+                        <p id="wallet-status-text" class="text-[10px] font-bold uppercase opacity-70">Cüzdan Bağla</p>
+                        <h4 id="wallet-addr-text" class="font-black text-lg leading-tight">Connect Wallet</h4>
+                    </div>
                 </div>
-                <i class="fa-solid fa-play-circle text-2xl opacity-20"></i>
+                <div class="z-10 bg-black/20 p-2 rounded-full">
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                </div>
+            </button>
+
+            <div class="mt-6 flex items-center justify-center gap-2 opacity-40">
+                <img src="https://ton.org/download/ton_symbol.svg" class="w-4 h-4 grayscale">
+                <p class="text-[10px] font-bold uppercase tracking-widest">Powered by TON Network</p>
             </div>
         </div>
     </div>
 
     <script>
-        let balance = 5000;
-        let minerPoints = 0;
-        const symbols = ['💎', '7️⃣', '🍒', '🍋', '⭐'];
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json'
+        });
 
-        function updateBalance() { document.getElementById('total-balance').innerText = balance.toLocaleString(); }
+        const btn = document.getElementById('connect-btn');
+        const statusText = document.getElementById('wallet-status-text');
+        const addrText = document.getElementById('wallet-addr-text');
 
-        // --- SLOT MACHINE ---
-        function openSlot() {
-            document.getElementById('game-view').style.display = 'flex';
-            document.getElementById('slot-area').classList.remove('hidden');
-            document.getElementById('miner-area').classList.add('hidden');
-        }
-
-        function spinSlot() {
-            if (balance < 200) { alert("Yetersiz Puan!"); return; }
-            balance -= 200; updateBalance();
-            
-            const btn = document.getElementById('slot-btn');
-            const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
-            btn.disabled = true;
-
-            reels.forEach(r => r.classList.add('spinning'));
-
-            setTimeout(() => {
-                let results = [];
-                reels.forEach((r, i) => {
-                    setTimeout(() => {
-                        r.classList.remove('spinning');
-                        const res = symbols[Math.floor(Math.random() * symbols.length)];
-                        r.innerText = res;
-                        results.push(res);
-                        if (results.length === 3) checkWin(results);
-                    }, i * 500);
-                });
-            }, 1000);
-        }
-
-        function checkWin(res) {
-            document.getElementById('slot-btn').disabled = false;
-            if (res[0] === res[1] && res[1] === res[2]) {
-                const prize = res[0] === '7️⃣' ? 5000 : 1000;
-                alert("JACKPOT! " + prize + " Puan Kazandın!");
-                balance += prize; updateBalance();
+        btn.onclick = async () => {
+            if (tonConnectUI.connected) {
+                await tonConnectUI.disconnect();
+            } else {
+                await tonConnectUI.openModal();
             }
-        }
+        };
 
-        // --- TON MINER & AD ---
-        function startMinerWithAd() {
-            document.getElementById('ad-overlay').style.display = 'flex';
-            let sec = 5;
-            const int = setInterval(() => {
-                sec--;
-                document.getElementById('ad-timer').innerText = sec;
-                document.getElementById('ad-progress').style.width = ((5 - sec) / 5 * 100) + "%";
-                if (sec <= 0) {
-                    clearInterval(int);
-                    document.getElementById('ad-overlay').style.display = 'none';
-                    openMiner();
-                }
-            }, 1000);
-        }
-
-        function openMiner() {
-            document.getElementById('game-view').style.display = 'flex';
-            document.getElementById('miner-area').classList.remove('hidden');
-            document.getElementById('slot-area').classList.add('hidden');
-            
-            minerPoints = 0;
-            let time = 60;
-            spawnGem();
-            
-            const timerInt = setInterval(() => {
-                time--;
-                document.getElementById('miner-timer').innerText = time + "s";
-                if (time <= 0) {
-                    clearInterval(timerInt);
-                    alert("Süre Doldu! Kazanç: " + minerPoints);
-                    balance += minerPoints; updateBalance();
-                    exitGame();
-                }
-            }, 1000);
-        }
-
-        function spawnGem() {
-            const area = document.getElementById('miner-target');
-            area.innerHTML = '';
-            const g = document.createElement('div');
-            g.className = 'gem';
-            g.innerText = '💎';
-            g.style.left = Math.random() * 80 + 10 + "%";
-            g.style.top = Math.random() * 60 + 20 + "%";
-            g.onclick = () => {
-                minerPoints += 25;
-                document.getElementById('m-score').innerText = minerPoints;
-                spawnGem();
-            };
-            area.appendChild(g);
-        }
-
-        function exitGame() {
-            document.getElementById('game-view').style.display = 'none';
-            document.getElementById('miner-target').innerHTML = '';
-        }
+        tonConnectUI.onStatusChange(wallet => {
+            if (wallet) {
+                const rawAddr = wallet.account.address;
+                statusText.innerText = "Bağlandı";
+                addrText.innerText = rawAddr.slice(0, 4) + "..." + rawAddr.slice(-4);
+                btn.style.background = "linear-gradient(135deg, #1a1a1a 0%, #111 100%)";
+                btn.style.border = "2px solid rgba(255,255,255,0.05)";
+            } else {
+                statusText.innerText = "Cüzdan Bağla";
+                addrText.innerText = "Connect Wallet";
+                btn.style.background = "linear-gradient(135deg, #007aff 0%, #0051ff 100%)";
+                btn.style.border = "2px solid rgba(255,255,255,0.1)";
+            }
+        });
     </script>
 </body>
 </html>
