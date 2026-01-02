@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Koalas Arcade - Professional Edition</title>
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <title>Koalas Arcade - Manual Wallet Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -12,12 +11,13 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
         body { background-color: #000; color: white; font-family: 'Inter', sans-serif; margin: 0; padding: 0; overflow: hidden; height: 100vh; }
 
-        /* --- CHECKING SCREEN --- */
-        #checking-screen {
+        /* --- CHECKING & ONBOARDING --- */
+        #checking-screen, #wallet-setup-screen {
             position: fixed; inset: 0; background: #000; z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: space-between;
             padding: 60px 24px; text-align: center;
         }
+
         .check-row { 
             display: flex; justify-content: space-between; width: 100%; max-width: 320px;
             padding: 20px 0; border-bottom: 1px solid #111; opacity: 0; transform: translateY(10px); transition: 0.5s ease; 
@@ -29,15 +29,13 @@
         .header-image { height: 230px; background: url('Koalas.jpg') center top/cover; position: relative; background-color: #111; }
         .app-container { background: #000; border-radius: 32px 32px 0 0; margin-top: -40px; position: relative; padding: 24px 20px 120px; }
 
-        /* --- MODALS --- */
+        /* --- MODAL --- */
         .modal-overlay { 
             display: none; position: fixed; inset: 0; z-index: 10001; 
             background: rgba(0,0,0,0.92); backdrop-filter: blur(15px); 
             align-items: center; justify-content: center; opacity: 0; transition: 0.3s; 
         }
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-content { transform: scale(0.9); transition: 0.3s; width: 90%; max-width: 380px; }
-        .modal-overlay.active .modal-content { transform: scale(1); }
 
         .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; border-top: 1px solid #111; display: flex; justify-content: space-around; padding: 12px 0 30px; z-index: 1000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #444; font-size: 10px; font-weight: 700; }
@@ -50,51 +48,43 @@
     <div id="checking-screen">
         <div>
             <img src="Koalas.jpg" class="w-24 h-24 rounded-full mx-auto grayscale">
-            <h1 class="text-3xl font-extrabold mt-6 tracking-tight italic">Checking Profile</h1>
+            <h1 class="text-3xl font-extrabold mt-6 tracking-tight italic">Checking Account</h1>
         </div>
         <div id="check-list" class="w-full max-w-[320px]">
             <div id="row1" class="check-row"><span class="text-zinc-500 font-bold">Account Age</span><span id="val1" class="text-zinc-800">Checking...</span></div>
             <div id="row2" class="check-row"><span class="text-zinc-500 font-bold">Activity Status</span><span id="val2" class="text-zinc-800">Checking...</span></div>
         </div>
         <div id="final-step" class="hidden w-full px-4">
-            <p class="text-zinc-500 text-xs font-bold uppercase mb-2">Initial $KOALA Reward</p>
-            <h2 class="text-6xl font-black mb-10"><span id="random-reward">0</span></h2>
-            <button onclick="startApp()" class="w-full bg-white text-black py-4 rounded-2xl font-black text-lg active:scale-95 transition-all">Continue to App</button>
+            <p class="text-zinc-500 text-xs font-bold uppercase mb-2">Registration Bonus</p>
+            <h2 class="text-6xl font-black mb-10"><span id="random-reward-display">0</span></h2>
+            <button onclick="goToWalletSetup()" class="w-full bg-white text-black py-4 rounded-2xl font-black text-lg active:scale-95 transition-all">Next</button>
         </div>
     </div>
 
-    <div id="address-modal" class="modal-overlay">
-        <div class="modal-content bg-[#111] p-8 rounded-[32px] border border-white/10">
-            <div class="w-12 h-12 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fa-solid fa-wallet text-blue-500 text-xl"></i>
+    <div id="wallet-setup-screen" class="hidden">
+        <div class="w-full max-w-sm">
+            <div class="w-16 h-16 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fa-solid fa-wallet text-blue-500 text-2xl"></i>
             </div>
-            <h3 class="text-xl font-black mb-2 text-center italic tracking-tight">SET TON ADDRESS</h3>
-            <p class="text-zinc-500 text-[10px] text-center mb-6 uppercase font-bold tracking-widest">Paste your address below</p>
+            <h2 class="text-2xl font-black italic mb-2">Connect Wallet</h2>
+            <p class="text-zinc-500 text-sm mb-8 px-6">Paste your TON wallet address to receive your $KOALA rewards.</p>
             
-            <input type="text" id="manual-addr-input" placeholder="UQBINP...nB-g" 
-                   class="w-full bg-black border border-zinc-800 rounded-2xl py-4 px-5 text-sm font-mono text-blue-400 focus:border-blue-500 outline-none transition-all mb-4">
+            <input type="text" id="initial-wallet-input" placeholder="UQBINP...nB-g" 
+                   class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 px-5 text-sm font-mono text-blue-400 focus:border-blue-500 outline-none mb-4">
             
-            <button onclick="saveManualAddress()" class="w-full bg-white text-black py-4 rounded-2xl font-black text-sm active:scale-95 transition-all">Save to Account</button>
-            <button onclick="toggleModal('address-modal', false)" class="w-full text-zinc-600 font-bold text-xs mt-4 text-center uppercase tracking-widest">Cancel</button>
+            <button onclick="finalizeSetup()" class="w-full bg-[#007aff] text-white py-4 rounded-2xl font-black text-sm active:scale-95 transition-all">
+                Save & Start Playing
+            </button>
         </div>
-    </div>
-
-    <div id="ad-modal" class="modal-overlay">
-        <div class="modal-content bg-[#111] p-8 rounded-[32px] border border-white/10 text-center">
-            <div class="text-5xl mb-4">🎬</div>
-            <h3 class="text-xl font-black mb-2 italic">Earn Free $KOALA</h3>
-            <p class="text-zinc-500 text-sm mb-8 leading-relaxed">Watch a 5-second sponsor clip to earn 1 $KOALA instantly.</p>
-            <button onclick="simulateAd()" id="ad-btn" class="w-full bg-blue-600 py-4 rounded-2xl font-black mb-3 text-sm tracking-wide">Watch Now</button>
-            <button onclick="toggleModal('ad-modal', false)" class="text-zinc-600 font-bold text-xs uppercase tracking-widest">Maybe Later</button>
-        </div>
+        <p class="text-zinc-600 text-[10px] uppercase font-black tracking-widest">Koalas Network • 2026</p>
     </div>
 
     <div id="main-app">
         <div class="header-image">
             <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-            <div class="absolute top-5 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-3 w-[85%] max-w-sm">
+            <div class="absolute top-5 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-3 w-[85%]">
                 <div class="flex gap-1"><div class="w-3 h-3 rounded-full bg-blue-500"></div><div class="w-3 h-3 rounded-full bg-white/20"></div></div>
-                <span class="text-[11px] font-bold flex-1">KOALAS GOAT PASS</span>
+                <span class="text-[11px] font-bold flex-1">KOALAS PASS</span>
                 <i class="fa-solid fa-chevron-right text-[10px] opacity-30"></i>
             </div>
         </div>
@@ -103,153 +93,129 @@
             <div class="flex justify-between items-start mb-8">
                 <div>
                     <h1 id="main-balance" class="text-5xl font-extrabold tracking-tighter mb-1">0</h1>
-                    <div onclick="toggleModal('address-modal', true)" class="flex items-center gap-2 cursor-pointer active:opacity-60 transition-all">
+                    <div onclick="openEditAddress()" class="flex items-center gap-2 cursor-pointer">
                         <p class="text-zinc-500 font-bold text-sm">
-                            $KOALA • <span id="wallet-addr" class="font-mono text-[11px] text-blue-400">CONNECT ADDRESS</span>
+                            $KOALA • <span id="display-address" class="font-mono text-[11px] text-blue-400">ADDRESS ERROR</span>
                         </p>
                         <i class="fa-solid fa-pencil text-[10px] text-zinc-700"></i>
                     </div>
                 </div>
-                <div class="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center border border-white/5 overflow-hidden">
-                    <img src="Koalas.jpg" class="w-full h-full object-cover">
+                <img src="Koalas.jpg" class="w-10 h-10 rounded-full border border-white/10">
+            </div>
+
+            <button onclick="toggleModal('ad-modal', true)" class="w-full bg-[#007aff] h-14 rounded-2xl font-black text-sm flex items-center justify-center gap-3 mb-10 shadow-lg shadow-blue-600/20">
+                <i class="fa-solid fa-play"></i> GET MORE $KOALA
+            </button>
+
+            <div class="bg-[#0e0e0e] border border-white/5 rounded-[24px] p-5 flex items-center justify-between mb-8">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center"><i class="fa-solid fa-t text-xl"></i></div>
+                    <div><p class="font-bold text-sm">$TON Balance</p><p class="text-xs text-zinc-500">0.00 TON</p></div>
                 </div>
+                <i class="fa-solid fa-chevron-right text-zinc-800"></i>
             </div>
 
-            <div class="flex gap-2 mb-10">
-                <div id="ton-connect-btn" class="h-12 overflow-hidden rounded-2xl"></div>
-                <button onclick="toggleModal('ad-modal', true)" class="bg-[#007aff] flex-1 h-12 rounded-2xl font-black text-[13px] flex items-center justify-center gap-2 shadow-lg shadow-blue-600/10">
-                    <i class="fa-solid fa-plus text-[10px]"></i> Get more $KOALA
-                </button>
-            </div>
-
-            <p class="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] mb-3">Wallet Status</p>
-            <div class="bg-[#0e0e0e] border border-white/5 rounded-[24px] p-4 flex items-center justify-between mb-8">
-                <div class="flex items-center gap-3">
-                    <div class="w-11 h-11 bg-blue-600 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-t"></i></div>
-                    <div><p class="font-bold text-sm tracking-tight">$TON</p><p class="text-xs text-zinc-500 font-medium">0 $TON</p></div>
-                </div>
-                <div class="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center text-zinc-700"><i class="fa-solid fa-arrow-up rotate-45"></i></div>
-            </div>
-
-            <p class="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] mb-4">CEX Missions</p>
-            <div class="grid grid-cols-2 gap-3 mb-10">
+            <div class="grid grid-cols-2 gap-4 mb-10">
                 <div class="bg-[#00f0ff] p-5 h-28 rounded-[24px] flex flex-col justify-between text-black">
-                    <span class="font-black italic text-sm tracking-tighter">BITGET</span>
-                    <button class="bg-black text-white py-2 rounded-xl text-[10px] font-black tracking-widest uppercase">Go</button>
+                    <span class="font-black italic">BITGET</span>
+                    <button class="bg-black text-white py-2 rounded-xl text-[10px] font-bold uppercase">Go</button>
                 </div>
                 <div class="bg-[#4d6aff] p-5 h-28 rounded-[24px] flex flex-col justify-between">
-                    <span class="font-black italic text-sm tracking-tighter">GATE.IO</span>
-                    <button class="bg-black text-white py-2 rounded-xl text-[10px] font-black tracking-widest uppercase">Go</button>
+                    <span class="font-black italic">GATE.IO</span>
+                    <button class="bg-black text-white py-2 rounded-xl text-[10px] font-bold uppercase">Go</button>
                 </div>
-            </div>
-
-            <div class="flex justify-between items-center mb-4">
-                <p class="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">TON PARK</p>
-                <div class="bg-white/5 px-2 py-1 rounded-md text-[9px] font-bold text-zinc-400">DAILY LOG</div>
-            </div>
-            <div class="flex gap-3 overflow-x-auto no-scrollbar pb-10">
-                <div class="min-w-[90px] h-[90px] bg-[#ffcc00] rounded-[22px] flex items-center justify-center text-4xl shadow-lg shadow-yellow-600/5">⛏️</div>
-                <div class="min-w-[90px] h-[90px] bg-[#ffcc00] rounded-[22px] flex items-center justify-center text-4xl shadow-lg shadow-yellow-600/5">🎰</div>
-                <div class="min-w-[90px] h-[90px] bg-[#ffcc00] rounded-[22px] flex items-center justify-center text-4xl shadow-lg shadow-yellow-600/5">💎</div>
             </div>
         </div>
 
         <nav class="nav-bar">
             <div class="nav-item active"><i class="fa-solid fa-house text-xl"></i><span>Home</span></div>
             <div class="nav-item"><i class="fa-solid fa-bolt text-xl"></i><span>Tasks</span></div>
-            <div class="nav-item"><i class="fa-solid fa-user-group text-xl"></i><span>Frens</span></div>
-            <div class="nav-item"><i class="fa-solid fa-gift text-xl"></i><span>Airdrop</span></div>
+            <div class="nav-item"><i class="fa-solid fa-user-group text-xl"></i><span>Friends</span></div>
         </nav>
+    </div>
+
+    <div id="ad-modal" class="modal-overlay">
+        <div class="modal-content bg-[#111] p-8 rounded-[32px] border border-white/10 text-center">
+            <div class="text-5xl mb-4">🎬</div>
+            <h3 class="text-xl font-black mb-2 italic">Watch & Earn</h3>
+            <p class="text-zinc-500 text-sm mb-8">Watch a 5s ad to get 1 $KOALA.</p>
+            <button onclick="watchAd()" id="ad-btn" class="w-full bg-blue-600 py-4 rounded-2xl font-black mb-4">Watch Ad</button>
+            <button onclick="toggleModal('ad-modal', false)" class="text-zinc-600 font-bold text-xs uppercase">Close</button>
+        </div>
     </div>
 
     <script>
         let balance = 0;
-        const randomReward = Math.floor(Math.random() * (10000 - 1000 + 1)) + 1000;
+        let userAddress = "";
+        const reward = Math.floor(Math.random() * 9001) + 1000;
 
-        // --- GİRİŞ KONTROL SİSTEMİ ---
+        // --- STEP 1: CHECKING ---
         document.addEventListener('DOMContentLoaded', () => {
-            const steps = [
-                { id: 'row1', val: 'val1', text: '5 Years' },
-                { id: 'row2', val: 'val2', text: 'Verified' }
-            ];
-            steps.forEach((step, i) => {
+            setTimeout(() => {
+                document.getElementById('row1').classList.add('visible');
+                document.getElementById('val1').innerText = "3 Years";
+                document.getElementById('val1').className = "text-white font-bold";
                 setTimeout(() => {
-                    document.getElementById(step.id).classList.add('visible');
-                    document.getElementById(step.val).innerText = step.text;
-                    document.getElementById(step.val).className = "text-white font-bold";
-                    if(i === steps.length - 1) {
-                        setTimeout(() => {
-                            document.getElementById('check-list').style.display = 'none';
-                            document.getElementById('random-reward').innerText = randomReward.toLocaleString();
-                            document.getElementById('final-step').classList.remove('hidden');
-                        }, 800);
-                    }
-                }, (i+1) * 1200);
-            });
+                    document.getElementById('row2').classList.add('visible');
+                    document.getElementById('val2').innerText = "Active";
+                    document.getElementById('val2').className = "text-white font-bold";
+                    setTimeout(() => {
+                        document.getElementById('check-list').style.display = 'none';
+                        document.getElementById('random-reward-display').innerText = reward.toLocaleString();
+                        document.getElementById('final-step').classList.remove('hidden');
+                    }, 800);
+                }, 1000);
+            }, 1000);
         });
 
-        function startApp() {
-            balance = randomReward;
-            updateBalanceDisplay();
+        // --- STEP 2: WALLET INPUT ---
+        function goToWalletSetup() {
             document.getElementById('checking-screen').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
-            setTimeout(() => document.getElementById('main-app').style.opacity = '1', 50);
+            document.getElementById('wallet-setup-screen').classList.remove('hidden');
         }
 
-        function updateBalanceDisplay() {
-            document.getElementById('main-balance').innerText = balance.toLocaleString();
-        }
-
-        // --- TON CONNECT ENTEGRASYONU ---
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json',
-            buttonRootId: 'ton-connect-btn'
-        });
-
-        // Cüzdan bağlandığında adresi otomatik yakala
-        tonConnectUI.onStatusChange(wallet => {
-            if (wallet) {
-                const addr = wallet.account.address;
-                const formatted = addr.slice(0, 6) + "..." + addr.slice(-4);
-                document.getElementById('wallet-addr').innerText = formatted;
-                document.getElementById('manual-addr-input').value = addr;
+        function finalizeSetup() {
+            const input = document.getElementById('initial-wallet-input').value.trim();
+            if (input.length > 15) {
+                userAddress = input;
+                balance = reward;
+                
+                // Dashboard Güncelleme
+                document.getElementById('main-balance').innerText = balance.toLocaleString();
+                document.getElementById('display-address').innerText = userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
+                
+                // Dashboard'a Geçiş
+                document.getElementById('wallet-setup-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                setTimeout(() => document.getElementById('main-app').style.opacity = '1', 50);
+            } else {
+                alert("Please enter a valid TON address.");
             }
-        });
-
-        // --- MODAL YÖNETİMİ ---
-        function toggleModal(id, show) {
-            const modal = document.getElementById(id);
-            if(show) { modal.classList.add('active'); }
-            else { modal.classList.remove('active'); }
         }
 
-        // --- REKLAM SİSTEMİ ---
-        function simulateAd() {
+        // --- AD LOGIC ---
+        function watchAd() {
             const btn = document.getElementById('ad-btn');
-            btn.disabled = true; btn.innerText = "Watching Sponsor... 5s";
-            btn.classList.replace('bg-blue-600', 'bg-zinc-800');
-            
+            btn.disabled = true; btn.innerText = "Watching... 5s";
             setTimeout(() => {
                 balance += 1;
-                updateBalanceDisplay();
-                btn.disabled = false; btn.innerText = "Watch Now";
-                btn.classList.replace('bg-zinc-800', 'bg-blue-600');
+                document.getElementById('main-balance').innerText = balance.toLocaleString();
+                btn.disabled = false; btn.innerText = "Watch Ad";
                 toggleModal('ad-modal', false);
-                alert("Bonus! 1 $KOALA added to your balance.");
             }, 5000);
         }
 
-        // --- MANUEL ADRES KAYDI ---
-        function saveManualAddress() {
-            const input = document.getElementById('manual-addr-input').value.trim();
-            if(input.length > 15) {
-                const formatted = input.slice(0, 6) + "..." + input.slice(-4);
-                document.getElementById('wallet-addr').innerText = formatted;
-                document.getElementById('wallet-addr').classList.add('text-green-400');
-                toggleModal('address-modal', false);
-                console.log("Adres bot içine kaydedildi: ", input);
-            } else {
-                alert("Please enter a valid TON address.");
+        function toggleModal(id, show) {
+            const modal = document.getElementById(id);
+            if(show) modal.classList.add('active');
+            else modal.classList.remove('active');
+        }
+
+        function openEditAddress() {
+            const newAddr = prompt("Enter new TON address:", userAddress);
+            if (newAddr && newAddr.length > 15) {
+                userAddress = newAddr;
+                document.getElementById('display-address').innerText = userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
             }
         }
     </script>
