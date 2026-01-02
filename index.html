@@ -2,233 +2,178 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hamster Miner Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Clicker UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --gold: #f3ba2f;
-            --blue: #007aff;
-            --bg: #000000;
-            --card-bg: #1c1c1e;
-        }
-
         body {
-            margin: 0; background-color: var(--bg); color: white;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica;
-            display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+            background-color: #000;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            overflow: hidden;
         }
-
-        /* Üst Bilgi Paneli */
-        #top-info {
-            display: flex; justify-content: space-around; padding: 15px;
-            background: rgba(255,255,255,0.05); border-bottom: 1px solid #333;
+        .main-container {
+            max-width: 450px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg, #1d1d1d 0%, #000000 100%);
+            position: relative;
         }
-        .stat-box { text-align: center; }
-        .stat-label { font-size: 10px; color: #888; text-transform: uppercase; }
-        .stat-value { font-size: 14px; font-weight: bold; color: var(--gold); }
-
-        /* Skor Alanı */
-        #score-container { text-align: center; padding: 20px 0; }
-        #score { font-size: 3rem; font-weight: 800; margin: 0; }
-
-        /* Ana Tıklama Alanı */
-        #game-page { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        
-        .circle-outer {
-            width: 280px; height: 280px; border-radius: 50%;
-            background: radial-gradient(circle, #2c3e50 0%, #000 100%);
-            border: 8px solid #333; display: flex; align-items: center; justify-content: center;
-            position: relative; cursor: pointer; transition: transform 0.05s;
-            box-shadow: 0 0 50px rgba(0, 122, 255, 0.2);
+        .card-bg {
+            background: #282828;
+            border-radius: 12px;
+            border: 1px solid #3d3d3d;
         }
-        .circle-outer:active { transform: scale(0.95); border-color: var(--blue); }
-        .character { font-size: 120px; }
-
-        /* Geliştirme (Mining) Sayfası */
-        #mine-page { display: none; padding: 20px; overflow-y: auto; flex-grow: 1; }
-        .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding-bottom: 100px; }
-        .card {
-            background: var(--card-bg); padding: 15px; border-radius: 15px;
-            border: 1px solid #333; display: flex; flex-direction: column; gap: 10px;
+        .emoji-circle {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #3a4bb1 0%, #121421 100%);
+            box-shadow: 0 0 50px rgba(58, 75, 177, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 140px;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            position: relative;
         }
-        .card-title { font-size: 12px; font-weight: bold; }
-        .card-profit { font-size: 10px; color: #4cd964; }
-        .card-btn {
-            background: #333; border: none; color: white; padding: 8px;
-            border-radius: 8px; font-size: 12px; cursor: pointer;
+        .emoji-circle:active {
+            transform: scale(0.95);
         }
-        .card-btn:enabled { background: var(--blue); }
-
-        /* Alt Navigasyon */
-        #nav {
-            height: 70px; background: #111; display: flex;
-            justify-content: space-around; align-items: center;
-            border-top: 1px solid #333; position: fixed; bottom: 0; width: 100%;
+        .floating-text {
+            position: absolute;
+            color: #fff;
+            font-weight: bold;
+            font-size: 24px;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
         }
-        .nav-item { text-align: center; color: #888; font-size: 11px; flex: 1; cursor: pointer; }
-        .nav-item.active { color: white; }
-        .nav-icon { font-size: 24px; display: block; margin-bottom: 4px; }
-
-        /* Enerji Barı */
-        #energy-area { width: 80%; margin-bottom: 30px; }
-        .bar-bg { width: 100%; height: 12px; background: #333; border-radius: 6px; margin-top: 8px; }
-        #bar-fill { width: 100%; height: 100%; background: var(--gold); border-radius: 6px; transition: width 0.1s; }
-
-        /* Tıklama Efekti */
-        .float-text {
-            position: absolute; color: white; font-weight: bold; font-size: 24px;
-            pointer-events: none; animation: rise 0.8s ease-out forwards;
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-100px); }
         }
-        @keyframes rise { 0% { opacity: 1; } 100% { transform: translateY(-120px); opacity: 0; } }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 10px;
+            color: #8e8e8e;
+        }
+        .nav-item.active { color: #fff; }
     </style>
 </head>
 <body>
 
-    <div id="top-info">
-        <div class="stat-box">
-            <div class="stat-label">Tık Başı</div>
-            <div class="stat-value" id="tap-val">+1</div>
+<div class="main-container p-4">
+    <div class="flex justify-between items-center mb-6">
+        <div class="flex items-center gap-2 bg-[#282828] rounded-full px-3 py-1 border border-[#444]">
+            <span class="text-sm">CEO</span>
+            <span class="text-xs text-gray-400">Bronze ></span>
         </div>
-        <div class="stat-box">
-            <div class="stat-label">Saatlik Kâr</div>
-            <div class="stat-value" id="profit-val">0</div>
-        </div>
-    </div>
-
-    <div id="game-page">
-        <div id="score-container">
-            <h1 id="score">0</h1>
-        </div>
-
-        <div class="circle-outer" onpointerdown="handleTap(event)">
-            <div class="character">👨‍💼</div>
-        </div>
-
-        <div id="energy-area">
-            <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                <span>⚡ <span id="energy-now">1000</span></span>
-                <span style="color:#888">/ <span id="energy-max">1000</span></span>
-            </div>
-            <div class="bar-bg"><div id="bar-fill"></div></div>
+        <div class="text-yellow-500 font-bold">
+            <i class="fas fa-key"></i> 0
         </div>
     </div>
 
-    <div id="mine-page">
-        <h2 style="text-align: center;">Maden Kartları</h2>
-        <div class="card-grid">
-            <div class="card">
-                <div class="card-title">Strateji Planı</div>
-                <div class="card-profit">Kâr: +50/saat</div>
-                <button class="card-btn" onclick="buyCard('strategy', 100, 50)">100 💰</button>
-            </div>
-            <div class="card">
-                <div class="card-title">Maden İşçisi</div>
-                <div class="card-profit">Kâr: +120/saat</div>
-                <button class="card-btn" onclick="buyCard('worker', 500, 120)">500 💰</button>
-            </div>
-            <div class="card">
-                <div class="card-title">Altın Kazma</div>
-                <div class="card-profit">Tık: +2</div>
-                <button class="card-btn" onclick="buyCard('drill', 1000, 0, 2)">1000 💰</button>
-            </div>
-            <div class="card">
-                <div class="card-title">Yapay Zeka</div>
-                <div class="card-profit">Kâr: +500/saat</div>
-                <button class="card-btn" onclick="buyCard('ai', 2500, 500)">2500 💰</button>
-            </div>
+    <div class="grid grid-cols-4 gap-2 mb-8">
+        <div class="card-bg p-2 text-center">
+            <div class="text-[10px] text-gray-400">Daily reward</div>
+            <div class="text-xs">11:15</div>
+        </div>
+        <div class="card-bg p-2 text-center">
+            <div class="text-[10px] text-gray-400">Daily cipher</div>
+            <div class="text-xs">06:15</div>
+        </div>
+        <div class="card-bg p-2 text-center">
+            <div class="text-[10px] text-gray-400">Daily combo</div>
+            <div class="text-xs">23:15</div>
+        </div>
+        <div class="card-bg p-2 text-center">
+            <div class="text-[10px] text-gray-400">Mini game</div>
+            <div class="text-xs">07:15</div>
         </div>
     </div>
 
-    <nav id="nav">
-        <div class="nav-item active" onclick="switchPage('game')">
-            <span class="nav-icon">🏠</span>Borsa
+    <div class="text-center mb-8">
+        <div class="flex justify-center items-center gap-3">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/Gold_Emoji_Coin.png" width="40" alt="coin">
+            <span id="score" class="text-5xl font-bold">120</span>
         </div>
-        <div class="nav-item" onclick="switchPage('mine')">
-            <span class="nav-icon">⛏️</span>Maden
+    </div>
+
+    <div class="flex-grow flex items-center justify-center">
+        <div id="clicker" class="emoji-circle">
+            🐶
+        </div>
+    </div>
+
+    <div class="flex justify-between items-center mt-6 px-4">
+        <div class="flex items-center gap-2">
+            <span class="text-yellow-500 text-xl">⚡</span>
+            <span class="font-bold">1000 / 1000</span>
+        </div>
+        <div class="flex items-center gap-2 text-gray-300">
+            <span>🚀 Boost</span>
+        </div>
+    </div>
+
+    <div class="mt-auto pt-6 border-t border-[#333] grid grid-cols-5 gap-1">
+        <div class="nav-item active">
+            <i class="fas fa-exchange-alt text-xl mb-1"></i>
+            <span>Exchange</span>
         </div>
         <div class="nav-item">
-            <span class="nav-icon">👥</span>Arkadaşlar
+            <i class="fas fa-hammer text-xl mb-1"></i>
+            <span>Mine</span>
         </div>
-    </nav>
+        <div class="nav-item">
+            <i class="fas fa-users text-xl mb-1"></i>
+            <span>Friends</span>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa-coins text-xl mb-1"></i>
+            <span>Earn</span>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa- parachute-box text-xl mb-1"></i>
+            <span>Airdrop</span>
+        </div>
+    </div>
+</div>
 
-    <script>
-        let state = {
-            balance: 0,
-            energy: 1000,
-            maxEnergy: 1000,
-            tapPower: 1,
-            profitPerHour: 0
-        };
+<script>
+    const clicker = document.getElementById('clicker');
+    const scoreDisplay = document.getElementById('score');
+    let score = 120;
 
-        function handleTap(e) {
-            if (state.energy >= state.tapPower) {
-                state.balance += state.tapPower;
-                state.energy -= state.tapPower;
-                showEffect(e.clientX, e.clientY);
-                updateUI();
-                if(window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-            }
-        }
+    clicker.addEventListener('click', (e) => {
+        // Skoru artır
+        score += 1;
+        scoreDisplay.innerText = score;
 
-        function buyCard(id, cost, profit, addTap = 0) {
-            if (state.balance >= cost) {
-                state.balance -= cost;
-                state.profitPerHour += profit;
-                state.tapPower += addTap;
-                updateUI();
-            }
-        }
+        // Tıklama efekti (Yüzen sayı)
+        const rect = clicker.getBoundingClientRect();
+        const x = e.clientX || (rect.left + rect.width / 2);
+        const y = e.clientY || (rect.top + rect.height / 2);
 
-        function switchPage(page) {
-            document.getElementById('game-page').style.display = page === 'game' ? 'flex' : 'none';
-            document.getElementById('mine-page').style.display = page === 'mine' ? 'block' : 'none';
-            document.querySelectorAll('.nav-item').forEach((el, i) => {
-                el.classList.toggle('active', (page === 'game' && i === 0) || (page === 'mine' && i === 1));
-            });
-        }
+        const floatText = document.createElement('div');
+        floatText.innerText = '+1';
+        floatText.className = 'floating-text';
+        floatText.style.left = `${x}px`;
+        floatText.style.top = `${y}px`;
 
-        function updateUI() {
-            document.getElementById('score').innerText = Math.floor(state.balance).toLocaleString();
-            document.getElementById('energy-now').innerText = state.energy;
-            document.getElementById('energy-max').innerText = state.maxEnergy;
-            document.getElementById('tap-val').innerText = "+" + state.tapPower;
-            document.getElementById('profit-val').innerText = "+" + state.profitPerHour;
-            document.getElementById('bar-fill').style.width = (state.energy / state.maxEnergy * 100) + "%";
+        document.body.appendChild(floatText);
 
-            // Kart butonlarını kontrol et
-            document.querySelectorAll('.card-btn').forEach(btn => {
-                let cost = parseInt(btn.innerText);
-                btn.disabled = state.balance < cost;
-            });
-        }
+        setTimeout(() => {
+            floatText.remove();
+        }, 800);
+    });
+</script>
 
-        function showEffect(x, y) {
-            const txt = document.createElement('div');
-            txt.className = 'float-text';
-            txt.innerText = "+" + state.tapPower;
-            txt.style.left = x + 'px'; txt.style.top = y + 'px';
-            document.body.appendChild(txt);
-            setTimeout(() => txt.remove(), 800);
-        }
-
-        // Pasif Gelir (Saniyede bir eklenir)
-        setInterval(() => {
-            if (state.profitPerHour > 0) {
-                state.balance += (state.profitPerHour / 3600);
-                updateUI();
-            }
-        }, 1000);
-
-        // Enerji Dolumu
-        setInterval(() => {
-            if (state.energy < state.maxEnergy) {
-                state.energy = Math.min(state.energy + 3, state.maxEnergy);
-                updateUI();
-            }
-        }, 1000);
-
-        if(window.Telegram?.WebApp) window.Telegram.WebApp.expand();
-        updateUI();
-    </script>
 </body>
 </html>
