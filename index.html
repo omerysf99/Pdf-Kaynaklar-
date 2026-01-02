@@ -3,241 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Idle Miner Tycoon Clone</title>
+    <title>Miner Tap To Earn</title>
     <style>
         :root {
-            --sky: #4da6ff;
-            --grass: #76c945;
-            --dirt: #8d5524;
-            --shaft-bg: #3d2b1f;
-            --gold: #ffd700;
-            --elevator-red: #d32f2f;
+            --gold: #f1c40f;
+            --blue: #3498db;
+            --dark-brown: #3d2b1f;
         }
 
         body {
-            margin: 0; padding: 0;
-            background: #222;
-            font-family: 'Arial Black', sans-serif;
-            overflow-x: hidden;
+            margin: 0;
+            background: radial-gradient(circle, #4a2d13, #1a0f07);
             color: white;
+            font-family: 'Arial Black', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            touch-action: manipulation;
         }
 
-        /* --- ÜST PANEL --- */
-        #hud {
-            position: fixed; top: 0; width: 100%; height: 60px;
-            background: rgba(0,0,0,0.8);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 1000; border-bottom: 3px solid var(--gold);
+        /* Üst Puan Tablosu */
+        #header {
+            margin-top: 40px;
+            text-align: center;
         }
 
-        .money-display { font-size: 24px; color: var(--gold); text-shadow: 2px 2px #000; }
-
-        /* --- DÜNYA YAPISI --- */
-        #world { position: relative; width: 100%; }
-
-        #surface {
-            height: 180px; background: linear-gradient(to bottom, var(--sky) 70%, var(--grass) 70%);
-            display: flex; align-items: flex-end; justify-content: space-around;
-            padding-bottom: 10px; border-bottom: 8px solid #4a2d13;
+        #score {
+            font-size: 3.5rem;
+            color: var(--gold);
+            text-shadow: 0 4px #000;
+            margin: 0;
         }
 
-        /* Karakter: Depo Yöneticisi (Görseldeki Yeşil Şapkalı) */
-        .manager-surface { font-size: 40px; position: relative; bottom: 5px; }
-        
-        /* Depo (Sağ üstteki mavi kule) */
-        .warehouse {
-            width: 80px; height: 110px; background: #4a90e2;
-            border: 4px solid #1c3d5a; border-radius: 10px 10px 0 0;
-            text-align: center; font-size: 12px;
+        /* Ana Tıklama Alanı */
+        #tap-container {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
         }
 
-        /* --- ASANSÖR (Sol taraftaki siyah şaft) --- */
-        #elevator-shaft {
-            position: absolute; left: 10px; top: 120px; bottom: 0;
-            width: 70px; background: #1a1a1a; border: 3px solid #333;
-            z-index: 50;
+        #main-character {
+            width: 280px;
+            height: 280px;
+            background: #2c3e50;
+            border: 10px solid var(--blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8rem;
+            cursor: pointer;
+            box-shadow: 0 0 50px rgba(52, 152, 219, 0.4);
+            transition: transform 0.05s active;
+            position: relative;
         }
 
-        /* Asansör Kabini ve Pembe Karakter */
-        #elevator-car {
-            position: absolute; width: 55px; height: 75px;
-            background: #e91e63; /* Pembe ceketli asansör görevlisi rengi */
-            left: 5px; top: 0; border-radius: 8px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: top 1s ease-in-out; border: 2px solid #fff;
+        #main-character:active {
+            transform: scale(0.92);
         }
 
-        /* --- MADEN KATLARI --- */
-        #mine-layers { margin-left: 90px; padding-top: 20px; background: var(--dirt); }
-
-        .floor {
-            height: 140px; background: var(--shaft-bg);
-            margin-bottom: 15px; border-radius: 0 20px 20px 0;
-            position: relative; display: flex; align-items: center;
-            border-bottom: 4px solid #222;
+        /* Karakter Detayı (Görseldeki mavi ceketli yönetici) */
+        #main-character::after {
+            content: "👨‍💼"; /* Mavi ceketli yönetici */
+            position: absolute;
         }
 
-        /* Kat Yöneticisi (Mavi Ceketli Gözlüklü) */
-        .floor-manager {
-            width: 50px; height: 70px; margin-left: 10px;
-            background: #2196f3; border-radius: 10px;
-            display: flex; align-items: center; justify-content: center; font-size: 30px;
+        /* Enerji Barı */
+        #energy-box {
+            width: 80%;
+            margin-bottom: 50px;
+            text-align: center;
         }
 
-        /* Madenciler (Baretli Sarı Karakterler) */
-        .miners-group { display: flex; gap: 10px; margin-left: 20px; }
-        .miner-active { font-size: 35px; animation: mine-swing 0.5s infinite alternate; }
-
-        @keyframes mine-swing {
-            from { transform: rotate(0deg); } to { transform: rotate(-20deg); }
+        .energy-text {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            display: block;
         }
 
-        /* Kat Seviye Butonu (Görseldeki Mavi Level Kutusu) */
-        .level-box {
-            position: absolute; right: 20px; top: 20px;
-            width: 60px; height: 60px; background: #4da6ff;
-            border: 3px solid #fff; border-radius: 10px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; box-shadow: 0 4px #1c3d5a;
+        .bar-bg {
+            width: 100%;
+            height: 25px;
+            background: #111;
+            border-radius: 15px;
+            border: 2px solid #555;
+            overflow: hidden;
         }
 
-        .level-box:active { transform: translateY(2px); box-shadow: 0 2px #1c3d5a; }
-
-        /* Kaynak Birikme Barı */
-        .stock-bar {
-            position: absolute; bottom: 15px; left: 80px; right: 100px;
-            height: 15px; background: #000; border-radius: 10px; overflow: hidden;
+        #bar-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #f1c40f, #e67e22);
+            transition: width 0.1s;
         }
-        .stock-fill { height: 100%; width: 0%; background: var(--gold); }
+
+        /* Tıklama Efekti (+1 Yazıları) */
+        .tap-ani {
+            position: absolute;
+            color: var(--gold);
+            font-size: 2rem;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 0.7s ease-out forwards;
+            z-index: 100;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-150px); opacity: 0; }
+        }
+
+        /* Alt Menü (Geliştirmeler) */
+        #footer-menu {
+            width: 100%;
+            height: 80px;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 2px solid var(--blue);
+        }
+
+        .menu-item {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #bdc3c7;
+        }
+
+        .menu-icon { font-size: 1.5rem; display: block; }
 
     </style>
 </head>
 <body>
 
-    <div id="hud">
-        <div class="money-display">💰 <span id="total-money">0</span></div>
+    <div id="header">
+        <p style="color: #bdc3c7; margin: 0;">TOPLAM MADEN</p>
+        <h1 id="score">0</h1>
     </div>
 
-    <div id="world">
-        <div id="surface">
-            <div class="manager-surface">👨‍🌾</div> <div class="warehouse">
-                <div style="background:#2c3e50; padding:2px;">LEVEL 10</div>
-                <div style="font-size:30px;">🏠</div>
-                <div id="warehouse-gold" style="color:gold">0</div>
+    <div id="tap-container">
+        <div id="main-character" onpointerdown="handleTap(event)">
             </div>
-        </div>
+    </div>
 
-        <div id="elevator-shaft">
-            <div id="elevator-car">
-                <span style="font-size:25px;">👩‍✈️</span> <small id="elev-cargo" style="font-weight:bold">0</small>
-            </div>
+    <div id="energy-box">
+        <span class="energy-text">⚡ <span id="energy-val">1000</span> / 1000</span>
+        <div class="bar-bg">
+            <div id="bar-fill"></div>
         </div>
+    </div>
 
-        <div id="mine-layers">
-            <div class="floor">
-                <div class="floor-manager">👨‍💼</div> <div class="miners-group">
-                    <div class="miner-active">👷‍♂️</div>
-                </div>
-                <div class="stock-bar"><div id="bar-1" class="stock-fill"></div></div>
-                <div class="level-box" onclick="upgrade(1)">
-                    <span style="font-size:10px">Level</span>
-                    <span id="lvl-1">1</span>
-                </div>
-            </div>
-
-            <div class="floor">
-                <div class="floor-manager">👨‍💼</div>
-                <div class="miners-group">
-                    <div class="miner-active">👷‍♂️</div>
-                    <div class="miner-active" style="animation-delay: 0.2s">👷‍♂️</div>
-                </div>
-                <div class="stock-bar"><div id="bar-2" class="stock-fill"></div></div>
-                <div class="level-box" onclick="upgrade(2)" style="background:#f39c12">
-                    <span style="font-size:10px">Level</span>
-                    <span id="lvl-2">1</span>
-                </div>
-            </div>
-        </div>
+    <div id="footer-menu">
+        <div class="menu-item"><span class="menu-icon">⛏️</span>Madenciler</div>
+        <div class="menu-item"><span class="menu-icon">👩‍✈️</span>Asansör</div>
+        <div class="menu-item" style="color: var(--gold)"><span class="menu-icon">💰</span>Borsa</div>
+        <div class="menu-item"><span class="menu-icon">⚙️</span>Ayarlar</div>
     </div>
 
     <script>
-        let gameState = {
-            money: 0,
-            elevatorLoad: 0,
-            floors: {
-                1: { lvl: 1, stock: 0, cost: 50, power: 10, speed: 1 },
-                2: { lvl: 1, stock: 0, cost: 250, power: 45, speed: 0.8 }
-            }
-        };
+        let balance = 0;
+        let energy = 1000;
+        const maxEnergy = 1000;
+        const tapPower = 1;
 
-        // Otomatik Üretim Barları
-        function updateProgress() {
-            for(let id in gameState.floors) {
-                let floor = gameState.floors[id];
-                let bar = document.getElementById(`bar-${id}`);
-                let currentWidth = parseFloat(bar.style.width) || 0;
+        const scoreEl = document.getElementById('score');
+        const energyValEl = document.getElementById('energy-val');
+        const energyBarEl = document.getElementById('bar-fill');
+        const tapContainer = document.getElementById('tap-container');
+
+        function handleTap(e) {
+            if (energy >= tapPower) {
+                // Skoru Artır
+                balance += tapPower;
+                energy -= tapPower;
                 
-                if(currentWidth >= 100) {
-                    bar.style.width = "0%";
-                    floor.stock += floor.power * floor.lvl;
-                } else {
-                    bar.style.width = (currentWidth + floor.speed) + "%";
+                updateUI();
+                createTapEffect(e.clientX, e.clientY);
+
+                // Hafif titreşim (Telegram için)
+                if (window.Telegram && window.Telegram.WebApp) {
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
                 }
-            }
-            requestAnimationFrame(updateProgress);
-        }
-
-        // Asansör Döngüsü (Görseldeki gibi dikey hareket)
-        const elevator = document.getElementById('elevator-car');
-        async function runElevator() {
-            while(true) {
-                // Kat 1'e git
-                elevator.style.top = "160px";
-                await wait(2000);
-                collect(1);
-
-                // Kat 2'ye git
-                elevator.style.top = "315px";
-                await wait(2000);
-                collect(2);
-
-                // Yüzeye dön ve parayı boşalt
-                elevator.style.top = "0px";
-                await wait(2500);
-                gameState.money += gameState.elevatorLoad;
-                gameState.elevatorLoad = 0;
-                updateUI();
-            }
-        }
-
-        function collect(floorId) {
-            gameState.elevatorLoad += gameState.floors[floorId].stock;
-            gameState.floors[floorId].stock = 0;
-            updateUI();
-        }
-
-        function upgrade(id) {
-            let f = gameState.floors[id];
-            if(gameState.money >= f.cost) {
-                gameState.money -= f.cost;
-                f.lvl++;
-                f.cost *= 2;
-                updateUI();
             }
         }
 
         function updateUI() {
-            document.getElementById('total-money').innerText = Math.floor(gameState.money).toLocaleString();
-            document.getElementById('elev-cargo').innerText = gameState.elevatorLoad;
-            document.getElementById('lvl-1').innerText = gameState.floors[1].lvl;
-            document.getElementById('lvl-2').innerText = gameState.floors[2].lvl;
+            scoreEl.innerText = balance.toLocaleString();
+            energyValEl.innerText = energy;
+            const percent = (energy / maxEnergy) * 100;
+            energyBarEl.style.width = percent + "%";
         }
 
-        const wait = ms => new Promise(res => setTimeout(res, ms));
+        function createTapEffect(x, y) {
+            const el = document.createElement('div');
+            el.className = 'tap-ani';
+            el.innerText = `+${tapPower}`;
+            el.style.left = `${x - 20}px`;
+            el.style.top = `${y - 20}px`;
+            document.body.appendChild(el);
 
-        // Başlat
-        updateProgress();
-        runElevator();
+            setTimeout(() => {
+                el.remove();
+            }, 700);
+        }
+
+        // Enerji Yenileme (Saniyede 2 enerji)
+        setInterval(() => {
+            if (energy < maxEnergy) {
+                energy += 2;
+                if (energy > maxEnergy) energy = maxEnergy;
+                updateUI();
+            }
+        }, 1000);
+
+        // Telegram tam ekran modu
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.expand();
+            window.Telegram.WebApp.ready();
+        }
     </script>
 </body>
 </html>
