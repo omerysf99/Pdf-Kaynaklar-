@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Koalas Arcade Pro</title>
+    <title>Koalas Casino & Miner</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -11,445 +11,189 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body, html { margin: 0; padding: 0; background-color: #000; color: white; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
         
-        /* Dashboard */
-        .hero { position: relative; width: 100%; height: 35vh; background: url('Koalas.jpg') center/cover; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 40px; }
-        .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, #000); }
-        .main-card { background: #111; border-radius: 30px; padding: 20px; border: 1px solid #1c1c1c; margin-top: -30px; position: relative; z-index: 20; }
-        
-        /* Oyun Görünümü */
-        #game-view { position: fixed; inset: 0; background: radial-gradient(circle at center, #111, #000); z-index: 3000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .close-btn { position: absolute; top: 40px; right: 25px; font-size: 28px; font-weight: bold; cursor: pointer; z-index: 3010; color: #555; }
+        /* Slot Machine Styles */
+        .slot-container { display: flex; gap: 10px; justify-content: center; margin: 30px 0; }
+        .slot-reel { width: 80px; height: 120px; background: #1a1a1a; border: 3px solid #333; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 50px; overflow: hidden; }
+        .spinning { animation: reelSpin 0.1s infinite linear; }
+        @keyframes reelSpin { 0% { transform: translateY(-10px); } 100% { transform: translateY(10px); } }
 
-        /* GELİŞMİŞ TON MINER */
-        #miner-area { width: 100%; height: 100%; display: none; position: relative; }
-        .gem { position: absolute; font-size: 50px; cursor: pointer; user-select: none; filter: drop-shadow(0 0 10px #007aff); transition: transform 0.1s; }
-        .gem:active { transform: scale(1.4); }
-        .timer-bar { position: absolute; top: 0; left: 0; height: 5px; background: #007aff; width: 100%; transition: width 0.1s linear; }
+        /* Reklam Overlay */
+        #ad-overlay { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 
-        /* GELİŞMİŞ LUCKY SPIN */
-        #spin-area { display: none; text-align: center; }
-        .wheel-container { position: relative; width: 320px; height: 320px; margin-bottom: 30px; }
-        .wheel { width: 100%; height: 100%; border-radius: 50%; border: 10px solid #222; position: relative; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); background: conic-gradient(
-            #007aff 0deg 60deg, #111 60deg 120deg, 
-            #007aff 120deg 180deg, #111 180deg 240deg, 
-            #007aff 240deg 300deg, #111 300deg 360deg
-        ); box-shadow: 0 0 50px rgba(0, 122, 255, 0.2); }
-        .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; background: #fff; border-radius: 50%; z-index: 10; border: 5px solid #222; }
-        .pointer { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #ff3b30; z-index: 20; }
-        
-        .game-card { background: linear-gradient(135deg, #151515, #0a0a0a); border: 1px solid #222; border-radius: 24px; padding: 20px; margin-top: 15px; display: flex; align-items: center; gap: 15px; }
+        /* Game UI */
+        #game-view { position: fixed; inset: 0; background: radial-gradient(circle, #1a1a1a, #000); z-index: 3000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .gem { position: absolute; font-size: 55px; cursor: pointer; filter: drop-shadow(0 0 15px #007aff); transition: transform 0.1s; z-index: 100; }
+        .gem:active { transform: scale(1.5); }
     </style>
 </head>
 <body>
 
-    <div id="game-view">
-        <div class="close-btn" onclick="exitGame()">✕</div>
-        
-        <div id="game-intro" class="text-center p-6">
-            <div id="game-icon" class="text-8xl mb-4"></div>
-            <h2 id="game-title" class="text-5xl font-black italic mb-2 tracking-tighter"></h2>
-            <p id="game-desc" class="text-zinc-500 mb-8 font-bold uppercase text-xs tracking-widest"></p>
-            <button onclick="startGame()" class="bg-blue-600 px-12 py-4 rounded-2xl font-black text-xl shadow-xl shadow-blue-900/40">BAŞLAT</button>
-        </div>
-
-        <div id="miner-area">
-            <div class="timer-bar" id="timer"></div>
-            <div id="miner-target-container" class="w-full h-full"></div>
-            <div class="absolute bottom-20 w-full text-center">
-                <span id="miner-score" class="text-6xl font-black italic opacity-20">0</span>
-            </div>
-        </div>
-
-        <div id="spin-area">
-            <div class="wheel-container">
-                <div class="pointer"></div>
-                <div id="wheel" class="wheel"></div>
-                <div class="wheel-center"></div>
-            </div>
-            <button id="spin-btn" onclick="runSpin()" class="bg-white text-black px-12 py-4 rounded-2xl font-black text-xl">ÇEVİR (FREE)</button>
+    <div id="ad-overlay">
+        <div class="text-blue-500 text-6xl mb-6"><i class="fa-solid fa-rectangle-ad"></i></div>
+        <h2 class="text-2xl font-black mb-2">REKLAM İZLENİYOR</h2>
+        <p class="text-zinc-500 mb-8">Koalas Kazandırıyor... <span id="ad-timer">5</span>s</p>
+        <div class="w-48 h-1 bg-zinc-800 rounded-full overflow-hidden">
+            <div id="ad-progress" class="h-full bg-blue-600 w-0 transition-all"></div>
         </div>
     </div>
 
-    <div class="hero"><h1 class="text-5xl font-black italic z-10">KOALAS</h1></div>
-    
-    <div class="px-4">
-        <div class="main-card">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 id="total-pts" class="text-5xl font-black tracking-tighter">1,250</h2>
-                    <p class="text-zinc-500 text-[10px] font-black tracking-widest uppercase">Available Points</p>
+    <div id="game-view">
+        <div class="absolute top-10 right-6 text-3xl opacity-50" onclick="exitGame()">✕</div>
+        
+        <div id="slot-area" class="hidden text-center">
+            <h2 class="text-4xl font-black italic mb-8 text-orange-500">777 JACKPOT</h2>
+            <div class="slot-container">
+                <div id="reel1" class="slot-reel">💎</div>
+                <div id="reel2" class="slot-reel">💎</div>
+                <div id="reel3" class="slot-reel">💎</div>
+            </div>
+            <button id="slot-btn" onclick="spinSlot()" class="mt-8 bg-orange-600 px-12 py-4 rounded-2xl font-black text-xl shadow-lg shadow-orange-900/40">SPIN (200 Pts)</button>
+        </div>
+
+        <div id="miner-area" class="hidden w-full h-full relative">
+            <div class="absolute top-20 w-full text-center">
+                <div class="text-xs font-bold text-blue-400 tracking-widest uppercase mb-2">Koalas Kazandırıyor!</div>
+                <div id="miner-timer" class="text-5xl font-black italic">60s</div>
+                <div class="text-2xl mt-2 font-bold text-zinc-500">Skor: <span id="m-score">0</span></div>
+            </div>
+            <div id="miner-target" class="w-full h-full"></div>
+        </div>
+    </div>
+
+    <div class="p-6 pt-12">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <p class="text-zinc-500 text-xs font-bold tracking-widest uppercase">Balance</p>
+                <h1 id="total-balance" class="text-5xl font-black italic">5,000</h1>
+            </div>
+            <img src="Koalas.jpg" class="w-16 h-16 rounded-3xl border-2 border-zinc-800">
+        </div>
+
+        <div class="grid gap-4">
+            <div class="bg-zinc-900 p-5 rounded-3xl border border-zinc-800 flex items-center gap-4" onclick="startMinerWithAd()">
+                <div class="text-4xl">⛏️</div>
+                <div class="flex-1">
+                    <h3 class="font-black italic text-lg leading-tight">TON MINER</h3>
+                    <p class="text-[10px] text-blue-500 font-bold">1 REKLAM İZLE - 1 DK KAZAN</p>
                 </div>
-                <img src="Koalas.jpg" class="w-14 h-14 rounded-2xl border border-white/10">
+                <i class="fa-solid fa-play-circle text-2xl opacity-20"></i>
             </div>
-            <div class="flex gap-2">
-                <button onclick="tonConnectUI.openModal()" class="flex-1 bg-zinc-900 border border-zinc-800 py-3 rounded-xl font-bold text-sm">Wallet</button>
-                <button class="flex-1 bg-blue-600 py-3 rounded-xl font-bold text-sm">Deposit</button>
-            </div>
-        </div>
 
-        <div class="game-card" onclick="openIntro('Ton Miner', '💎', '30 saniyede toplayabildiğin kadar elmas topla!')">
-            <div class="w-14 h-14 bg-blue-600/20 rounded-2xl flex items-center justify-center text-3xl">💎</div>
-            <div class="flex-1">
-                <h4 class="font-black italic text-lg">TON MINER</h4>
-                <p class="text-[10px] text-zinc-500 font-bold">HIZLI TIKLA, KAZAN!</p>
+            <div class="bg-zinc-900 p-5 rounded-3xl border border-zinc-800 flex items-center gap-4" onclick="openSlot()">
+                <div class="text-4xl">🎰</div>
+                <div class="flex-1">
+                    <h3 class="font-black italic text-lg leading-tight">777 SLOTS</h3>
+                    <p class="text-[10px] text-orange-500 font-bold">ŞANSINI DENE, JACKPOT YAP!</p>
+                </div>
+                <i class="fa-solid fa-play-circle text-2xl opacity-20"></i>
             </div>
-            <i class="fa-solid fa-chevron-right text-zinc-800"></i>
-        </div>
-
-        <div class="game-card" onclick="openIntro('Lucky Spin', '🎰', 'Çarkı çevir, 5000 puana kadar ödül kazan!')">
-            <div class="w-14 h-14 bg-orange-600/20 rounded-2xl flex items-center justify-center text-3xl">🎰</div>
-            <div class="flex-1">
-                <h4 class="font-black italic text-lg">LUCKY SPIN</h4>
-                <p class="text-[10px] text-zinc-500 font-bold">ŞANSINI DENE!</p>
-            </div>
-            <i class="fa-solid fa-chevron-right text-zinc-800"></i>
         </div>
     </div>
 
     <script>
-        let totalPoints = 1250;
-        let gameActive = false;
-        let minerScore = 0;
-        let timeLeft = 100;
+        let balance = 5000;
+        let minerPoints = 0;
+        const symbols = ['💎', '7️⃣', '🍒', '🍋', '⭐'];
 
-        function openIntro(name, icon, desc) {
-            document.getElementById('game-title').innerText = name;
-            document.getElementById('game-icon').innerText = icon;
-            document.getElementById('game-desc').innerText = desc;
+        function updateBalance() { document.getElementById('total-balance').innerText = balance.toLocaleString(); }
+
+        // --- SLOT MACHINE ---
+        function openSlot() {
             document.getElementById('game-view').style.display = 'flex';
-            document.getElementById('game-intro').style.display = 'block';
-            document.getElementById('miner-area').style.display = 'none';
-            document.getElementById('spin-area').style.display = 'none';
+            document.getElementById('slot-area').classList.remove('hidden');
+            document.getElementById('miner-area').classList.add('hidden');
         }
 
-        function startGame() {
-            document.getElementById('game-intro').style.display = 'none';
-            const title = document.getElementById('game-title').innerText;
+        function spinSlot() {
+            if (balance < 200) { alert("Yetersiz Puan!"); return; }
+            balance -= 200; updateBalance();
             
-            if (title === 'Ton Miner') {
-                startMiner();
-            } else {
-                document.getElementById('spin-area').style.display = 'flex';
-                document.getElementById('spin-area').style.flexDirection = 'column';
+            const btn = document.getElementById('slot-btn');
+            const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+            btn.disabled = true;
+
+            reels.forEach(r => r.classList.add('spinning'));
+
+            setTimeout(() => {
+                let results = [];
+                reels.forEach((r, i) => {
+                    setTimeout(() => {
+                        r.classList.remove('spinning');
+                        const res = symbols[Math.floor(Math.random() * symbols.length)];
+                        r.innerText = res;
+                        results.push(res);
+                        if (results.length === 3) checkWin(results);
+                    }, i * 500);
+                });
+            }, 1000);
+        }
+
+        function checkWin(res) {
+            document.getElementById('slot-btn').disabled = false;
+            if (res[0] === res[1] && res[1] === res[2]) {
+                const prize = res[0] === '7️⃣' ? 5000 : 1000;
+                alert("JACKPOT! " + prize + " Puan Kazandın!");
+                balance += prize; updateBalance();
             }
         }
 
-        // --- GELİŞMİŞ MINER SİSTEMİ ---
-        function startMiner() {
-            document.getElementById('miner-area').style.display = 'block';
-            minerScore = 0;
-            timeLeft = 100;
-            gameActive = true;
-            updateMinerScore();
-            spawnGem();
-
-            const timerInt = setInterval(() => {
-                timeLeft -= 0.5;
-                document.getElementById('timer').style.width = timeLeft + "%";
-                if (timeLeft <= 0) {
-                    clearInterval(timerInt);
-                    endMiner();
+        // --- TON MINER & AD ---
+        function startMinerWithAd() {
+            document.getElementById('ad-overlay').style.display = 'flex';
+            let sec = 5;
+            const int = setInterval(() => {
+                sec--;
+                document.getElementById('ad-timer').innerText = sec;
+                document.getElementById('ad-progress').style.width = ((5 - sec) / 5 * 100) + "%";
+                if (sec <= 0) {
+                    clearInterval(int);
+                    document.getElementById('ad-overlay').style.display = 'none';
+                    openMiner();
                 }
-            }, 100);
+            }, 1000);
+        }
+
+        function openMiner() {
+            document.getElementById('game-view').style.display = 'flex';
+            document.getElementById('miner-area').classList.remove('hidden');
+            document.getElementById('slot-area').classList.add('hidden');
+            
+            minerPoints = 0;
+            let time = 60;
+            spawnGem();
+            
+            const timerInt = setInterval(() => {
+                time--;
+                document.getElementById('miner-timer').innerText = time + "s";
+                if (time <= 0) {
+                    clearInterval(timerInt);
+                    alert("Süre Doldu! Kazanç: " + minerPoints);
+                    balance += minerPoints; updateBalance();
+                    exitGame();
+                }
+            }, 1000);
         }
 
         function spawnGem() {
-            if (!gameActive) return;
-            const container = document.getElementById('miner-target-container');
-            container.innerHTML = '';
-            const gem = document.createElement('div');
-            gem.className = 'gem';
-            gem.innerText = '💎';
-            gem.style.left = Math.random() * 80 + 10 + "%";
-            gem.style.top = Math.random() * 60 + 20 + "%";
-            
-            gem.onclick = (e) => {
-                e.stopPropagation();
-                minerScore += 15;
-                updateMinerScore();
+            const area = document.getElementById('miner-target');
+            area.innerHTML = '';
+            const g = document.createElement('div');
+            g.className = 'gem';
+            g.innerText = '💎';
+            g.style.left = Math.random() * 80 + 10 + "%";
+            g.style.top = Math.random() * 60 + 20 + "%";
+            g.onclick = () => {
+                minerPoints += 25;
+                document.getElementById('m-score').innerText = minerPoints;
                 spawnGem();
             };
-            container.appendChild(gem);
-        }
-
-        function updateMinerScore() {
-            document.getElementById('miner-score').innerText = minerScore;
-        }
-
-        function endMiner() {
-            gameActive = false;
-            alert("Süre Doldu! Toplanan Puan: " + minerScore);
-            totalPoints += minerScore;
-            updateTotal();
-            exitGame();
-        }
-
-        // --- GELİŞMİŞ SPIN SİSTEMİ ---
-        let isSpinning = false;
-        function runSpin() {
-            if (isSpinning) return;
-            isSpinning = true;
-            const wheel = document.getElementById('wheel');
-            const spinBtn = document.getElementById('spin-btn');
-            const deg = Math.floor(5000 + Math.random() * 5000);
-            
-            spinBtn.disabled = true;
-            spinBtn.innerText = "DÖNÜYOR...";
-            wheel.style.transform = `rotate(${deg}deg)`;
-
-            setTimeout(() => {
-                const prizes = [100, 500, 1000, 250, 2000, 50];
-                const win = prizes[Math.floor(Math.random() * prizes.length)];
-                alert("Tebrikler! Çarktan " + win + " puan çıktı!");
-                totalPoints += win;
-                updateTotal();
-                isSpinning = false;
-                spinBtn.disabled = false;
-                spinBtn.innerText = "ÇEVİR (FREE)";
-                exitGame();
-            }, 4000);
-        }
-
-        function updateTotal() {
-            document.getElementById('total-pts').innerText = totalPoints.toLocaleString();
+            area.appendChild(g);
         }
 
         function exitGame() {
             document.getElementById('game-view').style.display = 'none';
-            gameActive = false;
-            document.getElementById('miner-target-container').innerHTML = '';
+            document.getElementById('miner-target').innerHTML = '';
         }
-
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json'
-        });
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Koalas Arcade Pro</title>
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body, html { margin: 0; padding: 0; background-color: #000; color: white; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
-        
-        /* Dashboard */
-        .hero { position: relative; width: 100%; height: 35vh; background: url('Koalas.jpg') center/cover; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 40px; }
-        .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, #000); }
-        .main-card { background: #111; border-radius: 30px; padding: 20px; border: 1px solid #1c1c1c; margin-top: -30px; position: relative; z-index: 20; }
-        
-        /* Oyun Görünümü */
-        #game-view { position: fixed; inset: 0; background: radial-gradient(circle at center, #111, #000); z-index: 3000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .close-btn { position: absolute; top: 40px; right: 25px; font-size: 28px; font-weight: bold; cursor: pointer; z-index: 3010; color: #555; }
-
-        /* GELİŞMİŞ TON MINER */
-        #miner-area { width: 100%; height: 100%; display: none; position: relative; }
-        .gem { position: absolute; font-size: 50px; cursor: pointer; user-select: none; filter: drop-shadow(0 0 10px #007aff); transition: transform 0.1s; }
-        .gem:active { transform: scale(1.4); }
-        .timer-bar { position: absolute; top: 0; left: 0; height: 5px; background: #007aff; width: 100%; transition: width 0.1s linear; }
-
-        /* GELİŞMİŞ LUCKY SPIN */
-        #spin-area { display: none; text-align: center; }
-        .wheel-container { position: relative; width: 320px; height: 320px; margin-bottom: 30px; }
-        .wheel { width: 100%; height: 100%; border-radius: 50%; border: 10px solid #222; position: relative; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); background: conic-gradient(
-            #007aff 0deg 60deg, #111 60deg 120deg, 
-            #007aff 120deg 180deg, #111 180deg 240deg, 
-            #007aff 240deg 300deg, #111 300deg 360deg
-        ); box-shadow: 0 0 50px rgba(0, 122, 255, 0.2); }
-        .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; background: #fff; border-radius: 50%; z-index: 10; border: 5px solid #222; }
-        .pointer { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #ff3b30; z-index: 20; }
-        
-        .game-card { background: linear-gradient(135deg, #151515, #0a0a0a); border: 1px solid #222; border-radius: 24px; padding: 20px; margin-top: 15px; display: flex; align-items: center; gap: 15px; }
-    </style>
-</head>
-<body>
-
-    <div id="game-view">
-        <div class="close-btn" onclick="exitGame()">✕</div>
-        
-        <div id="game-intro" class="text-center p-6">
-            <div id="game-icon" class="text-8xl mb-4"></div>
-            <h2 id="game-title" class="text-5xl font-black italic mb-2 tracking-tighter"></h2>
-            <p id="game-desc" class="text-zinc-500 mb-8 font-bold uppercase text-xs tracking-widest"></p>
-            <button onclick="startGame()" class="bg-blue-600 px-12 py-4 rounded-2xl font-black text-xl shadow-xl shadow-blue-900/40">BAŞLAT</button>
-        </div>
-
-        <div id="miner-area">
-            <div class="timer-bar" id="timer"></div>
-            <div id="miner-target-container" class="w-full h-full"></div>
-            <div class="absolute bottom-20 w-full text-center">
-                <span id="miner-score" class="text-6xl font-black italic opacity-20">0</span>
-            </div>
-        </div>
-
-        <div id="spin-area">
-            <div class="wheel-container">
-                <div class="pointer"></div>
-                <div id="wheel" class="wheel"></div>
-                <div class="wheel-center"></div>
-            </div>
-            <button id="spin-btn" onclick="runSpin()" class="bg-white text-black px-12 py-4 rounded-2xl font-black text-xl">ÇEVİR (FREE)</button>
-        </div>
-    </div>
-
-    <div class="hero"><h1 class="text-5xl font-black italic z-10">KOALAS</h1></div>
-    
-    <div class="px-4">
-        <div class="main-card">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 id="total-pts" class="text-5xl font-black tracking-tighter">1,250</h2>
-                    <p class="text-zinc-500 text-[10px] font-black tracking-widest uppercase">Available Points</p>
-                </div>
-                <img src="Koalas.jpg" class="w-14 h-14 rounded-2xl border border-white/10">
-            </div>
-            <div class="flex gap-2">
-                <button onclick="tonConnectUI.openModal()" class="flex-1 bg-zinc-900 border border-zinc-800 py-3 rounded-xl font-bold text-sm">Wallet</button>
-                <button class="flex-1 bg-blue-600 py-3 rounded-xl font-bold text-sm">Deposit</button>
-            </div>
-        </div>
-
-        <div class="game-card" onclick="openIntro('Ton Miner', '💎', '30 saniyede toplayabildiğin kadar elmas topla!')">
-            <div class="w-14 h-14 bg-blue-600/20 rounded-2xl flex items-center justify-center text-3xl">💎</div>
-            <div class="flex-1">
-                <h4 class="font-black italic text-lg">TON MINER</h4>
-                <p class="text-[10px] text-zinc-500 font-bold">HIZLI TIKLA, KAZAN!</p>
-            </div>
-            <i class="fa-solid fa-chevron-right text-zinc-800"></i>
-        </div>
-
-        <div class="game-card" onclick="openIntro('Lucky Spin', '🎰', 'Çarkı çevir, 5000 puana kadar ödül kazan!')">
-            <div class="w-14 h-14 bg-orange-600/20 rounded-2xl flex items-center justify-center text-3xl">🎰</div>
-            <div class="flex-1">
-                <h4 class="font-black italic text-lg">LUCKY SPIN</h4>
-                <p class="text-[10px] text-zinc-500 font-bold">ŞANSINI DENE!</p>
-            </div>
-            <i class="fa-solid fa-chevron-right text-zinc-800"></i>
-        </div>
-    </div>
-
-    <script>
-        let totalPoints = 1250;
-        let gameActive = false;
-        let minerScore = 0;
-        let timeLeft = 100;
-
-        function openIntro(name, icon, desc) {
-            document.getElementById('game-title').innerText = name;
-            document.getElementById('game-icon').innerText = icon;
-            document.getElementById('game-desc').innerText = desc;
-            document.getElementById('game-view').style.display = 'flex';
-            document.getElementById('game-intro').style.display = 'block';
-            document.getElementById('miner-area').style.display = 'none';
-            document.getElementById('spin-area').style.display = 'none';
-        }
-
-        function startGame() {
-            document.getElementById('game-intro').style.display = 'none';
-            const title = document.getElementById('game-title').innerText;
-            
-            if (title === 'Ton Miner') {
-                startMiner();
-            } else {
-                document.getElementById('spin-area').style.display = 'flex';
-                document.getElementById('spin-area').style.flexDirection = 'column';
-            }
-        }
-
-        // --- GELİŞMİŞ MINER SİSTEMİ ---
-        function startMiner() {
-            document.getElementById('miner-area').style.display = 'block';
-            minerScore = 0;
-            timeLeft = 100;
-            gameActive = true;
-            updateMinerScore();
-            spawnGem();
-
-            const timerInt = setInterval(() => {
-                timeLeft -= 0.5;
-                document.getElementById('timer').style.width = timeLeft + "%";
-                if (timeLeft <= 0) {
-                    clearInterval(timerInt);
-                    endMiner();
-                }
-            }, 100);
-        }
-
-        function spawnGem() {
-            if (!gameActive) return;
-            const container = document.getElementById('miner-target-container');
-            container.innerHTML = '';
-            const gem = document.createElement('div');
-            gem.className = 'gem';
-            gem.innerText = '💎';
-            gem.style.left = Math.random() * 80 + 10 + "%";
-            gem.style.top = Math.random() * 60 + 20 + "%";
-            
-            gem.onclick = (e) => {
-                e.stopPropagation();
-                minerScore += 15;
-                updateMinerScore();
-                spawnGem();
-            };
-            container.appendChild(gem);
-        }
-
-        function updateMinerScore() {
-            document.getElementById('miner-score').innerText = minerScore;
-        }
-
-        function endMiner() {
-            gameActive = false;
-            alert("Süre Doldu! Toplanan Puan: " + minerScore);
-            totalPoints += minerScore;
-            updateTotal();
-            exitGame();
-        }
-
-        // --- GELİŞMİŞ SPIN SİSTEMİ ---
-        let isSpinning = false;
-        function runSpin() {
-            if (isSpinning) return;
-            isSpinning = true;
-            const wheel = document.getElementById('wheel');
-            const spinBtn = document.getElementById('spin-btn');
-            const deg = Math.floor(5000 + Math.random() * 5000);
-            
-            spinBtn.disabled = true;
-            spinBtn.innerText = "DÖNÜYOR...";
-            wheel.style.transform = `rotate(${deg}deg)`;
-
-            setTimeout(() => {
-                const prizes = [100, 500, 1000, 250, 2000, 50];
-                const win = prizes[Math.floor(Math.random() * prizes.length)];
-                alert("Tebrikler! Çarktan " + win + " puan çıktı!");
-                totalPoints += win;
-                updateTotal();
-                isSpinning = false;
-                spinBtn.disabled = false;
-                spinBtn.innerText = "ÇEVİR (FREE)";
-                exitGame();
-            }, 4000);
-        }
-
-        function updateTotal() {
-            document.getElementById('total-pts').innerText = totalPoints.toLocaleString();
-        }
-
-        function exitGame() {
-            document.getElementById('game-view').style.display = 'none';
-            gameActive = false;
-            document.getElementById('miner-target-container').innerHTML = '';
-        }
-
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json'
-        });
     </script>
 </body>
 </html>
