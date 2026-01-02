@@ -11,36 +11,41 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body, html { margin: 0; padding: 0; background-color: #000; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
         
-        /* Hero */
-        .hero { position: relative; width: 100%; height: 45vh; background: url('Koalas.jpg') center/cover; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 60px; }
+        .hero { position: relative; width: 100%; height: 40vh; background: url('Koalas.jpg') center/cover; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 50px; }
         .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, #000); }
         .title { font-size: 3.5rem; font-weight: 900; font-style: italic; z-index: 10; text-shadow: 0 10px 30px rgba(0,0,0,0.8); }
 
-        /* Main Card */
-        .main-card { background: #111; border-radius: 30px; padding: 20px; border: 1px solid #1c1c1c; margin-top: -40px; position: relative; z-index: 20; }
+        .main-card { background: #111; border-radius: 30px; padding: 20px; border: 1px solid #1c1c1c; margin-top: -30px; position: relative; z-index: 20; }
         
-        /* Wallet & Balance */
-        .connect-btn { background: #007aff; color: #fff; font-weight: 800; border-radius: 16px; width: 100%; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; margin: 15px 0; }
+        .connect-btn { background: #007aff; color: #fff; font-weight: 800; border-radius: 16px; width: 100%; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 15px; }
         .ton-box { background: #1a1a1a; border-radius: 20px; padding: 15px; border: 1px solid #222; display: flex; align-items: center; justify-content: space-between; }
         
-        /* Mini Games Section */
-        .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
-        .game-card { background: #151515; border-radius: 20px; padding: 15px; border: 1px solid #222; transition: 0.2s; position: relative; overflow: hidden; }
-        .game-card:active { transform: scale(0.95); }
-        .game-icon { font-size: 24px; margin-bottom: 8px; }
+        /* Oyun Kartları */
+        .games-container { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .game-card { background: linear-gradient(90deg, #151515, #1a1a1a); border-radius: 24px; padding: 20px; border: 1px solid #222; display: flex; align-items: center; gap: 20px; transition: 0.3s; cursor: pointer; }
+        .game-card:active { transform: scale(0.97); }
+        .game-icon-circle { width: 60px; height: 60px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
 
-        /* Toast */
-        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #007aff; color: white; padding: 10px 20px; border-radius: 50px; font-weight: 800; transition: 0.4s; z-index: 1000; }
-        
-        /* Nav */
-        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #050505; border-top: 1px solid #111; display: flex; justify-content: space-around; padding: 15px 0 30px 0; }
+        /* Oyun Ekranı (Overlay) */
+        #game-overlay { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; }
+        .close-game { position: absolute; top: 40px; right: 20px; background: #222; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+
+        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #050505; border-top: 1px solid #111; display: flex; justify-content: space-around; padding: 15px 0 30px 0; z-index: 100; }
         .nav-item { color: #444; font-size: 10px; font-weight: 700; text-align: center; }
         .nav-item.active { color: #007aff; }
     </style>
 </head>
 <body>
 
-    <div id="toast">Address Saved! ✔</div>
+    <div id="game-overlay">
+        <div class="close-game" onclick="closeGame()">X</div>
+        <div class="flex-1 flex flex-col items-center justify-center p-10 text-center">
+            <div id="game-ui-icon" class="text-8xl mb-6 animate-bounce"></div>
+            <h2 id="game-ui-title" class="text-4xl font-black italic mb-2"></h2>
+            <p class="text-zinc-400 mb-8">Oyun yükleniyor ve cüzdanın ile senkronize ediliyor...</p>
+            <button class="bg-blue-600 px-8 py-3 rounded-full font-bold">OYUNU BAŞLAT</button>
+        </div>
+    </div>
 
     <div class="hero">
         <h1 class="title">KOALAS</h1>
@@ -61,10 +66,10 @@
                     <img src="https://ton.org/download/ton_symbol.svg" class="w-8 h-8">
                     <div>
                         <p class="text-xs font-black">TON Balance</p>
-                        <p id="ton-val" class="text-zinc-500 text-[11px] font-bold">0.00 TON</p>
+                        <p class="text-zinc-500 text-[11px] font-bold">0.00 TON</p>
                     </div>
                 </div>
-                <div class="text-[9px] font-mono text-zinc-600" id="addr-short">Not Connected</div>
+                <div class="text-[9px] font-mono text-zinc-600" id="addr-short">Bağlı Değil</div>
             </div>
 
             <button id="wallet-trigger" class="connect-btn">
@@ -74,26 +79,24 @@
         </div>
 
         <h3 class="mt-8 mb-4 px-2 text-xs font-black uppercase tracking-[0.2em] text-zinc-500 italic">Mini Games</h3>
-        <div class="games-grid">
-            <div class="game-card border-l-4 border-l-green-500" onclick="alert('Game Loading...')">
-                <div class="game-icon">🍃</div>
-                <h4 class="text-sm font-black">Euca Dash</h4>
-                <p class="text-[9px] text-zinc-500 font-bold">Catch leaves, win points!</p>
+        
+        <div class="games-container">
+            <div class="game-card" onclick="openGame('Ton Miner', '💎', 'bg-purple-600/20 text-purple-500')">
+                <div class="game-icon-circle bg-purple-600/20 text-purple-500">💎</div>
+                <div class="flex-1">
+                    <h4 class="text-xl font-black italic">TON Miner</h4>
+                    <p class="text-xs text-zinc-500 font-bold">TON taşlarını kaz ve puan topla!</p>
+                </div>
+                <i class="fa-solid fa-chevron-right text-zinc-800"></i>
             </div>
-            <div class="game-card border-l-4 border-l-blue-500" onclick="alert('Game Loading...')">
-                <div class="game-icon">🧗</div>
-                <h4 class="text-sm font-black">Koala Climb</h4>
-                <p class="text-[9px] text-zinc-500 font-bold">Reach the top of tree!</p>
-            </div>
-            <div class="game-card border-l-4 border-l-purple-500" onclick="alert('Game Loading...')">
-                <div class="game-icon">💎</div>
-                <h4 class="text-sm font-black">Ton Miner</h4>
-                <p class="text-[9px] text-zinc-500 font-bold">Dig for TON gems!</p>
-            </div>
-            <div class="game-card border-l-4 border-l-orange-500" onclick="alert('Game Loading...')">
-                <div class="game-icon">🎰</div>
-                <h4 class="text-sm font-black">Lucky Spin</h4>
-                <p class="text-[9px] text-zinc-500 font-bold">Spin for 1000 pts!</p>
+
+            <div class="game-card" onclick="openGame('Lucky Spin', '🎰', 'bg-orange-600/20 text-orange-500')">
+                <div class="game-icon-circle bg-orange-600/20 text-orange-500">🎰</div>
+                <div class="flex-1">
+                    <h4 class="text-xl font-black italic">Lucky Spin</h4>
+                    <p class="text-xs text-zinc-500 font-bold">Çarkı çevir, büyük ödülü kap!</p>
+                </div>
+                <i class="fa-solid fa-chevron-right text-zinc-800"></i>
             </div>
         </div>
     </div>
@@ -101,8 +104,8 @@
     <div class="nav-bar">
         <div class="nav-item active"><i class="fa-solid fa-house text-xl mb-1"></i><p>Home</p></div>
         <div class="nav-item"><i class="fa-solid fa-medal text-xl mb-1"></i><p>Ranking</p></div>
-        <div class="nav-item"><i class="fa-solid fa-bolt text-xl mb-1"></i><p>Earn</p></div>
-        <div class="nav-item"><i class="fa-solid fa-users text-xl mb-1"></i><p>Frens</p></div>
+        <div class="nav-item"><i class="fa-solid fa-bolt-lightning text-xl mb-1"></i><p>Earn</p></div>
+        <div class="nav-item"><i class="fa-solid fa-user-group text-xl mb-1"></i><p>Friends</p></div>
     </div>
 
     <script>
@@ -113,7 +116,17 @@
         const walletBtn = document.getElementById('wallet-trigger');
         const btnLabel = document.getElementById('btn-label');
         const addrShort = document.getElementById('addr-short');
-        const toast = document.getElementById('toast');
+
+        // Oyun Açma/Kapama Mantığı
+        function openGame(title, icon, colorClass) {
+            document.getElementById('game-ui-title').innerText = title;
+            document.getElementById('game-ui-icon').innerText = icon;
+            document.getElementById('game-overlay').style.display = 'flex';
+        }
+
+        function closeGame() {
+            document.getElementById('game-overlay').style.display = 'none';
+        }
 
         walletBtn.onclick = async () => {
             if (tonConnectUI.connected) await tonConnectUI.disconnect();
@@ -123,24 +136,17 @@
         tonConnectUI.onStatusChange(wallet => {
             if (wallet) {
                 const addr = wallet.account.address;
-                const short = addr.slice(0,4) + "..." + addr.slice(-4);
-                btnLabel.innerText = "Connected";
-                addrShort.innerText = short;
+                btnLabel.innerText = "Bağlandı";
+                addrShort.innerText = addr.slice(0,4) + "..." + addr.slice(-4);
                 walletBtn.style.background = "#1a1a1a";
                 localStorage.setItem('saved_addr', addr);
-                showToast();
             } else {
                 btnLabel.innerText = "Connect Wallet";
-                addrShort.innerText = "Not Connected";
+                addrShort.innerText = "Bağlı Değil";
                 walletBtn.style.background = "#007aff";
                 localStorage.removeItem('saved_addr');
             }
         });
-
-        function showToast() {
-            toast.style.transform = "translateX(-50%) translateY(0)";
-            setTimeout(() => { toast.style.transform = "translateX(-50%) translateY(-100px)"; }, 3000);
-        }
 
         window.onload = () => {
             document.getElementById('final-points').innerText = Math.floor(Math.random() * 5000 + 1000).toLocaleString();
