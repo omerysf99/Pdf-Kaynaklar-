@@ -3,210 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Emoji Gold Miner Elite</title>
+    <title>Emoji Gold Miner Elite v2</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg-dark: #0a0a0b; --gold: #f3ba2f; --accent-blue: #4e60ff; --tg-blue: #24a1de; }
-        body { background-color: var(--bg-dark); color: white; font-family: 'Poppins', sans-serif; margin: 0; overflow: hidden; height: 100vh; user-select: none; }
-        
-        .app-container { width: 100%; max-width: 480px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; padding: 20px; position: relative; background: radial-gradient(circle at top, #1c1c21 0%, #000 100%); }
-        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; transition: all 0.3s ease; }
-        .glass-card:active { transform: scale(0.98); }
+        :root { --bg-dark: #000000; --gold: #f3ba2f; --tg-blue: #24a1de; --card-bg: #1c1c1e; }
+        body { background-color: var(--bg-dark); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
 
-        /* Sekme Yönetimi */
-        .page { display: none; flex-direction: column; height: 100%; animation: slideUp 0.3s ease-out; overflow-y: auto; padding-bottom: 100px; }
+        .app-container { 
+            width: 100%; max-width: 480px; margin: 0 auto; height: 100vh; 
+            display: flex; flex-direction: column; padding: 16px; position: relative;
+            background: radial-gradient(circle at top, #1c1c21 0%, #000 100%);
+        }
+
+        /* --- Sayfa Tasarımı --- */
+        .page { display: none; flex-direction: column; height: 100%; animation: pageEnter 0.25s ease-out; overflow-y: auto; padding-bottom: 90px; }
         .page.active { display: flex; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pageEnter { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
-        /* Ana Emoji Alanı */
-        .emoji-stage { position: relative; width: 280px; height: 280px; margin: auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .emoji-glow { position: absolute; inset: 0; background: var(--accent-blue); opacity: 0.15; blur: 60px; filter: blur(50px); border-radius: 50%; animation: pulseGlow 3s infinite; }
-        @keyframes pulseGlow { 0%, 100% { opacity: 0.1; transform: scale(1); } 50% { opacity: 0.25; transform: scale(1.1); } }
-        .emoji-main { font-size: 150px; z-index: 10; transition: transform 0.05s; }
-        .emoji-stage:active .emoji-main { transform: scale(0.9); }
-        
-        /* Enerji Barı */
-        .progress-container { height: 12px; background: rgba(255,255,255,0.1); border-radius: 20px; overflow: hidden; }
-        #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, var(--gold), #fff); box-shadow: 0 0 15px var(--gold); transition: width 0.2s; }
+        /* --- Yeni Buton Tasarımları --- */
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 20px; transition: all 0.2s; 
+        }
 
-        .floating-text { position: absolute; color: white; font-weight: 800; font-size: 32px; pointer-events: none; animation: floatUp 0.7s ease-out forwards; z-index: 100; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-120px) scale(1.5); } }
+        .action-btn {
+            background: linear-gradient(180deg, #2c2c2e 0%, #1c1c1e 100%);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.5);
+            transition: all 0.1s;
+        }
+        .action-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.5); }
 
-        /* Navigasyon */
-        .nav-bar { position: absolute; bottom: 20px; left: 20px; right: 20px; height: 75px; display: flex; justify-content: space-around; align-items: center; z-index: 50; }
-        .nav-btn { color: #555; font-size: 10px; display: flex; flex-direction: column; align-items: center; transition: 0.3s; }
-        .nav-btn.active { color: white; transform: translateY(-5px); }
-        .nav-btn i { font-size: 22px; margin-bottom: 4px; }
-        
-        /* Kartlar (Mine Sekmesi) */
-        .upgrade-card { display: flex; justify-content: space-between; align-items: center; padding: 15px; margin-bottom: 12px; }
-        .buy-btn { background: var(--gold); color: black; font-weight: 800; padding: 6px 15px; border-radius: 12px; font-size: 12px; }
-        
-        /* Telegram Cüzdan Butonu */
-        .tg-wallet-btn { background: var(--tg-blue); border-radius: 14px; padding: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; }
-        
+        .buy-btn {
+            background: var(--gold); color: black; font-weight: 800; border-radius: 12px;
+            box-shadow: 0 3px 0 #b38600; transition: all 0.1s;
+        }
+        .buy-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #b38600; }
+
+        /* --- Alt Navigasyon --- */
+        .nav-container {
+            position: absolute; bottom: 15px; left: 10px; right: 10px;
+            background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px);
+            border-radius: 24px; padding: 8px; display: flex; justify-content: space-around;
+            border: 1px solid rgba(255, 255, 255, 0.08); z-index: 100;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            flex: 1; padding: 10px 0; color: #8e8e93; font-size: 10px; font-weight: 600; transition: 0.3s;
+        }
+        .nav-item.active { color: white; background: rgba(255, 255, 255, 0.05); border-radius: 18px; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active i { color: var(--gold); filter: drop-shadow(0 0 8px rgba(243, 186, 47, 0.4)); }
+
+        /* --- Clicker Alanı --- */
+        .tap-zone {
+            position: relative; width: 280px; height: 280px; margin: auto;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle, rgba(243, 186, 47, 0.1) 0%, transparent 70%);
+        }
+        .main-emoji { font-size: 140px; user-select: none; filter: drop-shadow(0 0 20px rgba(0,0,0,0.5)); transition: transform 0.05s; }
+        .tap-zone:active .main-emoji { transform: scale(0.92); }
+
+        /* --- Floating Text --- */
+        .floating-point {
+            position: absolute; color: white; font-weight: 900; font-size: 32px;
+            pointer-events: none; animation: floatUp 0.6s ease-out forwards; z-index: 50;
+        }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-140px); } }
+
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="flex justify-between items-center mb-6 z-10">
+    <div class="flex justify-between items-center mb-4">
         <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center border border-white/20 shadow-lg">🐶</div>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-yellow-500 to-orange-400 flex items-center justify-center shadow-lg text-xl">🐶</div>
             <div>
-                <div class="text-[10px] text-gray-400 font-bold tracking-widest uppercase">Elite CEO</div>
-                <div class="text-sm font-extrabold text-white">Level <span id="level-txt">1</span> <i class="fas fa-chevron-right text-[10px] text-yellow-500"></i></div>
+                <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Master Miner</div>
+                <div class="text-sm font-bold flex items-center gap-1">Level 1 <i class="fas fa-chevron-right text-[8px]"></i></div>
             </div>
         </div>
-        <div class="glass-card px-4 py-2 flex items-center gap-2 border-yellow-500/30">
-            <i class="fas fa-key text-yellow-500 animate-bounce"></i>
-            <span class="font-black">0</span>
+        <div class="bg-[#1c1c1e] px-4 py-2 rounded-2xl flex items-center gap-2 border border-white/5">
+            <i class="fas fa-gem text-blue-400"></i>
+            <span class="font-black text-sm">0</span>
         </div>
     </div>
 
     <div id="exchange-page" class="page active">
-        <div class="grid grid-cols-4 gap-2 mb-8">
-            <div class="glass-card p-2 text-center border-white/5">
-                <div class="text-[8px] text-gray-500 font-bold uppercase">Reward</div>
-                <div class="text-xs font-black">0</div>
-            </div>
-            <div class="glass-card p-2 text-center border-white/5">
-                <div class="text-[8px] text-gray-500 font-bold uppercase">Cipher</div>
-                <div class="text-xs font-black text-blue-400">0</div>
-            </div>
-            <div class="glass-card p-2 text-center border-white/5">
-                <div class="text-[8px] text-gray-500 font-bold uppercase">Combo</div>
-                <div class="text-xs font-black text-orange-400">0</div>
-            </div>
-            <div class="glass-card p-2 text-center border-white/5">
-                <div class="text-[8px] text-gray-500 font-bold uppercase">Keys</div>
-                <div class="text-xs font-black text-green-400">0</div>
-            </div>
-        </div>
-
-        <div class="text-center mb-4">
-            <div class="flex justify-center items-center gap-3">
-                <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(243,186,47,0.4)]">
-                    <i class="fas fa-dollar-sign text-2xl text-black"></i>
-                </div>
+        <div class="flex flex-col items-center mt-4">
+            <div class="flex items-center gap-2 mb-2">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/Gold_Emoji_Coin.png" width="40">
                 <span id="score" class="text-6xl font-black tracking-tighter">0</span>
             </div>
-            <div class="text-gray-400 text-xs mt-3 tracking-[3px] font-bold">PROFIT PER HOUR: <span class="text-green-400">+$<span id="profit-txt">0</span></span></div>
+            <div class="text-green-500 text-xs font-bold bg-green-500/10 px-3 py-1 rounded-full">
+                Profit: +$<span id="profit-val">0</span> / hr
+            </div>
         </div>
 
-        <div class="flex-grow flex items-center justify-center">
-            <div id="click-btn" class="emoji-stage">
-                <div class="emoji-glow"></div>
-                <span class="emoji-main">🐶</span>
+        <div class="tap-zone" id="tap-btn">
+            <span class="main-emoji">🐶</span>
+        </div>
+
+        <div class="mt-auto">
+            <div class="flex justify-between items-center mb-2 px-1">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-bolt text-yellow-400"></i>
+                    <span id="energy-txt" class="font-bold">1000</span>
+                    <span class="text-gray-600 text-xs">/ 1000</span>
+                </div>
+                <div class="text-xs font-bold text-gray-400">Full in 15m</div>
+            </div>
+            <div class="h-3 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                <div id="energy-bar" class="h-full bg-gradient-to-r from-yellow-500 to-yellow-200 transition-all duration-300" style="width: 100%;"></div>
             </div>
         </div>
     </div>
 
     <div id="mine-page" class="page">
-        <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
-            <i class="fas fa-pickaxe text-yellow-500"></i> Market
-        </h2>
-        <div class="space-y-4">
-            <div class="glass-card upgrade-card">
+        <h2 class="text-2xl font-black mb-6">Mining Market</h2>
+        <div class="grid grid-cols-1 gap-3">
+            <div class="glass-card p-4 flex justify-between items-center">
                 <div class="flex items-center gap-4">
-                    <div class="text-3xl">💻</div>
+                    <div class="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-3xl">⛏️</div>
                     <div>
-                        <div class="font-bold">Hamster IT Team</div>
-                        <div class="text-[10px] text-green-400">+$120/h</div>
+                        <div class="font-bold text-lg">Iron Pickaxe</div>
+                        <div class="text-xs text-green-500 font-bold">+$50/hr</div>
                     </div>
                 </div>
-                <button onclick="buyUpgrade(120, 500)" class="buy-btn">500 <i class="fas fa-dollar-sign"></i></button>
+                <button onclick="buy(50, 200)" class="buy-btn px-6 py-2">200</button>
             </div>
-            <div class="glass-card upgrade-card">
+            <div class="glass-card p-4 flex justify-between items-center opacity-70">
                 <div class="flex items-center gap-4">
-                    <div class="text-3xl">🚀</div>
+                    <div class="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center text-3xl">⚙️</div>
                     <div>
-                        <div class="font-bold">Influencer Pack</div>
-                        <div class="text-[10px] text-green-400">+$450/h</div>
+                        <div class="font-bold text-lg">Auto Clicker</div>
+                        <div class="text-xs text-gray-400">Locked</div>
                     </div>
                 </div>
-                <button onclick="buyUpgrade(450, 1500)" class="buy-btn">1.5K <i class="fas fa-dollar-sign"></i></button>
-            </div>
-            <div class="glass-card upgrade-card">
-                <div class="flex items-center gap-4">
-                    <div class="text-3xl">💎</div>
-                    <div>
-                        <div class="font-bold">Token Listing</div>
-                        <div class="text-[10px] text-green-400">+$2.1K/h</div>
-                    </div>
-                </div>
-                <button class="buy-btn opacity-50">Locked</button>
+                <button class="bg-white/10 text-gray-500 px-6 py-2 rounded-xl font-bold">Lvl 5</button>
             </div>
         </div>
     </div>
 
-    <div id="airdrop-page" class="page">
-        <div class="text-center py-10">
-            <img src="https://ton.org/download/ton_symbol.png" class="w-24 mx-auto mb-6 animate-pulse" alt="TON">
-            <h2 class="text-3xl font-black mb-2">Airdrop Tasks</h2>
-            <p class="text-gray-400 text-sm px-10 mb-10">Listing is coming! Connect your TON wallet to be eligible.</p>
-            
-            <div class="glass-card p-6 mx-2 mb-6">
-                <div class="flex items-center gap-4 mb-8 text-left">
-                    <div class="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center">
-                        <i class="fas fa-wallet text-blue-500 text-2xl"></i>
-                    </div>
-                    <div>
-                        <div class="font-bold text-lg">Connect your TON wallet</div>
-                        <div class="text-[11px] text-gray-500">Connected wallet will receive tokens</div>
-                    </div>
-                </div>
-                <button id="wallet-btn" class="tg-wallet-btn">
-                    <i class="fab fa-telegram-plane"></i>
-                    <span id="wallet-text">Connect Wallet</span>
-                </button>
-            </div>
-            
-            <div class="space-y-3 text-left">
-                <div class="glass-card p-4 flex justify-between items-center">
-                    <span class="font-bold"><i class="fab fa-youtube text-red-500 mr-2"></i> Subscribe YouTube</span>
-                    <i class="fas fa-circle-check text-green-500"></i>
-                </div>
-            </div>
+    <div id="airdrop-page" class="page text-center pt-10">
+        <div class="w-24 h-24 bg-blue-500 rounded-3xl mx-auto flex items-center justify-center shadow-2xl mb-6">
+            <i class="fab fa-telegram-plane text-5xl"></i>
         </div>
+        <h2 class="text-3xl font-black mb-2">TON Connect</h2>
+        <p class="text-gray-500 text-sm px-12 mb-10">Connect your wallet to receive 1,000,000 $TOKEN on listing day.</p>
+        
+        <button id="wallet-trigger" class="action-btn w-full py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3">
+            <i class="fas fa-wallet text-blue-400"></i>
+            <span id="wallet-status">Connect Wallet</span>
+        </button>
     </div>
 
-    <div class="mt-auto z-50">
-        <div class="flex justify-between items-end mb-3 px-2">
-            <div class="flex items-center gap-3">
-                <i class="fas fa-bolt text-yellow-400 text-2xl animate-pulse"></i>
-                <div>
-                    <span id="energy-text" class="font-black text-2xl tracking-tighter">1000</span>
-                    <span class="text-gray-500 text-xs font-bold">/ 1000</span>
-                </div>
-            </div>
-            <button class="glass-card px-4 py-2 flex items-center gap-2 text-orange-400 font-bold text-sm">
-                <i class="fas fa-rocket"></i> Boost
-            </button>
+    <div class="nav-container">
+        <div class="nav-item active" onclick="nav('exchange', this)">
+            <i class="fas fa-coins"></i>
+            <span>Exchange</span>
         </div>
-        <div class="progress-container mb-6">
-            <div id="energy-fill"></div>
+        <div class="nav-item" onclick="nav('mine', this)">
+            <i class="fas fa-pickaxe"></i>
+            <span>Mine</span>
         </div>
-
-        <div class="glass-card nav-bar">
-            <div class="nav-btn active" onclick="showPage('exchange', this)">
-                <i class="fas fa-exchange-alt"></i><span>Exchange</span>
-            </div>
-            <div class="nav-btn" onclick="showPage('mine', this)">
-                <i class="fas fa-pickaxe"></i><span>Mine</span>
-            </div>
-            <div class="nav-btn opacity-30">
-                <i class="fas fa-user-group"></i><span>Friends</span>
-            </div>
-            <div class="nav-btn opacity-30">
-                <i class="fas fa-coins"></i><span>Earn</span>
-            </div>
-            <div class="nav-btn" onclick="showPage('airdrop', this)">
-                <i class="fas fa- parachute-box"></i><span>Airdrop</span>
-            </div>
+        <div class="nav-item opacity-40">
+            <i class="fas fa-user-friends"></i>
+            <span>Friends</span>
+        </div>
+        <div class="nav-item" onclick="nav('airdrop', this)">
+            <i class="fas fa-parachute-box"></i>
+            <span>Airdrop</span>
         </div>
     </div>
 </div>
@@ -214,100 +185,88 @@
 <script>
     let score = 0;
     let energy = 1000;
-    let profitPerHour = 0;
+    let profit = 0;
     const maxEnergy = 1000;
 
-    const scoreEl = document.getElementById('score');
-    const energyEl = document.getElementById('energy-text');
-    const energyFill = document.getElementById('energy-fill');
-    const clickBtn = document.getElementById('click-btn');
-    const profitEl = document.getElementById('profit-txt');
-    const walletBtn = document.getElementById('wallet-btn');
+    const scoreDisplay = document.getElementById('score');
+    const energyDisplay = document.getElementById('energy-txt');
+    const energyBar = document.getElementById('energy-bar');
+    const profitDisplay = document.getElementById('profit-val');
+    const tapBtn = document.getElementById('tap-btn');
 
-    // --- TIKLAMA MEKANİZMASI ---
-    function handleTap(x, y) {
-        if (energy > 0) {
-            score++;
-            energy--;
-            updateUI();
-            createFloatingText(x, y);
-            if(navigator.vibrate) navigator.vibrate(40);
-        } else {
-            clickBtn.classList.add('animate-shake');
-            setTimeout(() => clickBtn.classList.remove('animate-shake'), 200);
-        }
+    // Tap Fonksiyonu
+    function doTap(e) {
+        if (energy <= 0) return;
+        
+        score++;
+        energy--;
+        update();
+        
+        // Efekt
+        const x = e.touches ? e.touches[0].clientX : e.clientX;
+        const y = e.touches ? e.touches[0].clientY : e.clientY;
+        spawnText(x, y);
+        if(navigator.vibrate) navigator.vibrate(30);
     }
 
-    // --- MARKET SİSTEMİ ---
-    function buyUpgrade(profit, cost) {
+    // Market Alım
+    function buy(p, cost) {
         if (score >= cost) {
             score -= cost;
-            profitPerHour += profit;
-            updateUI();
-            alert('Satın Alındı! Saatlik kazancın arttı.');
-        } else {
-            alert('Yetersiz bakiye!');
+            profit += p;
+            update();
         }
     }
 
-    // --- CÜZDAN BAĞLAMA ---
-    walletBtn.onclick = () => {
-        const txt = document.getElementById('wallet-text');
-        txt.innerText = "Connecting...";
+    // Sekme Değiştirme (Geliştirilmiş)
+    function nav(pageId, el) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId + '-page').classList.add('active');
+        
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    // UI Güncelleme
+    function update() {
+        scoreDisplay.innerText = Math.floor(score).toLocaleString();
+        energyDisplay.innerText = energy;
+        profitDisplay.innerText = profit.toLocaleString();
+        energyBar.style.width = (energy / maxEnergy * 100) + "%";
+    }
+
+    // Pasif Döngü
+    setInterval(() => {
+        if (energy < maxEnergy) energy++;
+        score += (profit / 3600);
+        update();
+    }, 1000);
+
+    // Floating Text
+    function spawnText(x, y) {
+        const div = document.createElement('div');
+        div.className = 'floating-point';
+        div.innerText = '+1';
+        div.style.left = x + 'px';
+        div.style.top = y + 'px';
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 600);
+    }
+
+    // Wallet Simülasyonu
+    document.getElementById('wallet-trigger').onclick = function() {
+        const status = document.getElementById('wallet-status');
+        status.innerText = "Connecting...";
         setTimeout(() => {
-            txt.innerText = "UQ7x...a8B Connected";
-            walletBtn.style.background = "#00b127";
+            status.innerText = "UQ7x...9aB0 Connected";
+            this.style.borderColor = "#24a1de";
         }, 1500);
     };
 
-    // --- GÜNCELLEMELER ---
-    function updateUI() {
-        scoreEl.innerText = Math.floor(score).toLocaleString();
-        energyEl.innerText = energy;
-        profitEl.innerText = profitPerHour.toLocaleString();
-        energyFill.style.width = (energy / maxEnergy * 100) + "%";
-    }
-
-    // Pasif Kazanç ve Enerji Yenileme
-    setInterval(() => {
-        // Enerji Yenileme
-        if (energy < maxEnergy) energy++;
-        // Saatlik kazancı saniyeye bölüp ekle
-        score += (profitPerHour / 3600);
-        updateUI();
-    }, 1000);
-
-    // --- SAYFA GEÇİŞİ ---
-    function showPage(pageId, btn) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(pageId + '-page').classList.add('active');
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    }
-
-    function createFloatingText(x, y) {
-        const text = document.createElement('div');
-        text.className = 'floating-text';
-        text.innerText = '+1';
-        text.style.left = x + 'px';
-        text.style.top = y + 'px';
-        document.body.appendChild(text);
-        setTimeout(() => text.remove(), 700);
-    }
-
-    // Event Listeners
-    clickBtn.addEventListener('mousedown', (e) => handleTap(e.clientX, e.clientY));
-    clickBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        const touch = e.touches[e.touches.length - 1];
-        handleTap(touch.clientX, touch.clientY);
-    }, {passive: false});
+    // Events
+    tapBtn.addEventListener('touchstart', (e) => { e.preventDefault(); doTap(e); }, {passive: false});
+    tapBtn.addEventListener('mousedown', doTap);
 </script>
-
-<style>
-    .animate-shake { animation: shake 0.2s infinite; }
-    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
-</style>
 
 </body>
 </html>
