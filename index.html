@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TapSwap Classic Edition</title>
+    <title>TapSwap Lucky Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0b0b0e;
-            --main-yellow: #ffcf4d;
+            --bg: #0f1014;
+            --gold: #ffcf4d;
             --usdt: #26A17B;
-            --doge: #C2A633;
+            --doge: #ba9f33;
+            --not: #ffffff;
         }
 
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg);
             color: white;
             font-family: 'Montserrat', sans-serif;
             margin: 0;
@@ -22,111 +23,110 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: space-between;
             overflow: hidden;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* Üst Bakiye Alanı */
-        .header {
-            margin-top: 40px;
+        /* Üst Bakiye Paneli */
+        .stats-container {
+            margin-top: 30px;
             text-align: center;
+            width: 100%;
         }
 
-        .main-balance {
-            font-size: 3rem;
+        .main-score {
+            font-size: 3.5rem;
             font-weight: 900;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            margin-bottom: 5px;
+            color: var(--gold);
         }
 
-        .sub-balances {
+        .crypto-balances {
             display: flex;
+            justify-content: center;
             gap: 15px;
-            color: #888;
-            font-size: 0.9rem;
-            margin-top: 5px;
+            font-size: 0.85rem;
+            color: #aaa;
         }
 
-        /* Ana Tıklama Alanı (TapSwap Coin Yerine Kutu) */
-        .tap-area {
-            flex-grow: 1;
+        .crypto-balances span b { color: #eee; }
+
+        /* Dokunma Alanı */
+        .tap-zone {
+            position: relative;
+            width: 100%;
+            height: 50vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
-            width: 100%;
         }
 
-        .coin-wrapper {
+        .box-container {
+            width: 260px;
+            height: 260px;
             position: relative;
-            width: 280px;
-            height: 280px;
             cursor: pointer;
-            transition: transform 0.1s ease;
+            transition: transform 0.05s active;
         }
 
-        .coin-wrapper:active {
-            transform: scale(0.95);
-        }
-
-        .coin-wrapper img {
+        .box-container img {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            filter: drop-shadow(0 0 30px rgba(255, 207, 77, 0.2));
+            filter: drop-shadow(0 0 20px rgba(255, 207, 77, 0.2));
         }
 
-        /* Uçan Sayı Efekti */
-        .floating-text {
+        /* Uçan Sayı Animasyonu */
+        .tap-number {
             position: absolute;
-            color: white;
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 900;
             pointer-events: none;
-            animation: moveUp 0.8s ease-out forwards;
+            animation: floatUp 0.7s ease-out forwards;
             z-index: 100;
         }
 
-        @keyframes moveUp {
+        @keyframes floatUp {
             0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-200px); opacity: 0; }
+            100% { transform: translateY(-150px); opacity: 0; }
         }
 
-        /* Alt Menü (Bot Görünümü) */
-        .nav-bar {
+        /* Alt Sekmeler (Kutu Değiştirici) */
+        .bottom-nav {
             width: 90%;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: 20px;
+            background: #1c1f24;
             margin-bottom: 20px;
+            border-radius: 20px;
             display: flex;
+            padding: 10px;
             justify-content: space-around;
-            border: 1px solid #222;
+            border: 1px solid #333;
         }
 
-        .nav-item {
+        .nav-tab {
             text-align: center;
-            color: #666;
             font-size: 0.7rem;
+            color: #555;
             cursor: pointer;
+            transition: 0.3s;
         }
 
-        .nav-item.active { color: var(--main-yellow); }
-
-        .nav-item img {
-            width: 24px;
+        .nav-tab img {
+            width: 30px;
+            height: 30px;
             display: block;
             margin: 0 auto 5px;
-            opacity: 0.5;
+            opacity: 0.4;
         }
 
-        /* Brainrot Patlama Modu */
-        .brainrot-mode {
-            animation: shake 0.05s infinite;
-        }
+        .nav-tab.active { color: var(--gold); }
+        .nav-tab.active img { opacity: 1; filter: drop-shadow(0 0 5px var(--gold)); }
 
-        @keyframes shake {
+        /* Sarsıntı */
+        .shake { animation: shakeEffect 0.05s infinite; }
+        @keyframes shakeEffect {
             0% { transform: translate(1px, 1px); }
             50% { transform: translate(-2px, -1px); }
             100% { transform: translate(1px, 2px); }
@@ -135,104 +135,103 @@
 </head>
 <body>
 
-    <div class="header">
-        <div class="main-balance" id="total-score">0</div>
-        <div class="sub-balances">
-            <span>USDT: <b id="usdt-val">0.000</b></span> | 
-            <span>DOGE: <b id="doge-val">0</b></span> | 
-            <span>NOT: <b id="not-val">0</b></span>
+    <div class="stats-container">
+        <div class="main-score" id="score">0</div>
+        <div class="crypto-balances">
+            <span>USDT: <b id="bal-usdt">0.000</b></span>
+            <span>DOGE: <b id="bal-doge">0</b></span>
+            <span>NOT: <b id="bal-not">0</b></span>
         </div>
     </div>
 
-    <div class="tap-area" id="tap-zone">
-        <div class="coin-wrapper" id="main-btn">
-            <img src="secret.jpg" id="current-img" alt="Tap">
+    <div class="tap-zone" id="tap-zone">
+        <div class="box-container" id="main-box" onmousedown="handleTap(event)" ontouchstart="handleTap(event)">
+            <img src="secret.jpg" id="box-img">
         </div>
     </div>
 
-    <div class="nav-bar">
-        <div class="nav-item active" onclick="changeBox('secret.jpg')">
-            <img src="secret.jpg" style="opacity: 1;"> SECRET
+    <div class="bottom-nav">
+        <div class="nav-tab active" onclick="switchBox('secret.jpg', this)">
+            <img src="secret.jpg"> SECRET
         </div>
-        <div class="nav-item" onclick="changeBox('rainbow.jpg')">
+        <div class="nav-tab" onclick="switchBox('rainbow.jpg', this)">
             <img src="rainbow.jpg"> RAINBOW
         </div>
-        <div class="nav-item" onclick="changeBox('fastive.jpg')">
+        <div class="nav-tab" onclick="switchBox('fastive.jpg', this)">
             <img src="fastive.jpg"> FASTIVE
         </div>
     </div>
 
     <script>
-        let score = 0;
-        let balances = { usdt: 0, doge: 0, not: 0 };
-        const mainBtn = document.getElementById('main-btn');
-        const tapZone = document.getElementById('tap-zone');
+        let balances = { usdt: 0, doge: 0, not: 0, total: 0 };
 
-        // Kutu Değiştirme
-        function changeBox(imgName) {
-            document.getElementById('current-img').src = imgName;
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+        function switchBox(img, el) {
+            document.getElementById('box-img').src = img;
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
         }
 
-        // Tıklama Mantığı
-        mainBtn.addEventListener('touchstart', (e) => {
+        function handleTap(e) {
             e.preventDefault();
-            const touch = e.touches[0];
-            handleTap(touch.clientX, touch.clientY);
-        });
+            
+            // Dokunma koordinatlarını al
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
 
-        mainBtn.addEventListener('mousedown', (e) => {
-            handleTap(e.clientX, e.clientY);
-        });
-
-        function handleTap(x, y) {
-            // Rastgele Ödül (TapSwap Mantığı + Senin Şartların)
+            // Şans Mantığı
             const rand = Math.random();
             let amount = 0;
             let type = "";
+            let color = "";
 
-            if (rand < 0.1) { // %10 Şansla USDT
-                amount = parseFloat((Math.random() * 0.009 + 0.001).toFixed(3));
+            if (rand < 0.1) { // %10 şans USDT
+                amount = parseFloat((Math.random() * (0.01 - 0.001) + 0.001).toFixed(3));
                 balances.usdt += amount;
                 type = "USDT";
-                document.getElementById('usdt-val').innerText = balances.usdt.toFixed(3);
-            } else if (rand < 0.5) { // %40 Şansla DOGE
-                amount = Math.floor(Math.random() * 10) + 1; // TapSwap hızı için küçük miktar
+                color = "var(--usdt)";
+                document.getElementById('bal-usdt').innerText = balances.usdt.toFixed(3);
+            } else if (rand < 0.5) { // %40 şans DOGE
+                amount = Math.floor(Math.random() * 5) + 1; // Hızlı tıklama için küçük miktar
                 balances.doge += amount;
                 type = "DOGE";
-                document.getElementById('doge-val').innerText = balances.doge;
-            } else { // %50 Şansla NOT
-                amount = Math.floor(Math.random() * 5) + 1;
+                color = "var(--doge)";
+                document.getElementById('bal-doge').innerText = balances.doge;
+            } else { // %50 şans NOT
+                amount = Math.floor(Math.random() * 3) + 1;
                 balances.not += amount;
                 type = "NOT";
-                document.getElementById('not-val').innerText = balances.not;
+                color = "#fff";
+                document.getElementById('bal-not').innerText = balances.not;
             }
 
-            score += 1; // Toplam tık puanı
-            document.getElementById('total-score').innerText = score;
+            // Toplam Skor
+            balances.total += 1;
+            document.getElementById('score').innerText = balances.total;
 
-            // Uçan Sayı Oluştur
-            createFloatingText(x, y, `+${amount} ${type}`);
-
-            // Brainrot Sarsıntısı
-            document.body.classList.add('brainrot-mode');
-            setTimeout(() => document.body.classList.remove('brainrot-mode'), 50);
+            // Animasyonlar
+            showFloatingText(clientX, clientY, `+${amount}`, color);
+            triggerShake();
         }
 
-        function createFloatingText(x, y, text) {
-            const el = document.createElement('div');
-            el.className = 'floating-text';
-            el.innerText = text;
-            el.style.left = `${x}px`;
-            el.style.top = `${y}px`;
-            
-            // Renk seçimi
-            if(text.includes('USDT')) el.style.color = '#26A17B';
-            if(text.includes('DOGE')) el.style.color = '#ffcf4d';
+        function showFloatingText(x, y, text, color) {
+            const num = document.createElement('div');
+            num.className = 'tap-number';
+            num.innerText = text;
+            num.style.left = `${x - 20}px`;
+            num.style.top = `${y - 20}px`;
+            num.style.color = color;
+            document.body.appendChild(num);
+            setTimeout(() => num.remove(), 700);
+        }
 
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 800);
+        function triggerShake() {
+            const box = document.getElementById('main-box');
+            box.style.transform = "scale(0.92)";
+            document.body.classList.add('shake');
+            setTimeout(() => {
+                box.style.transform = "scale(1)";
+                document.body.classList.remove('shake');
+            }, 50);
         }
     </script>
 </body>
