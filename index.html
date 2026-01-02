@@ -3,260 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Koalas Arcade Pro</title>
+    <title>Koalas - Professional UI</title>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Space+Grotesk:wght@300;700&display=swap');
-        
-        body, html { 
-            margin: 0; padding: 0; background-color: #050505; color: white; 
-            font-family: 'Space Grotesk', sans-serif; overflow: hidden; height: 100vh; 
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body { background-color: #000; color: white; font-family: 'Inter', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
 
-        /* --- OYUN KONSOLU ARAYÜZÜ --- */
-        #game-overlay {
-            position: fixed; inset: 0; background: #000; z-index: 10000;
-            display: none; flex-direction: column;
-        }
-
-        .game-header {
-            padding: 40px 20px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            background: linear-gradient(to bottom, rgba(0,122,255,0.1), transparent);
-        }
-
-        /* Miner Neon Efekti */
-        .gem-miner {
-            filter: drop-shadow(0 0 20px #007aff);
-            animation: gemFloat 2s ease-in-out infinite;
-        }
-        @keyframes gemFloat {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-20px) scale(1.1); }
-        }
-
-        /* Slot Makinesi Gelişmiş Tasarım */
-        .slot-machine-body {
-            background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
-            border: 4px solid #333;
-            border-radius: 40px;
-            padding: 30px 15px;
-            box-shadow: 0 0 50px rgba(255,153,0,0.1);
+        /* Üst Kapak Görseli */
+        .header-image {
+            height: 250px;
+            background: url('Koalas.jpg') center top/cover;
             position: relative;
         }
-        .slot-window {
-            background: #000;
-            border-radius: 20px;
-            display: flex; gap: 10px; padding: 15px;
-            border: 2px solid #444;
-            box-shadow: inset 0 0 20px rgba(0,0,0,1);
-        }
-        .reel {
-            width: 80px; height: 100px; background: #111;
-            border-radius: 12px; display: flex; align-items: center;
-            justify-content: center; font-size: 45px;
-            border: 1px solid #222;
+        .pass-label {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; width: 85%;
         }
 
-        /* Alt Navigasyon Bar (Modern) */
-        .nav-pill {
-            background: rgba(255,255,255,0.03);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 30px;
-            display: flex; justify-content: space-around;
-            padding: 15px; margin: 0 20px 30px;
+        /* Ana İçerik Kartı */
+        .app-container {
+            background: #000; border-radius: 32px 32px 0 0;
+            margin-top: -40px; position: relative; padding: 24px 20px;
+            min-height: 100vh;
         }
 
-        .action-btn {
-            background: #fff; color: #000;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900; letter-spacing: 2px;
-            padding: 20px; border-radius: 20px;
-            width: 100%; transition: 0.2s;
+        /* Görev Kartları */
+        .mission-box { border-radius: 20px; padding: 16px; height: 120px; display: flex; flex-direction: column; justify-content: space-between; }
+        .bg-bitget { background: #00f0ff; color: #000; }
+        .bg-gate { background: #4d6aff; color: #fff; }
+
+        /* Oyunlar (TONPark) */
+        .park-item {
+            min-width: 85px; height: 85px; background: #ffcc00; 
+            border-radius: 18px; display: flex; align-items: center; 
+            justify-content: center; font-size: 38px; flex-shrink: 0;
         }
-        .action-btn:active { transform: scale(0.95); }
+
+        /* Alt Navigasyon */
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: rgba(0,0,0,0.95); border-top: 1px solid #1a1a1a;
+            display: flex; justify-content: space-around; padding: 12px 0 28px; z-index: 50;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #555; font-size: 11px; font-weight: 600; }
+        .nav-item.active { color: #2d8cf0; }
     </style>
 </head>
 <body>
 
-    <div id="game-overlay">
-        <div class="game-header">
-            <div>
-                <h2 id="game-title" class="text-2xl font-black italic tracking-tighter text-blue-500">TON MINER</h2>
-                <p id="game-subtitle" class="text-[10px] text-zinc-500 font-bold tracking-widest uppercase">Koalas Arcade Session</p>
+    <div class="header-image">
+        <div class="pass-label">
+            <div class="flex gap-1">
+                <div class="w-4 h-4 rounded-full bg-blue-500"></div>
+                <div class="w-4 h-4 rounded-full bg-white/20"></div>
             </div>
-            <button onclick="closeGame()" class="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800">
-                <i class="fa-solid fa-xmark text-zinc-400"></i>
+            <span class="flex-1">KOALAS Pass</span>
+            <i class="fa-solid fa-chevron-right text-[10px] opacity-40"></i>
+        </div>
+    </div>
+
+    <div class="app-container">
+        
+        <div class="flex justify-between items-start mb-6">
+            <div>
+                <h1 class="text-5xl font-extrabold tracking-tight mb-1">322,387</h1>
+                <div class="flex items-center gap-2 text-zinc-500 font-bold text-sm">
+                    <span>$KOALA</span>
+                    <span class="opacity-30">•</span>
+                    <span class="font-mono text-xs">UQBINP...nB-g</span>
+                </div>
+            </div>
+            <img src="Koalas.jpg" class="w-10 h-10 rounded-full border border-white/10">
+        </div>
+
+        <div class="flex gap-2 mb-8">
+            <button class="bg-[#151515] w-14 h-12 rounded-xl flex items-center justify-center border border-white/5">
+                <i class="fa-solid fa-ellipsis text-blue-500"></i>
+            </button>
+            <button class="bg-[#007aff] flex-1 h-12 rounded-xl font-black text-sm flex items-center justify-center gap-2">
+                <i class="fa-solid fa-plus text-xs"></i> Get more $KOALA
             </button>
         </div>
 
-        <div class="flex-1 flex flex-col items-center justify-center p-6">
-            
-            <div id="miner-view" class="w-full h-full flex flex-col items-center justify-center hidden">
-                <div class="relative mb-12">
-                    <div class="absolute inset-0 bg-blue-600 blur-[100px] opacity-20"></div>
-                    <div id="gem-target" class="text-8xl gem-miner cursor-pointer select-none">💎</div>
-                </div>
-                <div class="text-center">
-                    <h3 id="miner-score" class="text-6xl font-black mb-2 tracking-tighter">0</h3>
-                    <p class="text-blue-500 font-bold text-xs tracking-[0.4em] uppercase">Mined Points</p>
-                </div>
-                <div class="mt-12 w-full max-w-[200px] h-1 bg-zinc-900 rounded-full overflow-hidden">
-                    <div id="miner-progress" class="h-full bg-blue-600 transition-all duration-100" style="width: 100%"></div>
-                </div>
-            </div>
-
-            <div id="slot-view" class="w-full flex flex-col items-center hidden">
-                <div class="slot-machine-body w-full max-w-[320px]">
-                    <div class="slot-window">
-                        <div id="r1" class="reel">🐨</div>
-                        <div id="r2" class="reel">🐨</div>
-                        <div id="r3" class="reel">🐨</div>
-                    </div>
-                </div>
-                <div class="mt-10 text-center">
-                    <p class="text-zinc-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-4">Win up to 5,000 Pts</p>
-                    <button onclick="spinSlots()" id="spin-btn" class="action-btn bg-orange-500 text-white">SPIN NOW</button>
-                </div>
-            </div>
-
-        </div>
-
-        <div id="ad-info" class="p-6 text-center text-[10px] text-zinc-600 font-bold tracking-widest border-t border-zinc-900/50">
-            SECURED BY KOALAS NETWORK • 2026
-        </div>
-    </div>
-
-    <div class="p-6">
-        <div class="flex justify-between items-center mb-10">
-            <h1 class="text-3xl font-black italic tracking-tighter">KOALAS</h1>
-            <div class="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                <i class="fa-solid fa-user text-xs"></i>
-            </div>
-        </div>
-
         <div class="mb-8">
-            <p class="text-zinc-500 text-[10px] font-black tracking-widest uppercase mb-1">Your Earnings</p>
-            <h2 class="text-6xl font-bold tracking-tighter">14,200</h2>
-        </div>
-
-        <div class="space-y-4">
-            <div onclick="openGame('miner')" class="bg-zinc-900/50 p-6 rounded-[30px] border border-white/5 flex items-center justify-between active:scale-95 transition-all">
-                <div class="flex items-center gap-5">
-                    <div class="w-14 h-14 bg-blue-600/10 rounded-2xl flex items-center justify-center text-3xl shadow-[inset_0_0_20px_rgba(0,122,255,0.2)]">💎</div>
+            <p class="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-3">Balance</p>
+            <div class="bg-[#0e0e0e] border border-white/5 rounded-2xl p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-t"></i>
+                    </div>
                     <div>
-                        <h4 class="font-bold text-lg italic">TON MINER</h4>
-                        <p class="text-[10px] text-blue-500 font-bold uppercase">1 Min Session</p>
+                        <p class="font-bold text-sm">$TON</p>
+                        <p class="text-xs text-zinc-500">0 $TON</p>
                     </div>
                 </div>
-                <i class="fa-solid fa-chevron-right text-zinc-800"></i>
-            </div>
-
-            <div onclick="openGame('slot')" class="bg-zinc-900/50 p-6 rounded-[30px] border border-white/5 flex items-center justify-between active:scale-95 transition-all">
-                <div class="flex items-center gap-5">
-                    <div class="w-14 h-14 bg-orange-600/10 rounded-2xl flex items-center justify-center text-3xl shadow-[inset_0_0_20px_rgba(255,153,0,0.2)]">🎰</div>
-                    <div>
-                        <h4 class="font-bold text-lg italic">777 SLOTS</h4>
-                        <p class="text-[10px] text-orange-500 font-bold uppercase">Infinite Jackpot</p>
-                    </div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-zinc-800"></i>
+                <button class="bg-[#1a1a1a] p-2 px-3 rounded-lg text-blue-500">
+                    <i class="fa-solid fa-arrow-up rotate-45 text-sm"></i>
+                </button>
             </div>
         </div>
+
+        <p class="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-4">CEX Missions</p>
+        <div class="grid grid-cols-2 gap-3 mb-8">
+            <div class="mission-box bg-bitget">
+                <div class="flex items-center gap-2 font-bold text-sm">
+                    <i class="fa-solid fa-bolt"></i> Bitget
+                </div>
+                <button class="bg-black text-white py-2 rounded-xl text-xs font-black">Go</button>
+            </div>
+            <div class="mission-box bg-gate">
+                <div class="flex items-center gap-2 font-bold text-sm">
+                    <i class="fa-solid fa-circle-nodes"></i> Gate.io
+                </div>
+                <button class="bg-black text-white py-2 rounded-xl text-xs font-black">Go</button>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-4">
+            <p class="text-zinc-500 text-xs font-bold uppercase tracking-widest">TONPark</p>
+            <div class="bg-white/10 p-1 px-2 rounded-lg text-[10px] flex items-center gap-1">
+                <i class="fa-solid fa-calendar"></i> 17
+            </div>
+        </div>
+        <div class="flex gap-3 overflow-x-auto no-scrollbar pb-10">
+            <div class="park-item">😊</div>
+            <div class="park-item">🎰</div>
+            <div class="park-item">🤩</div>
+            <div class="park-item">🎬</div>
+        </div>
+
     </div>
+
+    <nav class="nav-bar">
+        <a href="#" class="nav-item active"><i class="fa-solid fa-house text-lg"></i><span>Home</span></a>
+        <a href="#" class="nav-item"><i class="fa-solid fa-chart-simple text-lg"></i><span>Ranking</span></a>
+        <a href="#" class="nav-item"><i class="fa-solid fa-bolt text-lg"></i><span>Missions</span></a>
+        <a href="#" class="nav-item"><i class="fa-solid fa-user-group text-lg"></i><span>Friends</span></a>
+        <a href="#" class="nav-item"><i class="fa-solid fa-gift text-lg"></i><span>Airdrop</span></a>
+    </nav>
 
     <script>
-        let minerPoints = 0;
-        let isSpinning = false;
-
-        function openGame(type) {
-            const overlay = document.getElementById('game-overlay');
-            const minerView = document.getElementById('miner-view');
-            const slotView = document.getElementById('slot-view');
-            const title = document.getElementById('game-title');
-
-            overlay.style.display = 'flex';
-            
-            if(type === 'miner') {
-                title.innerText = "TON MINER";
-                title.className = "text-2xl font-black italic tracking-tighter text-blue-500";
-                minerView.classList.remove('hidden');
-                slotView.classList.add('hidden');
-                startMiner();
-            } else {
-                title.innerText = "777 SLOTS";
-                title.className = "text-2xl font-black italic tracking-tighter text-orange-500";
-                slotView.classList.remove('hidden');
-                minerView.classList.add('hidden');
-            }
-        }
-
-        function closeGame() {
-            document.getElementById('game-overlay').style.display = 'none';
-            location.reload(); // Puanları kaydetmek için basitleştirilmiş reload
-        }
-
-        // --- Miner Logic ---
-        function startMiner() {
-            const target = document.getElementById('gem-target');
-            const scoreDisplay = document.getElementById('miner-score');
-            const progress = document.getElementById('miner-progress');
-            let time = 100;
-
-            target.onclick = () => {
-                minerPoints += 10;
-                scoreDisplay.innerText = minerPoints;
-                target.style.transform = "scale(0.8)";
-                setTimeout(() => target.style.transform = "scale(1)", 50);
-            };
-
-            const timer = setInterval(() => {
-                time -= 1;
-                progress.style.width = time + "%";
-                if(time <= 0) {
-                    clearInterval(timer);
-                    alert("Mining Session Ended! Score: " + minerPoints);
-                    closeGame();
-                }
-            }, 600); // 60 saniye
-        }
-
-        // --- Slot Logic ---
-        function spinSlots() {
-            if(isSpinning) return;
-            isSpinning = true;
-            const btn = document.getElementById('spin-btn');
-            const reels = [document.getElementById('r1'), document.getElementById('r2'), document.getElementById('r3')];
-            const icons = ['💎', '🐨', '7️⃣', '🍒', '🍋'];
-
-            btn.innerText = "ROLLING...";
-            btn.style.opacity = "0.5";
-
-            reels.forEach((reel, i) => {
-                let count = 0;
-                const interval = setInterval(() => {
-                    reel.innerText = icons[Math.floor(Math.random() * icons.length)];
-                    count++;
-                    if(count > 20 + (i * 10)) {
-                        clearInterval(interval);
-                        if(i === 2) {
-                            isSpinning = false;
-                            btn.innerText = "SPIN NOW";
-                            btn.style.opacity = "1";
-                            checkWin(reels);
-                        }
-                    }
-                }, 50);
-            });
-        }
-
-        function checkWin(reels) {
-            if(reels[0].innerText === reels[1].innerText && reels[1].innerText === reels[2].innerText) {
-                alert("JACKPOT! You won 5,000 Koala Points!");
-            }
-        }
+        // TON Connect ve diğer fonksiyonlar buraya eklenebilir.
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json'
+        });
     </script>
 </body>
 </html>
