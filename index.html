@@ -3,22 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ChatGPT Farm Clicker</title>
+    <title>Temu Style Farm</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --bg: #2c1a3d;
-            --dirt: #6d4c41;
-            --plowed: #3e2723;
-            --grass: #4caf50;
-            --gold: #f3ba2f;
+            --sky: #87CEEB;
+            --grass: #7cfc00;
+            --dirt: #8B4513;
+            --water: #00BFFF;
+            --gold: #FFD700;
         }
 
         body {
             margin: 0;
-            background: radial-gradient(circle, #3d2b56, #0e0a1a);
-            color: white;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to bottom, var(--sky) 0%, #E0F7FA 100%);
             height: 100vh;
             display: flex;
             flex-direction: column;
@@ -27,183 +26,262 @@
             user-select: none;
         }
 
-        /* Üst Panel */
-        .header {
-            width: 100%;
-            padding: 20px 0;
+        /* Üst Panel - İlerleme */
+        .top-bar {
+            width: 90%;
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             text-align: center;
-            background: rgba(0,0,0,0.3);
-            border-bottom: 2px solid rgba(255,255,255,0.1);
         }
 
-        .stats {
-            font-size: 2.5rem;
-            font-weight: 900;
+        .progress-container {
+            width: 100%;
+            height: 20px;
+            background: #eee;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+            border: 2px solid #fff;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Çiftlik Alanı */
+        .farm-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            position: relative;
+        }
+
+        .plant-box {
+            position: relative;
+            width: 200px;
+            height: 200px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
         }
 
-        /* Çiftlik Izgarası */
-        .farm-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 100px);
-            grid-template-rows: repeat(3, 100px);
-            gap: 15px;
-            margin-top: 50px;
+        .plant-img {
+            font-size: 8rem;
+            transition: transform 0.3s;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2));
+            z-index: 2;
         }
 
-        .plot {
+        .soil {
+            position: absolute;
+            bottom: 20px;
+            width: 150px;
+            height: 40px;
+            background: var(--dirt);
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+
+        /* Su Kovası ve Kontroller */
+        .controls {
+            width: 100%;
+            padding-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .water-bucket {
             width: 100px;
             height: 100px;
-            background-color: var(--dirt);
-            border-radius: 12px;
-            cursor: pointer;
-            position: relative;
+            background: white;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
-            transition: transform 0.1s, background-color 0.3s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.1s;
         }
 
-        .plot:active { transform: scale(0.9); }
+        .water-bucket:active { transform: scale(0.9); }
 
-        /* Tarla Durumları */
-        .plot.empty { background-color: #5d4037; }
-        .plot.plowed { background-color: var(--plowed); border: 2px dashed #5d4037; }
-        .plot.growing { background-color: var(--plowed); }
-        .plot.ready { background-color: var(--plowed); box-shadow: 0 0 20px var(--grass); }
-
-        /* Bitki Animasyonu */
-        .crop {
-            animation: grow 3s linear forwards;
-            pointer-events: none;
+        .water-bucket i {
+            font-size: 3rem;
+            color: var(--water);
         }
 
-        @keyframes grow {
-            0% { transform: scale(0.3); opacity: 0.5; }
-            100% { transform: scale(1.1); opacity: 1; }
-        }
-
-        /* Uçan Coin Efekti */
-        .coin-popup {
+        .water-count {
             position: absolute;
-            color: var(--gold);
+            top: -10px;
+            right: -10px;
+            background: #ff4444;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
             font-weight: bold;
-            font-size: 1.5rem;
-            animation: flyUp 1s ease-out forwards;
-            pointer-events: none;
-        }
-
-        @keyframes flyUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-50px); opacity: 0; }
-        }
-
-        .footer-info {
-            position: fixed;
-            bottom: 30px;
-            color: #b1a7c1;
-            text-align: center;
             font-size: 0.9rem;
-            padding: 0 20px;
+        }
+
+        .btn-water {
+            background: var(--water);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,191,255,0.4);
+            cursor: pointer;
+        }
+
+        .btn-water:disabled { background: #ccc; box-shadow: none; }
+
+        /* Animasyonlar */
+        .water-drop {
+            position: absolute;
+            color: var(--water);
+            font-size: 2rem;
+            z-index: 5;
+            animation: fall 0.6s linear forwards;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100px) scale(0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(50px) scale(1.5); opacity: 0; }
+        }
+
+        .floating-text {
+            position: absolute;
+            color: #4CAF50;
+            font-weight: bold;
+            animation: float 1s ease-out forwards;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100px); opacity: 0; }
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="stats">
-            <i class="fas fa-coins" style="color:var(--gold)"></i>
-            <span id="money">0</span>
+    <div class="top-bar">
+        <div style="font-weight: bold; color: #333;">Ücretsiz Hediye İçin Sulayın!</div>
+        <div class="progress-container">
+            <div class="progress-fill" id="p-bar"></div>
         </div>
-        <div style="color: #b1a7c1; margin-top: 5px;">Tarlalara dokunarak ekim yap!</div>
+        <div style="font-size: 0.8rem; color: #666;">İlerleme: %<span id="p-text">0</span></div>
     </div>
 
-    <div class="farm-grid" id="grid">
+    <div class="farm-area">
+        <div class="plant-box">
+            <div class="plant-img" id="plant">🌱</div>
+            <div class="soil"></div>
         </div>
+    </div>
 
-    <div class="footer-info">
-        <b>Nasıl Oynanır?</b><br>
-        1. Toprağı Sür -> 2. Tohum Ek -> 3. Büyümesini Bekle -> 4. Hasat Et!
+    <div class="controls">
+        <div class="water-bucket" onclick="collectWater()">
+            <i class="fas fa-faucet-drip"></i>
+            <div class="water-count" id="w-count">0</div>
+        </div>
+        <button class="btn-water" id="w-btn" onclick="pourWater()">SULA</button>
+        <div style="font-weight: bold; color: #555;">Bakiye: <span id="money">0</span> $CHAT</div>
     </div>
 
     <script>
-        let money = 0;
-        const grid = document.getElementById('grid');
+        let waterDrops = 0;
+        let progress = 0;
+        let balance = 0;
+        let plantLevel = 0;
+
+        const plants = ['🌱', '🌿', '🌻', '🌳', '🍎'];
+        const pBar = document.getElementById('p-bar');
+        const pText = document.getElementById('p-text');
+        const wCount = document.getElementById('w-count');
+        const plantEl = document.getElementById('plant');
         const moneyEl = document.getElementById('money');
+        const wBtn = document.getElementById('w-btn');
 
-        // Durumlar: EMPTY -> PLOWED -> GROWING -> READY
-        const plots = Array(9).fill('EMPTY');
+        function collectWater() {
+            waterDrops += 10;
+            updateUI();
+            createFloatingText(event.clientX, event.clientY, "+10 Su", "var(--water)");
+            if(navigator.vibrate) navigator.vibrate(20);
+        }
 
-        function createGrid() {
-            grid.innerHTML = '';
-            plots.forEach((state, index) => {
-                const plot = document.createElement('div');
-                plot.className = `plot ${state.toLowerCase()}`;
+        function pourWater() {
+            if (waterDrops >= 10) {
+                waterDrops -= 10;
+                progress += 5;
                 
-                if (state === 'EMPTY') {
-                    plot.innerHTML = '<i class="fas fa-shovels" style="font-size:1.2rem; opacity:0.3;"></i>';
-                } else if (state === 'PLOWED') {
-                    plot.innerHTML = '🌱';
-                } else if (state === 'GROWING') {
-                    plot.innerHTML = '<span class="crop">🌿</span>';
-                } else if (state === 'READY') {
-                    plot.innerHTML = '🌽';
+                // Su damlası efekti
+                createWaterEffect();
+                
+                if (progress >= 100) {
+                    progress = 0;
+                    levelUp();
                 }
 
-                plot.onclick = () => handlePlotClick(index);
-                grid.appendChild(plot);
-            });
-        }
-
-        function handlePlotClick(index) {
-            if (plots[index] === 'EMPTY') {
-                // Toprağı sür
-                plots[index] = 'PLOWED';
-                vibrate(20);
-            } 
-            else if (plots[index] === 'PLOWED') {
-                // Tohum ek ve büyüme sürecini başlat
-                plots[index] = 'GROWING';
-                vibrate(30);
-                setTimeout(() => {
-                    plots[index] = 'READY';
-                    createGrid();
-                }, 3000); // 3 saniyede büyür
-            } 
-            else if (plots[index] === 'READY') {
-                // Hasat et
-                plots[index] = 'EMPTY';
-                money += 50;
-                moneyEl.innerText = money.toLocaleString();
-                showCoinPopup(index);
-                vibrate(50);
+                updateUI();
+                if(navigator.vibrate) navigator.vibrate(50);
             }
-            createGrid();
         }
 
-        function showCoinPopup(index) {
-            const plotEls = document.querySelectorAll('.plot');
-            const rect = plotEls[index].getBoundingClientRect();
-            const popup = document.createElement('div');
-            popup.className = 'coin-popup';
-            popup.innerText = '+50';
-            popup.style.left = `${rect.left + 30}px`;
-            popup.style.top = `${rect.top}px`;
-            document.body.appendChild(popup);
-            setTimeout(() => popup.remove(), 1000);
+        function levelUp() {
+            plantLevel++;
+            balance += 500;
+            if (plantLevel >= plants.length) plantLevel = 0;
+            
+            plantEl.innerHTML = plants[plantLevel];
+            plantEl.style.transform = "scale(1.5)";
+            setTimeout(() => plantEl.style.transform = "scale(1)", 300);
+            
+            createFloatingText(window.innerWidth/2, window.innerHeight/2, "+500 $CHAT!", "var(--gold)");
         }
 
-        function vibrate(ms) {
-            if (navigator.vibrate) navigator.vibrate(ms);
+        function createWaterEffect() {
+            const drop = document.createElement('i');
+            drop.className = 'fas fa-tint water-drop';
+            drop.style.left = '50%';
+            drop.style.top = '40%';
+            document.querySelector('.farm-area').appendChild(drop);
+            setTimeout(() => drop.remove(), 600);
         }
 
-        // Başlangıç
-        createGrid();
+        function createFloatingText(x, y, text, color) {
+            const el = document.createElement('div');
+            el.className = 'floating-text';
+            el.innerText = text;
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.style.color = color;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        function updateUI() {
+            wCount.innerText = waterDrops;
+            pBar.style.width = progress + '%';
+            pText.innerText = progress;
+            moneyEl.innerText = balance.toLocaleString();
+            wBtn.disabled = waterDrops < 10;
+        }
+
+        updateUI();
     </script>
 </body>
 </html>
