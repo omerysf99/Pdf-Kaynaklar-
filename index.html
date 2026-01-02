@@ -3,202 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Miner Tap - Pro</title>
+    <title>Hamster Miner Pro</title>
     <style>
         :root {
-            --gold: #f1c40f;
-            --blue: #3498db;
-            --dark: #1a0f07;
+            --gold: #f3ba2f;
+            --blue: #007aff;
+            --bg: #000000;
+            --card-bg: #1c1c1e;
         }
 
         body {
-            margin: 0; background: var(--dark); color: white;
-            font-family: 'Arial Black', sans-serif;
+            margin: 0; background-color: var(--bg); color: white;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica;
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
 
-        /* --- SAYFA YÖNETİMİ --- */
-        .page { display: none; flex-direction: column; align-items: center; width: 100%; flex-grow: 1; padding-top: 40px; }
-        .active-page { display: flex; }
+        /* Üst Bilgi Paneli */
+        #top-info {
+            display: flex; justify-content: space-around; padding: 15px;
+            background: rgba(255,255,255,0.05); border-bottom: 1px solid #333;
+        }
+        .stat-box { text-align: center; }
+        .stat-label { font-size: 10px; color: #888; text-transform: uppercase; }
+        .stat-value { font-size: 14px; font-weight: bold; color: var(--gold); }
 
-        /* --- ANA OYUN EKRANI --- */
-        #score { font-size: 3.5rem; color: var(--gold); text-shadow: 0 4px #000; margin: 10px 0; }
+        /* Skor Alanı */
+        #score-container { text-align: center; padding: 20px 0; }
+        #score { font-size: 3rem; font-weight: 800; margin: 0; }
+
+        /* Ana Tıklama Alanı */
+        #game-page { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
-        #main-character {
-            width: 260px; height: 260px; background: #2c3e50;
-            border: 10px solid var(--blue); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 8rem; cursor: pointer; position: relative;
-            box-shadow: 0 0 40px rgba(52, 152, 219, 0.3);
-            transition: transform 0.05s;
+        .circle-outer {
+            width: 280px; height: 280px; border-radius: 50%;
+            background: radial-gradient(circle, #2c3e50 0%, #000 100%);
+            border: 8px solid #333; display: flex; align-items: center; justify-content: center;
+            position: relative; cursor: pointer; transition: transform 0.05s;
+            box-shadow: 0 0 50px rgba(0, 122, 255, 0.2);
         }
-        #main-character:active { transform: scale(0.92); }
-        #main-character::after { content: "👨‍💼"; }
+        .circle-outer:active { transform: scale(0.95); border-color: var(--blue); }
+        .character { font-size: 120px; }
 
-        /* --- GELİŞTİRME SAYFALARI --- */
-        .upgrade-list { width: 90%; margin-top: 20px; }
-        .upgrade-item {
-            background: rgba(255,255,255,0.1); padding: 15px;
-            margin-bottom: 10px; border-radius: 15px;
-            display: flex; justify-content: space-between; align-items: center;
-            border-left: 5px solid var(--blue);
+        /* Geliştirme (Mining) Sayfası */
+        #mine-page { display: none; padding: 20px; overflow-y: auto; flex-grow: 1; }
+        .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding-bottom: 100px; }
+        .card {
+            background: var(--card-bg); padding: 15px; border-radius: 15px;
+            border: 1px solid #333; display: flex; flex-direction: column; gap: 10px;
         }
-        .buy-btn {
-            background: var(--gold); border: none; padding: 10px 15px;
-            border-radius: 10px; font-weight: bold; cursor: pointer;
+        .card-title { font-size: 12px; font-weight: bold; }
+        .card-profit { font-size: 10px; color: #4cd964; }
+        .card-btn {
+            background: #333; border: none; color: white; padding: 8px;
+            border-radius: 8px; font-size: 12px; cursor: pointer;
         }
-        .buy-btn:disabled { background: #555; opacity: 0.5; }
+        .card-btn:enabled { background: var(--blue); }
 
-        /* --- ALT MENÜ --- */
+        /* Alt Navigasyon */
         #nav {
-            height: 85px; background: #000; display: flex;
+            height: 70px; background: #111; display: flex;
             justify-content: space-around; align-items: center;
-            border-top: 3px solid var(--blue); z-index: 100;
+            border-top: 1px solid #333; position: fixed; bottom: 0; width: 100%;
         }
-        .nav-item { text-align: center; color: #7f8c8d; cursor: pointer; flex: 1; transition: 0.3s; }
-        .nav-item.active { color: var(--gold); transform: translateY(-5px); }
-        .nav-icon { font-size: 1.6rem; display: block; }
+        .nav-item { text-align: center; color: #888; font-size: 11px; flex: 1; cursor: pointer; }
+        .nav-item.active { color: white; }
+        .nav-icon { font-size: 24px; display: block; margin-bottom: 4px; }
 
-        /* Enerji */
-        #energy-container { width: 80%; margin: 20px 0; }
-        .bar-bg { width: 100%; height: 20px; background: #111; border-radius: 10px; overflow: hidden; }
-        #bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #f1c40f, #e67e22); }
+        /* Enerji Barı */
+        #energy-area { width: 80%; margin-bottom: 30px; }
+        .bar-bg { width: 100%; height: 12px; background: #333; border-radius: 6px; margin-top: 8px; }
+        #bar-fill { width: 100%; height: 100%; background: var(--gold); border-radius: 6px; transition: width 0.1s; }
 
-        .tap-ani { position: absolute; color: var(--gold); font-size: 2rem; animation: float 0.7s forwards; pointer-events: none; }
-        @keyframes float { 0% { opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
+        /* Tıklama Efekti */
+        .float-text {
+            position: absolute; color: white; font-weight: bold; font-size: 24px;
+            pointer-events: none; animation: rise 0.8s ease-out forwards;
+        }
+        @keyframes rise { 0% { opacity: 1; } 100% { transform: translateY(-120px); opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="game-page" class="page active-page">
-        <p style="color: #bdc3c7; margin: 0;">TOPLAM PUAN</p>
-        <h1 id="score">0</h1>
-        
-        <div style="flex-grow: 1; display: flex; align-items: center;">
-            <div id="main-character" onpointerdown="handleTap(event)"></div>
+    <div id="top-info">
+        <div class="stat-box">
+            <div class="stat-label">Tık Başı</div>
+            <div class="stat-value" id="tap-val">+1</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Saatlik Kâr</div>
+            <div class="stat-value" id="profit-val">0</div>
+        </div>
+    </div>
+
+    <div id="game-page">
+        <div id="score-container">
+            <h1 id="score">0</h1>
         </div>
 
-        <div id="energy-container">
-            <small>⚡ <span id="energy-val">1000</span> / <span id="max-energy-val">1000</span></small>
+        <div class="circle-outer" onpointerdown="handleTap(event)">
+            <div class="character">👨‍💼</div>
+        </div>
+
+        <div id="energy-area">
+            <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                <span>⚡ <span id="energy-now">1000</span></span>
+                <span style="color:#888">/ <span id="energy-max">1000</span></span>
+            </div>
             <div class="bar-bg"><div id="bar-fill"></div></div>
         </div>
     </div>
 
-    <div id="miner-page" class="page">
-        <h2>Madenciler</h2>
-        <div class="upgrade-list">
-            <div class="upgrade-item">
-                <div>
-                    <b>Keskin Kazma</b><br>
-                    <small>Tık Başı: +<span id="tap-power-val">1</span></small>
-                </div>
-                <button class="buy-btn" onclick="buyUpgrade('tap')">Geliştir <br> <span id="tap-cost">50</span> 💰</button>
+    <div id="mine-page">
+        <h2 style="text-align: center;">Maden Kartları</h2>
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-title">Strateji Planı</div>
+                <div class="card-profit">Kâr: +50/saat</div>
+                <button class="card-btn" onclick="buyCard('strategy', 100, 50)">100 💰</button>
             </div>
-        </div>
-    </div>
-
-    <div id="elev-page" class="page">
-        <h2>Asansör Sistemi</h2>
-        <div class="upgrade-list">
-            <div class="upgrade-item">
-                <div>
-                    <b>Enerji Bataryası</b><br>
-                    <small>Kapasite: +500</small>
-                </div>
-                <button class="buy-btn" onclick="buyUpgrade('energy')">Geliştir <br> <span id="energy-cost">100</span> 💰</button>
+            <div class="card">
+                <div class="card-title">Maden İşçisi</div>
+                <div class="card-profit">Kâr: +120/saat</div>
+                <button class="card-btn" onclick="buyCard('worker', 500, 120)">500 💰</button>
+            </div>
+            <div class="card">
+                <div class="card-title">Altın Kazma</div>
+                <div class="card-profit">Tık: +2</div>
+                <button class="card-btn" onclick="buyCard('drill', 1000, 0, 2)">1000 💰</button>
+            </div>
+            <div class="card">
+                <div class="card-title">Yapay Zeka</div>
+                <div class="card-profit">Kâr: +500/saat</div>
+                <button class="card-btn" onclick="buyCard('ai', 2500, 500)">2500 💰</button>
             </div>
         </div>
     </div>
 
     <nav id="nav">
-        <div class="nav-item active" onclick="showPage('game-page', this)">
-            <span class="nav-icon">💰</span>Borsa
+        <div class="nav-item active" onclick="switchPage('game')">
+            <span class="nav-icon">🏠</span>Borsa
         </div>
-        <div class="nav-item" onclick="showPage('miner-page', this)">
-            <span class="nav-icon">⛏️</span>Madenciler
+        <div class="nav-item" onclick="switchPage('mine')">
+            <span class="nav-icon">⛏️</span>Maden
         </div>
-        <div class="nav-item" onclick="showPage('elev-page', this)">
-            <span class="nav-icon">👩‍✈️</span>Asansör
+        <div class="nav-item">
+            <span class="nav-icon">👥</span>Arkadaşlar
         </div>
     </nav>
 
     <script>
         let state = {
-            money: 0,
+            balance: 0,
             energy: 1000,
             maxEnergy: 1000,
             tapPower: 1,
-            costs: { tap: 50, energy: 100 }
+            profitPerHour: 0
         };
 
-        // --- SAYFA GEÇİŞ FONKSİYONU ---
-        function showPage(pageId, navEl) {
-            // Tüm sayfaları gizle
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
-            // Seçilen sayfayı göster
-            document.getElementById(pageId).classList.add('active-page');
-            
-            // Navigasyon stilini güncelle
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            navEl.classList.add('active');
-        }
-
-        // --- TIKLAMA MANTIĞI ---
         function handleTap(e) {
             if (state.energy >= state.tapPower) {
-                state.money += state.tapPower;
+                state.balance += state.tapPower;
                 state.energy -= state.tapPower;
+                showEffect(e.clientX, e.clientY);
                 updateUI();
-                createEffect(e.clientX, e.clientY);
-                if(window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                if(window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
             }
         }
 
-        // --- GELİŞTİRME SATIN ALMA ---
-        function buyUpgrade(type) {
-            let cost = state.costs[type];
-            if (state.money >= cost) {
-                state.money -= cost;
-                if (type === 'tap') {
-                    state.tapPower += 1;
-                    state.costs.tap *= 2;
-                } else if (type === 'energy') {
-                    state.maxEnergy += 500;
-                    state.energy = state.maxEnergy;
-                    state.costs.energy *= 2;
-                }
+        function buyCard(id, cost, profit, addTap = 0) {
+            if (state.balance >= cost) {
+                state.balance -= cost;
+                state.profitPerHour += profit;
+                state.tapPower += addTap;
                 updateUI();
             }
         }
 
-        function updateUI() {
-            document.getElementById('score').innerText = Math.floor(state.money).toLocaleString();
-            document.getElementById('energy-val').innerText = state.energy;
-            document.getElementById('max-energy-val').innerText = state.maxEnergy;
-            document.getElementById('tap-power-val').innerText = state.tapPower;
-            document.getElementById('tap-cost').innerText = state.costs.tap;
-            document.getElementById('energy-cost').innerText = state.costs.energy;
-            
-            let percent = (state.energy / state.maxEnergy) * 100;
-            document.getElementById('bar-fill').style.width = percent + "%";
-
-            // Buton kontrolü
-            document.querySelectorAll('.buy-btn').forEach(btn => {
-                let cost = parseInt(btn.querySelector('span').innerText);
-                btn.disabled = state.money < cost;
+        function switchPage(page) {
+            document.getElementById('game-page').style.display = page === 'game' ? 'flex' : 'none';
+            document.getElementById('mine-page').style.display = page === 'mine' ? 'block' : 'none';
+            document.querySelectorAll('.nav-item').forEach((el, i) => {
+                el.classList.toggle('active', (page === 'game' && i === 0) || (page === 'mine' && i === 1));
             });
         }
 
-        function createEffect(x, y) {
-            const div = document.createElement('div');
-            div.className = 'tap-ani';
-            div.style.left = x + 'px'; div.style.top = y + 'px';
-            div.innerText = "+" + state.tapPower;
-            document.body.appendChild(div);
-            setTimeout(() => div.remove(), 700);
+        function updateUI() {
+            document.getElementById('score').innerText = Math.floor(state.balance).toLocaleString();
+            document.getElementById('energy-now').innerText = state.energy;
+            document.getElementById('energy-max').innerText = state.maxEnergy;
+            document.getElementById('tap-val').innerText = "+" + state.tapPower;
+            document.getElementById('profit-val').innerText = "+" + state.profitPerHour;
+            document.getElementById('bar-fill').style.width = (state.energy / state.maxEnergy * 100) + "%";
+
+            // Kart butonlarını kontrol et
+            document.querySelectorAll('.card-btn').forEach(btn => {
+                let cost = parseInt(btn.innerText);
+                btn.disabled = state.balance < cost;
+            });
         }
 
-        // Enerji Yenileme
+        function showEffect(x, y) {
+            const txt = document.createElement('div');
+            txt.className = 'float-text';
+            txt.innerText = "+" + state.tapPower;
+            txt.style.left = x + 'px'; txt.style.top = y + 'px';
+            document.body.appendChild(txt);
+            setTimeout(() => txt.remove(), 800);
+        }
+
+        // Pasif Gelir (Saniyede bir eklenir)
+        setInterval(() => {
+            if (state.profitPerHour > 0) {
+                state.balance += (state.profitPerHour / 3600);
+                updateUI();
+            }
+        }, 1000);
+
+        // Enerji Dolumu
         setInterval(() => {
             if (state.energy < state.maxEnergy) {
                 state.energy = Math.min(state.energy + 3, state.maxEnergy);
@@ -206,6 +227,7 @@
             }
         }, 1000);
 
+        if(window.Telegram?.WebApp) window.Telegram.WebApp.expand();
         updateUI();
     </script>
 </body>
