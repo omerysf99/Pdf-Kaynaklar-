@@ -64,9 +64,6 @@
             border: 1px solid #1c1c1c;
         }
 
-        /* Gizli TonConnect Butonu Stili */
-        #ton-connect-hidden { display: none; }
-
         .custom-connect-btn {
             background: #007aff;
             color: white;
@@ -103,6 +100,9 @@
         }
         .bar-bg { background: #0a0a0a; height: 6px; border-radius: 12px; overflow: hidden; margin-bottom: 28px; }
         .bar-fill { background: white; height: 100%; width: 0%; transition: width 0.4s ease; }
+
+        /* TON İkonu için özel stil */
+        .ton-logo { width: 24px; height: 24px; }
     </style>
 </head>
 <body>
@@ -111,11 +111,11 @@
         <h1 class="text-3xl font-black mb-14 text-center italic tracking-[0.3em]">KOALAS</h1>
         <div class="space-y-8">
             <div id="step1" class="opacity-30">
-                <div class="flex justify-between text-[11px] font-bold mb-2 uppercase tracking-widest"><span>Checking Wallet Access</span><span id="check1"></span></div>
+                <div class="flex justify-between text-[11px] font-bold mb-2 uppercase"><span>Checking Assets</span><span id="check1"></span></div>
                 <div class="bar-bg"><div id="bar1" class="bar-fill"></div></div>
             </div>
             <div id="step2" class="opacity-30">
-                <div class="flex justify-between text-[11px] font-bold mb-2 uppercase tracking-widest"><span>Minting Koalas Points</span><span id="check2"></span></div>
+                <div class="flex justify-between text-[11px] font-bold mb-2 uppercase"><span>Finalizing Points</span><span id="check2"></span></div>
                 <div class="bar-bg"><div id="bar2" class="bar-fill"></div></div>
             </div>
         </div>
@@ -144,23 +144,25 @@
                     </div>
                 </div>
 
-                <div id="ton-connect-button-root" style="display: none;"></div>
                 <button id="custom-connect-btn" class="custom-connect-btn">
                     <i class="fa-solid fa-wallet"></i> 
                     <span id="btn-text">Connect Wallet</span>
                 </button>
 
                 <div class="mt-9">
-                    <p class="text-[#333] text-[10px] font-black uppercase mb-4 tracking-widest">Your Assets</p>
+                    <p class="text-[#333] text-[10px] font-black uppercase mb-4 tracking-widest">Balance</p>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center border border-blue-400/20 shadow-lg">
-                                <i class="fa-solid fa-gem text-white text-sm"></i>
+                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-white/20">
+                                <img src="https://ton.org/download/ton_symbol.svg" class="ton-logo" alt="TON">
                             </div>
                             <div>
-                                <p class="font-black text-[16px] italic tracking-tighter">TON Network</p>
-                                <p id="wallet-status" class="text-[#555] text-xs font-bold">Not Connected</p>
+                                <p class="font-black text-[16px] italic tracking-tighter">#TON</p>
+                                <p class="text-[#555] text-xs font-bold">0 #TON</p>
                             </div>
+                        </div>
+                        <div id="payment-btn" class="w-11 h-11 bg-[#1a1a1a] rounded-xl flex items-center justify-center border border-white/5 cursor-pointer hover:bg-zinc-800 transition-colors">
+                            <i class="fa-solid fa-arrow-right-arrow-left text-[#007aff] text-xs rotate-90"></i>
                         </div>
                     </div>
                 </div>
@@ -169,20 +171,20 @@
 
         <div class="nav-bar">
             <div class="nav-item active flex flex-col items-center"><i class="fa-solid fa-house-user text-xl mb-1"></i><p>Home</p></div>
-            <div class="nav-item flex flex-col items-center"><i class="fa-solid fa-medal text-xl mb-1"></i><p>Leaderboard</p></div>
+            <div class="nav-item flex flex-col items-center"><i class="fa-solid fa-medal text-xl mb-1"></i><p>Ranking</p></div>
             <div class="nav-item flex flex-col items-center"><i class="fa-solid fa-bolt-lightning text-xl mb-1"></i><p>Earn</p></div>
             <div class="nav-item flex flex-col items-center"><i class="fa-solid fa-user-group text-xl mb-1"></i><p>Friends</p></div>
         </div>
     </div>
 
     <script>
-        // 1. TON Connect Başlatma
+        // TON Connect Başlatma
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button-root'
         });
 
-        // 2. Özel Butona Tıklama İşlemi
+        // Cüzdan Bağlama Butonu
         const customBtn = document.getElementById('custom-connect-btn');
         customBtn.addEventListener('click', async () => {
             if (tonConnectUI.connected) {
@@ -192,20 +194,45 @@
             }
         });
 
-        // 3. Cüzdan Durumu Takibi
+        // ÖDEME ALMA EKRANI AÇMA
+        const paymentBtn = document.getElementById('payment-btn');
+        paymentBtn.addEventListener('click', async () => {
+            if (!tonConnectUI.connected) {
+                alert("Please connect your wallet first!");
+                await tonConnectUI.openModal();
+                return;
+            }
+
+            // Örnek bir işlem isteği (Ödeme Ekranı Tetikleme)
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 60, // 60 saniye geçerli
+                messages: [
+                    {
+                        address: "UQC123456789...", // Buraya paranın gideceği cüzdan adresi gelir
+                        amount: "100000000" // 0.1 TON (nanoTON birimiyle)
+                    }
+                ]
+            };
+
+            try {
+                await tonConnectUI.sendTransaction(transaction);
+            } catch (e) {
+                console.log("Transaction cancelled or failed.");
+            }
+        });
+
+        // Cüzdan Durumu Takibi
         tonConnectUI.onStatusChange(wallet => {
             if (wallet) {
                 document.getElementById('btn-text').innerText = "Wallet Connected";
-                document.getElementById('wallet-status').innerText = wallet.account.address.slice(0, 6) + "..." + wallet.account.address.slice(-4);
                 customBtn.style.backgroundColor = "#222";
             } else {
                 document.getElementById('btn-text').innerText = "Connect Wallet";
-                document.getElementById('wallet-status').innerText = "Not Connected";
                 customBtn.style.backgroundColor = "#007aff";
             }
         });
 
-        // 4. Analiz ve Rastgele Puan
+        // Analiz Animasyonu ve Puan
         async function run() {
             const randomPoints = Math.floor(Math.random() * (10000 - 1000 + 1)) + 1000;
             document.getElementById('final-points').innerText = randomPoints.toLocaleString();
