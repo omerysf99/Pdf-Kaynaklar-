@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Block - Brainrot Edition</title>
+    <title>Lucky Block</title>
     <style>
         body {
-            background-color: #000;
+            background-color: #0d0d0d;
             color: #fff;
             display: flex;
             flex-direction: column;
@@ -15,84 +15,84 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
-            font-family: 'Arial Black', sans-serif;
-        }
-
-        /* Sarsıntı Efekti (Shake) */
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-
-        /* Büyüme ve Parlama */
-        @keyframes brainrot-open {
-            0% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.5); filter: brightness(3) contrast(2); }
-            100% { transform: scale(0); filter: brightness(5); opacity: 0; }
+            font-family: 'Montserrat', sans-serif;
         }
 
         .container { text-align: center; z-index: 2; }
 
         #lucky-block {
             cursor: pointer;
-            width: 300px;
-            height: 300px;
+            width: 280px;
+            height: 280px;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
         }
 
-        /* Hover durumunda hafif titreme */
-        #lucky-block:hover {
-            animation: shake 0.5s infinite;
+        /* Sarsıntı */
+        @keyframes shake {
+            0%, 100% { transform: translate(0,0); }
+            25% { transform: translate(-4px, 4px); }
+            50% { transform: translate(4px, -4px); }
+            75% { transform: translate(-4px, -4px); }
+        }
+
+        /* Patlama/Açılış */
+        @keyframes open-animation {
+            0% { transform: scale(1); filter: brightness(1); }
+            100% { transform: scale(2); filter: brightness(2); opacity: 0; }
         }
 
         img {
             max-width: 100%;
-            transition: all 0.1s ease;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
         }
 
-        /* Animasyon sınıfları */
-        .shaking { animation: shake 0.1s infinite !important; }
-        .exploding { animation: brainrot-open 0.4s forwards !important; }
+        .shaking { animation: shake 0.1s infinite; }
+        .exploding { animation: open-animation 0.4s forwards; }
 
+        /* Yeni Ödül Tasarımı */
         #result {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0);
-            font-size: 5rem;
-            color: #0f0;
-            text-shadow: 0 0 20px #0f0, 0 0 40px #fff;
-            z-index: 10;
+            font-size: 3.5rem;
+            font-weight: 900;
             text-align: center;
-            width: 100%;
-            pointer-events: none;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+            transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            /* Daha yumuşak gölge */
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+            letter-spacing: -1px;
         }
 
-        #result.show { transform: translate(-50%, -50%) scale(1.2); }
+        #result.show { transform: translate(-50%, -50%) scale(1); }
+
+        /* Ödül Renkleri */
+        .color-usdt { color: #26A17B; } /* Tether Yeşili */
+        .color-doge { color: #BA9F33; } /* Doge Altını */
+        .color-not { color: #e5e5e5; }  /* Gümüş/Beyaz */
 
         .btn-reset {
-            margin-top: 20px;
-            padding: 15px 30px;
-            background: #ff003c;
-            color: white;
-            border: none;
-            font-weight: bold;
+            margin-top: 40px;
+            padding: 12px 24px;
+            background: transparent;
+            color: #888;
+            border: 1px solid #444;
+            border-radius: 30px;
+            font-size: 0.9rem;
             cursor: pointer;
             display: none;
-            box-shadow: 0 0 20px #ff003c;
+            transition: all 0.3s;
+        }
+
+        .btn-reset:hover {
+            color: white;
+            border-color: white;
+            background: rgba(255,255,255,0.05);
         }
     </style>
 </head>
@@ -100,9 +100,8 @@
 
 <div class="container">
     <div id="lucky-block" onclick="openBlock()">
-        <img src="secret.jpg" id="block-img" alt="Secret Block">
+        <img src="secret.jpg" id="block-img" alt="Lucky Block">
     </div>
-    
     <button class="btn-reset" id="reset-btn" onclick="resetGame()">YENİDEN DENE</button>
 </div>
 
@@ -111,39 +110,40 @@
 <script>
     function openBlock() {
         const block = document.getElementById('lucky-block');
-        const img = document.getElementById('block-img');
         const resultDiv = document.getElementById('result');
         const resetBtn = document.getElementById('reset-btn');
 
-        // 1. Aşama: Hızlı Sarsıntı
+        // Sallanma efekti
         block.classList.add('shaking');
         
-        // 2. Aşama: "Brainrot" Patlaması (300ms sonra)
         setTimeout(() => {
             block.classList.remove('shaking');
             block.classList.add('exploding');
             
-            // Ödül Belirle
+            // Ödül ve Renk Belirleme
             const rand = Math.random();
             let reward = "";
+            let colorClass = "";
+
             if (rand < 0.33) {
                 reward = (Math.random() * (0.01 - 0.001) + 0.001).toFixed(3) + " USDT";
+                colorClass = "color-usdt";
             } else if (rand < 0.66) {
                 reward = Math.floor(Math.random() * 1000) + 1 + " DOGE";
+                colorClass = "color-doge";
             } else {
                 reward = Math.floor(Math.random() * 999) + 1 + " NOT";
+                colorClass = "color-not";
             }
 
-            // 3. Aşama: Sonucu Ekrana Fırlat
             setTimeout(() => {
                 resultDiv.innerText = reward;
-                resultDiv.classList.add('show');
+                resultDiv.className = colorClass + " show";
                 resetBtn.style.display = "inline-block";
-                document.body.style.backgroundColor = "#fff"; // Anlık parlama çakması
-                setTimeout(() => { document.body.style.backgroundColor = "#000"; }, 100);
+                block.style.pointerEvents = "none";
             }, 300);
 
-        }, 400);
+        }, 500);
     }
 
     function resetGame() {
@@ -152,7 +152,8 @@
         const resetBtn = document.getElementById('reset-btn');
 
         block.classList.remove('exploding');
-        resultDiv.classList.remove('show');
+        resultDiv.className = "";
+        resultDiv.innerText = "";
         resetBtn.style.display = "none";
         block.style.pointerEvents = "auto";
     }
