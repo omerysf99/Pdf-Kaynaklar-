@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Amine Kombat - Full UI</title>
+    <title>Amine Kombat - Functional Tabs</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; user-select: none; }
@@ -16,33 +16,31 @@
         }
         .loading-container { position: relative; width: 100%; max-width: 450px; }
         .loading-img { width: 100%; height: auto; border-radius: 25px; display: block; }
-        .overlay-content {
-            position: absolute; bottom: 50px; width: 100%;
-            display: flex; flex-direction: column; align-items: center; pointer-events: none;
-        }
-        .on-ton { font-size: 75px; font-weight: 900; line-height: 1; text-shadow: 0px 4px 15px rgba(0,0,0,1); }
+        .overlay-content { position: absolute; bottom: 50px; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .on-ton { font-size: 75px; font-weight: 900; line-height: 1; text-shadow: 0px 4px 15px #000; }
 
         /* OYUN ANA EKRANI */
         #game-screen {
             display: none; flex-direction: column; width: 100%; max-width: 450px; padding: 15px;
             background: linear-gradient(180deg, #1d2025 0%, #000000 100%);
-            position: relative;
         }
 
+        .page { display: none; flex-direction: column; flex: 1; width: 100%; }
+        .page.active { display: flex; }
+
+        /* ÜST BİLGİLER */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 15px 0; }
         .stat-card { background: #272a2f; padding: 8px; border-radius: 12px; text-align: center; border: 1px solid #333; }
         .stat-label { font-size: 9px; color: #888; text-transform: uppercase; }
         .stat-value { font-size: 11px; font-weight: 700; }
 
-        .score-container { text-align: center; margin-bottom: 10px; }
-        .coin-val { font-size: 48px; font-weight: 900; color: #fff; }
-
-        .tap-area { display: flex; justify-content: center; margin-top: 5px; flex: 1; align-items: center; }
+        /* TIKLAMA ALANI */
+        .score-container { text-align: center; margin-bottom: 10px; font-size: 48px; font-weight: 900; }
+        .tap-area { display: flex; justify-content: center; flex: 1; align-items: center; }
         .circle-outer {
             width: 280px; height: 280px; border-radius: 50%;
             background: radial-gradient(circle, #3a3f47 0%, #111418 100%);
-            display: flex; justify-content: center; align-items: center;
-            border: 12px solid #272a2f; box-shadow: 0 0 40px rgba(0,0,0,0.6);
+            display: flex; justify-content: center; align-items: center; border: 12px solid #272a2f;
         }
         .amine-coin {
             width: 240px; height: 240px; border-radius: 50%;
@@ -50,23 +48,16 @@
             cursor: pointer; transition: transform 0.05s;
         }
         .amine-coin:active { transform: scale(0.94); }
-        .amine-coin.disabled { filter: grayscale(1) brightness(0.5); cursor: not-allowed; }
 
-        /* ENERJİ VE SEKMELER */
-        .bottom-section { margin-top: auto; padding-bottom: 10px; }
-        .energy-info { display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
-        .bar-bg { width: 100%; height: 10px; background: #333; border-radius: 10px; margin-bottom: 15px; }
-        .bar-fill { height: 100%; background: #f3ba2f; border-radius: 10px; transition: width 0.2s; }
+        /* DİĞER SAYFALAR STİLİ */
+        .page-content { padding: 20px; text-align: center; }
+        .upgrade-btn { background: #f3ba2f; color: #000; border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 20px; }
 
-        /* NAVİGASYON SEKMELERİ */
-        .nav-tabs {
-            display: flex; justify-content: space-around; background: #272a2f; 
-            padding: 10px 5px; border-radius: 15px; border: 1px solid #333;
-        }
-        .tab-item { display: flex; flex-direction: column; align-items: center; gap: 4px; opacity: 0.6; cursor: pointer; }
+        /* ALT NAVİGASYON */
+        .bottom-nav { background: #272a2f; display: flex; justify-content: space-around; padding: 10px; border-radius: 15px; margin-top: 10px; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; opacity: 0.5; cursor: pointer; }
         .tab-item.active { opacity: 1; color: #f3ba2f; }
-        .tab-icon { font-size: 18px; }
-        .tab-label { font-size: 10px; font-weight: 600; }
+        .tab-label { font-size: 10px; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -74,83 +65,87 @@
     <div id="loading-screen">
         <div class="loading-container">
             <img src="coins.hmstr.jpg" class="loading-img">
-            <div class="overlay-content">
-                <div class="on-ton">on TON</div>
-            </div>
+            <div class="overlay-content"><div class="on-ton">on TON</div></div>
         </div>
     </div>
 
     <div id="game-screen">
         <div class="stats-grid">
-            <div class="stat-card"><div class="stat-label">Earn per tap</div><div class="stat-value" style="color:#f3ba2f;">+1</div></div>
-            <div class="stat-card"><div class="stat-label">Coins to level</div><div class="stat-value">50K</div></div>
-            <div class="stat-card"><div class="stat-label">Profit per hour</div><div class="stat-value" style="color:#82ff82;">+0</div></div>
+            <div class="stat-card"><div class="stat-label">Earn per tap</div><div class="stat-value">+1</div></div>
+            <div class="stat-card"><div class="stat-label">Profit per hour</div><div class="stat-value" style="color:#82ff82;">+<span id="profit-val">0</span></div></div>
+            <div class="stat-card"><div class="stat-label">Energy</div><div class="stat-value"><span id="energy-val">1000</span></div></div>
         </div>
 
-        <div class="score-container">
-            <div class="coin-val">🪙 <span id="coin-count">0</span></div>
+        <div id="exchange" class="page active">
+            <div class="score-container">🪙 <span id="coin-count">0</span></div>
+            <div class="tap-area">
+                <div class="circle-outer"><div class="amine-coin" onclick="tapAction()"></div></div>
+            </div>
+            <div style="height:10px; background:#333; border-radius:10px; margin: 10px 0;"><div id="energy-bar" style="height:100%; background:#f3ba2f; width:100%; border-radius:10px;"></div></div>
         </div>
 
-        <div class="tap-area">
-            <div class="circle-outer">
-                <div class="amine-coin" id="tap-btn" onclick="tapAction(event)"></div>
+        <div id="mine" class="page">
+            <div class="page-content">
+                <h2>Mine Section</h2>
+                <p>Buy upgrades to increase profit per hour.</p>
+                <button class="upgrade-btn" onclick="buyUpgrade()">Upgrade CPU (Cost: 100)</button>
             </div>
         </div>
 
-        <div class="bottom-section">
-            <div class="energy-info">
-                <span>⚡ <span id="energy-val">1000</span> / 1000</span>
-                <span style="color: #f3ba2f;">Bronze ></span>
-            </div>
-            <div class="bar-bg"><div id="energy-bar" class="bar-fill" style="width: 100%;"></div></div>
+        <div id="friends" class="page"><div class="page-content"><h2>Friends</h2><p>Invite your friends to earn more!</p></div></div>
+        <div id="earn" class="page"><div class="page-content"><h2>Earn</h2><p>Complete tasks and earn daily rewards.</p></div></div>
+        <div id="airdrop" class="page"><div class="page-content"><h2>Airdrop</h2><p>Connect your wallet for the upcoming token.</p></div></div>
 
-            <div class="nav-tabs">
-                <div class="tab-item active"><span class="tab-icon">🏠</span><span class="tab-label">Exchange</span></div>
-                <div class="tab-item"><span class="tab-icon">⛏️</span><span class="tab-label">Mine</span></div>
-                <div class="tab-item"><span class="tab-icon">👥</span><span class="tab-label">Friends</span></div>
-                <div class="tab-item"><span class="tab-icon">💰</span><span class="tab-label">Earn</span></div>
-                <div class="tab-item"><span class="tab-icon">💎</span><span class="tab-label">Airdrop</span></div>
-            </div>
+        <div class="bottom-nav">
+            <div class="tab-item active" onclick="showPage('exchange', this)"><span>🏠</span><span class="tab-label">Exchange</span></div>
+            <div class="tab-item" onclick="showPage('mine', this)"><span>⛏️</span><span class="tab-label">Mine</span></div>
+            <div class="tab-item" onclick="showPage('friends', this)"><span>👥</span><span class="tab-label">Friends</span></div>
+            <div class="tab-item" onclick="showPage('earn', this)"><span>💰</span><span class="tab-label">Earn</span></div>
+            <div class="tab-item" onclick="showPage('airdrop', this)"><span>💎</span><span class="tab-label">Airdrop</span></div>
         </div>
     </div>
 
     <script>
         let score = 0;
         let energy = 1000;
-        const maxEnergy = 1000;
+        let profit = 0;
 
-        window.onload = function() {
-            setTimeout(() => {
-                document.getElementById('loading-screen').style.display = 'none';
-                document.getElementById('game-screen').style.display = 'flex';
-            }, 4000);
-        };
+        window.onload = () => setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'flex';
+        }, 4000);
 
-        function tapAction(e) {
+        function showPage(pageId, element) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            element.classList.add('active');
+        }
+
+        function tapAction() {
             if (energy > 0) {
-                score++;
-                energy--; 
-                updateUI();
+                score++; energy--; updateUI();
                 if (navigator.vibrate) navigator.vibrate(5);
             }
         }
 
-        // Enerji 2 saniyede 1 artar
+        function buyUpgrade() {
+            if (score >= 100) {
+                score -= 100; profit += 50; updateUI();
+                alert("Upgrade successful!");
+            } else { alert("Not enough coins!"); }
+        }
+
         setInterval(() => {
-            if (energy < maxEnergy) {
-                energy++;
-                updateUI();
-            }
-        }, 2000);
+            if (energy < 1000) { energy++; updateUI(); }
+            if (profit > 0) { score += (profit / 3600); updateUI(); }
+        }, 1000);
 
         function updateUI() {
-            document.getElementById('coin-count').innerText = score.toLocaleString();
+            document.getElementById('coin-count').innerText = Math.floor(score).toLocaleString();
             document.getElementById('energy-val').innerText = energy;
-            document.getElementById('energy-bar').style.width = (energy / maxEnergy * 100) + '%';
-
-            const btn = document.getElementById('tap-btn');
-            if (energy <= 0) btn.classList.add('disabled');
-            else btn.classList.remove('disabled');
+            document.getElementById('profit-val').innerText = profit;
+            document.getElementById('energy-bar').style.width = (energy / 10) + '%';
         }
     </script>
 </body>
