@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Koalas OG Dashboard</title>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -16,7 +17,7 @@
             overflow-x: hidden;
         }
 
-        /* Üst Bölge ve Koalas.jpg */
+        /* Hero Section - Koalas.jpg */
         .hero-section {
             position: relative;
             width: 100%;
@@ -31,7 +32,6 @@
             padding-bottom: 100px;
         }
 
-        /* Görsel Üstü KOALAS Yazısı */
         .koalas-header {
             font-size: 3.8rem;
             font-weight: 900;
@@ -50,7 +50,6 @@
             background: linear-gradient(to bottom, transparent, #000);
         }
 
-        /* Kart Konteynırı */
         .content-container {
             position: relative;
             margin-top: -75px; 
@@ -63,10 +62,12 @@
             border-radius: 30px;
             padding: 26px;
             border: 1px solid #1c1c1c;
-            box-shadow: 0 -15px 50px rgba(0,0,0,0.6);
         }
 
-        .connect-btn {
+        /* Gizli TonConnect Butonu Stili */
+        #ton-connect-hidden { display: none; }
+
+        .custom-connect-btn {
             background: #007aff;
             color: white;
             font-weight: 800;
@@ -78,10 +79,8 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            transition: transform 0.1s;
+            cursor: pointer;
         }
-
-        .connect-btn:active { transform: scale(0.96); }
 
         .nav-bar {
             position: fixed;
@@ -97,7 +96,6 @@
         .nav-item { text-align: center; color: #444; font-size: 10px; font-weight: 700; }
         .nav-item.active { color: #007aff; }
 
-        /* Analiz Ekranı */
         #loading-screen {
             position: fixed;
             inset: 0; background: black; z-index: 1000;
@@ -113,7 +111,7 @@
         <h1 class="text-3xl font-black mb-14 text-center italic tracking-[0.3em]">KOALAS</h1>
         <div class="space-y-8">
             <div id="step1" class="opacity-30">
-                <div class="flex justify-between text-[11px] font-bold mb-2 uppercase tracking-widest"><span>Checking Telegram Age</span><span id="check1"></span></div>
+                <div class="flex justify-between text-[11px] font-bold mb-2 uppercase tracking-widest"><span>Checking Wallet Access</span><span id="check1"></span></div>
                 <div class="bar-bg"><div id="bar1" class="bar-fill"></div></div>
             </div>
             <div id="step2" class="opacity-30">
@@ -126,14 +124,10 @@
     <div id="app" class="hidden">
         <div class="hero-section">
             <h1 class="koalas-header">KOALAS</h1>
-
             <div class="absolute top-10 left-0 w-full px-5 flex justify-between items-center z-20">
                 <div class="bg-black/60 backdrop-blur-xl px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
                     <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
                     <span class="text-[10px] font-black uppercase tracking-widest italic">Live Status</span>
-                </div>
-                <div class="w-9 h-9 bg-black/60 rounded-full flex items-center justify-center border border-white/10">
-                    <i class="fa-solid fa-ellipsis text-xs"></i>
                 </div>
             </div>
         </div>
@@ -145,29 +139,28 @@
                         <h2 id="final-points" class="text-5xl font-black tracking-tighter">0</h2>
                         <p class="text-[#888] text-[12px] font-black tracking-[0.2em] uppercase mt-1">Koalas Points</p>
                     </div>
-                    <div class="w-12 h-12 rounded-2xl overflow-hidden border border-white/10 shadow-xl">
+                    <div class="w-12 h-12 rounded-2xl overflow-hidden border border-white/10">
                         <img src="Koalas.jpg" class="w-full h-full object-cover">
                     </div>
                 </div>
 
-                <button class="connect-btn">
-                    <i class="fa-solid fa-wallet"></i> Connect Wallet
+                <div id="ton-connect-button-root" style="display: none;"></div>
+                <button id="custom-connect-btn" class="custom-connect-btn">
+                    <i class="fa-solid fa-wallet"></i> 
+                    <span id="btn-text">Connect Wallet</span>
                 </button>
 
                 <div class="mt-9">
                     <p class="text-[#333] text-[10px] font-black uppercase mb-4 tracking-widest">Your Assets</p>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center border border-blue-400/20 shadow-lg shadow-blue-500/10">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center border border-blue-400/20 shadow-lg">
                                 <i class="fa-solid fa-gem text-white text-sm"></i>
                             </div>
                             <div>
                                 <p class="font-black text-[16px] italic tracking-tighter">TON Network</p>
-                                <p class="text-[#555] text-xs font-bold">0.00 TON</p>
+                                <p id="wallet-status" class="text-[#555] text-xs font-bold">Not Connected</p>
                             </div>
-                        </div>
-                        <div class="w-11 h-11 bg-[#151515] rounded-xl flex items-center justify-center border border-white/5">
-                            <i class="fa-solid fa-arrow-right-to-bracket text-[#007aff] text-xs rotate-[-90deg]"></i>
                         </div>
                     </div>
                 </div>
@@ -175,10 +168,7 @@
         </div>
 
         <div class="nav-bar">
-            <div class="nav-item active flex flex-col items-center">
-                <i class="fa-solid fa-house-user text-xl mb-1"></i>
-                <p>Home</p>
-            </div>
+            <div class="nav-item active flex flex-col items-center"><i class="fa-solid fa-house-user text-xl mb-1"></i><p>Home</p></div>
             <div class="nav-item flex flex-col items-center"><i class="fa-solid fa-medal text-xl mb-1"></i><p>Leaderboard</p></div>
             <div class="nav-item flex flex-col items-center"><i class="fa-solid fa-bolt-lightning text-xl mb-1"></i><p>Earn</p></div>
             <div class="nav-item flex flex-col items-center"><i class="fa-solid fa-user-group text-xl mb-1"></i><p>Friends</p></div>
@@ -186,15 +176,39 @@
     </div>
 
     <script>
-        // Puanı Formatlama Fonksiyonu (Örn: 5,420)
-        function formatNumber(num) {
-            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
+        // 1. TON Connect Başlatma
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json',
+            buttonRootId: 'ton-connect-button-root'
+        });
 
-        async function runSequence() {
-            // 1000 ile 10000 arası rastgele puan üret
+        // 2. Özel Butona Tıklama İşlemi
+        const customBtn = document.getElementById('custom-connect-btn');
+        customBtn.addEventListener('click', async () => {
+            if (tonConnectUI.connected) {
+                await tonConnectUI.disconnect();
+            } else {
+                await tonConnectUI.openModal();
+            }
+        });
+
+        // 3. Cüzdan Durumu Takibi
+        tonConnectUI.onStatusChange(wallet => {
+            if (wallet) {
+                document.getElementById('btn-text').innerText = "Wallet Connected";
+                document.getElementById('wallet-status').innerText = wallet.account.address.slice(0, 6) + "..." + wallet.account.address.slice(-4);
+                customBtn.style.backgroundColor = "#222";
+            } else {
+                document.getElementById('btn-text').innerText = "Connect Wallet";
+                document.getElementById('wallet-status').innerText = "Not Connected";
+                customBtn.style.backgroundColor = "#007aff";
+            }
+        });
+
+        // 4. Analiz ve Rastgele Puan
+        async function run() {
             const randomPoints = Math.floor(Math.random() * (10000 - 1000 + 1)) + 1000;
-            document.getElementById('final-points').innerText = formatNumber(randomPoints);
+            document.getElementById('final-points').innerText = randomPoints.toLocaleString();
 
             const steps = [1, 2];
             for (let s of steps) {
@@ -202,23 +216,17 @@
                 await new Promise(r => {
                     let w = 0;
                     const i = setInterval(() => {
-                        w += 5;
+                        w += 10;
                         document.getElementById('bar' + s).style.width = w + '%';
-                        if (w >= 100) {
-                            clearInterval(i);
-                            document.getElementById('check' + s).innerHTML = '<i class="fa-solid fa-check text-white"></i>';
-                            setTimeout(r, 500);
-                        }
-                    }, 30);
+                        if (w >= 100) { clearInterval(i); document.getElementById('check' + s).innerHTML = '✔'; setTimeout(r, 400); }
+                    }, 40);
                 });
             }
-
-            // Dashboard'a geçiş
             document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('app').classList.remove('hidden');
         }
 
-        window.onload = runSequence;
+        window.onload = run;
     </script>
 </body>
 </html>
