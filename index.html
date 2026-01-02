@@ -3,245 +3,385 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Koalas OG</title>
+    <title>KOALAS ULTIMATE DASHBOARD</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
         
+        :root {
+            --tg-theme-bg-color: #000000;
+            --tg-theme-text-color: #ffffff;
+            --primary-blue: #007aff;
+            --card-bg: #111111;
+        }
+
         body, html {
-            margin: 0; padding: 0; height: 100%;
+            margin: 0; padding: 0; width: 100%; height: 100%;
             font-family: 'Inter', sans-serif;
-            background-color: #000; color: white;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
             overflow: hidden;
+            user-select: none;
         }
 
-        /* --- DASHBOARD STİLLERİ --- */
-        .hero-section {
-            position: relative;
-            width: 100%;
-            height: 52vh; 
+        /* --- LOADING SCREEN --- */
+        #loading-screen {
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; padding: 40px;
+        }
+
+        .bar-container { background: #0f0f0f; height: 8px; border-radius: 20px; overflow: hidden; margin-bottom: 25px; border: 1px solid #1a1a1a; }
+        .bar-progress { width: 0%; height: 100%; background: linear-gradient(90deg, #007aff, #00c6ff); transition: width 0.1s linear; }
+
+        /* --- BACKGROUND & HERO --- */
+        .hero-bg {
+            position: relative; width: 100%; height: 50vh;
             background-image: url('Koalas.jpg');
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            padding-bottom: 100px;
+            background-size: cover; background-position: center;
         }
 
-        .koalas-header {
-            font-size: 3.8rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -3px;
-            text-shadow: 0 15px 40px rgba(0,0,0,0.9);
-            z-index: 5;
-            font-style: italic;
+        .hero-bg::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 70%;
+            background: linear-gradient(to bottom, transparent, #000 95%);
         }
 
-        .hero-section::after {
-            content: '';
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 55%;
-            background: linear-gradient(to bottom, transparent, #000);
+        .koalas-title {
+            position: absolute; bottom: 60px; width: 100%; text-align: center;
+            font-size: 4rem; font-weight: 900; font-style: italic; letter-spacing: -4px;
+            text-shadow: 0 10px 40px rgba(0,0,0,0.8); z-index: 10;
         }
 
-        .content-container {
-            position: relative;
-            margin-top: -75px; 
-            padding: 0 16px;
-            z-index: 10;
+        /* --- SCROLLABLE CONTENT --- */
+        #app-content {
+            height: 100vh; overflow-y: auto; padding-bottom: 120px; scroll-behavior: smooth;
         }
 
         .main-card {
-            background: #111;
-            border-radius: 30px;
-            padding: 26px;
-            border: 1px solid #1c1c1c;
+            background: var(--card-bg); border-radius: 32px; padding: 25px;
+            margin: -40px 16px 20px 16px; position: relative; z-index: 20;
+            border: 1px solid #1c1c1c; box-shadow: 0 -20px 40px rgba(0,0,0,0.5);
         }
 
-        .custom-connect-btn {
-            background: #007aff;
-            color: white;
-            font-weight: 800;
-            border-radius: 16px;
-            width: 100%;
-            padding: 16px;
-            margin-top: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
+        .stat-item { background: #1a1a1a; border-radius: 18px; padding: 15px; border: 1px solid #222; }
 
-        /* --- LOADING / CHECKING SİSTEMİ --- */
-        #loading-screen {
-            position: fixed; inset: 0; background: black; z-index: 1000;
-            display: flex; flex-direction: column; justify-content: center; padding: 40px;
-            transition: opacity 0.6s ease;
+        /* --- BUTTONS --- */
+        .btn-primary {
+            background: var(--primary-blue); color: #fff; font-weight: 800;
+            padding: 18px; border-radius: 18px; width: 100%; display: flex;
+            align-items: center; justify-content: center; gap: 10px;
+            transition: all 0.2s; border: none; outline: none;
         }
-        .bar-bg { background: #0f0f0f; height: 6px; border-radius: 10px; overflow: hidden; margin-bottom: 30px; }
-        .bar-fill { 
-            background: white; 
-            height: 100%; 
-            width: 0%; 
-            transition: width 0.1s linear; /* Daha akıcı dolum için linear yaptık */
-        }
+        .btn-primary:active { transform: scale(0.96); opacity: 0.9; }
 
-        .nav-bar {
+        /* --- NAV BAR --- */
+        .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(0,0,0,0.98); border-top: 1px solid #121212;
-            display: flex; justify-content: space-around; padding: 14px 0 30px 0;
+            background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(20px);
+            border-top: 1px solid #1a1a1a; display: flex; justify-content: space-around;
+            padding: 15px 0 35px 0; z-index: 1000;
         }
-        .nav-item { text-align: center; color: #444; font-size: 10px; font-weight: 700; }
-        .nav-item.active { color: #007aff; }
+
+        .nav-link { color: #444; text-align: center; font-size: 10px; font-weight: 700; transition: 0.3s; }
+        .nav-link.active { color: var(--primary-blue); }
+        .nav-link i { font-size: 20px; margin-bottom: 5px; display: block; }
+
+        /* --- MODAL SYSTEM --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px); z-index: 2000; display: none;
+            align-items: flex-end;
+        }
+        .modal-content {
+            background: #111; width: 100%; border-radius: 30px 30px 0 0;
+            padding: 30px 20px; border-top: 1px solid #222; transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+        }
+
+        /* Utility */
+        .hidden { display: none !important; }
+        .flex-center { display: flex; align-items: center; justify-content: center; }
+        .skeleton { background: linear-gradient(90deg, #111 25%, #1a1a1a 50%, #111 75%); background-size: 200% 100%; animation: skeleton 1.5s infinite; }
+        @keyframes skeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     </style>
 </head>
 <body>
 
     <div id="loading-screen">
-        <h1 class="text-3xl font-black mb-16 text-center italic tracking-widest">KOALAS</h1>
-        <div class="space-y-10">
-            <div id="step-container-1" class="opacity-20">
-                <div class="flex justify-between text-[11px] font-bold mb-3 uppercase tracking-[0.2em]">
-                    <span>Checking Account Age</span>
-                    <span id="check-icon-1" class="text-white font-black"></span>
-                </div>
-                <div class="bar-bg"><div id="bar-1" class="bar-fill"></div></div>
+        <h1 class="text-4xl font-black mb-16 text-center italic tracking-tighter">KOALAS</h1>
+        <div id="loaders-list">
             </div>
-            <div id="step-container-2" class="opacity-20">
-                <div class="flex justify-between text-[11px] font-bold mb-3 uppercase tracking-[0.2em]">
-                    <span>Validating OG Score</span>
-                    <span id="check-icon-2" class="text-white font-black"></span>
-                </div>
-                <div class="bar-bg"><div id="bar-2" class="bar-fill"></div></div>
-            </div>
-        </div>
     </div>
 
     <div id="app" class="hidden">
-        <div class="hero-section">
-            <h1 class="koalas-header">KOALAS</h1>
-            <div class="absolute top-10 left-0 w-full px-5 flex justify-between items-center z-20">
-                <div class="bg-black/60 backdrop-blur-xl px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
-                    <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                    <span class="text-[10px] font-black uppercase tracking-widest italic">Live Status</span>
+        
+        <div id="app-content">
+            <div class="hero-bg">
+                <h1 class="koalas-title">KOALAS</h1>
+                <div class="absolute top-12 left-5">
+                    <div class="bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <span class="text-[10px] font-black uppercase tracking-widest italic">Live Season 1</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="content-container">
             <div class="main-card">
-                <div class="flex justify-between items-start">
+                <div class="flex justify-between items-start mb-8">
                     <div>
-                        <h2 id="final-points" class="text-5xl font-black tracking-tighter">0</h2>
-                        <p class="text-[#888] text-[12px] font-black tracking-widest uppercase mt-1">Koalas Points</p>
+                        <p class="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Total Balance</p>
+                        <h2 id="user-points" class="text-5xl font-black tracking-tighter">0</h2>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="bg-blue-500/10 text-blue-500 text-[10px] px-2 py-0.5 rounded font-bold">OG RANK</span>
+                            <span class="text-zinc-600 text-[10px] font-bold">TOP 1%</span>
+                        </div>
                     </div>
-                    <div class="w-12 h-12 rounded-2xl overflow-hidden border border-white/10">
+                    <div class="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white/5 shadow-2xl">
                         <img src="Koalas.jpg" class="w-full h-full object-cover">
                     </div>
                 </div>
 
-                <button id="custom-connect-btn" class="custom-connect-btn active:scale-95 transition-transform">
-                    <i class="fa-solid fa-wallet"></i> 
-                    <span id="btn-text">Connect Wallet</span>
+                <button id="main-connect-btn" class="btn-primary mb-6">
+                    <i class="fa-solid fa-wallet text-lg"></i>
+                    <span>Connect TON Wallet</span>
                 </button>
 
-                <div class="mt-9">
-                    <p class="text-[#333] text-[10px] font-black uppercase mb-4 tracking-widest italic">Asset Balance</p>
-                    <div class="flex items-center justify-between">
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-4 bg-zinc-900/40 rounded-2xl border border-white/5">
                         <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-white/20">
-                                <img src="https://ton.org/download/ton_symbol.svg" class="w-6 h-6" alt="TON">
+                            <div class="w-10 h-10 bg-white rounded-full flex-center">
+                                <img src="https://ton.org/download/ton_symbol.svg" class="w-6 h-6">
                             </div>
                             <div>
-                                <p class="font-black text-[16px] italic">#TON</p>
-                                <p class="text-[#555] text-xs font-bold">0 #TON</p>
+                                <p class="text-sm font-black">TON Coin</p>
+                                <p class="text-xs text-zinc-500 font-bold">0.00 #TON</p>
                             </div>
                         </div>
-                        <div id="payment-btn" class="w-11 h-11 bg-[#1a1a1a] rounded-xl flex items-center justify-center border border-white/5 active:bg-zinc-800">
-                            <i class="fa-solid fa-paper-plane text-[#007aff] text-xs"></i>
+                        <div id="send-tx-btn" class="w-10 h-10 bg-zinc-800 rounded-xl flex-center active:bg-zinc-700">
+                            <i class="fa-solid fa-paper-plane text-blue-500 text-xs"></i>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <div class="px-4 space-y-4">
+                <h3 class="text-sm font-black uppercase tracking-widest ml-2 text-zinc-500">Daily Missions</h3>
+                
+                <div class="bg-zinc-900/50 p-5 rounded-3xl border border-white/5 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-blue-600/10 rounded-2xl flex-center text-blue-500">
+                            <i class="fa-brands fa-telegram text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold">Join Koalas Channel</p>
+                            <p class="text-xs text-green-500 font-bold">+500 KOALAS</p>
+                        </div>
+                    </div>
+                    <button class="bg-white text-black text-[10px] font-black px-4 py-2 rounded-full uppercase">Go</button>
+                </div>
+
+                <div class="bg-zinc-900/50 p-5 rounded-3xl border border-white/5 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-pink-600/10 rounded-2xl flex-center text-pink-500">
+                            <i class="fa-brands fa-x-twitter text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold">Follow on X</p>
+                            <p class="text-xs text-green-500 font-bold">+300 KOALAS</p>
+                        </div>
+                    </div>
+                    <button class="bg-white text-black text-[10px] font-black px-4 py-2 rounded-full uppercase">Go</button>
+                </div>
+
+                <div class="bg-gradient-to-br from-blue-900/40 to-black p-6 rounded-3xl border border-blue-500/20 mt-6">
+                    <h4 class="text-xl font-black italic mb-2 tracking-tighter">INVITE FRIENDS</h4>
+                    <p class="text-xs text-zinc-400 mb-4 font-semibold leading-relaxed">Bring your buddies to the eucalyptus forest and earn 10% of their earnings!</p>
+                    <button class="bg-white text-black font-black w-full py-3 rounded-2xl text-sm italic">INVITE A KOALA</button>
+                </div>
+            </div>
         </div>
 
-        <div class="nav-bar">
-            <div class="nav-item active flex flex-col items-center"><i class="fa-solid fa-house-user text-xl mb-1"></i><p>Home</p></div>
-            <div class="nav-item flex flex-col items-center"><i class="fa-solid fa-medal text-xl mb-1"></i><p>Ranking</p></div>
-            <div class="nav-item flex flex-col items-center"><i class="fa-solid fa-bolt-lightning text-xl mb-1"></i><p>Earn</p></div>
-            <div class="nav-item flex flex-col items-center"><i class="fa-solid fa-user-group text-xl mb-1"></i><p>Friends</p></div>
+        <nav class="bottom-nav">
+            <div class="nav-link active" onclick="showPage('home')">
+                <i class="fa-solid fa-house"></i>
+                <span>Home</span>
+            </div>
+            <div class="nav-link" onclick="showPage('leaderboard')">
+                <i class="fa-solid fa-trophy"></i>
+                <span>Leaderboard</span>
+            </div>
+            <div class="nav-link" onclick="showPage('earn')">
+                <i class="fa-solid fa-bolt"></i>
+                <span>Tasks</span>
+            </div>
+            <div class="nav-link" onclick="showPage('frens')">
+                <i class="fa-solid fa-users"></i>
+                <span>Frens</span>
+            </div>
+        </nav>
+    </div>
+
+    <div id="modal" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mb-6"></div>
+            <div id="modal-body"></div>
         </div>
     </div>
 
     <script>
-        // --- TON CONNECT AYARLARI ---
+        /* --- KOALAS CORE ENGINE ---
+           Bu bölüm uygulamanın tüm mantığını yönetir.
+        */
+
+        // [1] TON CONNECT SETUP
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button-root'
         });
 
-        document.getElementById('custom-connect-btn').onclick = async () => {
-            if (tonConnectUI.connected) await tonConnectUI.disconnect();
-            else await tonConnectUI.openModal();
-        };
+        // [2] LOADING SYSTEM (CHECKING DÜZELTİLDİ)
+        const loadingSteps = [
+            "Checking Telegram Account",
+            "Analyzing OG Activity",
+            "Checking Wallet Connection",
+            "Calculating Initial Points",
+            "Syncing Eucalyptus Forest",
+            "Loading Eucalyptus Rewards",
+            "Finalizing OG Status"
+        ];
 
-        document.getElementById('payment-btn').onclick = async () => {
-            if (!tonConnectUI.connected) { await tonConnectUI.openModal(); return; }
-            const tx = { validUntil: Math.floor(Date.now() / 1000) + 60, messages: [{ address: "UQC123456789...", amount: "50000000" }] };
-            try { await tonConnectUI.sendTransaction(tx); } catch(e) {}
-        };
-
-        tonConnectUI.onStatusChange(w => {
-            document.getElementById('btn-text').innerText = w ? "Connected" : "Connect Wallet";
-        });
-
-        // --- DÜZELTİLMİŞ ANALİZ FONKSİYONU ---
-        async function startApp() {
-            // Puanı belirle
-            const pts = Math.floor(Math.random() * 9001) + 1000;
-            document.getElementById('final-points').innerText = pts.toLocaleString();
-
-            const runStep = (stepNum) => {
-                return new Promise(resolve => {
-                    const container = document.getElementById(`step-container-${stepNum}`);
-                    const bar = document.getElementById(`bar-${stepNum}`);
-                    const icon = document.getElementById(`check-icon-${stepNum}`);
-                    
-                    container.style.opacity = "1"; // Aktif olanı parlat
-                    
-                    let width = 0;
-                    const interval = setInterval(() => {
-                        width += 2; // Dolma hızı
-                        bar.style.width = width + "%";
-                        
-                        if (width >= 100) {
-                            clearInterval(interval);
-                            icon.innerText = "✔"; // Onay işareti
-                            setTimeout(resolve, 600); // Diğer adıma geçmeden önce kısa bekleme
-                        }
-                    }, 25);
-                });
-            };
-
-            // Adımları sırayla çalıştır
-            await runStep(1);
-            await runStep(2);
-
-            // Ekranı kapat ve Dashboard'u aç
-            const loader = document.getElementById('loading-screen');
-            loader.style.opacity = "0";
+        async function initLoading() {
+            const list = document.getElementById('loaders-list');
             
+            for(let i=0; i < loadingSteps.length; i++) {
+                const stepId = `step-${i}`;
+                list.innerHTML += `
+                    <div id="${stepId}" class="opacity-10 transition-opacity duration-300">
+                        <div class="flex justify-between text-[11px] font-black uppercase mb-2 tracking-widest">
+                            <span>${loadingSteps[i]}</span>
+                            <span id="check-${i}"></span>
+                        </div>
+                        <div class="bar-container"><div id="bar-${i}" class="bar-progress"></div></div>
+                    </div>
+                `;
+            }
+
+            for(let i=0; i < loadingSteps.length; i++) {
+                document.getElementById(`step-${i}`).classList.remove('opacity-10');
+                document.getElementById(`step-${i}`).classList.add('opacity-100');
+                
+                await new Promise(resolve => {
+                    let w = 0;
+                    const interval = setInterval(() => {
+                        w += 4;
+                        document.getElementById(`bar-${i}`).style.width = w + '%';
+                        if(w >= 100) {
+                            clearInterval(interval);
+                            document.getElementById(`check-${i}`).innerHTML = '<i class="fa-solid fa-check text-blue-500"></i>';
+                            setTimeout(resolve, 300);
+                        }
+                    }, 20);
+                });
+            }
+
+            // Finish Loading
+            const ls = document.getElementById('loading-screen');
+            ls.style.opacity = '0';
             setTimeout(() => {
-                loader.style.display = "none";
+                ls.style.display = 'none';
                 document.getElementById('app').classList.remove('hidden');
+                calculatePoints();
             }, 600);
         }
 
-        window.onload = startApp;
+        // [3] POINT CALCULATION
+        function calculatePoints() {
+            // 1000 - 10.000 arası rastgele puan
+            const base = Math.floor(Math.random() * 9000) + 1000;
+            animateValue("user-points", 0, base, 1500);
+        }
+
+        function animateValue(id, start, end, duration) {
+            const obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const current = Math.floor(progress * (end - start) + start);
+                obj.innerHTML = current.toLocaleString();
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // [4] INTERACTION HANDLERS
+        document.getElementById('main-connect-btn').onclick = async () => {
+            if (tonConnectUI.connected) {
+                await tonConnectUI.disconnect();
+            } else {
+                await tonConnectUI.openModal();
+            }
+        };
+
+        tonConnectUI.onStatusChange(wallet => {
+            const btn = document.getElementById('main-connect-btn');
+            if (wallet) {
+                btn.innerHTML = `<i class="fa-solid fa-check-circle"></i> Connected: ${wallet.account.address.slice(0,4)}...${wallet.account.address.slice(-4)}`;
+                btn.style.background = "#1a1a1a";
+            } else {
+                btn.innerHTML = `<i class="fa-solid fa-wallet"></i> Connect TON Wallet`;
+                btn.style.background = "#007aff";
+            }
+        });
+
+        document.getElementById('send-tx-btn').onclick = async () => {
+            if(!tonConnectUI.connected) {
+                openModal(`
+                    <h3 class="text-xl font-black mb-4">Connect First</h3>
+                    <p class="text-zinc-500 text-sm mb-6">You need to connect your wallet before making a transaction.</p>
+                    <button onclick="closeModal()" class="btn-primary">Understood</button>
+                `);
+                return;
+            }
+            
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 60,
+                messages: [{ address: "UQC123456789...", amount: "10000000" }] // 0.01 TON
+            };
+            try { await tonConnectUI.sendTransaction(transaction); } catch(e) { console.error(e); }
+        };
+
+        // [5] UI NAVIGATION
+        function showPage(page) {
+            console.log("Navigating to:", page);
+            // Burada sayfa değiştirme mantığı eklenebilir. 
+            // Şu an tek sayfa dashboard olduğu için görsel geri bildirim veriyoruz.
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+
+        function openModal(html) {
+            const modal = document.getElementById('modal');
+            const content = modal.querySelector('.modal-content');
+            document.getElementById('modal-body').innerHTML = html;
+            modal.style.display = 'flex';
+            setTimeout(() => content.style.transform = 'translateY(0)', 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            const content = modal.querySelector('.modal-content');
+            content.style.transform = 'translateY(100%)';
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        // START
+        window.onload = initLoading;
+
     </script>
 </body>
 </html>
