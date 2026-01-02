@@ -3,48 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONux Miner - Düzgün Fan</title>
+    <title>TONux Miner - Clean</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; user-select: none; }
-        body { background: #ffffff; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; user-select: none; }
+        body { background-color: #ffffff; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
 
         #game-container { 
             width: 100%; 
             max-width: 450px; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding-top: 60px;
             position: relative;
         }
 
-        /* Bakiye Alanı */
+        /* Bakiye ve Hız Göstergesi */
         .balance-container { text-align: center; margin-bottom: 40px; }
-        #main-balance { font-size: 48px; font-weight: 800; color: #000; letter-spacing: -1px; }
-        .speed-badge { 
-            display: inline-block; 
-            color: #007bff; 
-            font-weight: 700; 
-            font-size: 18px; 
-            margin-top: 5px; 
-        }
+        #main-balance { font-size: 56px; font-weight: 900; color: #000; letter-spacing: -2px; }
+        .speed-info { color: #007bff; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 5px; }
 
-        /* --- FAN DÜZELTME ALANI --- */
+        /* --- MERKEZLENMİŞ DÜZGÜN FAN --- */
         .fan-box {
             width: 280px;
             height: 280px;
             display: flex;
             justify-content: center;
-            align-items: center; /* Fanın yamuk durmaması için dikeyde ortalar */
+            align-items: center;
             position: relative;
+            /* Hafif gölge efekti derinlik katar */
+            filter: drop-shadow(0 10px 20px rgba(0, 123, 255, 0.1));
         }
 
         .fan-img { 
             width: 100%; 
             height: 100%; 
-            object-fit: contain; /* Görselin yamulmasını önler */
+            object-fit: contain; 
             border-radius: 50%;
-            animation: spin 3s linear infinite; /* Kesintisiz düzgün dönüş */
+            /* Yamukluğu önlemek için transform-origin merkezde tutulur */
+            transform-origin: center center;
+            animation: spin 3s linear infinite; 
         }
 
         @keyframes spin { 
@@ -54,65 +52,73 @@
 
         /* Claim Butonu */
         .claim-btn {
-            width: 100%;
-            max-width: 350px;
-            padding: 18px;
+            width: 90%;
+            padding: 22px;
             border: none;
-            border-radius: 18px;
+            border-radius: 20px;
             background: #007bff;
             color: white;
             font-size: 20px;
-            font-weight: 700;
+            font-weight: 800;
             cursor: pointer;
             margin-top: auto;
             margin-bottom: 20px;
-            box-shadow: 0 10px 20px rgba(0,123,255,0.2);
-            transition: transform 0.1s;
+            box-shadow: 0 10px 25px rgba(0, 123, 255, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: transform 0.1s ease;
         }
         .claim-btn:active { transform: scale(0.96); }
 
-        .min-limit { font-size: 13px; color: #999; margin-bottom: 20px; }
+        .footer-info { font-size: 13px; color: #999; margin-bottom: 30px; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
     <div class="balance-container">
-        <div id="main-balance">0.0000</div>
-        <div class="speed-badge">1 GH/s ⚡</div>
+        <div id="main-balance">0.0001</div>
+        <div class="speed-info">1 GH/s ⚡</div>
     </div>
 
     <div class="fan-box">
-        <img src="tonux.jpg" class="fan-img" onerror="this.src='https://via.placeholder.com/280/007bff/ffffff?text=FAN'">
+        <img src="tonux.jpg" class="fan-img" onerror="this.src='https://i.ibb.co/L9pXq0x/fan-blue.png'">
     </div>
 
-    <button class="claim-btn" onclick="processClaim()">💰 CLAIM TON</button>
-    <p class="min-limit">Minimum Claim: 0.01 TON</p>
+    <button class="claim-btn" onclick="handleClaim()">
+        💰 CLAIM TON
+    </button>
+    
+    <p class="footer-info">Minimum Claim: 0.01 TON</p>
 </div>
 
 <script>
-    let currentTon = 0.00000000;
-    const power = 1; // Başlangıç gücü
+    let currentTon = 0.0001; // Başlangıç değeri
+    const power = 1; // Herkese başlangıçta 1 GH/s
 
-    /* Matematik: 24 saatte 1 TON
-       1 saniyede = 0.00001157...
-       10 milisaniyede = 0.00000011574
+    /* SENİN MATEMATİĞİN:
+       - 1 GH/s = 24 saatte 1 TON
+       - 1 GH/s = 1 saniyede 0.00001157...
+       - 1 GH/s = 1 salisede (10ms) 0.00000011574
     */
-    const productionTick = 0.00000011574;
+    const tickRate = 10; 
+    const productionPerTick = 0.00000011574; 
 
     setInterval(() => {
-        currentTon += productionTick;
-        // Ekranda 4 hane gösteriyoruz
+        currentTon += productionPerTick;
+        // Ekranda 4 hane olarak gösterilir
         document.getElementById('main-balance').innerText = currentTon.toFixed(4);
-    }, 10);
+    }, tickRate);
 
-    function processClaim() {
+    function handleClaim() {
         if(currentTon >= 0.01) { // 0.01 TON sınırı
-            alert("Success! Claimed: " + currentTon.toFixed(4) + " TON");
+            alert("Başarıyla " + currentTon.toFixed(4) + " TON toplandı!");
             currentTon = 0;
             if(navigator.vibrate) navigator.vibrate(50);
         } else {
-            alert("Minimum claim limit is 0.01 TON!");
+            alert("Minimum toplama limiti 0.01 TON'dur.");
         }
     }
 </script>
