@@ -3,331 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Emoji Gold Miner Ultra</title>
+    <title>Hamster Kombat Clone UI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { 
-            --gold: #FFD700; 
-            --gold-glow: rgba(255, 215, 0, 0.3);
-            --bg-ultra-dark: #050505;
-            --tg-blue: #0088cc;
-        }
-
-        body { 
-            background-color: var(--bg-ultra-dark); 
-            color: #fff; 
-            font-family: 'Outfit', sans-serif; 
-            margin: 0; 
-            overflow: hidden; 
+        body {
+            background-color: #000;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
             height: 100vh;
+            overflow: hidden;
         }
 
-        /* Arkaplan Işığı */
-        .ambient-light {
-            position: absolute;
-            top: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
-            z-index: 0;
-            pointer-events: none;
+        /* Üst Panel Arkaplanı */
+        .header-gradient {
+            background: linear-gradient(180deg, #1a1a1a 0%, #000 100%);
         }
 
-        .app-container { 
-            width: 100%; max-width: 480px; margin: 0 auto; height: 100vh; 
-            display: flex; flex-direction: column; padding: 20px; position: relative;
-            z-index: 1;
+        /* Kartlardaki Buzlu Cam Efekti */
+        .glass-card {
+            background: rgba(28, 28, 30, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
         }
 
-        /* --- Kart Tasarımları --- */
-        .premium-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            backdrop-filter: blur(12px);
-        }
-
-        /* --- Sayfa Geçişleri --- */
-        .page { display: none; flex-direction: column; height: 100%; animation: pageFade 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .page.active { display: flex; }
-        @keyframes pageFade { 
-            from { opacity: 0; transform: translateY(10px) scale(0.98); } 
-            to { opacity: 1; transform: translateY(0) scale(1); } 
-        }
-
-        /* --- Tık Alanı (Büyük Emoji) --- */
-        .tap-area {
-            position: relative; width: 300px; height: 300px; margin: auto;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .emoji-circle {
-            width: 250px; height: 250px;
-            background: radial-gradient(circle, rgba(255,215,0,0.15) 0%, transparent 70%);
+        /* Ana Tıklama Alanı Glow (Mavi/Mor Parlama) */
+        .main-circle-bg {
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(58, 131, 244, 0.3) 0%, rgba(0, 0, 0, 0) 70%);
             border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             position: relative;
-            transition: transform 0.1s;
-            cursor: pointer;
-        }
-        .emoji-circle::after {
-            content: ''; position: absolute; inset: -10px;
-            border-radius: 50%; border: 2px solid rgba(255,215,0,0.1);
-            animation: pulse-ring 2s infinite;
-        }
-        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
-        
-        .main-emoji { font-size: 160px; z-index: 10; user-select: none; }
-        .emoji-circle:active { transform: scale(0.9); }
-
-        /* --- Butonlar --- */
-        .btn-buy {
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            color: #000; font-weight: 800; padding: 10px 20px; border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-            transition: 0.2s;
-        }
-        .btn-buy:active { transform: scale(0.95); }
-
-        /* --- Navigasyon --- */
-        .bottom-nav {
-            position: absolute; bottom: 25px; left: 20px; right: 20px;
-            height: 80px; background: rgba(15, 15, 15, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 28px; display: flex; align-items: center; justify-content: space-around;
-            backdrop-filter: blur(20px); z-index: 100;
-        }
-        .nav-link {
-            display: flex; flex-direction: column; align-items: center; 
-            color: #555; font-size: 11px; font-weight: 600; transition: 0.3s;
-        }
-        .nav-link.active { color: var(--gold); }
-        .nav-link i { font-size: 24px; margin-bottom: 4px; transition: 0.3s; }
-        .nav-link.active i { transform: translateY(-5px); filter: drop-shadow(0 0 10px var(--gold)); }
-
-        /* --- Floating Metin --- */
-        .float-val {
-            position: absolute; color: white; font-weight: 800; font-size: 36px;
-            pointer-events: none; animation: floatUp 0.8s ease-out forwards;
-        }
-        @keyframes floatUp { 
-            0% { opacity: 1; transform: translateY(0); } 
-            100% { opacity: 0; transform: translateY(-150px) scale(1.2); } 
         }
 
-        ::-webkit-scrollbar { display: none; }
+        .inner-circle {
+            width: 280px;
+            height: 280px;
+            background: #111;
+            border: 8px solid #2c2c2e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 50px rgba(58, 131, 244, 0.2);
+            transition: transform 0.05s;
+        }
+
+        .inner-circle:active {
+            transform: scale(0.95);
+        }
+
+        /* Alt Navigasyon Aktif Durumu */
+        .nav-item.active {
+            background: #1c1c1e;
+            border: 1px solid #f3ba2f;
+            border-radius: 12px;
+            color: #f3ba2f;
+        }
+
+        /* Enerji Barı Özelleştirme */
+        .energy-bar-bg {
+            background: #2c2c2e;
+            height: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .energy-fill {
+            background: linear-gradient(90deg, #f3ba2f, #ffdb4d);
+            height: 100%;
+            width: 100%;
+            transition: width 0.3s;
+        }
+
+        /* Bildirim Noktası */
+        .dot {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 8px;
+            height: 8px;
+            background: #ff4d4d;
+            border-radius: 50%;
+        }
     </style>
 </head>
 <body>
 
-<div class="ambient-light"></div>
-
-<div class="app-container">
-    <div class="flex justify-between items-center mb-8">
-        <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl premium-card flex items-center justify-center text-2xl shadow-xl">🐶</div>
+<div class="flex flex-col h-screen max-w-md mx-auto relative px-4 pt-4">
+    
+    <div class="flex justify-between items-center mb-4">
+        <div class="flex items-center gap-2">
+            <div class="w-10 h-10 rounded-lg overflow-hidden border border-gray-700">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Hamster" alt="avatar">
+            </div>
             <div>
-                <div class="text-[10px] text-gray-500 font-bold tracking-widest uppercase">Rank: Godlike</div>
-                <div class="text-sm font-extrabold flex items-center gap-2">Level 1 <i class="fas fa-angle-right text-xs text-yellow-500"></i></div>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Hamster (CEO)</p>
+                <div class="flex items-center gap-1">
+                    <span class="text-xs font-bold">Bronze</span>
+                    <i class="fas fa-chevron-right text-[8px] text-gray-500"></i>
+                    <span class="text-[10px] text-gray-400">1 / 11</span>
+                </div>
             </div>
         </div>
-        <div class="premium-card px-4 py-2 flex items-center gap-2">
-            <i class="fas fa-bolt text-yellow-500"></i>
-            <span id="energy-top" class="font-black text-sm">1000</span>
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1 bg-[#1c1c1e] px-3 py-1.5 rounded-full border border-gray-800">
+                <i class="fas fa-key text-yellow-500 text-xs"></i>
+                <span class="text-sm font-bold">0</span>
+            </div>
+            <i class="fas fa-cog text-gray-400 text-xl"></i>
         </div>
     </div>
 
-    <div id="exchange" class="page active">
-        <div class="text-center mb-10">
-            <div class="flex flex-col items-center">
-                <div class="text-gray-400 text-[10px] font-black tracking-[4px] uppercase mb-2">Total Balance</div>
-                <div class="flex items-center gap-3">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/Gold_Emoji_Coin.png" width="45" class="drop-shadow-2xl">
-                    <span id="score" class="text-6xl font-black tracking-tighter">0</span>
-                </div>
-                <div class="mt-4 px-4 py-1.5 premium-card text-xs font-bold text-green-400 border-green-500/20">
-                    Profit Per Hour: +$<span id="profit">0</span>
-                </div>
+    <div class="glass-card flex items-center justify-between px-6 py-2 mb-6">
+        <div class="flex flex-col items-center flex-1 border-r border-gray-800">
+            <span class="text-[9px] text-gray-500 uppercase font-bold">Earn per tap</span>
+            <div class="flex items-center gap-1">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/Gold_Emoji_Coin.png" width="14">
+                <span class="text-xs font-bold text-white">+1</span>
             </div>
         </div>
-
-        <div class="tap-area">
-            <div class="emoji-circle" id="tap-btn">
-                <span class="main-emoji">🐶</span>
-            </div>
-        </div>
-
-        <div class="mt-auto mb-20">
-            <div class="flex justify-between text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-widest">
-                <span>Energy Reserve</span>
-                <span id="energy-pct">100%</span>
-            </div>
-            <div class="h-4 bg-white/5 rounded-full p-1 border border-white/5 shadow-inner">
-                <div id="energy-bar" class="h-full bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-200 rounded-full transition-all duration-300" style="width: 100%;"></div>
+        <div class="flex flex-col items-center flex-1">
+            <span class="text-[9px] text-gray-500 uppercase font-bold">Profit per hour</span>
+            <div class="flex items-center gap-1">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/Gold_Emoji_Coin.png" width="14">
+                <span class="text-xs font-bold text-white">0</span>
+                <i class="fas fa-info-circle text-[10px] text-gray-600 ml-1"></i>
             </div>
         </div>
     </div>
 
-    <div id="mine" class="page">
-        <div class="mb-6">
-            <h2 class="text-3xl font-black tracking-tight">Marketplace</h2>
-            <p class="text-gray-500 text-sm">Upgrade your mining power</p>
+    <div class="grid grid-cols-4 gap-2 mb-10">
+        <div class="glass-card p-2 flex flex-col items-center relative">
+            <div class="dot"></div>
+            <span class="text-[18px] mb-1">📅</span>
+            <span class="text-[8px] font-bold text-center leading-tight">Daily reward</span>
+            <span class="text-[9px] text-gray-500 mt-1">11:15</span>
         </div>
-        
-        <div class="grid grid-cols-1 gap-4">
-            <div class="premium-card p-5 flex justify-between items-center group">
-                <div class="flex items-center gap-4">
-                    <div class="w-16 h-16 bg-gradient-to-br from-blue-600/20 to-indigo-600/20 rounded-2xl flex items-center justify-center text-3xl">🤖</div>
-                    <div>
-                        <div class="font-bold text-lg">AI Miner v1</div>
-                        <div class="text-xs text-green-400 font-black tracking-wider">+$150 /hr</div>
-                    </div>
-                </div>
-                <button onclick="buyUpgrade(150, 500)" class="btn-buy">500</button>
-            </div>
-            
-            <div class="premium-card p-5 flex justify-between items-center opacity-50">
-                <div class="flex items-center gap-4">
-                    <div class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl text-gray-600">🚀</div>
-                    <div>
-                        <div class="font-bold text-lg">Space Mining</div>
-                        <div class="text-xs text-gray-500">Unlocks at Level 5</div>
-                    </div>
-                </div>
-                <i class="fas fa-lock text-gray-600 mr-4"></i>
+        <div class="glass-card p-2 flex flex-col items-center relative">
+            <div class="dot"></div>
+            <span class="text-[18px] mb-1">🔐</span>
+            <span class="text-[8px] font-bold text-center leading-tight">Daily cipher</span>
+            <span class="text-[9px] text-gray-500 mt-1">06:15</span>
+        </div>
+        <div class="glass-card p-2 flex flex-col items-center relative">
+            <div class="dot"></div>
+            <span class="text-[18px] mb-1">📑</span>
+            <span class="text-[8px] font-bold text-center leading-tight">Daily combo</span>
+            <span class="text-[9px] text-gray-500 mt-1">23:15</span>
+        </div>
+        <div class="glass-card p-2 flex flex-col items-center relative">
+            <div class="dot"></div>
+            <span class="text-[18px] mb-1">🎮</span>
+            <span class="text-[8px] font-bold text-center leading-tight">Mini game</span>
+            <span class="text-[9px] text-gray-500 mt-1">07:15</span>
+        </div>
+    </div>
+
+    <div class="flex flex-col items-center mb-6">
+        <div class="flex items-center gap-3">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/Gold_Emoji_Coin.png" width="48">
+            <span class="text-5xl font-black tracking-tight" id="score">120</span>
+        </div>
+    </div>
+
+    <div class="flex-1 flex items-center justify-center">
+        <div class="main-circle-bg">
+            <div class="inner-circle" id="tap-btn">
+                <span class="text-[140px] select-none">🐹</span>
             </div>
         </div>
     </div>
 
-    <div id="airdrop" class="page text-center pt-12">
-        <div class="relative w-32 h-32 mx-auto mb-8">
-            <div class="absolute inset-0 bg-blue-500 blur-3xl opacity-20"></div>
-            <div class="w-full h-full premium-card flex items-center justify-center text-5xl text-blue-500 border-blue-500/30">
-                <i class="fab fa-telegram"></i>
+    <div class="mt-auto pb-24">
+        <div class="flex justify-between items-center mb-2 px-2">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-bolt text-yellow-500"></i>
+                <span class="font-bold text-sm">1000 / 1000</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-[20px]">🚀</span>
+                <span class="font-bold text-sm uppercase tracking-wider">Boost</span>
             </div>
         </div>
-        <h2 class="text-4xl font-black mb-4 tracking-tighter">TON Wallet</h2>
-        <p class="text-gray-500 text-sm px-12 mb-12 font-medium">Connect your TON wallet to receive your airdrop rewards instantly.</p>
-        
-        <button id="connect-btn" class="w-full py-5 rounded-3xl bg-[#0088cc] text-white font-black text-xl shadow-[0_10px_30px_rgba(0,136,204,0.3)] flex items-center justify-center gap-3 active:scale-95 transition-all">
-            <i class="fas fa-link"></i>
-            <span id="conn-text">Connect TON Wallet</span>
-        </button>
+        <div class="energy-bar-bg">
+            <div class="energy-fill"></div>
+        </div>
     </div>
 
-    <nav class="bottom-nav">
-        <button onclick="switchPage('exchange', this)" class="nav-link active">
-            <i class="fas fa-bolt"></i>
-            <span>Tapper</span>
-        </button>
-        <button onclick="switchPage('mine', this)" class="nav-link">
-            <i class="fas fa-rocket"></i>
-            <span>Upgrades</span>
+    <div class="absolute bottom-4 left-4 right-4 h-20 bg-[#111] rounded-3xl border border-gray-800 flex items-center justify-around px-2 py-1 z-50">
+        <div class="nav-item active flex flex-col items-center justify-center w-16 h-16">
+            <span class="text-xl">🐹</span>
+            <span class="text-[9px] font-bold mt-1">Exchange</span>
         </div>
-        <button class="nav-link opacity-20">
-            <i class="fas fa-users"></i>
-            <span>Squad</span>
-        </button>
-        <button onclick="switchPage('airdrop', this)" class="nav-link">
-            <i class="fas fa-parachute-box"></i>
-            <span>Airdrop</span>
-        </button>
-    </nav>
+        <div class="nav-item flex flex-col items-center justify-center w-16 h-16 text-gray-500">
+            <i class="fas fa-pickaxe text-lg"></i>
+            <span class="text-[9px] font-bold mt-1">Mine</span>
+        </div>
+        <div class="nav-item flex flex-col items-center justify-center w-16 h-16 text-gray-500">
+            <i class="fas fa-users text-lg"></i>
+            <span class="text-[9px] font-bold mt-1">Friends</span>
+        </div>
+        <div class="nav-item flex flex-col items-center justify-center w-16 h-16 text-gray-500">
+            <i class="fas fa-coins text-lg"></i>
+            <span class="text-[9px] font-bold mt-1">Earn</span>
+        </div>
+        <div class="nav-item flex flex-col items-center justify-center w-16 h-16 text-gray-500 relative">
+            <div class="dot" style="top: 8px; right: 8px;"></div>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/Gold_Emoji_Coin.png" width="20">
+            <span class="text-[9px] font-bold mt-1">Airdrop</span>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    let score = 0;
-    let energy = 1000;
-    let profitPerHour = 0;
-    const maxEnergy = 1000;
-
-    // Elementler
     const scoreEl = document.getElementById('score');
-    const energyBar = document.getElementById('energy-bar');
-    const energyTop = document.getElementById('energy-top');
-    const energyPct = document.getElementById('energy-pct');
-    const profitEl = document.getElementById('profit');
     const tapBtn = document.getElementById('tap-btn');
+    let count = 120;
 
-    // Tap İşlemi
-    function handleTap(e) {
-        if (energy <= 0) return;
-
-        score++;
-        energy--;
-        updateUI();
-
-        const x = e.touches ? e.touches[0].clientX : e.clientX;
-        const y = e.touches ? e.touches[0].clientY : e.clientY;
-        createFloatEffect(x, y);
-
-        if(navigator.vibrate) navigator.vibrate(40);
-    }
-
-    // Market Alım
-    function buyUpgrade(amount, cost) {
-        if (score >= cost) {
-            score -= cost;
-            profitPerHour += amount;
-            updateUI();
-        }
-    }
-
-    // UI Güncelleme
-    function updateUI() {
-        scoreEl.innerText = Math.floor(score).toLocaleString();
-        profitEl.innerText = profitPerHour.toLocaleString();
-        energyTop.innerText = energy;
+    tapBtn.addEventListener('click', (e) => {
+        count++;
+        scoreEl.innerText = count;
         
-        const pct = (energy / maxEnergy) * 100;
-        energyBar.style.width = pct + "%";
-        energyPct.innerText = Math.floor(pct) + "%";
-    }
-
-    // Saniyelik Kazanç ve Enerji Yenileme
-    setInterval(() => {
-        if (energy < maxEnergy) energy++;
-        score += (profitPerHour / 3600);
-        updateUI();
-    }, 1000);
-
-    // Sayfa Değiştirme
-    function switchPage(pageId, el) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-        
-        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
-    }
-
-    // Floating Effect
-    function createFloatEffect(x, y) {
-        const div = document.createElement('div');
-        div.className = 'float-val';
-        div.innerText = '+1';
-        div.style.left = x + 'px';
-        div.style.top = y + 'px';
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 800);
-    }
-
-    // Cüzdan Bağlama
-    document.getElementById('connect-btn').onclick = function() {
-        const btnText = document.getElementById('conn-text');
-        btnText.innerText = "Verifying...";
-        setTimeout(() => {
-            btnText.innerText = "UQ7x...9aB0 Connected";
-            this.style.background = "#22c55e";
-            this.style.boxShadow = "0 10px 30px rgba(34, 197, 94, 0.3)";
-        }, 1500);
-    };
-
-    // Event Dinleyiciler
-    tapBtn.addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(e); }, {passive: false});
-    tapBtn.addEventListener('mousedown', handleTap);
+        // Basit bir dokunma efekti (Vibrate gibi)
+        if (navigator.vibrate) navigator.vibrate(20);
+    });
 </script>
 
 </body>
