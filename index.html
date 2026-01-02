@@ -3,139 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Emoji Gold Miner</title>
+    <title>Emoji Gold Miner Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --bg-dark: #0a0a0b;
-            --card-gray: #1c1c1e;
-            --accent-blue: #4e60ff;
-            --gold: #f3ba2f;
-        }
+        :root { --bg-dark: #0a0a0b; --gold: #f3ba2f; --accent-blue: #4e60ff; }
+        body { background-color: var(--bg-dark); color: white; font-family: 'Poppins', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
+        
+        .app-container { width: 100%; max-width: 480px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; padding: 20px; position: relative; background: linear-gradient(180deg, #16171b 0%, #000000 100%); }
+        .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; }
+        
+        /* Sekme Yönetimi */
+        .page { display: none; flex-direction: column; height: 100%; animation: fadeIn 0.3s ease; }
+        .page.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        body {
-            background-color: var(--bg-dark);
-            color: white;
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-        }
+        /* Click Area */
+        .emoji-container { position: relative; width: 260px; height: 260px; margin: auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; }
+        .emoji-container:active { transform: scale(0.92); }
+        .emoji-main { font-size: 140px; user-select: none; z-index: 10; }
+        
+        /* Enerji Bar */
+        .progress-bar { height: 14px; background: #222; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
+        #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #f3ba2f, #ffcc33); transition: width 0.2s ease; }
 
-        .app-container {
-            width: 100%;
-            max-width: 480px;
-            background: linear-gradient(180deg, #16171b 0%, #000000 100%);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            position: relative;
-            border-top: 2px solid #f3ba2f55;
-        }
+        .floating-text { position: absolute; color: white; font-weight: 800; font-size: 28px; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 100; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-150px); } }
 
-        /* Cam Efekti Kartlar */
-        .glass-card {
-            background: rgba(28, 28, 30, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            transition: all 0.3s ease;
-        }
-
-        /* Ana Emoji Butonu */
-        .click-area {
-            position: relative;
-            width: 280px;
-            height: 280px;
-            margin: auto;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(78, 96, 255, 0.2) 0%, rgba(0, 0, 0, 0) 70%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .emoji-main {
-            font-size: 160px;
-            filter: drop-shadow(0 0 20px rgba(78, 96, 255, 0.5));
-            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            user-select: none;
-        }
-
-        .emoji-main:active {
-            transform: scale(0.9);
-        }
-
-        /* Parlama Efekti */
-        .glow-ring {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 4px solid var(--accent-blue);
-            opacity: 0.3;
-            box-shadow: 0 0 30px var(--accent-blue);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.3; }
-            50% { transform: scale(1.05); opacity: 0.5; }
-            100% { transform: scale(1); opacity: 0.3; }
-        }
-
-        .floating-point {
-            position: absolute;
-            color: var(--gold);
-            font-weight: 800;
-            font-size: 32px;
-            pointer-events: none;
-            animation: floatUp 0.7s ease-out forwards;
-            z-index: 50;
-        }
-
-        @keyframes floatUp {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-120px); }
-        }
-
-        .progress-bar {
-            height: 12px;
-            background: #333;
-            border-radius: 6px;
-            overflow: hidden;
-            border: 1px solid #444;
-        }
-
-        .progress-fill {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, #f3ba2f, #ffea00);
-            box-shadow: 0 0 10px #f3ba2f;
-        }
-
-        .nav-item i {
-            font-size: 1.4rem;
-            margin-bottom: 4px;
-        }
+        .nav-btn { cursor: pointer; transition: all 0.2s; color: #666; }
+        .nav-btn.active { color: var(--gold); transform: translateY(-5px); }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="flex justify-between items-center mb-4">
+    <div class="flex justify-between items-center mb-6">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-500 to-orange-500 flex items-center justify-center border-2 border-white/20">
-                <span class="text-xl">🐶</span>
-            </div>
+            <div class="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center">🐶</div>
             <div>
-                <div class="text-xs text-gray-400 font-bold uppercase tracking-wider">Player (CEO)</div>
-                <div class="text-sm font-semibold text-yellow-500">Bronze Stage ></div>
+                <div class="text-[10px] text-gray-500 font-bold uppercase">Level 1</div>
+                <div class="text-xs font-semibold text-yellow-500">Bronze CEO ></div>
             </div>
         </div>
         <div class="glass-card px-4 py-2 flex items-center gap-2">
@@ -144,136 +52,202 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-4 gap-2 mb-6">
-        <div class="glass-card p-2 text-center">
-            <i class="fas fa-gift text-blue-400 text-xs mb-1"></i>
-            <div class="text-[9px] text-gray-400 uppercase">Reward</div>
-            <div class="text-[11px] font-bold text-white">00:00</div>
+    <div id="exchange-page" class="page active">
+        <div class="grid grid-cols-4 gap-2 mb-6 text-center">
+            <div class="glass-card p-2"><div class="text-[8px] text-gray-400">DAILY REWARD</div><div class="text-xs font-bold">0</div></div>
+            <div class="glass-card p-2"><div class="text-[8px] text-gray-400">CIPHER</div><div class="text-xs font-bold">0</div></div>
+            <div class="glass-card p-2"><div class="text-[8px] text-gray-400">COMBO</div><div class="text-xs font-bold">0</div></div>
+            <div class="glass-card p-2"><div class="text-[8px] text-gray-400">MINI GAME</div><div class="text-xs font-bold">0</div></div>
         </div>
-        <div class="glass-card p-2 text-center">
-            <i class="fas fa-code text-purple-400 text-xs mb-1"></i>
-            <div class="text-[9px] text-gray-400 uppercase">Cipher</div>
-            <div class="text-[11px] font-bold text-white">00:00</div>
-        </div>
-        <div class="glass-card p-2 text-center">
-            <i class="fas fa-layers-group text-orange-400 text-xs mb-1"></i>
-            <div class="text-[9px] text-gray-400 uppercase">Combo</div>
-            <div class="text-[11px] font-bold text-white">00:00</div>
-        </div>
-        <div class="glass-card p-2 text-center">
-            <i class="fas fa-gamepad text-green-400 text-xs mb-1"></i>
-            <div class="text-[9px] text-gray-400 uppercase">Mini Game</div>
-            <div class="text-[11px] font-bold text-white">00:00</div>
-        </div>
-    </div>
 
-    <div class="text-center my-4">
-        <div class="flex justify-center items-center gap-3">
-            <div class="w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center shadow-[0_0_20px_rgba(243,186,47,0.4)]">
-                <i class="fas fa-dollar-sign text-2xl text-black"></i>
+        <div class="text-center mb-4">
+            <div class="flex justify-center items-center gap-3">
+                <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="w-10 h-10" alt="coin">
+                <span id="score" class="text-5xl font-black tracking-tight">0</span>
             </div>
-            <span id="score" class="text-6xl font-extrabold tracking-tighter">0</span>
+            <div class="text-gray-400 text-xs mt-2 uppercase tracking-widest">Profit per hour: <span class="text-green-500">+0</span></div>
         </div>
-        <div class="text-gray-400 text-sm mt-2 font-medium tracking-widest">PROFIT PER HOUR: <span class="text-green-400">+0</span></div>
+
+        <div class="flex-grow flex items-center justify-center">
+            <div id="click-btn" class="emoji-container">
+                <div class="absolute inset-0 bg-blue-600/20 blur-3xl rounded-full"></div>
+                <div class="emoji-main">🐶</div>
+            </div>
+        </div>
     </div>
 
-    <div class="flex-grow flex items-center justify-center relative">
-        <div id="click-area" class="click-area">
-            <div class="glow-ring"></div>
-            <div id="emoji" class="emoji-main">🐶</div>
+    <div id="mine-page" class="page">
+        <h2 class="text-2xl font-bold mb-4">Market & Cards</h2>
+        <div class="grid grid-cols-2 gap-4 overflow-y-auto">
+            <div class="glass-card p-4">
+                <div class="text-orange-400 text-lg mb-2">🔥 GPU Farm</div>
+                <div class="text-xs text-gray-400">Income: +500/h</div>
+                <button class="mt-4 w-full bg-yellow-500 text-black font-bold py-1 rounded">Locked</button>
+            </div>
+            <div class="glass-card p-4">
+                <div class="text-blue-400 text-lg mb-2">💎 Trading</div>
+                <div class="text-xs text-gray-400">Income: +1.2k/h</div>
+                <button class="mt-4 w-full bg-yellow-500 text-black font-bold py-1 rounded">Locked</button>
+            </div>
         </div>
     </div>
 
-    <div class="mt-4">
+    <div id="friends-page" class="page text-center pt-10">
+        <i class="fas fa-users text-6xl text-yellow-500 mb-4"></i>
+        <h2 class="text-2xl font-bold">Invite Friends!</h2>
+        <p class="text-gray-400 mt-2 px-10">You and your friend will receive bonuses</p>
+        <button class="mt-10 mx-auto bg-blue-600 px-8 py-3 rounded-xl font-bold">Invite a Friend</button>
+    </div>
+
+    <div id="earn-page" class="page">
+        <h2 class="text-2xl font-bold mb-6">Tasks List</h2>
+        <div class="space-y-3">
+            <div class="glass-card p-4 flex justify-between items-center">
+                <div class="flex items-center gap-3"><i class="fab fa-youtube text-red-500"></i> Watch Video</div>
+                <span class="text-yellow-500 font-bold">+50,000</span>
+            </div>
+            <div class="glass-card p-4 flex justify-between items-center">
+                <div class="flex items-center gap-3"><i class="fab fa-telegram text-blue-400"></i> Join Channel</div>
+                <span class="text-yellow-500 font-bold">+10,000</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="airdrop-page" class="page text-center pt-10">
+        <div class="text-6xl mb-4">🪂</div>
+        <h2 class="text-2xl font-bold">Airdrop Tasks</h2>
+        <p class="text-gray-400 mt-2">Listing is coming soon...</p>
+        <div class="glass-card mt-10 p-6 mx-4">
+            <div class="text-sm text-gray-300">Wallet not connected</div>
+            <button class="mt-4 bg-white text-black px-6 py-2 rounded-lg font-bold">Connect Wallet</button>
+        </div>
+    </div>
+
+    <div class="mt-auto">
         <div class="flex justify-between items-end mb-2 px-2">
             <div class="flex items-center gap-2">
-                <i class="fas fa-bolt text-yellow-400 text-xl"></i>
+                <span class="text-2xl">⚡</span>
                 <div>
-                    <span class="block text-[10px] text-gray-400 uppercase font-bold">Energy</span>
-                    <span class="font-bold text-lg">1000 / 1000</span>
+                    <span id="energy-text" class="font-black text-xl">1000</span>
+                    <span class="text-gray-500 text-sm">/ 1000</span>
                 </div>
             </div>
-            <div class="glass-card px-4 py-2 flex items-center gap-2 cursor-pointer active:scale-95 transition-transform">
-                <i class="fas fa-rocket text-orange-500"></i>
-                <span class="font-bold text-sm">BOOST</span>
+            <div class="flex items-center gap-1 text-orange-400 font-bold">
+                <i class="fas fa-rocket"></i> Boost
             </div>
         </div>
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
+        <div class="progress-bar mb-6">
+            <div id="energy-fill"></div>
         </div>
-    </div>
 
-    <div class="mt-6 flex justify-between items-center px-2 py-2 border-t border-white/5">
-        <div class="nav-item flex flex-col items-center text-blue-500">
-            <i class="fas fa-coins"></i>
-            <span class="text-[10px] font-bold">Exchange</span>
-        </div>
-        <div class="nav-item flex flex-col items-center text-gray-500">
-            <i class="fas fa-pickaxe"></i>
-            <span class="text-[10px] font-bold">Mine</span>
-        </div>
-        <div class="nav-item flex flex-col items-center text-gray-500">
-            <i class="fas fa-user-group"></i>
-            <span class="text-[10px] font-bold">Friends</span>
-        </div>
-        <div class="nav-item flex flex-col items-center text-gray-500">
-            <i class="fas fa-wallet"></i>
-            <span class="text-[10px] font-bold">Earn</span>
-        </div>
-        <div class="nav-item flex flex-col items-center text-gray-500">
-            <i class="fas fa-parachute-box"></i>
-            <span class="text-[10px] font-bold">Airdrop</span>
+        <div class="glass-card py-3 px-2 flex justify-between items-center">
+            <div class="nav-btn active flex flex-col items-center flex-1" onclick="showPage('exchange', this)">
+                <i class="fas fa-exchange-alt"></i><span class="text-[9px] mt-1">Exchange</span>
+            </div>
+            <div class="nav-btn flex flex-col items-center flex-1" onclick="showPage('mine', this)">
+                <i class="fas fa-pickaxe"></i><span class="text-[9px] mt-1">Mine</span>
+            </div>
+            <div class="nav-btn flex flex-col items-center flex-1" onclick="showPage('friends', this)">
+                <i class="fas fa-user-group"></i><span class="text-[9px] mt-1">Friends</span>
+            </div>
+            <div class="nav-btn flex flex-col items-center flex-1" onclick="showPage('earn', this)">
+                <i class="fas fa-coins"></i><span class="text-[9px] mt-1">Earn</span>
+            </div>
+            <div class="nav-btn flex flex-col items-center flex-1" onclick="showPage('airdrop', this)">
+                <i class="fas fa-parachute-box"></i><span class="text-[9px] mt-1">Airdrop</span>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    const clickArea = document.getElementById('click-area');
-    const scoreText = document.getElementById('score');
     let score = 0;
+    let energy = 1000;
+    const maxEnergy = 1000;
 
-    clickArea.addEventListener('click', (e) => {
-        score++;
-        scoreText.innerText = score.toLocaleString();
+    const scoreEl = document.getElementById('score');
+    const energyEl = document.getElementById('energy-text');
+    const energyFill = document.getElementById('energy-fill');
+    const clickBtn = document.getElementById('click-btn');
 
-        // Sayı uçurma efekti
-        const float = document.createElement('div');
-        float.className = 'floating-point';
-        float.innerText = '+1';
-        
-        // Tıklanan yere göre konumlandırma
-        const rect = clickArea.getBoundingClientRect();
-        const x = e.clientX - 20;
-        const y = e.clientY - 20;
-        
-        float.style.left = `${x}px`;
-        float.style.top = `${y}px`;
-        
-        document.body.appendChild(float);
-        
-        setTimeout(() => {
-            float.remove();
-        }, 700);
-    });
-
-    // Dokunmatik cihazlar için çoklu dokunuş desteği
-    clickArea.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        const touches = e.changedTouches;
-        for(let i=0; i<touches.length; i++) {
+    // TIKLAMA FONKSİYONU
+    function handleTap(x, y) {
+        if (energy > 0) {
+            // Skoru artır, Enerjiyi azalt
             score++;
-            scoreText.innerText = score.toLocaleString();
+            energy--;
             
-            const float = document.createElement('div');
-            float.className = 'floating-point';
-            float.innerText = '+1';
-            float.style.left = `${touches[i].clientX}px`;
-            float.style.top = `${touches[i].clientY}px`;
-            document.body.appendChild(float);
-            setTimeout(() => float.remove(), 700);
+            updateUI();
+            createFloatingText(x, y);
+            
+            // Titreşim (Mobil destekliyorsa)
+            if(navigator.vibrate) navigator.vibrate(50);
+        } else {
+            // Enerji yok uyarısı (Opsiyonel)
+            clickBtn.style.animation = "shake 0.2s";
+            setTimeout(() => clickBtn.style.animation = "", 200);
         }
+    }
+
+    // ARAYÜZ GÜNCELLEME
+    function updateUI() {
+        scoreEl.innerText = score.toLocaleString();
+        energyEl.innerText = energy;
+        const percent = (energy / maxEnergy) * 100;
+        energyFill.style.width = percent + "%";
+    }
+
+    // ENERJİ YENİLENMESİ (Saniyede +1)
+    setInterval(() => {
+        if (energy < maxEnergy) {
+            energy++;
+            updateUI();
+        }
+    }, 1000);
+
+    // SEKMELER ARASI GEÇİŞ
+    function showPage(pageId, btn) {
+        // Tüm sayfaları gizle
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        // Hedef sayfayı göster
+        document.getElementById(pageId + '-page').classList.add('active');
+        
+        // Buton aktiflik durumunu güncelle
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    // GÖRSEL EFEKTLER
+    function createFloatingText(x, y) {
+        const text = document.createElement('div');
+        text.className = 'floating-text';
+        text.innerText = '+1';
+        text.style.left = x + 'px';
+        text.style.top = y + 'px';
+        document.body.appendChild(text);
+        setTimeout(() => text.remove(), 800);
+    }
+
+    // EVENT LISTENERS
+    clickBtn.addEventListener('mousedown', (e) => handleTap(e.clientX, e.clientY));
+    
+    // Mobil için Multi-tap desteği
+    clickBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.touches[e.touches.length - 1];
+        handleTap(touch.clientX, touch.clientY);
     }, {passive: false});
+
 </script>
+
+<style>
+    @keyframes shake {
+        0% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        50% { transform: translateX(5px); }
+        100% { transform: translateX(0); }
+    }
+</style>
 
 </body>
 </html>
