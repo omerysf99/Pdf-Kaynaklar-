@@ -6,229 +6,262 @@
     <title>Idle Miner Tycoon Clone</title>
     <style>
         :root {
-            --bg-color: #2c3e50;
-            --gold: #f1c40f;
-            --panel: #34495e;
+            --bg-sky: #4fa3e3;
+            --earth: #8b4513;
+            --tunnel: #3d2b1f;
+            --gold: #ffd700;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
+            background-color: var(--bg-sky);
+            font-family: 'Arial', sans-serif;
+            color: white;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
             height: 100vh;
-            overflow: hidden;
-            user-select: none;
         }
 
-        /* Üst Panel: Para Durumu */
-        #header {
-            background: rgba(0,0,0,0.5);
-            padding: 20px;
-            text-align: center;
-            border-bottom: 3px solid var(--gold);
-        }
-
-        #balance {
-            font-size: 2.5rem;
+        /* Üst Panel */
+        #top-bar {
+            height: 60px;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
             font-weight: bold;
             color: var(--gold);
+            z-index: 100;
+            position: sticky;
+            top: 0;
         }
 
-        #income-rate {
-            font-size: 0.9rem;
-            color: #bdc3c7;
-        }
-
-        /* Orta Alan: Maden Animasyonu */
-        #mine-area {
-            flex-grow: 1;
+        /* Oyun Alanı Konteynırı */
+        #game-container {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
             position: relative;
         }
 
-        .mine-shaft {
-            width: 120px;
+        /* Yeryüzü ve Depo */
+        #surface {
             height: 120px;
-            background: #7f8c8d;
-            border-radius: 10px;
+            background: #4caf50;
+            position: relative;
+            border-bottom: 5px solid #2e7d32;
+        }
+
+        .warehouse {
+            position: absolute;
+            right: 20px;
+            bottom: 0;
+            width: 80px;
+            height: 100px;
+            background: #555;
+            border: 3px solid #333;
+            text-align: center;
+        }
+
+        /* Maden Şaftı (Dikey Yapı) */
+        #shaft-container {
+            background-color: var(--earth);
+            min-height: 600px;
+            position: relative;
+            padding-left: 80px; /* Asansör boşluğu */
+        }
+
+        /* Asansör Yolu */
+        #elevator-shaft {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 70px;
+            background: #222;
+            border-right: 4px solid #444;
+        }
+
+        #elevator {
+            width: 60px;
+            height: 50px;
+            background: #e74c3c;
+            position: absolute;
+            left: 5px;
+            top: 0;
+            transition: top 2s linear;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 4rem;
-            cursor: pointer;
-            transition: transform 0.1s;
-            z-index: 2;
+            font-size: 0.8rem;
+            border-radius: 5px;
         }
 
-        .mine-shaft:active { transform: scale(0.9); }
-
-        /* Alt Panel: Geliştirmeler */
-        #shop-panel {
-            background: var(--panel);
-            padding: 15px;
-            max-height: 40%;
-            overflow-y: auto;
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-        }
-
-        .upgrade-item {
-            background: #2c3e50;
-            margin-bottom: 10px;
-            padding: 12px;
-            border-radius: 10px;
+        /* Maden Katları */
+        .mine-floor {
+            height: 100px;
+            background: var(--tunnel);
+            margin: 20px 10px;
+            border-radius: 0 10px 10px 0;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            border-left: 5px solid var(--gold);
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 4px solid #000;
         }
 
-        .upgrade-info h4 { margin: 0; font-size: 1rem; }
-        .upgrade-info p { margin: 2px 0 0; font-size: 0.8rem; color: #bdc3c7; }
+        .miner { font-size: 2rem; cursor: pointer; }
+        .floor-stats { font-size: 0.9rem; }
 
-        .buy-btn {
+        .upgrade-btn {
             background: var(--gold);
-            color: #000;
             border: none;
-            padding: 8px 15px;
+            padding: 5px 10px;
             border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
         }
 
-        .buy-btn:disabled {
-            background: #7f8c8d;
-            opacity: 0.5;
+        /* Animasyonlar */
+        @keyframes collect {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
         }
+        .collecting { animation: collect 0.3s ease; }
 
-        .floating-coin {
-            position: absolute;
-            color: var(--gold);
-            font-weight: bold;
-            animation: moveUp 1s forwards;
-            pointer-events: none;
-        }
-
-        @keyframes moveUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-100px); opacity: 0; }
-        }
     </style>
 </head>
 <body>
 
-    <div id="header">
-        <div id="balance">$ 0</div>
-        <div id="income-rate">Saniyelik Kazanç: $ 0</div>
-    </div>
+    <div id="top-bar">💰 <span id="total-money">0</span></div>
 
-    <div id="mine-area">
-        <div class="mine-shaft" id="click-area">⛏️</div>
-    </div>
-
-    <div id="shop-panel">
-        <div class="upgrade-item">
-            <div class="upgrade-info">
-                <h4>Acemi Madenci</h4>
-                <p>Kazanç: +$1/sn | Maliyet: $15</p>
+    <div id="game-container">
+        <div id="surface">
+            <div class="warehouse">
+                🏢<br>DEPO
+                <div id="warehouse-gold" style="font-size: 0.8rem; color: gold;">0</div>
             </div>
-            <button class="buy-btn" onclick="buyUpgrade(0)">Satın Al</button>
         </div>
 
-        <div class="upgrade-item">
-            <div class="upgrade-info">
-                <h4>Sondaj Makinesi</h4>
-                <p>Kazanç: +$8/sn | Maliyet: $100</p>
+        <div id="shaft-container">
+            <div id="elevator-shaft">
+                <div id="elevator">🏗️ <span id="elev-load">0</span></div>
             </div>
-            <button class="buy-btn" onclick="buyUpgrade(1)">Satın Al</button>
-        </div>
 
-        <div class="upgrade-item">
-            <div class="upgrade-info">
-                <h4>Altın Fabrikası</h4>
-                <p>Kazanç: +$45/sn | Maliyet: $500</p>
+            <div class="mine-floor" id="floor-1">
+                <div class="miner" onclick="mine(1)">⛏️</div>
+                <div class="floor-stats">
+                    Kat 1 (Seviye <span id="lvl-1">1</span>)<br>
+                    Stok: <span id="stock-1">0</span>
+                </div>
+                <button class="upgrade-btn" onclick="upgrade(1)">Geliştir ($50)</button>
             </div>
-            <button class="buy-btn" onclick="buyUpgrade(2)">Satın Al</button>
+
+            <div class="mine-floor" id="floor-2">
+                <div class="miner" onclick="mine(2)">⛏️</div>
+                <div class="floor-stats">
+                    Kat 2 (Seviye <span id="lvl-2">1</span>)<br>
+                    Stok: <span id="stock-2">0</span>
+                </div>
+                <button class="upgrade-btn" onclick="upgrade(2)">Geliştir ($200)</button>
+            </div>
         </div>
     </div>
 
     <script>
-        let balance = 0;
-        let autoIncome = 0;
+        let gameState = {
+            money: 0,
+            warehouseGold: 0,
+            elevatorLoad: 0,
+            floors: {
+                1: { level: 1, stock: 0, cost: 50, power: 5 },
+                2: { level: 1, stock: 0, cost: 200, power: 20 }
+            }
+        };
 
-        const upgrades = [
-            { name: "Madenci", cost: 15, income: 1, count: 0 },
-            { name: "Sondaj", cost: 100, income: 8, count: 0 },
-            { name: "Fabrika", cost: 500, income: 45, count: 0 }
-        ];
-
-        const balanceEl = document.getElementById('balance');
-        const incomeEl = document.getElementById('income-rate');
-        const clickArea = document.getElementById('click-area');
-        const buttons = document.querySelectorAll('.buy-btn');
-
-        // Manuel Tıklama
-        clickArea.addEventListener('click', (e) => {
-            addMoney(1);
-            showCoinEffect(e.clientX, e.clientY);
-        });
-
-        function addMoney(amount) {
-            balance += amount;
+        // 1. Madencilik (Tıklayarak altın çıkar)
+        function mine(floorId) {
+            const floor = gameState.floors[floorId];
+            floor.stock += floor.power;
             updateUI();
         }
 
-        function buyUpgrade(index) {
-            const item = upgrades[index];
-            if (balance >= item.cost) {
-                balance -= item.cost;
-                item.count++;
-                autoIncome += item.income;
-                item.cost = Math.floor(item.cost * 1.5); // Fiyat artışı
-                
-                // UI Güncelleme (Fiyatı göster)
-                const desc = document.querySelectorAll('.upgrade-info p')[index];
-                desc.innerText = `Kazanç: +${item.income}/sn | Maliyet: $${item.cost}`;
-                
+        // 2. Geliştirme
+        function upgrade(floorId) {
+            const floor = gameState.floors[floorId];
+            if (gameState.money >= floor.cost) {
+                gameState.money -= floor.cost;
+                floor.level++;
+                floor.power += Math.floor(floor.power * 0.5);
+                floor.cost = Math.floor(floor.cost * 1.8);
                 updateUI();
             }
         }
 
-        function updateUI() {
-            balanceEl.innerText = "$ " + Math.floor(balance).toLocaleString();
-            incomeEl.innerText = `Saniyelik Kazanç: $ ${autoIncome}`;
-            
-            // Butonların aktiflik durumu
-            upgrades.forEach((item, i) => {
-                buttons[i].disabled = balance < item.cost;
-            });
-        }
+        // 3. Asansör Döngüsü (Otomatik)
+        const elevatorEl = document.getElementById('elevator');
+        let elevatorPos = "top";
 
-        function showCoinEffect(x, y) {
-            const coin = document.createElement('div');
-            coin.innerText = "+$1";
-            coin.className = 'floating-coin';
-            coin.style.left = x + 'px';
-            coin.style.top = y + 'px';
-            document.body.appendChild(coin);
-            setTimeout(() => coin.remove(), 1000);
-        }
-
-        // Pasif Gelir Döngüsü (Her 1 saniyede)
-        setInterval(() => {
-            if (autoIncome > 0) {
-                addMoney(autoIncome);
+        function moveElevator() {
+            if (elevatorPos === "top") {
+                // Aşağı in
+                elevatorEl.style.top = "150px"; // Kat 1 hizası
+                setTimeout(() => {
+                    // Kat 1'den al
+                    let take = gameState.floors[1].stock;
+                    gameState.elevatorLoad += take;
+                    gameState.floors[1].stock = 0;
+                    
+                    // Kat 2'ye in
+                    elevatorEl.style.top = "270px"; 
+                    setTimeout(() => {
+                        let take2 = gameState.floors[2].stock;
+                        gameState.elevatorLoad += take2;
+                        gameState.floors[2].stock = 0;
+                        
+                        // Yukarı çık
+                        elevatorPos = "bottom";
+                        moveElevator();
+                    }, 2000);
+                }, 2000);
+            } else {
+                // Yüzeye çık
+                elevatorEl.style.top = "0px";
+                setTimeout(() => {
+                    // Depoya boşalt ve paraya çevir
+                    gameState.money += gameState.elevatorLoad;
+                    gameState.elevatorLoad = 0;
+                    elevatorPos = "top";
+                    updateUI();
+                    moveElevator();
+                }, 2000);
             }
+        }
+
+        function updateUI() {
+            document.getElementById('total-money').innerText = Math.floor(gameState.money).toLocaleString();
+            document.getElementById('elev-load').innerText = gameState.elevatorLoad;
+            
+            for (let i in gameState.floors) {
+                document.getElementById(`stock-${i}`).innerText = gameState.floors[i].stock;
+                document.getElementById(`lvl-${i}`).innerText = gameState.floors[i].level;
+                // Buton yazılarını güncellemek için querySelector kullanılabilir
+            }
+        }
+
+        // Başlat
+        moveElevator();
+        
+        // Pasif Üretim (Her saniye stok birikir)
+        setInterval(() => {
+            gameState.floors[1].stock += (gameState.floors[1].level * 1);
+            gameState.floors[2].stock += (gameState.floors[2].level * 2);
+            updateUI();
         }, 1000);
 
-        // İlk çalıştırma
-        updateUI();
     </script>
 </body>
 </html>
