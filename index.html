@@ -3,220 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flappy CW Ultimate</title>
+    <title>CW Flappy - Fixed & Final</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
-        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; user-select: none; }
-        
-        /* Sayfa Yapısı */
-        .page { display: none; height: calc(100vh - 85px); overflow-y: auto; position: relative; background: #4eb5d3; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { background-color: #f0f4f8; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; user-select: none; }
+        .page { display: none; height: calc(100vh - 85px); position: relative; overflow-y: auto; background: #4eb5d3; }
         .page.active { display: block; }
-        .white-page { background: white; }
+        .bg-white-page { background: #ffffff; }
 
-        /* Oyun Arka Planı */
-        .city-bg { position: absolute; bottom: 85px; width: 100%; height: 100px; background: url('https://i.imgur.com/8S9N8S9.png') repeat-x; opacity: 0.6; z-index: 1; }
-        .ground { position: absolute; bottom: 70px; width: 100%; height: 40px; background: #74bf2e; border-top: 4px solid #538021; z-index: 5; }
-
-        /* CW Pass & Bilet */
-        .ticket { background: #ffc107; clip-path: polygon(10% 0, 90% 0, 100% 20%, 100% 80%, 90% 100%, 10% 100%, 0 80%, 0 20%); }
-
-        /* Game Over Modal */
-        #game-over { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.7); 
-            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000;
+        /* Piksel Karakter & Zemin */
+        .ground-ui { position: absolute; bottom: 70px; width: 100%; height: 45px; background: #74bf2e; border-top: 5px solid #538021; z-index: 10; }
+        
+        /* Game Over Modal - Görsel 9 ile Aynı */
+        #game-over-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            display: none; justify-content: center; align-items: center; z-index: 5000;
         }
 
-        /* Navigasyon */
-        .nav-item.active { color: #0088cc; }
-        .nav-item.active i { transform: scale(1.1); }
+        #game-canvas { display: none; position: absolute; inset: 0; z-index: 100; cursor: pointer; }
+        .score-live { position: absolute; top: 15%; width: 100%; text-align: center; font-size: 80px; color: white; font-weight: 900; z-index: 200; text-shadow: 4px 4px 0 #000; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div class="max-w-md mx-auto h-screen flex flex-col shadow-2xl overflow-hidden relative">
+<div class="max-w-md mx-auto h-screen flex flex-col relative bg-[#4eb5d3]">
     
     <div class="bg-white p-3 flex items-center justify-between border-b z-[1000]">
         <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-[#9c5c3c] rounded-lg flex items-center justify-center border-2 border-black">
-                <span class="text-white font-black text-[10px]">CW</span>
-            </div>
+            <div class="w-8 h-8 bg-[#9c5c3c] rounded-lg border-2 border-black flex items-center justify-center text-white font-black text-[10px]">CW</div>
             <span class="text-[#0088cc] font-black text-lg italic">Flappy</span>
-            <div class="bg-[#0088cc] text-white text-[10px] px-2 py-0.5 rounded font-bold">CW</div>
         </div>
         <div class="flex items-center gap-2">
-            <span class="text-[10px] font-bold text-gray-500">Abu Saeid Nill"🌱 SEED"</span>
-            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">✎</div>
-            <div class="bg-[#0088cc] text-white text-[10px] px-2 py-1 rounded-md font-black">EN</div>
+            <span class="text-[9px] font-bold text-gray-400">ID: 8392479231</span>
+            <div class="bg-[#0088cc] text-white text-[10px] px-2 py-1 rounded font-black">EN</div>
         </div>
+    </div>
+
+    <div id="game-layer" style="display:none;">
+        <div class="score-live" id="live-score">0</div>
+        <canvas id="game-canvas"></canvas>
     </div>
 
     <div id="flappy-page" class="page active px-4 pt-2">
-        <div class="grid grid-cols-2 gap-2 mt-2 relative z-10">
-            <div class="bg-white rounded-2xl p-3 shadow-sm border border-gray-100">
-                <div class="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase">
-                    <span class="text-red-500">❤️</span> Attempts today <span class="text-blue-500 ml-auto" id="attempts-ui">14</span>
-                </div>
-                <button onclick="showPage('tasks')" class="w-full bg-[#0088cc] text-white py-2 rounded-xl mt-2 font-black text-xs shadow-md">Increase</button>
+        <div class="grid grid-cols-2 gap-2 mt-2">
+            <div class="bg-white rounded-2xl p-3 shadow-sm">
+                <p class="text-[10px] font-bold text-gray-400 uppercase flex items-center gap-1">
+                    <span class="text-red-500">❤️</span> Attempts today <span class="text-blue-500 ml-auto" id="att-count">24</span>
+                </p>
+                <button class="w-full bg-[#0088cc] text-white py-2 rounded-xl mt-2 font-black text-xs">Increase</button>
             </div>
-            <div class="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 text-[9px] font-bold space-y-1">
-                <div class="flex justify-between"><span>🏆 Record today</span> <span class="text-blue-500" id="record-today-ui">7.98</span></div>
-                <div class="flex justify-between"><span>🏆 All-time record</span> <span class="text-blue-500" id="all-time-ui">7.98</span></div>
-                <div class="flex justify-between"><span>🚀 Point multiplier</span> <span class="text-blue-500">x1.14</span></div>
-            </div>
-        </div>
-
-        <div class="flex gap-2 mt-4 relative z-10">
-            <div class="ticket flex-1 h-14 flex items-center justify-center font-black text-white text-[10px] shadow-lg italic">CW PASS</div>
-            <div class="flex-[2] space-y-2">
-                <div class="border-2 border-dashed border-white/50 bg-blue-500/30 rounded-2xl p-2 flex items-center justify-between">
-                    <span class="text-white text-[9px] font-bold italic tracking-tight">🎲 Free daily lottery</span>
-                    <span class="text-white">🔊</span>
-                </div>
-                <div class="bg-[#0088cc] rounded-2xl p-2 flex items-center justify-center gap-2 text-white text-[10px] font-bold shadow-md">
-                    <span>🎮</span> Our games
-                </div>
+            <div class="bg-white rounded-2xl p-3 shadow-sm text-[9px] font-bold space-y-1">
+                <div class="flex justify-between"><span>🏆 Record today</span> <span class="text-blue-500" id="rec-today">2.02</span></div>
+                <div class="flex justify-between"><span>🏆 All-time record</span> <span class="text-blue-500">2.02</span></div>
+                <div class="flex justify-between"><span>🚀 Point multiplier</span> <span class="text-green-500">x1.0</span></div>
             </div>
         </div>
 
-        <div class="flex flex-col items-center justify-center mt-24 relative z-10">
-            <div id="bird-menu" class="w-14 h-10 bg-[#9c5c3c] border-4 border-black rounded-xl flex items-center justify-center animate-bounce">
+        <div class="flex flex-col items-center justify-center mt-32">
+            <div class="w-14 h-10 bg-[#9c5c3c] border-4 border-black rounded-xl flex items-center justify-center animate-bounce">
                 <span class="text-white font-black text-[10px]">CW</span>
             </div>
-            <button id="play-btn" class="mt-16 bg-white p-7 rounded-3xl shadow-2xl border-b-8 border-gray-200 active:translate-y-1 transition-all">
+            <button id="start-btn" class="mt-16 bg-white p-8 rounded-3xl shadow-2xl border-b-8 border-gray-100 active:scale-95 transition-all">
                 <div class="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-green-600 border-b-[15px] border-b-transparent ml-1"></div>
             </button>
         </div>
-        
-        <div class="city-bg"></div>
-        <div class="ground"></div>
-        <canvas id="game-canvas" class="absolute inset-0 z-50 hidden"></canvas>
+        <div class="ground-ui"></div>
     </div>
 
-    <div id="rating-page" class="page white-page px-4 pt-4">
-        <div class="bg-blue-50 rounded-2xl p-4 flex justify-between items-center mb-6">
-            <span class="text-blue-400">💎 Today's prize amount:</span>
-            <span class="font-black text-[#0088cc]">72.52 TON</span>
-        </div>
-        
-        <div class="flex justify-around items-end mb-8">
-            <div class="text-center"><div class="w-16 h-16 rounded-full bg-gray-200 border-4 border-gray-100 mx-auto mb-2 overflow-hidden"><img src="https://i.pravatar.cc/100?u=1"></div><p class="text-[10px] font-bold">Юpa 🐾</p><p class="text-blue-500 font-black text-[10px]">1.93 TON</p></div>
-            <div class="text-center scale-125"><div class="w-16 h-16 rounded-full bg-gray-200 border-4 border-yellow-400 mx-auto mb-2 overflow-hidden"><img src="https://i.pravatar.cc/100?u=2"></div><p class="text-[10px] font-bold">C C</p><p class="text-blue-500 font-black text-[10px]">2.66 TON</p></div>
-            <div class="text-center"><div class="w-16 h-16 rounded-full bg-gray-200 border-4 border-orange-400 mx-auto mb-2 overflow-hidden"><img src="https://i.pravatar.cc/100?u=3"></div><p class="text-[10px] font-bold">Daniar</p><p class="text-blue-500 font-black text-[10px]">1.45 TON</p></div>
-        </div>
-
-        <div class="space-y-2">
-            <div class="flex items-center justify-between p-3 border-b border-gray-50">
-                <div class="flex items-center gap-3"><span class="font-bold text-gray-400">04</span><img src="https://i.pravatar.cc/100?u=4" class="w-8 h-8 rounded-full"><span class="text-xs font-bold">Ani</span></div>
-                <span class="text-[#0088cc] font-black text-xs">1.21 TON</span>
-            </div>
-            </div>
-    </div>
-
-    <div id="wallet-page" class="page white-page px-6 pt-10">
-        <div class="flex gap-2 mb-8">
-            <button class="flex-1 bg-[#0088cc] text-white py-2 rounded-xl font-bold text-xs">Wallet</button>
-            <button class="flex-1 bg-gray-100 text-gray-400 py-2 rounded-xl font-bold text-xs">Lottery</button>
-        </div>
-        
+    <div id="wallet-page" class="page bg-white-page px-6 pt-6">
         <h1 class="text-2xl font-black mb-2">Withdrawal</h1>
-        <p class="text-gray-400 text-xs mb-8">Connect your TON wallet to withdraw winnings from the daily rating</p>
-        
-        <div class="flex justify-center mb-8">
-            <img src="https://ton.org/download/ton_symbol.png" class="w-24 h-24 animate-pulse">
+        <div class="bg-gray-50 rounded-[32px] p-8 text-center mt-10">
+            <div class="text-5xl mb-4">👛</div>
+            <p class="text-gray-400 font-bold text-xs uppercase">Balance</p>
+            <h2 class="text-4xl font-black text-[#0088cc]">0.00 TON</h2>
+            <button class="w-full bg-[#0088cc] text-white py-4 rounded-2xl mt-8 font-black shadow-lg">CONNECT WALLET</button>
         </div>
+    </div>
 
-        <button class="w-full bg-[#0088cc] text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg">
-            <span>👛</span> Connect wallet
-        </button>
-
-        <div class="mt-8 bg-gray-50 rounded-2xl p-6">
-            <div class="flex justify-between items-center mb-4">
-                <span class="font-bold text-gray-700">Balance</span>
-                <span class="text-[#0088cc] font-black italic">💎 0.00 TON</span>
-            </div>
-            <div class="flex gap-2">
-                <input type="number" value="0.00" class="flex-1 bg-white border rounded-xl p-3 font-bold text-center">
-                <button class="bg-gray-200 text-gray-400 px-6 rounded-xl font-black text-xs">Withdraw</button>
+    <div id="tasks-page" class="page bg-white-page px-4 pt-4">
+        <h2 class="text-xl font-black mb-6">Ads Tasks</h2>
+        <div class="space-y-3">
+            <div class="border p-4 rounded-2xl flex items-center justify-between">
+                <div><p class="font-bold text-sm">Beginner's Kit</p><p class="text-blue-500 text-xs">+10 attempts</p></div>
+                <button class="bg-blue-50 text-blue-500 px-4 py-1 rounded-full font-black text-xs">GO</button>
             </div>
         </div>
     </div>
 
-    <div id="tasks-page" class="page white-page px-4 pt-4">
-        <h2 class="text-xl font-black mb-6">Ads Tasks / Refresh daily</h2>
-        <div class="space-y-4">
-            <div class="flex items-center gap-4 p-4 border rounded-2xl shadow-sm">
-                <div class="text-2xl">📢</div>
-                <div class="flex-1">
-                    <p class="font-bold text-sm">Beginner's Kit (0/4)</p>
-                    <p class="text-blue-500 font-bold text-xs">+10 instant attempts</p>
-                </div>
-                <div class="bg-blue-50 text-blue-500 px-3 py-1 rounded-full text-[10px] font-black">GO</div>
-            </div>
-            <div class="flex items-center gap-4 p-4 border rounded-2xl shadow-sm">
-                <div class="text-2xl">🏆</div>
-                <div class="flex-1">
-                    <p class="font-bold text-sm">Champion's kit (0/6)</p>
-                    <p class="text-blue-500 font-bold text-xs">+17 instant attempts</p>
-                </div>
-                <div class="bg-blue-50 text-blue-500 px-3 py-1 rounded-full text-[10px] font-black">GO</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="h-[85px] bg-white border-t flex justify-around items-center px-2 z-[3000]">
-        <button onclick="showPage('flappy')" class="nav-item active flex flex-col items-center gap-1">
+    <div class="h-[85px] bg-white border-t flex justify-around items-center z-[2000]">
+        <button onclick="nav('flappy')" class="flex flex-col items-center gap-1 text-blue-500">
             <span class="text-xl">🎮</span><span class="text-[9px] font-bold">Flappy</span>
         </button>
-        <button onclick="showPage('rating')" class="nav-item flex flex-col items-center gap-1 text-gray-300">
-            <span class="text-xl">📊</span><span class="text-[9px] font-bold">Rating</span>
-        </button>
-        <button onclick="showPage('friends')" class="nav-item flex flex-col items-center gap-1 text-gray-300">
-            <span class="text-xl">👥</span><span class="text-[9px] font-bold">Friends</span>
-        </button>
-        <button onclick="showPage('wallet')" class="nav-item flex flex-col items-center gap-1 text-gray-300">
+        <button onclick="nav('wallet')" class="flex flex-col items-center gap-1 text-gray-300">
             <span class="text-xl">👛</span><span class="text-[9px] font-bold">Wallet</span>
         </button>
-        <button onclick="showPage('tasks')" class="nav-item flex flex-col items-center gap-1 text-gray-300">
+        <button onclick="nav('tasks')" class="flex flex-col items-center gap-1 text-gray-300">
             <span class="text-xl">✅</span><span class="text-[9px] font-bold">Tasks</span>
         </button>
     </div>
 
-    <div id="game-over">
-        <div class="bg-white rounded-[32px] w-[85%] p-6 text-center shadow-2xl animate-pop">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-black text-gray-800 tracking-tighter">GAME OVER</h2>
-                <span class="text-gray-400 text-xl">🔊</span>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-2 mb-4">
-                <div class="bg-gray-50 rounded-2xl p-3 border">
-                    <p class="text-gray-400 text-[9px] font-bold uppercase">Record today</p>
-                    <p class="text-[#0088cc] font-black text-xl" id="modal-daily-best">0.00</p>
+    <div id="game-over-modal">
+        <div class="bg-white rounded-[40px] w-[85%] p-8 text-center shadow-2xl">
+            <h2 class="text-2xl font-black text-gray-800 mb-6 tracking-tighter uppercase">GAME OVER</h2>
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="bg-gray-50 p-4 rounded-2xl border">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase">Record Today</p>
+                    <p class="text-[#0088cc] font-black text-xl" id="modal-rec">0.00</p>
                 </div>
-                <div class="bg-gray-50 rounded-2xl p-3 border">
-                    <p class="text-gray-400 text-[9px] font-bold uppercase">All-time record</p>
-                    <p class="text-[#0088cc] font-black text-xl" id="modal-all-time">0.00</p>
+                <div class="bg-gray-50 p-4 rounded-2xl border">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase">All-time</p>
+                    <p class="text-[#0088cc] font-black text-xl">2.02</p>
                 </div>
             </div>
-
-            <div class="space-y-2 mb-6 text-sm font-bold">
-                <div class="flex justify-between p-3 bg-gray-50 rounded-xl border border-dashed text-gray-500">
-                    <span>❤️ Attempts today <span class="text-red-500">13</span></span>
-                    <span class="text-blue-500">ⓘ</span>
-                </div>
-                <div class="flex justify-between p-3 bg-gray-50 rounded-xl border border-dashed text-gray-500">
-                    <span>🏅 barriers passed</span>
-                    <span id="final-score" class="text-[#0088cc]">0.00</span>
-                </div>
-            </div>
-
             <div class="space-y-3">
-                <button onclick="restartGame()" class="w-full bg-[#0088cc] text-white py-4 rounded-2xl font-black shadow-lg">RESTART</button>
+                <button onclick="initGame()" class="w-full bg-[#0088cc] text-white py-4 rounded-2xl font-black shadow-lg">RESTART</button>
                 <button class="w-full bg-red-500 text-white py-4 rounded-2xl font-black shadow-lg flex items-center justify-center gap-2">
-                    <span class="text-xs">📢</span> RESTART WITH 2X BOOSTER
+                    <span class="text-xs">🔥</span> RESTART WITH 2X BOOSTER
                 </button>
-                <button onclick="showPage('rating')" class="w-full bg-blue-50 text-[#0088cc] py-4 rounded-2xl font-black">VIEW RATING</button>
+                <button onclick="nav('flappy')" class="w-full bg-blue-50 text-[#0088cc] py-4 rounded-2xl font-black">VIEW RATING</button>
             </div>
         </div>
     </div>
@@ -224,85 +129,110 @@
 
 <script>
     let score = 0;
-    let dailyBest = 7.98;
-    let allTimeBest = 7.98;
-    let gameActive = false;
+    let playing = false;
+    let pipes = [];
+    let frame;
+    let isGameOver = false; // Sonsuz loop engelleyici
 
-    // Sekme Yönetimi
-    function showPage(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active', 'text-[#0088cc]'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.add('text-gray-300'));
-        
-        const target = document.getElementById(pageId + '-page');
-        if(target) target.classList.add('active');
-        
-        // Aktif butonu boya
-        event.currentTarget.classList.add('active', 'text-[#0088cc]');
-        
-        // Oyun açıksa kapat
-        if(pageId !== 'flappy') {
-            gameActive = false;
-            document.getElementById('game-canvas').classList.add('hidden');
-            document.getElementById('game-over').style.display = 'none';
-        }
-    }
-
-    // Basit Flappy Mekaniği
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = 400; canvas.height = 600;
+    canvas.width = window.innerWidth > 450 ? 450 : window.innerWidth;
+    canvas.height = window.innerHeight - 85;
 
-    let bird = { x: 50, y: 300, w: 30, h: 25, v: 0, g: 0.25 };
-    let pipes = [];
+    let bird = { x: 50, y: 300, w: 34, h: 26, v: 0, g: 0.25, jump: 5 };
 
-    function draw() {
-        if(!gameActive) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Kuş
+    function nav(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id + '-page').classList.add('active');
+        stopGame();
+    }
+
+    function initGame() {
+        isGameOver = false;
+        playing = true;
+        score = 0;
+        pipes = [];
+        bird.y = 300;
+        bird.v = 0;
+        document.getElementById('live-score').innerText = "0";
+        document.getElementById('game-layer').style.display = 'block';
+        document.getElementById('game-canvas').style.display = 'block';
+        document.getElementById('game-over-modal').style.display = 'none';
+        animate();
+    }
+
+    function animate() {
+        if (!playing || isGameOver) return;
+
+        ctx.fillStyle = "#70c5ce";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
         bird.v += bird.g;
         bird.y += bird.v;
+
+        // Bird drawing
         ctx.fillStyle = "#9c5c3c";
         ctx.fillRect(bird.x, bird.y, bird.w, bird.h);
 
-        // Borular (Simüle)
-        if(pipes.length === 0 || pipes[pipes.length-1].x < 200) {
-            pipes.push({ x: 400, y: Math.random() * 300 + 100 });
+        // Pipe logic
+        if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 250) {
+            pipes.push({ x: canvas.width, y: Math.random() * (canvas.height - 300) + 100, gap: 170, passed: false });
         }
 
-        pipes.forEach((p, i) => {
-            p.x -= 2;
+        pipes.forEach(p => {
+            p.x -= 3;
             ctx.fillStyle = "#538021";
-            ctx.fillRect(p.x, 0, 50, p.y);
-            ctx.fillRect(p.x, p.y + 150, 50, canvas.height);
+            ctx.fillRect(p.x, 0, 60, p.y);
+            ctx.fillRect(p.x, p.y + p.gap, 60, canvas.height);
 
-            if(p.x < 0) { pipes.splice(i, 1); score += 1; }
-            if(bird.y > canvas.height || bird.y < 0) endGame();
+            // Collision
+            if (bird.x + bird.w > p.x && bird.x < p.x + 60 && (bird.y < p.y || bird.y + bird.h > p.y + p.gap)) {
+                triggerGameOver();
+            }
+
+            if (!p.passed && p.x < bird.x) {
+                p.passed = true;
+                score++;
+                document.getElementById('live-score').innerText = score;
+            }
         });
 
-        requestAnimationFrame(draw);
+        if (bird.y + bird.h > canvas.height || bird.y < 0) triggerGameOver();
+
+        frame = requestAnimationFrame(animate);
     }
 
-    function endGame() {
-        gameActive = false;
-        document.getElementById('final-score').innerText = score.toFixed(2);
-        document.getElementById('modal-daily-best').innerText = Math.max(score, dailyBest).toFixed(2);
-        document.getElementById('game-over').style.display = 'flex';
+    function triggerGameOver() {
+        if (isGameOver) return; // KRİTİK: Sonsuz loopu burada kesiyoruz
+        isGameOver = true;
+        playing = false;
+        cancelAnimationFrame(frame);
+        
+        document.getElementById('modal-rec').innerText = score.toFixed(2);
+        document.getElementById('game-over-modal').style.display = 'flex';
     }
 
-    function restartGame() {
-        score = 0;
-        bird.y = 300; bird.v = 0;
-        pipes = [];
-        gameActive = true;
-        document.getElementById('game-over').style.display = 'none';
-        document.getElementById('game-canvas').classList.remove('hidden');
-        draw();
+    function stopGame() {
+        playing = false;
+        isGameOver = false;
+        document.getElementById('game-layer').style.display = 'none';
+        document.getElementById('game-over-modal').style.display = 'none';
+        cancelAnimationFrame(frame);
     }
 
-    document.getElementById('play-btn').onclick = restartGame;
-    window.onmousedown = () => { if(gameActive) bird.v = -5; };
+    document.getElementById('start-btn').onclick = initGame;
+    window.onmousedown = (e) => { 
+        if(playing) {
+            e.preventDefault();
+            bird.v = -bird.jump; 
+        }
+    };
+    window.ontouchstart = (e) => {
+        if(playing) {
+            e.preventDefault();
+            bird.v = -bird.jump;
+        }
+    };
 </script>
 </body>
 </html>
