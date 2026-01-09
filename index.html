@@ -3,193 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CW Flappy Fixed</title>
+    <title>Flappy CW - Perfect UI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap');
         body { background-color: #4eb5d3; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; user-select: none; }
-        .page { display: none; height: calc(100vh - 75px); position: relative; }
+        .page { display: none; height: calc(100vh - 75px); position: relative; overflow-y: auto; }
         .page.active { display: block; }
-        
-        /* Gelişmiş Skor Ekranı (Modal) */
-        #death-screen { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8); 
-            display: none; flex-direction: column; justify-content: center; 
-            align-items: center; z-index: 2000; backdrop-filter: blur(10px);
+
+        /* Piksel Arka Plan */
+        .sky { background-color: #4eb5d3; }
+        .city-bg { position: absolute; bottom: 110px; width: 100%; height: 100px; background: linear-gradient(transparent, rgba(255,255,255,0.3)); z-index: 1; }
+        .ground { 
+            position: absolute; bottom: 75px; width: 100%; height: 35px; 
+            background: repeating-linear-gradient(45deg, #8bc34a, #8bc34a 15px, #9ccc65 15px, #9ccc65 30px);
+            border-top: 4px solid #558b2f; z-index: 5;
+        }
+
+        /* CW PASS Bileti */
+        .ticket { 
+            background: #ffc107; clip-path: polygon(10% 0, 90% 0, 100% 20%, 100% 80%, 90% 100%, 10% 100%, 0 80%, 0 20%);
+            box-shadow: 0 4px 0 #d9a406;
+        }
+
+        /* Skor Ekranı (Modal) */
+        #game-over-screen {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000;
         }
 
         #game-canvas { display: none; position: absolute; inset: 0; z-index: 100; }
-        .score-hud { position: absolute; top: 50px; width: 100%; text-align: center; font-size: 60px; color: white; font-weight: 900; z-index: 110; pointer-events: none; text-shadow: 4px 4px 0 #000; }
-        
-        .bird-body { width: 50px; height: 36px; background: #9c5c3c; border: 3px solid #000; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; }
-        .ground { position: absolute; bottom: 75px; width: 100%; height: 35px; background: #8bc34a; border-top: 4px solid #558b2f; z-index: 5; }
+        .live-score { position: absolute; top: 60px; width: 100%; text-align: center; font-size: 80px; color: white; font-weight: 900; z-index: 110; text-shadow: 5px 5px 0 #000; }
     </style>
 </head>
 <body>
 
-<div id="death-screen">
-    <div class="bg-white rounded-[40px] p-10 text-center shadow-2xl scale-110">
-        <h2 class="text-gray-400 font-bold uppercase text-xs mb-2">Oyun Bitti</h2>
-        <h1 id="final-score" class="text-7xl font-black text-blue-600 mb-6">0</h1>
-        <div class="flex gap-4 mb-8">
-            <div class="bg-blue-50 p-4 rounded-2xl">
-                <p class="text-[10px] text-blue-400 font-bold">GÜNLÜK</p>
-                <p id="modal-daily" class="font-black text-gray-700">0</p>
+<div id="game-over-screen">
+    <div class="bg-white rounded-[40px] p-8 text-center w-[85%] max-w-sm shadow-2xl">
+        <h2 class="text-gray-400 font-bold uppercase text-xs mb-2">Score</h2>
+        <h1 id="last-score" class="text-7xl font-black text-blue-600 mb-6">0</h1>
+        <div class="grid grid-cols-2 gap-3 mb-8">
+            <div class="bg-blue-50 p-3 rounded-2xl">
+                <p class="text-[10px] text-blue-400 font-bold">TODAY</p>
+                <p id="stat-daily" class="font-black text-gray-700">0.00</p>
             </div>
-            <div class="bg-blue-50 p-4 rounded-2xl">
-                <p class="text-[10px] text-blue-400 font-bold">REKOR</p>
-                <p id="modal-record" class="font-black text-gray-700">0</p>
+            <div class="bg-blue-50 p-3 rounded-2xl">
+                <p class="text-[10px] text-blue-400 font-bold">BEST</p>
+                <p id="stat-record" class="font-black text-gray-700">0.00</p>
             </div>
         </div>
-        <button onclick="closeDeathScreen()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition">ANA MENÜ</button>
+        <button onclick="restartToMenu()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition">RETRY</button>
     </div>
 </div>
 
-<div class="max-w-md mx-auto h-screen flex flex-col relative bg-[#4eb5d3] overflow-hidden">
+<div class="max-w-md mx-auto h-screen flex flex-col relative sky overflow-hidden">
     
-    <div id="game-ui" style="display:none;">
-        <div class="score-hud" id="live-score">0</div>
+    <div class="flex items-center justify-between p-3 z-50">
+        <div class="flex items-center gap-2">
+            <div class="w-10 h-8 bg-[#9c5c3c] rounded-lg border-2 border-black flex items-center justify-center text-[10px] text-white font-black">CW</div>
+            <span class="text-blue-500 font-black text-xl italic tracking-tighter">Flappy</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="bg-blue-500 text-white text-[9px] font-bold px-2.5 py-1 rounded-full">CW</div>
+            <div class="text-[9px] font-bold text-gray-700 bg-white/50 px-3 py-1.5 rounded-full border border-white/40">✿EARN✿MONEY...</div>
+            <div class="bg-blue-500 text-white text-[9px] font-black px-2.5 py-1.5 rounded-lg shadow-sm">EN</div>
+        </div>
+    </div>
+
+    <div id="game-layer" style="display:none;">
+        <div class="live-score" id="score-val">0</div>
         <canvas id="game-canvas"></canvas>
     </div>
 
-    <div id="flappy-page" class="page active px-4 pt-4">
-        <div class="flex gap-3">
-            <div class="bg-white rounded-2xl p-4 flex-1 shadow-xl">
-                <span class="text-[10px] font-bold text-red-500 uppercase">HAKLAR</span>
-                <div class="text-3xl font-black text-gray-800" id="heart-val">10</div>
+    <div id="flappy-page" class="page active px-3">
+        <div class="grid grid-cols-2 gap-2 mt-2">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-b-4 border-gray-200">
+                <div class="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase mb-3">
+                    <span class="text-red-500 text-lg">❤️</span> Attempts today <span class="text-blue-600 ml-auto" id="hearts">14</span>
+                </div>
+                <button class="w-full bg-blue-500 text-white py-2 rounded-xl font-black text-xs shadow-[0_4px_0_#1d4ed8] active:translate-y-1 transition-all uppercase">Increase</button>
             </div>
-            <div class="bg-white rounded-2xl p-4 flex-1 shadow-xl text-[10px] font-bold space-y-1">
-                <div class="flex justify-between"><span>BUGÜN</span> <span id="daily-ui" class="text-blue-500">0</span></div>
-                <div class="flex justify-between"><span>REKOR</span> <span id="record-ui" class="text-blue-500">0</span></div>
+            <div class="bg-white rounded-3xl p-4 shadow-md border-b-4 border-gray-200 text-[10px] font-bold space-y-1.5 uppercase">
+                <div class="flex justify-between"><span>🏆 Record today</span> <span class="text-blue-500" id="daily-top">0.00</span></div>
+                <div class="flex justify-between"><span>🏆 All-time record</span> <span class="text-blue-500" id="record-top">0.00</span></div>
+                <div class="flex justify-between"><span>🚀 Point multiplier</span> <span class="text-blue-500">x1.14</span></div>
             </div>
         </div>
 
-        <div class="flex flex-col items-center justify-center mt-32">
-            <div class="bird-body animate-bounce">CW</div>
-            <button id="play-btn" class="mt-16 bg-white p-8 rounded-[40px] shadow-2xl active:scale-90 transition-all border-b-8 border-gray-200">
-                <div class="w-0 h-0 border-t-[15px] border-t-transparent border-l-[30px] border-l-green-600 border-b-[15px] border-b-transparent ml-2"></div>
+        <div class="mt-4 flex gap-2">
+            <div class="ticket flex-1 h-16 flex items-center justify-center font-black text-white text-[11px]">CW PASS</div>
+            <div class="flex-[2.5] flex flex-col gap-1.5">
+                <div class="bg-blue-500/80 border-2 border-dashed border-white/50 p-2.5 rounded-2xl text-white text-[10px] font-bold flex items-center justify-between">
+                    <span>🎁 Free daily lottery</span> <span class="bg-white/20 p-1.5 rounded-full">🔊</span>
+                </div>
+                <button class="bg-blue-600 text-white py-2.5 rounded-2xl font-bold text-[10px] shadow-md flex items-center justify-center gap-2">
+                    <span>💻</span> Our games
+                </button>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-center justify-center mt-24">
+            <div class="w-14 h-10 bg-[#9c5c3c] border-4 border-black rounded-xl flex items-center justify-center text-white font-black text-xs animate-bounce">CW</div>
+            <button id="start-btn" class="mt-16 bg-white p-7 rounded-[40px] border-4 border-gray-200 shadow-2xl active:scale-90 transition-all">
+                <div class="w-0 h-0 border-t-[18px] border-t-transparent border-l-[30px] border-l-green-600 border-b-[18px] border-b-transparent ml-2"></div>
             </button>
         </div>
     </div>
 
+    <div id="wallet-page" class="page px-6 pt-10 text-center">
+        <div class="bg-white rounded-[40px] p-10 shadow-xl">
+            <div class="text-5xl mb-4">💎</div>
+            <h1 class="text-4xl font-black text-gray-800 mb-8">0.00 CW</h1>
+            <button onclick="linkWallet()" id="wallet-btn" class="w-full bg-[#0088cc] text-white py-4 rounded-2xl font-bold">CONNECT TON</button>
+        </div>
+    </div>
+
+    <div class="city-bg"></div>
     <div class="ground"></div>
 
-    <div class="h-[75px] bg-white flex justify-around items-center z-[100] border-t">
-        <div class="text-blue-500 text-center"><p class="text-2xl">🎮</p><p class="text-[9px] font-bold">FLAPPY</p></div>
-        <div class="text-gray-300 text-center"><p class="text-2xl">🏆</p><p class="text-[9px] font-bold">RATING</p></div>
-        <div class="text-gray-300 text-center"><p class="text-2xl">💰</p><p class="text-[9px] font-bold">WALLET</p></div>
+    <div class="h-[75px] bg-white border-t border-gray-100 flex justify-around items-center z-[1000] relative">
+        <button onclick="navTo('flappy', this)" class="nav-btn active flex flex-col items-center gap-1 text-blue-500">
+            <span class="text-2xl">🎮</span><span class="text-[10px] font-black uppercase">Flappy</span>
+        </button>
+        <button onclick="navTo('flappy', this)" class="nav-btn flex flex-col items-center gap-1 text-gray-400">
+            <span class="text-2xl">🏆</span><span class="text-[10px] font-black uppercase">Rating</span>
+        </button>
+        <button onclick="navTo('flappy', this)" class="nav-btn flex flex-col items-center gap-1 text-gray-400">
+            <span class="text-2xl">👥</span><span class="text-[10px] font-black uppercase">Friends</span>
+        </button>
+        <button onclick="navTo('wallet', this)" class="nav-btn flex flex-col items-center gap-1 text-gray-400">
+            <span class="text-2xl">💳</span><span class="text-[10px] font-black uppercase">Wallet</span>
+        </button>
+        <button onclick="navTo('flappy', this)" class="nav-btn flex flex-col items-center gap-1 text-gray-400">
+            <span class="text-2xl">✅</span><span class="text-[10px] font-black uppercase">Tasks</span>
+        </button>
     </div>
 </div>
 
 <script>
-    let hearts = 10;
-    let dailyBest = 0;
-    let allTimeBest = 0;
-    let gameActive = false;
-    let score = 0;
-    let pipes = [];
-    let animationId;
+    let heartCount = 14;
+    let dailyVal = 0;
+    let recordVal = 0;
+    let isRunning = false;
+    let currentScore = 0;
+    let pipeList = [];
+    let frameId;
 
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth > 450 ? 450 : window.innerWidth;
     canvas.height = window.innerHeight - 75;
 
-    const bird = { x: 60, y: 300, w: 34, h: 26, v: 0, g: 0.25, j: 5 };
+    const bird = { x: 60, y: 300, w: 34, h: 26, v: 0, g: 0.25, jump: 5 };
 
-    function gameLoop() {
-        if (!gameActive) return; // Döngüyü burada kesin olarak durduruyoruz
+    function navTo(id, btn) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id + '-page').classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.replace('text-blue-500', 'text-gray-400'));
+        if(btn) btn.classList.replace('text-gray-400', 'text-blue-500');
+    }
 
+    function linkWallet() {
+        const addr = prompt("TON Adresinizi Girin:");
+        if(addr) {
+            document.getElementById('wallet-btn').innerText = addr.substring(0,6) + "..." + addr.substring(addr.length-4);
+            localStorage.setItem('ton_addr', addr);
+        }
+    }
+
+    function runEngine() {
+        if (!isRunning) return;
         ctx.fillStyle = "#70c5ce";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         bird.v += bird.g;
         bird.y += bird.v;
 
-        // Karakter Çizimi
+        // Karakter
         ctx.fillStyle = "#9c5c3c";
         ctx.fillRect(bird.x, bird.y, bird.w, bird.h);
         ctx.strokeRect(bird.x, bird.y, bird.w, bird.h);
 
-        // Boru Üretimi
-        if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
-            pipes.push({ x: canvas.width, y: Math.random() * (canvas.height - 300) + 100, gap: 150, passed: false });
+        // Borular
+        if (pipeList.length === 0 || pipeList[pipeList.length - 1].x < canvas.width - 220) {
+            pipeList.push({ x: canvas.width, y: Math.random() * (canvas.height - 300) + 100, gap: 160, hit: false });
         }
 
-        pipes.forEach(p => {
+        pipeList.forEach(p => {
             p.x -= 3.5;
             ctx.fillStyle = "#2ecc71";
             ctx.fillRect(p.x, 0, 60, p.y);
             ctx.fillRect(p.x, p.y + p.gap, 60, canvas.height);
 
-            // Çarpışma Kontrolü (Hata burada düzeltildi: gameActive anında false yapılıyor)
-            if (bird.x + bird.w > p.x && bird.x < p.x + 60 && (bird.y < p.y || bird.y + bird.h > p.y + p.gap)) {
-                triggerGameOver();
-            }
-
-            if (!p.passed && p.x < bird.x) {
-                p.passed = true;
-                score++;
-                document.getElementById('live-score').innerText = score;
-            }
+            // Çarpışma
+            if (bird.x + bird.w > p.x && bird.x < p.x + 60 && (bird.y < p.y || bird.y + bird.h > p.y + p.gap)) stopGame();
+            if (!p.hit && p.x < bird.x) { p.hit = true; currentScore++; document.getElementById('score-val').innerText = currentScore; }
         });
 
-        if (bird.y + bird.h > canvas.height || bird.y < 0) triggerGameOver();
-
-        pipes = pipes.filter(p => p.x > -100);
-        animationId = requestAnimationFrame(gameLoop);
+        if (bird.y + bird.h > canvas.height || bird.y < 0) stopGame();
+        pipeList = pipeList.filter(p => p.x > -100);
+        frameId = requestAnimationFrame(runEngine);
     }
 
-    function triggerGameOver() {
-        if (!gameActive) return; // Zaten bittiyse tekrar çalışma (Sonsuz loop engeli)
-        gameActive = false;
-        cancelAnimationFrame(animationId);
+    function stopGame() {
+        if (!isRunning) return;
+        isRunning = false;
+        cancelAnimationFrame(frameId);
 
-        hearts--;
-        if (score > dailyBest) dailyBest = score;
-        if (score > allTimeBest) allTimeBest = score;
+        heartCount--;
+        if (currentScore > dailyVal) dailyVal = currentScore;
+        if (currentScore > recordVal) recordVal = currentScore;
 
-        // UI Güncelleme
-        document.getElementById('heart-val').innerText = hearts;
-        document.getElementById('daily-ui').innerText = dailyBest;
-        document.getElementById('record-ui').innerText = allTimeBest;
+        document.getElementById('hearts').innerText = heartCount;
+        document.getElementById('daily-top').innerText = dailyVal + ".00";
+        document.getElementById('record-top').innerText = recordVal + ".00";
         
-        // Modal Güncelleme
-        document.getElementById('final-score').innerText = score;
-        document.getElementById('modal-daily').innerText = dailyBest;
-        document.getElementById('modal-record').innerText = allTimeBest;
-        
-        document.getElementById('death-screen').style.display = 'flex';
+        document.getElementById('last-score').innerText = currentScore;
+        document.getElementById('stat-daily').innerText = dailyVal + ".00";
+        document.getElementById('stat-record').innerText = recordVal + ".00";
+        document.getElementById('game-over-screen').style.display = 'flex';
     }
 
-    function closeDeathScreen() {
-        document.getElementById('death-screen').style.display = 'none';
-        document.getElementById('game-ui').style.display = 'none';
-        gameActive = false;
+    function restartToMenu() {
+        document.getElementById('game-over-screen').style.display = 'none';
+        document.getElementById('game-layer').style.display = 'none';
+        isRunning = false;
     }
 
-    document.getElementById('play-btn').addEventListener('click', () => {
-        if (hearts <= 0) { alert("Hakkın bitti!"); return; }
-        
-        // Reset
-        score = 0;
-        pipes = [];
-        bird.y = 300;
-        bird.v = 0;
-        gameActive = true;
-        
-        document.getElementById('live-score').innerText = "0";
-        document.getElementById('game-ui').style.display = 'block';
+    document.getElementById('start-btn').addEventListener('click', () => {
+        if (heartCount <= 0) return alert("No hearts left!");
+        currentScore = 0; pipeList = []; bird.y = 300; bird.v = 0;
+        isRunning = true;
+        document.getElementById('score-val').innerText = "0";
+        document.getElementById('game-layer').style.display = 'block';
         document.getElementById('game-canvas').style.display = 'block';
-        
-        gameLoop();
+        runEngine();
     });
 
-    window.addEventListener('touchstart', (e) => {
-        if (gameActive) {
-            e.preventDefault();
-            bird.v = -bird.j;
-        }
+    window.addEventListener('touchstart', (e) => { 
+        if (isRunning) { e.preventDefault(); bird.v = -bird.jump; }
     });
 </script>
 </body>
