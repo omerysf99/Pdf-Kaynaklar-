@@ -3,285 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yaytsogram Ultimate v5</title>
+    <title>Yaytsogram Pro: 71M Edition</title>
     <style>
         :root {
             --primary: #0088cc;
-            --bg-top: #a4c488;
-            --bg-bottom: #76925d;
-            --glass: rgba(255, 255, 255, 0.15);
-            --gold-grad: radial-gradient(circle at 35% 30%, #fff6a2, #f39c12, #d35400);
-            --silver-grad: radial-gradient(circle at 35% 30%, #ffffff, #bdc3c7, #2c3e50);
-            --bronze-grad: radial-gradient(circle at 35% 30%, #5ec8ff, #0088cc, #005580);
+            --bg-dark: #1a1a1a;
+            --bronze: linear-gradient(135deg, #cd7f32, #a0522d);
+            --silver: linear-gradient(135deg, #c0c0c0, #708090);
+            --gold: linear-gradient(135deg, #ffd700, #daa520);
+            --glass: rgba(255, 255, 255, 0.1);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-bottom); color: white; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: #000; color: white; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
 
-        .app-shell { width: 100%; max-width: 480px; background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%); display: flex; flex-direction: column; position: relative; }
+        .app-shell { width: 100%; max-width: 480px; background: radial-gradient(circle at top, #2c3e50, #000); display: flex; flex-direction: column; position: relative; }
 
-        /* --- OVERLAYS --- */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; padding: 20px; text-align: center; }
-        .modal-box { background: white; color: #222; padding: 30px; border-radius: 30px; width: 100%; max-width: 350px; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        /* --- UI COMPONENTS --- */
+        header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .stat-pill { background: var(--glass); padding: 8px 15px; border-radius: 50px; font-weight: 800; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1); }
         
-        /* --- HEADER --- */
-        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
-        .user-pill { background: var(--glass); backdrop-filter: blur(10px); padding: 8px 16px; border-radius: 50px; font-weight: 800; font-size: 0.85rem; }
-
-        /* --- CONTENT --- */
-        .content { flex: 1; position: relative; }
-        .tab-panel { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; padding: 20px; animation: fadeIn 0.3s; }
+        .content { flex: 1; position: relative; overflow-y: auto; }
+        .tab-panel { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; padding: 20px; }
         .tab-panel.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- EGG EVOLUTION --- */
-        .level-badge { background: rgba(0,0,0,0.4); padding: 5px 15px; border-radius: 50px; font-size: 0.75rem; font-weight: 800; margin-bottom: 15px; transition: 0.5s; }
-        .egg-wrapper { width: 250px; height: 340px; cursor: pointer; transition: transform 0.1s; position: relative; }
-        .egg-wrapper:active { transform: scale(0.94); }
-        .egg-body { 
-            width: 100%; height: 100%; border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.4); position: relative; overflow: hidden; transition: 1s ease;
-            border: 2px solid rgba(255,255,255,0.2);
-        }
-        .egg-pattern { position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; background: repeating-linear-gradient(-45deg, transparent, transparent 40px, rgba(255,255,255,0.08) 40px, rgba(255,255,255,0.08) 80px); }
+        /* --- EGG SYSTEM --- */
+        .lvl-indicator { margin-bottom: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+        .egg-container { width: 280px; height: 380px; position: relative; cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center; }
+        .egg-container:active { transform: scale(0.92); }
         
-        /* Level Colors */
-        .lvl-bronz { background: var(--bronze-grad); }
-        .lvl-silver { background: var(--silver-grad); box-shadow: 0 0 40px rgba(255,255,255,0.2); }
-        .lvl-gold { background: var(--gold-grad); box-shadow: 0 0 60px rgba(255,215,0,0.4); }
+        .egg { 
+            width: 100%; height: 100%; border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
+            position: relative; transition: 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 50px 80px rgba(0,0,0,0.6);
+        }
+        
+        /* Level Styles */
+        .egg.lvl1 { background: var(--bronze); border: 4px solid #8b4513; }
+        .egg.lvl2 { background: var(--silver); border: 4px solid #4f4f4f; box-shadow: 0 0 40px rgba(255,255,255,0.1); }
+        .egg.lvl3 { background: var(--gold); border: 4px solid #b8860b; box-shadow: 0 0 60px rgba(255,215,0,0.3); }
 
-        /* --- SCORE & PROGRESS --- */
-        .score-val { font-size: 3rem; font-weight: 900; margin-top: 15px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .progress-container { width: 80%; height: 10px; background: rgba(0,0,0,0.2); border-radius: 10px; margin-top: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
-        .progress-bar { height: 100%; width: 0%; background: #fff; transition: width 0.3s; box-shadow: 0 0 10px #fff; }
+        .egg-shine { position: absolute; top: 15%; left: 15%; width: 30%; height: 20%; background: rgba(255,255,255,0.2); border-radius: 50%; filter: blur(10px); }
 
-        /* --- BUTTONS --- */
-        .btn-main { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 18px; font-weight: 800; cursor: pointer; font-size: 1rem; margin-top: 15px; transition: 0.3s; }
-        .btn-turbo { background: linear-gradient(90deg, #ff0000, #ff8c00); animation: pulse 1.5s infinite; border: 2px solid white; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        /* --- TEXTS --- */
+        .main-score { font-size: 3.5rem; font-weight: 900; margin-top: 20px; color: white; }
+        .target-text { font-size: 0.9rem; opacity: 0.6; font-weight: 600; margin-bottom: 15px; }
+
+        /* --- PROGRESS BAR --- */
+        .prog-bg { width: 80%; height: 12px; background: #333; border-radius: 10px; overflow: hidden; border: 1px solid #444; }
+        .prog-fill { height: 100%; width: 0%; background: var(--primary); transition: 0.3s; box-shadow: 0 0 15px var(--primary); }
 
         /* --- NAVIGATION --- */
-        nav { background: white; display: flex; padding: 10px 5px 35px; border-radius: 30px 30px 0 0; }
-        .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; color: #bbb; font-size: 0.7rem; font-weight: 800; cursor: pointer; }
-        .nav-btn.active { color: var(--primary); }
-        .nav-btn i { font-size: 1.5rem; margin-bottom: 4px; }
+        nav { background: #111; display: flex; padding: 10px 5px 35px; border-top: 1px solid #222; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; color: #555; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 1.6rem; margin-bottom: 5px; }
 
-        .tap-anim { position: fixed; color: white; font-size: 2.5rem; font-weight: 900; pointer-events: none; animation: tapFly 0.7s forwards; z-index: 999; }
-        @keyframes tapFly { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-150px) scale(1.5); opacity: 0; } }
+        /* --- LISTS (FRIENDS/TASKS) --- */
+        .list-item { width: 100%; background: var(--glass); padding: 15px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .btn-claim { background: var(--primary); border: none; padding: 8px 15px; border-radius: 10px; color: white; font-weight: 800; font-size: 0.8rem; }
+
+        /* --- ANIMATIONS --- */
+        .tap-pop { position: fixed; color: #00bbff; font-size: 2.2rem; font-weight: 900; pointer-events: none; animation: floatUp 0.8s forwards; z-index: 999; }
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-120px) scale(1.5); opacity: 0; } }
+
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
+        .win-card { background: white; color: #222; padding: 30px; border-radius: 30px; text-align: center; width: 100%; max-width: 350px; }
     </style>
 </head>
 <body>
 
-<div class="overlay" id="rewardOverlay">
-    <div class="modal-box">
-        <h1 style="font-size: 4rem;">🥳</h1>
-        <h2 style="margin: 10px 0;">YUMURTA KIRILDI!</h2>
-        <p>Tebrikler, şansına çıkan ödül:</p>
-        <div id="rewardAmount" style="font-size: 3rem; font-weight: 900; color: var(--primary); margin: 20px 0;">0.00 TON</div>
-        <button class="btn-main" onclick="location.reload()">BAKİYEYİ AL VE YENİDEN BAŞLA</button>
+<div class="overlay" id="winOverlay">
+    <div class="win-card">
+        <h1 style="font-size: 4rem;">💎</h1>
+        <h2 style="margin: 10px 0;">71M TAMAMLANDI!</h2>
+        <p>Yumurta tamamen kırıldı. Kazandığın ödül:</p>
+        <div id="rewardVal" style="font-size: 2.5rem; font-weight: 900; color: var(--primary); margin: 20px 0;">0.00 TON</div>
+        <button onclick="location.reload()" style="width:100%; background:var(--primary); color:white; border:none; padding:15px; border-radius:15px; font-weight:900;">YENİDEN BAŞLA</button>
     </div>
 </div>
 
-<div class="overlay" id="walletModal">
-    <div class="modal-box">
-        <h3>Cüzdan Bağla</h3>
-        <input type="text" id="walletInput" placeholder="TON Adresini girin" style="width:100%; padding:15px; margin:15px 0; border:1px solid #ddd; border-radius:12px;">
-        <button class="btn-main" onclick="saveWallet()">KAYDET</button>
-        <button class="btn-main" style="background:#ccc" onclick="closeWallet()">İPTAL</button>
-    </div>
-</div>
-
-<div class="app-shell" id="app">
+<div class="app-shell">
     <header>
-        <div class="user-pill">🥚 YAYTSOGRAM</div>
-        <div class="user-pill" id="headerBalance">0.00 TON</div>
+        <div class="stat-pill" id="lvlBadge">LVL 1</div>
+        <div class="stat-pill" id="balanceText" style="color: #00ccff;">0.00 TON</div>
     </header>
 
     <div class="content">
-        <div id="tab-game" class="tab-panel active">
-            <div id="levelBadge" class="level-badge">LEVEL 1: BRONZ</div>
-            <div class="egg-wrapper" id="egg">
-                <div class="egg-body lvl-bronz" id="eggBody">
-                    <div class="egg-pattern"></div>
-                </div>
+        <div id="tab-mine" class="tab-panel active">
+            <div class="lvl-indicator" id="lvlName" style="color: #cd7f32;">BRONZ YUMURTA</div>
+            <div class="egg-container" id="eggBtn">
+                <div class="egg lvl1" id="eggVisual"><div class="egg-shine"></div></div>
             </div>
-            <div class="score-val" id="score">0</div>
-            <div style="font-weight: 800; font-size: 0.8rem; margin-top:5px; opacity:0.8;">0 / 15,000,000</div>
-            <div class="progress-container">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-            <div style="margin-top: 20px; color: #fff; font-size: 0.8rem; font-weight: 800;">SIFIRLANMA: <span id="timer">--:--:--</span></div>
+            <div class="main-score" id="score">0</div>
+            <div class="target-text" id="targetInfo">Hedef: 15,000,000</div>
+            <div class="prog-bg"><div class="prog-fill" id="progFill"></div></div>
         </div>
 
-        <div id="tab-wallet" class="tab-panel">
-            <div style="background:white; color:#222; width:100%; padding:40px 20px; border-radius:25px; text-align:center;">
-                <p style="font-weight:800; color:#888;">TOPLAM KAZANÇ</p>
-                <h2 id="walletBalance" style="font-size:3rem; color:var(--primary); margin:10px 0;">0.00 TON</h2>
-                <div id="walletActions">
-                    <button class="btn-main" onclick="openWallet()">Cüzdanı Bağla</button>
-                </div>
+        <div id="tab-friends" class="tab-panel">
+            <h2 style="margin-bottom: 20px;">Arkadaşlarını Davet Et</h2>
+            <div class="list-item">
+                <div><strong>Arkadaş Bonusu</strong><br><small>Her kişi için 50k tık</small></div>
+                <button class="btn-claim" onclick="alert('Link kopyalandı!')">DAVET ET</button>
+            </div>
+            <p style="opacity: 0.5; margin-top: 20px;">Henüz kimseyi davet etmediniz.</p>
+        </div>
+
+        <div id="tab-tasks" class="tab-panel">
+            <h2 style="margin-bottom: 20px;">Günlük Görevler</h2>
+            <div class="list-item">
+                <div><strong>Telegram'a Katıl</strong><br><small>+100,000 Tık</small></div>
+                <button class="btn-claim">KATIL</button>
+            </div>
+            <div class="list-item">
+                <div><strong>Twitter (X) Takip Et</strong><br><small>+50,000 Tık</small></div>
+                <button class="btn-claim">TAKİP ET</button>
             </div>
         </div>
 
         <div id="tab-super" class="tab-panel">
-            <h1 style="margin-bottom:20px;">Süper Güçler</h1>
-            <div style="background:var(--glass); width:100%; padding:30px; border-radius:25px; text-align:center;">
-                <div style="font-size:4rem; margin-bottom:10px;">⚡</div>
-                <h3>15M Özel Turbo</h3>
-                <p style="font-size:0.85rem; margin:10px 0; opacity:0.8;">Tek tıkla 15 milyon tıkla ve büyük ödülü kap!</p>
-                <button class="btn-main btn-turbo" id="turboBtn" onclick="activateTurbo()">TURBOYU BAŞLAT</button>
+            <h1 style="margin-top: 30px;">⚡ ULTRA TURBO</h1>
+            <p style="margin: 15px 0; opacity: 0.7; text-align: center;">Tek bir dokunuşla mevcut seviyeyi bitir ve hedefine yaklaş!</p>
+            <div style="background: var(--glass); padding: 40px; border-radius: 30px; border: 2px dashed #444; width: 100%; text-align: center;">
+                <button id="turboBtn" onclick="runUltraTurbo()" style="background: var(--gold); color: black; border: none; padding: 20px 40px; border-radius: 20px; font-weight: 900; font-size: 1.2rem; cursor: pointer;">TURBOYU ATEŞLE</button>
             </div>
         </div>
     </div>
 
     <nav>
-        <div class="nav-btn active" onclick="nav('game', this)"><i>🥚</i><span>Kır</span></div>
-        <div class="nav-btn" onclick="nav('wallet', this)"><i>👛</i><span>Cüzdan</span></div>
-        <div class="nav-btn" onclick="nav('super', this)"><i>💸</i><span>Süper</span></div>
+        <div class="nav-item active" onclick="showTab('mine', this)"><i>⛏️</i><span>Kaz</span></div>
+        <div class="nav-item" onclick="showTab('friends', this)"><i>👥</i><span>Dostlar</span></div>
+        <div class="nav-item" onclick="showTab('tasks', this)"><i>📋</i><span>Görevler</span></div>
+        <div class="nav-item" onclick="showTab('super', this)"><i>🔥</i><span>Süper</span></div>
     </nav>
 </div>
 
 <script>
-    let clicks = parseInt(localStorage.getItem('yaytso_clicks')) || 0;
-    let balance = parseFloat(localStorage.getItem('yaytso_balance')) || 0;
-    const max = 15000000;
-    let isFinished = false;
-
-    // UI Elementleri
-    const scoreEl = document.getElementById('score');
-    const progressBar = document.getElementById('progressBar');
-    const eggBody = document.getElementById('eggBody');
-    const levelBadge = document.getElementById('levelBadge');
-    const headerBal = document.getElementById('headerBalance');
-    const walletBal = document.getElementById('walletBalance');
+    let clicks = parseInt(localStorage.getItem('clicks_71m')) || 0;
+    let balance = parseFloat(localStorage.getItem('ton_balance')) || 0;
+    
+    const targets = { lvl1: 15000000, lvl2: 45000000, lvl3: 71000000 };
 
     function updateUI() {
-        scoreEl.innerText = clicks.toLocaleString();
-        headerBal.innerText = balance.toFixed(2) + " TON";
-        walletBal.innerText = balance.toFixed(2) + " TON";
-        
-        let percent = (clicks / max) * 100;
-        progressBar.style.width = percent + "%";
+        const scoreEl = document.getElementById('score');
+        const progFill = document.getElementById('progFill');
+        const egg = document.getElementById('eggVisual');
+        const lvlName = document.getElementById('lvlName');
+        const lvlBadge = document.getElementById('lvlBadge');
+        const targetText = document.getElementById('targetInfo');
+        const balText = document.getElementById('balanceText');
 
-        // Level Yönetimi
-        if (clicks >= 10000000) {
-            eggBody.className = "egg-body lvl-gold";
-            levelBadge.innerText = "LEVEL 3: ULTIMATE ALTIN";
-            levelBadge.style.color = "#ffd700";
-        } else if (clicks >= 5000000) {
-            eggBody.className = "egg-body lvl-silver";
-            levelBadge.innerText = "LEVEL 2: GÜMÜŞ";
-            levelBadge.style.color = "#ddd";
+        scoreEl.innerText = clicks.toLocaleString();
+        balText.innerText = balance.toFixed(2) + " TON";
+
+        // Seviye ve Görsel Kontrolü
+        if (clicks >= targets.lvl3) {
+            handleWin();
+        } else if (clicks >= targets.lvl2) {
+            egg.className = "egg lvl3";
+            lvlName.innerText = "ALTIN YUMURTA";
+            lvlName.style.color = "#ffd700";
+            lvlBadge.innerText = "LVL 3";
+            targetText.innerText = `Hedef: ${targets.lvl3.toLocaleString()}`;
+            progFill.style.width = ((clicks / targets.lvl3) * 100) + "%";
+        } else if (clicks >= targets.lvl1) {
+            egg.className = "egg lvl2";
+            lvlName.innerText = "GÜMÜŞ YUMURTA";
+            lvlName.style.color = "#c0c0c0";
+            lvlBadge.innerText = "LVL 2";
+            targetText.innerText = `Hedef: ${targets.lvl2.toLocaleString()}`;
+            progFill.style.width = ((clicks / targets.lvl2) * 100) + "%";
         } else {
-            eggBody.className = "egg-body lvl-bronz";
-            levelBadge.innerText = "LEVEL 1: BRONZ";
+            egg.className = "egg lvl1";
+            lvlName.innerText = "BRONZ YUMURTA";
+            lvlName.style.color = "#cd7f32";
+            lvlBadge.innerText = "LVL 1";
+            targetText.innerText = `Hedef: ${targets.lvl1.toLocaleString()}`;
+            progFill.style.width = ((clicks / targets.lvl1) * 100) + "%";
         }
 
-        localStorage.setItem('yaytso_clicks', clicks);
-        localStorage.setItem('yaytso_balance', balance);
+        localStorage.setItem('clicks_71m', clicks);
+        localStorage.setItem('ton_balance', balance);
     }
 
-    // Tıklama Fonksiyonu
-    function tap(e) {
-        if (isFinished || clicks >= max) return;
-        
-        clicks++;
-        if (clicks >= max) finalizeGame();
-        
+    function handleTap(e) {
+        if (clicks >= targets.lvl3) return;
+        clicks += 1;
         updateUI();
-        createTapAnim(e);
-        if(navigator.vibrate) navigator.vibrate(12);
+        createPop(e);
+        if(navigator.vibrate) navigator.vibrate(10);
     }
 
-    function createTapAnim(e) {
+    function createPop(e) {
         const x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         const y = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
         const pop = document.createElement('div');
-        pop.className = 'tap-anim'; pop.innerText = '+1';
-        pop.style.left = `${x-15}px`; pop.style.top = `${y-40}px`;
+        pop.className = 'tap-pop';
+        pop.innerText = '+1';
+        pop.style.left = (x - 20) + 'px';
+        pop.style.top = (y - 50) + 'px';
         document.body.appendChild(pop);
-        setTimeout(() => pop.remove(), 700);
+        setTimeout(() => pop.remove(), 800);
     }
 
-    // Turbo Fonksiyonu
-    function activateTurbo() {
+    function runUltraTurbo() {
         const btn = document.getElementById('turboBtn');
-        if(btn.disabled || isFinished) return;
+        if(btn.disabled) return;
         btn.disabled = true;
         btn.innerText = "TURBO AKTİF...";
-        nav('game', document.querySelectorAll('.nav-btn')[0]);
+        
+        let target = 0;
+        if(clicks < targets.lvl1) target = targets.lvl1;
+        else if(clicks < targets.lvl2) target = targets.lvl2;
+        else target = targets.lvl3;
 
-        let interval = setInterval(() => {
-            clicks += 300000; // Hızlı artış
-            if (clicks >= max) {
-                clicks = max;
-                clearInterval(interval);
-                finalizeGame();
+        showTab('mine', document.querySelectorAll('.nav-item')[0]);
+
+        let step = (target - clicks) / 40;
+        let int = setInterval(() => {
+            clicks += Math.floor(step);
+            if(clicks >= target) {
+                clicks = target;
+                clearInterval(int);
+                btn.disabled = false;
+                btn.innerText = "TURBOYU ATEŞLE";
             }
             updateUI();
-        }, 40);
+        }, 50);
     }
 
-    // Oyun Sonu ve Ödül
-    function finalizeGame() {
-        if (isFinished) return;
-        isFinished = true;
-        
+    function handleWin() {
         let reward = 0;
         let roll = Math.random() * 100;
+        if(roll < 80) reward = Math.random() * (5 - 0.1) + 0.1;
+        else reward = Math.random() * (20 - 5) + 5;
         
-        if (roll < 80) { // %80 ihtimal: 0.10 - 5 TON
-            reward = Math.random() * (5 - 0.1) + 0.1;
-        } else { // %20 ihtimal: 5 - 20 TON
-            reward = Math.random() * (20 - 5) + 5;
-        }
-
         balance += reward;
-        document.getElementById('rewardAmount').innerText = reward.toFixed(2) + " TON";
-        document.getElementById('rewardOverlay').style.display = 'flex';
+        document.getElementById('rewardVal').innerText = reward.toFixed(2) + " TON";
+        document.getElementById('winOverlay').style.display = 'flex';
+        localStorage.setItem('ton_balance', balance);
     }
 
-    // Cüzdan İşlemleri
-    function openWallet() { document.getElementById('walletModal').style.display = 'flex'; }
-    function closeWallet() { document.getElementById('walletModal').style.display = 'none'; }
-    function saveWallet() {
-        const addr = document.getElementById('walletInput').value;
-        if(addr.length < 8) return alert("Geçerli bir adres girin!");
-        localStorage.setItem('yaytso_wallet', addr);
-        document.getElementById('walletActions').innerHTML = `<p style="color:green; font-weight:bold;">Bağlı: ${addr.substring(0,6)}...${addr.substring(addr.length-4)}</p><button class="btn-main" style="background:#27ae60" onclick="alert('Talep alındı!')">ÖDEME ÇEK</button>`;
-        closeWallet();
-    }
-
-    // Navigasyon
-    function nav(id, el) {
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    function showTab(id, el) {
+        document.querySelectorAll('.tab-panel').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById(`tab-${id}`).classList.add('active');
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        if(el) el.classList.add('active');
+        el.classList.add('active');
     }
 
-    // Zamanlayıcı
-    function updateTimer() {
-        const now = new Date(), end = new Date();
-        end.setHours(24, 0, 0, 0);
-        const diff = end - now;
-        const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
-        document.getElementById('timer').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-    }
+    document.getElementById('eggBtn').addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(e); });
+    document.getElementById('eggBtn').addEventListener('mousedown', handleTap);
 
-    // Event Listeners
-    document.getElementById('egg').addEventListener('touchstart', (e) => { e.preventDefault(); tap(e); });
-    document.getElementById('egg').addEventListener('mousedown', tap);
-
-    // Başlangıç Kontrolü
-    if(localStorage.getItem('yaytso_wallet')) {
-        const addr = localStorage.getItem('yaytso_wallet');
-        document.getElementById('walletActions').innerHTML = `<p style="color:green; font-weight:bold;">Bağlı: ${addr.substring(0,6)}...${addr.substring(addr.length-4)}</p><button class="btn-main" style="background:#27ae60" onclick="alert('Talep alındı!')">ÖDEME ÇEK</button>`;
-    }
-
-    setInterval(updateTimer, 1000);
     updateUI();
-    updateTimer();
 </script>
 </body>
 </html>
