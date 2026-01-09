@@ -3,25 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yaytsogram Ultimate</title>
+    <title>Yaytsogram Ultimate v3</title>
     <style>
         :root {
-            --bg-main: #8ba870;
-            --bg-gradient: linear-gradient(180deg, #a4c488 0%, #76925d 100%);
-            --ton-blue: #0088cc;
-            --glass: rgba(255, 255, 255, 0.2);
-            --card-white: #ffffff;
-            --text-dark: #2c3e50;
-            --accent-gold: #ffd700;
+            --primary: #0088cc;
+            --primary-dark: #0077b5;
+            --bg-top: #a4c488;
+            --bg-bottom: #76925d;
+            --glass: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --text-main: #ffffff;
+            --card-bg: #ffffff;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
 
         body {
-            margin: 0;
-            font-family: 'Inter', -apple-system, system-ui, sans-serif;
-            background: var(--bg-main);
-            color: white;
+            background-color: var(--bg-bottom);
+            color: var(--text-main);
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -31,49 +35,67 @@
         .app-shell {
             width: 100%;
             max-width: 480px;
-            background: var(--bg-gradient);
+            background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
             display: flex;
             flex-direction: column;
             position: relative;
-            box-shadow: 0 0 40px rgba(0,0,0,0.2);
         }
 
-        /* --- ÜST PANEL --- */
-        .top-bar {
-            padding: 20px;
+        /* --- HEADER --- */
+        header {
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 10;
         }
 
-        .logo-area {
+        .user-pill {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            padding: 6px 14px;
+            border-radius: 50px;
             display: flex;
             align-items: center;
             gap: 10px;
-            background: var(--glass);
-            padding: 8px 16px;
-            border-radius: 50px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.3);
         }
 
-        /* --- İÇERİK ALANLARI (SEKMELER) --- */
-        .tab-content {
+        .avatar-mini {
+            width: 28px; height: 28px;
+            background: var(--primary);
+            border-radius: 50%;
+            border: 2px solid #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 14px;
+        }
+
+        /* --- MAIN TABS --- */
+        .content-area {
             flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-panel {
+            position: absolute;
+            inset: 0;
             display: none;
             flex-direction: column;
             align-items: center;
             padding: 20px;
             overflow-y: auto;
-            animation: fadeIn 0.3s ease;
+            animation: slideUp 0.3s ease-out;
         }
 
-        .tab-content.active { display: flex; }
+        .tab-panel.active { display: flex; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        /* --- ANA OYUN (KIR SEKMESİ) --- */
+        /* --- KIR (GAME) TAB --- */
         .egg-stage {
             flex: 1;
             display: flex;
@@ -81,283 +103,239 @@
             justify-content: center;
             align-items: center;
             width: 100%;
+            margin-bottom: 20px;
         }
 
-        .egg-container {
+        .egg-wrapper {
             position: relative;
-            width: 280px;
-            height: 360px;
+            width: 260px; height: 340px;
             cursor: pointer;
-            perspective: 1000px;
+            transition: transform 0.1s;
         }
 
-        .egg-visual {
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 35% 35%, #63ccff 0%, #007bb8 100%);
+        .egg-wrapper:active { transform: scale(0.94); }
+
+        .egg-body {
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at 35% 30%, #5ec8ff 0%, #0088cc 100%);
             border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.3), inset -20px -20px 40px rgba(0,0,0,0.2);
-            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.35), inset -25px -25px 50px rgba(0,0,0,0.2);
+            border: 4px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+            position: relative;
         }
 
-        .egg-container:active .egg-visual { transform: scale(0.9) rotateX(10deg); }
-
-        .score-box {
-            text-align: center;
-            margin-top: 30px;
+        /* Yumurta Desenleri (Image benzeri) */
+        .egg-pattern {
+            position: absolute;
+            width: 200%; height: 200%;
+            top: -50%; left: -50%;
+            background: repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255,255,255,0.15) 35px, rgba(255,255,255,0.15) 70px);
+            pointer-events: none;
         }
 
-        .total-ton { font-size: 2.8rem; font-weight: 900; letter-spacing: -1px; }
-        
-        .daily-badge {
-            background: var(--card-white);
-            color: var(--text-dark);
-            padding: 6px 18px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 700;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        .score-container { text-align: center; margin-top: 25px; }
+        .score-val { font-size: 3.2rem; font-weight: 900; line-height: 1; text-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .limit-pill {
+            background: var(--card-bg); color: #333;
+            padding: 6px 20px; border-radius: 20px;
+            font-size: 0.9rem; font-weight: 800; margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: inline-block;
         }
 
-        /* --- DASHBOARD KARTLARI --- */
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            gap: 12px;
-            width: 100%;
-            margin-top: 25px;
+        /* --- DASHBOARD --- */
+        .dash-cards {
+            display: flex; width: 100%; gap: 12px; margin-bottom: 10px;
         }
 
-        .info-card {
-            background: var(--card-white);
-            color: var(--text-dark);
-            padding: 15px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 4px solid #ddd;
+        .dash-card {
+            background: var(--card-bg); color: #222;
+            border-radius: 20px; padding: 15px;
+            flex: 1; display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
 
-        .card-icon { font-size: 1.8rem; }
-        .card-label { font-size: 0.7rem; color: #7f8c8d; font-weight: 800; text-transform: uppercase; }
-        .card-value { font-size: 1.1rem; font-weight: 800; color: var(--ton-blue); }
+        .card-label { font-size: 0.7rem; color: #888; font-weight: 800; text-transform: uppercase; margin-bottom: 2px; }
+        .card-val { font-size: 1.1rem; font-weight: 800; color: var(--primary); }
 
-        /* --- ALT MENÜ --- */
-        .nav-dock {
-            background: rgba(255,255,255,0.95);
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 10px 32px;
+        /* --- NAVIGATION --- */
+        nav {
+            background: rgba(255,255,255,0.98);
+            display: flex; justify-content: space-around;
+            padding: 10px 5px 35px;
             border-radius: 30px 30px 0 0;
             backdrop-filter: blur(20px);
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
         }
 
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: #95a5a6;
-            font-size: 0.65rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
-            flex: 1;
+        .nav-btn {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            color: #b0b0b0; font-size: 0.65rem; font-weight: 700; cursor: pointer; transition: 0.3s;
         }
 
-        .nav-item.active { color: var(--ton-blue); transform: translateY(-5px); }
-        .nav-item i { font-size: 1.6rem; margin-bottom: 4px; transition: 0.3s; }
-        .nav-item.active i { transform: scale(1.2); }
+        .nav-btn.active { color: var(--primary); transform: translateY(-3px); }
+        .nav-btn i { font-size: 1.5rem; margin-bottom: 5px; }
 
-        /* --- EFEKTLER --- */
-        .click-pop {
-            position: fixed;
-            color: white;
-            font-size: 2.2rem;
-            font-weight: 900;
-            pointer-events: none;
-            animation: popUp 0.8s ease-out forwards;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            z-index: 100;
+        /* --- UI ELEMENTS --- */
+        .list-box {
+            width: 100%; background: var(--glass); 
+            border: 1px solid var(--glass-border);
+            border-radius: 20px; padding: 20px; margin-bottom: 15px;
         }
 
-        @keyframes popUp {
+        .ton-btn {
+            width: 100%; background: var(--primary); color: white;
+            border: none; padding: 16px; border-radius: 18px;
+            font-size: 1.1rem; font-weight: 800; cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,136,204,0.3);
+        }
+
+        .tap-anim {
+            position: fixed; color: white; font-size: 2.5rem; font-weight: 900;
+            pointer-events: none; animation: tapFly 0.8s ease-out forwards;
+            z-index: 1000; text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        @keyframes tapFly {
             0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-150px) scale(1.5); opacity: 0; }
-        }
-
-        /* Diğer Sekme Listeleri */
-        .list-item {
-            background: var(--glass);
-            width: 100%;
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            100% { transform: translateY(-160px) scale(1.6); opacity: 0; }
         }
     </style>
 </head>
 <body>
 
 <div class="app-shell">
-    <div class="top-bar">
-        <div class="logo-area">
-            <span>🥚</span>
-            <span style="font-weight: 800;">YAYTSOGRAM</span>
+    <header>
+        <div class="user-pill">
+            <div class="avatar-mini">K</div>
+            <span style="font-weight: 800; font-size: 0.9rem;">Kaanfurkan</span>
         </div>
-        <div class="daily-badge" style="background: var(--ton-blue); color: white; border: none;">TR</div>
-    </div>
+        <div class="user-pill" style="font-weight: 800;">TR</div>
+    </header>
 
-    <div id="tab-kir" class="tab-content active">
-        <div class="egg-stage">
-            <div style="margin-bottom: 20px; font-weight: 600; opacity: 0.9;">Hediye TON kazanmak için dokun!</div>
-            <div class="egg-container" id="eggAction">
-                <div class="egg-visual"></div>
-            </div>
-            <div class="score-box">
-                <div class="total-ton" id="scoreDisplay">0</div>
-                <div class="daily-badge">GÜNLÜK HAK: <span id="limitDisplay">0 / 10 000</span></div>
-            </div>
-        </div>
-
-        <div class="info-grid">
-            <div class="info-card">
-                <div class="card-icon">💵</div>
-                <div>
-                    <div class="card-label">Kod Sıfırlanıyor</div>
-                    <div class="card-value" id="timer">--:--:--</div>
+    <div class="content-area">
+        <div id="tab-game" class="tab-panel active">
+            <div class="egg-stage">
+                <p style="margin-bottom: 20px; font-weight: 600;">Ton Kazanmak İçin Dokun!</p>
+                <div class="egg-wrapper" id="egg">
+                    <div class="egg-body"><div class="egg-pattern"></div></div>
+                </div>
+                <div class="score-container">
+                    <div class="score-val" id="score">0</div>
+                    <div class="limit-pill" id="limit">0 / 10 000</div>
                 </div>
             </div>
-            <div class="info-card" style="justify-content: center; font-size: 1.8rem; font-weight: 900;">
-                10000
+
+            <div class="dash-cards">
+                <div class="dash-card">
+                    <span style="font-size: 1.8rem;">⌛</span>
+                    <div>
+                        <div class="card-label">Kod Sıfırlama</div>
+                        <div class="card-val" id="timer">--:--:--</div>
+                    </div>
+                </div>
+                <div class="dash-card" style="justify-content: center; font-size: 1.8rem; font-weight: 900;">
+                    10000
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-friends" class="tab-panel">
+            <h1 style="margin-bottom: 10px;">Dostlarını Çağır</h1>
+            <p style="text-align: center; opacity: 0.8; margin-bottom: 25px;">Her arkadaşın için %10 bonus kazan!</p>
+            <div class="list-box">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div><strong>Davet Linki</strong><br><small>t.me/yaytsogram_bot?start=8392...</small></div>
+                    <button style="padding: 10px 15px; border-radius: 12px; border:none; font-weight:800;">KOPYALA</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-wallet" class="tab-panel">
+            <div class="list-box" style="background: white; color: #222; text-align: center; padding: 40px 20px;">
+                <p style="font-weight: 800; color: #888; margin-bottom: 5px;">KAZANCIN</p>
+                <h2 style="font-size: 3rem; color: var(--primary); margin-bottom: 20px;">0.00 TON</h2>
+                <button class="ton-btn">Cüzdanı Bağla</button>
+            </div>
+            <p style="font-size: 0.8rem; text-align: center; opacity: 0.7;">Ödemeler her hafta Pazar günü yapılır.</p>
+        </div>
+
+        <div id="tab-super" class="tab-panel">
+            <h1>Süper Tıklamalar</h1>
+            <div class="list-box" style="text-align: center;">
+                <div style="font-size: 4rem; margin-bottom: 10px;">⚡</div>
+                <h3>Günlük Enerjin</h3>
+                <p style="font-size: 1.5rem; font-weight: 900; margin: 10px 0;">3 / 3</p>
+                <button class="ton-btn" style="background: #f39c12;">ŞİMDİ KULLAN</button>
             </div>
         </div>
     </div>
 
-    <div id="tab-friends" class="tab-content">
-        <h2 style="margin-bottom: 20px;">Arkadaşlarını Davet Et</h2>
-        <div class="list-item">
-            <span>Davet linkini paylaş</span>
-            <button style="padding: 8px 15px; border-radius: 10px; border: none; background: white; font-weight: bold;">Kopyala</button>
-        </div>
-        <p style="text-align: center; opacity: 0.8; font-size: 0.9rem;">Her arkadaşın için 5.000 ekstra tık hakkı kazanırsın!</p>
-    </div>
-
-    <div id="tab-boost" class="tab-content">
-        <h2>Hızlandırıcılar</h2>
-        <div class="list-item">
-            <div><strong>Multi-Tap</strong><br><small>Her tık +2 sayar</small></div>
-            <span>1.000 🪙</span>
-        </div>
-        <div class="list-item">
-            <div><strong>Enerji Limiti</strong><br><small>+500 Limit artırır</small></div>
-            <span>2.500 🪙</span>
-        </div>
-    </div>
-
-    <div id="tab-wallet" class="tab-content">
-        <div style="background: white; color: #333; padding: 30px; border-radius: 25px; width: 100%; text-align: center;">
-            <div style="color: #888; font-weight: bold; margin-bottom: 10px;">TOPLAM BAKİYEN</div>
-            <div style="font-size: 2.5rem; font-weight: 900; color: var(--ton-blue);">0.00 TON</div>
-            <button style="margin-top: 20px; width: 100%; padding: 15px; border-radius: 15px; border: none; background: var(--ton-blue); color: white; font-weight: bold; font-size: 1.1rem;">Cüzdan Bağla</button>
-        </div>
-    </div>
-
-    <div id="tab-super" class="tab-content">
-        <h2>Süper Tıklamalar</h2>
-        <div style="text-align: center; background: rgba(0,0,0,0.1); padding: 20px; border-radius: 20px;">
-            <p>Süper tıklamalar her gün saat 00:00'da yenilenir.</p>
-            <div style="font-size: 3rem;">⚡ 0/3</div>
-        </div>
-    </div>
-
-    <nav class="nav-dock">
-        <div class="nav-item active" onclick="switchTab('kir', this)">
-            <i>🥚</i><span>Kır</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('friends', this)">
-            <i>👥</i><span>Dostlar</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('boost', this)">
-            <i>🚀</i><span>Hızlandır</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('wallet', this)">
-            <i>👛</i><span>Cüzdan</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('super', this)">
-            <i>💸</i><span>Süper</span>
-        </div>
+    <nav>
+        <div class="nav-btn active" onclick="nav('game', this)"><i>🥚</i><span>Kır</span></div>
+        <div class="nav-btn" onclick="nav('friends', this)"><i>👥</i><span>Dostlar</span></div>
+        <div class="nav-btn" onclick="nav('wallet', this)"><i>👛</i><span>Cüzdan</span></div>
+        <div class="nav-btn" onclick="nav('super', this)"><i>💸</i><span>Süper</span></div>
     </nav>
 </div>
 
 <script>
     let clicks = 0;
-    const maxLimit = 10000;
-    const scoreDisplay = document.getElementById('scoreDisplay');
-    const limitDisplay = document.getElementById('limitDisplay');
-    const egg = document.getElementById('eggAction');
+    const max = 10000;
+    const scoreEl = document.getElementById('score');
+    const limitEl = document.getElementById('limit');
+    const egg = document.getElementById('egg');
 
-    // Tıklama Fonksiyonu
-    function handleTap(e) {
-        if (clicks >= maxLimit) return;
-
+    // --- TIKLAMA SİSTEMİ ---
+    function tap(e) {
+        if (clicks >= max) return;
+        
         clicks++;
-        scoreDisplay.innerText = clicks.toLocaleString('tr-TR');
-        limitDisplay.innerText = `${clicks.toLocaleString('tr-TR')} / 10 000`;
+        scoreEl.innerText = clicks.toLocaleString('tr-TR');
+        limitEl.innerText = `${clicks.toLocaleString('tr-TR')} / 10 000`;
 
-        // Görsel Efekt
         const x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         const y = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
 
         const pop = document.createElement('div');
-        pop.className = 'click-pop';
+        pop.className = 'tap-anim';
         pop.innerText = '+1';
-        pop.style.left = `${x - 20}px`;
-        pop.style.top = `${y - 40}px`;
+        pop.style.left = `${x - 25}px`;
+        pop.style.top = `${y - 50}px`;
         document.body.appendChild(pop);
 
         setTimeout(() => pop.remove(), 800);
-        if (navigator.vibrate) navigator.vibrate(15);
+        if (navigator.vibrate) navigator.vibrate(12);
     }
 
-    egg.addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(e); });
-    egg.addEventListener('mousedown', handleTap);
+    egg.addEventListener('touchstart', (e) => { e.preventDefault(); tap(e); });
+    egg.addEventListener('mousedown', tap);
 
-    // Gece Yarısı Sayacı
-    function startTimer() {
-        const timerEl = document.getElementById('timer');
-        setInterval(() => {
-            const now = new Date();
-            const tomorrow = new Date();
-            tomorrow.setHours(24, 0, 0, 0);
-            const diff = tomorrow - now;
+    // --- GECE YARISI SAYACI ---
+    function updateTimer() {
+        const now = new Date();
+        const end = new Date();
+        end.setHours(24, 0, 0, 0);
+        const diff = end - now;
 
-            const h = Math.floor(diff / 3600000);
-            const m = Math.floor((diff % 3600000) / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
 
-            timerEl.innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-        }, 1000);
+        document.getElementById('timer').innerText = 
+            `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     }
+    setInterval(updateTimer, 1000);
+    updateTimer();
 
-    // Sekme Değiştirme
-    function switchTab(tabId, el) {
-        // Tüm sekmeleri gizle
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-        // Hedef sekmeyi göster
-        document.getElementById(`tab-${tabId}`).classList.add('active');
-        
-        // Navigasyon stilini güncelle
-        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+    // --- NAVİGASYON ---
+    function nav(id, el) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(`tab-${id}`).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
     }
-
-    startTimer();
 </script>
 
 </body>
