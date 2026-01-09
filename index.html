@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yaytsogram Evolution: Reset System</title>
+    <title>Yaytsogram Evolution: Local Edition</title>
     <style>
         :root {
             --primary: #0088cc;
@@ -27,12 +27,12 @@
 
         /* --- YUMURTA TASARIMI --- */
         .lvl-name { margin-bottom: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; font-size: 1.2rem; }
-        .egg-container { width: 260px; height: 350px; position: relative; cursor: pointer; transition: 0.1s; }
+        .egg-container { width: 260px; height: 350px; position: relative; cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center; }
         .egg-container:active { transform: scale(0.92); }
         
         .egg { 
             width: 100%; height: 100%; border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
-            position: relative; transition: 0.5s ease; box-shadow: 0 40px 70px rgba(0,0,0,0.6);
+            position: relative; transition: 0.8s ease; box-shadow: 0 40px 70px rgba(0,0,0,0.6);
             border: 4px solid rgba(255,255,255,0.1);
         }
         
@@ -40,18 +40,17 @@
         .lvl2-style { background: var(--silver); }
         .lvl3-style { background: var(--gold); }
 
-        .egg-shine { position: absolute; top: 15%; left: 15%; width: 30%; height: 20%; background: rgba(255,255,255,0.2); border-radius: 50%; filter: blur(10px); }
+        .egg-shine { position: absolute; top: 15%; left: 15%; width: 30%; height: 20%; background: rgba(255,255,255,0.3); border-radius: 50%; filter: blur(10px); }
 
-        /* --- PUAN VE PROGRESS --- */
+        /* --- SCORE & PROGRESS --- */
         .score-display { font-size: 3.2rem; font-weight: 900; margin-top: 15px; }
         .target-display { font-size: 0.85rem; opacity: 0.6; margin-bottom: 10px; font-weight: bold; }
         .prog-bg { width: 85%; height: 10px; background: #222; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
         .prog-fill { height: 100%; width: 0%; background: var(--primary); transition: 0.2s; box-shadow: 0 0 15px var(--primary); }
 
-        /* --- MODAL (ÖDÜL) --- */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
-        .reward-card { background: white; color: #222; padding: 30px; border-radius: 30px; text-align: center; width: 100%; max-width: 350px; animation: popUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes popUp { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        /* --- OVERLAY (MODAL) --- */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
+        .reward-card { background: white; color: #222; padding: 30px; border-radius: 30px; text-align: center; width: 100%; max-width: 350px; box-shadow: 0 0 40px var(--primary); }
 
         /* --- NAV --- */
         nav { background: #111; display: flex; padding: 10px 5px 35px; border-top: 1px solid #222; }
@@ -59,6 +58,7 @@
         .nav-item.active { color: var(--primary); }
         .nav-item i { font-size: 1.5rem; margin-bottom: 4px; }
 
+        .btn-action { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 900; cursor: pointer; margin-top: 15px; }
         .tap-anim { position: fixed; color: #fff; font-size: 2.5rem; font-weight: 900; pointer-events: none; animation: tapFly 0.8s forwards; z-index: 999; text-shadow: 0 0 10px #0088cc; }
         @keyframes tapFly { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-130px); opacity: 0; } }
     </style>
@@ -68,17 +68,17 @@
 <div class="overlay" id="rewardOverlay">
     <div class="reward-card">
         <h1 id="rewardIcon" style="font-size: 4rem;">🎁</h1>
-        <h2 id="rewardTitle">LEVEL TAMAMLANDI!</h2>
-        <p id="rewardDesc">Şansına çıkan ödül:</p>
-        <div id="rewardVal" style="font-size: 2.5rem; font-weight: 900; color: var(--primary); margin: 15px 0;">0.00 TON</div>
-        <button id="nextLvlBtn" style="width:100%; background:var(--primary); color:white; border:none; padding:15px; border-radius:15px; font-weight:900; cursor:pointer;">SONRAKİ YUMURTAYA GEÇ</button>
+        <h2 id="rewardTitle">TEBRİKLER!</h2>
+        <p id="rewardDesc">Seviye ödülünü kazandın:</p>
+        <div id="rewardVal" style="font-size: 2.8rem; font-weight: 900; color: var(--primary); margin: 20px 0;">0.00 TON</div>
+        <button id="nextLvlBtn" class="btn-action">SONRAKİ SEVİYEYE GEÇ</button>
     </div>
 </div>
 
 <div class="app-shell">
     <header>
         <div class="stat-pill" id="lvlBadge">LEVEL 1</div>
-        <div class="stat-pill" id="totalTon" style="color: #00ccff; border-color: #00ccff;">0.00 TON</div>
+        <div class="stat-pill" id="totalBalance" style="color: #00ccff; border-color: #00ccff;">0.00 TON</div>
     </header>
 
     <div class="content">
@@ -88,110 +88,115 @@
                 <div class="egg lvl1-style" id="eggVisual"><div class="egg-shine"></div></div>
             </div>
             <div class="score-display" id="score">0</div>
-            <div class="target-display" id="targetLabel">HEDEF: 15.000.000</div>
+            <div class="target-display" id="targetLabel">HEDEF: 15,000,000</div>
             <div class="prog-bg"><div class="prog-fill" id="progFill"></div></div>
         </div>
 
-        <div id="other-tab" class="tab-panel">
-            <h2>Görevler & Cüzdan</h2>
-            <p style="margin-top:20px; opacity:0.6;">Ödüllerin otomatik olarak cüzdanına yansır.</p>
+        <div id="wallet-tab" class="tab-panel">
+            <h2 style="margin-bottom:20px;">Cüzdanım</h2>
+            <div style="background:var(--glass); padding:30px; border-radius:20px; width:100%; text-align:center;">
+                <p style="opacity:0.6;">Toplam Bakiye</p>
+                <h1 id="walletDisplay" style="font-size:3rem; color:var(--primary);">0.00 TON</h1>
+                <button class="btn-action" onclick="alert('Minimum çekim tutarı 10 TONdur.')">PARA ÇEK</button>
+            </div>
         </div>
     </div>
 
     <nav>
         <div class="nav-item active" onclick="switchTab('mine', this)"><i>⛏️</i><span>Kaz</span></div>
-        <div class="nav-item" onclick="switchTab('other', this)"><i>👛</i><span>Cüzdan</span></div>
+        <div class="nav-item" onclick="switchTab('wallet', this)"><i>👛</i><span>Cüzdan</span></div>
     </nav>
 </div>
 
 <script>
-    // Durum Değişkenleri
-    let currentLevel = parseInt(localStorage.getItem('yaytso_lvl')) || 1;
-    let currentClicks = parseInt(localStorage.getItem('yaytso_clicks')) || 0;
-    let totalBalance = parseFloat(localStorage.getItem('yaytso_balance')) || 0;
+    // --- VERİ YÖNETİMİ (LOKAL) ---
+    let lvl = parseInt(localStorage.getItem('yaytso_lvl_idx')) || 1;
+    let clicks = parseInt(localStorage.getItem('yaytso_lvl_clicks')) || 0;
+    let ton = parseFloat(localStorage.getItem('yaytso_ton_total')) || 0;
 
-    const levelConfigs = {
-        1: { name: "BRONZ YUMURTA", target: 15000000, color: "#cd7f32", class: "lvl1-style", icon: "🎁" },
-        2: { name: "GÜMÜŞ YUMURTA", target: 45000000, color: "#c0c0c0", class: "lvl2-style", icon: "🥈" },
-        3: { name: "ALTIN YUMURTA", target: 71000000, color: "#ffd700", class: "lvl3-style", icon: "🏆" }
+    const configs = {
+        1: { name: "BRONZ YUMURTA", target: 15000000, class: "lvl1-style", color: "#cd7f32", icon: "🎁" },
+        2: { name: "GÜMÜŞ YUMURTA", target: 45000000, class: "lvl2-style", color: "#c0c0c0", icon: "🥈" },
+        3: { name: "ALTIN YUMURTA", target: 71000000, class: "lvl3-style", icon: "🏆" }
     };
 
     function updateUI() {
-        const config = levelConfigs[currentLevel];
+        const c = configs[lvl];
+        document.getElementById('lvlName').innerText = c.name;
+        document.getElementById('lvlName').style.color = c.color;
+        document.getElementById('lvlBadge').innerText = "LEVEL " + lvl;
+        document.getElementById('score').innerText = clicks.toLocaleString();
+        document.getElementById('targetLabel').innerText = "HEDEF: " + c.target.toLocaleString();
+        document.getElementById('totalBalance').innerText = ton.toFixed(2) + " TON";
+        document.getElementById('walletDisplay').innerText = ton.toFixed(2) + " TON";
         
-        document.getElementById('lvlName').innerText = config.name;
-        document.getElementById('lvlName').style.color = config.color;
-        document.getElementById('lvlBadge').innerText = "LEVEL " + currentLevel;
-        document.getElementById('score').innerText = currentClicks.toLocaleString();
-        document.getElementById('targetLabel').innerText = "HEDEF: " + config.target.toLocaleString();
-        document.getElementById('totalTon').innerText = totalBalance.toFixed(2) + " TON";
+        document.getElementById('eggVisual').className = "egg " + c.class;
         
-        const egg = document.getElementById('eggVisual');
-        egg.className = "egg " + config.class;
+        const prog = (clicks / c.target) * 100;
+        document.getElementById('progFill').style.width = Math.min(prog, 100) + "%";
 
-        const progress = (currentClicks / config.target) * 100;
-        document.getElementById('progFill').style.width = Math.min(progress, 100) + "%";
-
-        // Verileri kaydet
-        localStorage.setItem('yaytso_lvl', currentLevel);
-        localStorage.setItem('yaytso_clicks', currentClicks);
-        localStorage.setItem('yaytso_balance', totalBalance);
+        // Kaydet
+        localStorage.setItem('yaytso_lvl_idx', lvl);
+        localStorage.setItem('yaytso_lvl_clicks', clicks);
+        localStorage.setItem('yaytso_ton_total', ton);
     }
 
     function handleTap(e) {
-        const config = levelConfigs[currentLevel];
-        if (currentClicks < config.target) {
-            currentClicks += 500000; // TEST HIZI: Gerçek kullanımda +1 yapın.
+        if (lvl > 3) return;
+        const c = configs[lvl];
+        
+        if (clicks < c.target) {
+            clicks += 1; // Normal hız (+1)
             
-            if (currentClicks >= config.target) {
-                currentClicks = config.target;
-                showReward();
+            if (clicks >= c.target) {
+                clicks = c.target;
+                triggerReward();
             }
             updateUI();
-            createTapEffect(e);
+            showTapEffect(e);
+            if(navigator.vibrate) navigator.vibrate(10);
         }
     }
 
-    function showReward() {
-        const config = levelConfigs[currentLevel];
-        let reward = 0;
-        let chance = Math.random() * 100;
+    function triggerReward() {
+        const c = configs[lvl];
+        let win = 0;
+        let roll = Math.random() * 100;
 
-        // Ödül mantığı
-        if (chance < 80) reward = Math.random() * (5 - 0.1) + 0.1;
-        else reward = Math.random() * (20 - 5) + 5;
+        if (roll < 80) win = Math.random() * (5 - 0.1) + 0.1;
+        else win = Math.random() * (20 - 5) + 5;
 
-        totalBalance += reward;
+        ton += win;
         
-        document.getElementById('rewardIcon').innerText = config.icon;
-        document.getElementById('rewardVal').innerText = reward.toFixed(2) + " TON";
+        document.getElementById('rewardIcon').innerText = c.icon;
+        document.getElementById('rewardVal').innerText = win.toFixed(2) + " TON";
         document.getElementById('rewardOverlay').style.display = 'flex';
 
         const btn = document.getElementById('nextLvlBtn');
-        if (currentLevel < 3) {
+        if (lvl < 3) {
             btn.innerText = "SONRAKİ YUMURTAYA GEÇ (PUAN SIFIRLANIR)";
             btn.onclick = () => {
-                currentLevel++;
-                currentClicks = 0; // PUAN SIFIRLAMA
+                lvl++;
+                clicks = 0; // Seviye atlayınca puan sıfırlanır
                 document.getElementById('rewardOverlay').style.display = 'none';
                 updateUI();
             };
         } else {
-            btn.innerText = "OYUNU TAMAMLADIN!";
+            btn.innerText = "OYUN BİTTİ - TÜM ÖDÜLLER SENİN!";
             btn.onclick = () => location.reload();
         }
     }
 
-    function createTapEffect(e) {
+    function showTapEffect(e) {
         const x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         const y = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-        const div = document.createElement('div');
-        div.className = 'tap-anim';
-        div.innerText = "+1";
-        div.style.left = (x - 20) + "px";
-        div.style.top = (y - 50) + "px";
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 800);
+        const d = document.createElement('div');
+        d.className = 'tap-anim';
+        d.innerText = "+1";
+        d.style.left = (x - 15) + "px";
+        d.style.top = (y - 40) + "px";
+        document.body.appendChild(d);
+        setTimeout(() => d.remove(), 800);
     }
 
     function switchTab(id, el) {
@@ -201,11 +206,9 @@
         el.classList.add('active');
     }
 
-    // Event Listeners
     document.getElementById('eggBtn').addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(e); });
     document.getElementById('eggBtn').addEventListener('mousedown', handleTap);
 
-    // İlk yükleme
     updateUI();
 </script>
 </body>
