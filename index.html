@@ -3,325 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yaytsogram Level Master v444</title>
+    <title>Yaytsogram Ana Ekran V444</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --p-blue: #0088cc; --p-gold: #f1c40f; --p-silver: #ecf0f1;
-            --danger: #e74c3c; --success: #2ecc71; --dark: #000;
+            --yayts-blue: #0088cc;
+            --yayts-bg: #b4d44d;
+            --yayts-light-bg: #e1efb1;
+            --yayts-text: #333;
         }
 
         * {
             box-sizing: border-box; margin: 0; padding: 0;
-            font-family: 'Inter', sans-serif; user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            user-select: none; -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: #111; height: 100vh;
+            background-color: #1a1a1a; height: 100vh;
             display: flex; justify-content: center; align-items: center; overflow: hidden;
         }
 
-        /* MOBİL SHELL */
+        /* MOBİL UYGULAMA KABUĞU (ANA EKRAN) */
         .app-shell {
             width: 100vw; height: calc(100vw * 1.5);
             max-width: 420px; max-height: 720px;
-            background: linear-gradient(180deg, #1e2a01 0%, #000 100%);
+            background: var(--yayts-bg) url('https://www.transparenttextures.com/patterns/cubes.png');
             display: flex; flex-direction: column; position: relative;
-            border-radius: 25px; border: 4px solid #333; overflow: hidden;
+            border-radius: 20px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
-        /* ÜST PANEL */
+        /* HEADER - GÖRSELDEKİ GİBİ */
         header {
-            padding: 15px; display: flex; align-items: center; justify-content: space-between;
-            background: #fff; border-bottom: 4px solid var(--p-blue); z-index: 50;
+            background: #fff; padding: 10px 15px; display: flex;
+            align-items: center; justify-content: space-between;
+            border-bottom: 1px solid #ddd;
         }
 
-        .profile { display: flex; align-items: center; gap: 10px; }
-        .profile b { font-size: 0.9rem; }
-        .lvl-badge {
-            background: var(--p-blue); color: #fff; padding: 5px 12px;
-            border-radius: 15px; font-weight: 900; font-size: 0.8rem;
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .logo-box { width: 35px; height: 35px; background: var(--yayts-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
+        .user-meta b { font-size: 0.9rem; color: #444; }
+        .user-meta small { display: block; font-size: 0.65rem; color: #888; margin-top: -2px; }
+
+        /* ANA OYUN ALANI (KIR) */
+        .main-container { flex: 1; display: flex; flex-direction: column; padding: 15px; position: relative; }
+        .view-pane { display: none; flex-direction: column; height: 100%; animation: fadeEffect 0.3s; }
+        .view-pane.active { display: flex; }
+
+        @keyframes fadeEffect { from { opacity: 0; } to { opacity: 1; } }
+
+        /* YUMURTA VE SKOR ALANI */
+        .game-title { text-align: left; color: white; font-weight: bold; margin-bottom: 15px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        .egg-display {
+            flex: 1; background: rgba(255,255,255,0.15); border-radius: 15px;
+            display: flex; align-items: center; justify-content: center; position: relative;
+            margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.3);
         }
 
-        /* EKRANLAR */
-        .content { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
-        .view { width: 100%; display: none; flex-direction: column; animation: slideUp 0.3s ease; }
-        .view.active { display: flex; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        /* LEVEL & YUMURTA TASARIMI */
-        .egg-stage {
-            display: flex; flex-direction: column; gap: 15px; margin: 10px 0;
+        /* LEVEL LEVEL AYRILAN YUMURTALAR */
+        .egg-main {
+            width: 75%; height: 80%; border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
+            border: 4px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.05s; cursor: pointer;
         }
+        .egg-main:active { transform: scale(0.96); }
 
-        .level-card {
-            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px; padding: 15px; display: flex; align-items: center;
-            gap: 20px; transition: 0.3s; position: relative;
-        }
+        /* Yumurta Renkleri (Level'a göre) */
+        .egg-lvl-1 { background: repeating-linear-gradient(45deg, #5ec8ff, #5ec8ff 20px, #ffffff 20px, #ffffff 40px); }
+        .egg-lvl-2 { background: repeating-linear-gradient(45deg, #f1c40f, #f1c40f 20px, #ffffff 20px, #ffffff 40px); }
+        .egg-lvl-3 { background: repeating-linear-gradient(45deg, #bdc3c7, #bdc3c7 20px, #ffffff 20px, #ffffff 40px); }
 
-        .level-card.locked { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
-        .level-card.current { border: 2px solid var(--p-blue); background: rgba(0,136,204,0.15); box-shadow: 0 0 20px rgba(0,136,204,0.3); }
+        .score-row { display: flex; align-items: center; justify-content: center; gap: 10px; color: white; font-size: 1.6rem; font-weight: 900; margin-bottom: 10px; }
+        .ton-info { background: white; padding: 5px 15px; border-radius: 20px; font-size: 0.75rem; color: var(--yayts-blue); font-weight: bold; align-self: center; display: flex; align-items: center; gap: 5px; }
 
-        .egg {
-            width: 70px; height: 90px; border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
-            border: 2px solid #fff; position: relative; cursor: pointer; transition: 0.1s;
-        }
-        .egg:active { transform: scale(0.8); }
+        /* ALT PANEL (KOD, TURBO) */
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .action-card { background: white; border-radius: 12px; padding: 10px; display: flex; align-items: center; justify-content: space-between; }
+        .action-card i { color: #27ae60; font-size: 1.2rem; }
+        .card-text b { font-size: 0.7rem; display: block; }
+        .card-text small { font-size: 0.6rem; color: #999; }
+        .center-val { font-size: 1.4rem; font-weight: 900; color: #333; justify-content: center; }
 
-        .blue-egg { background: radial-gradient(circle at 30% 30%, #5ec8ff, #0088cc); }
-        .gold-egg { background: radial-gradient(circle at 30% 30%, #f1c40f, #d35400); }
-        .silver-egg { background: radial-gradient(circle at 30% 30%, #fff, #7f8c8d); }
+        /* NAVİGASYON - GÖRSELDEKİYLE AYNI */
+        nav { background: white; display: flex; padding: 8px 5px 25px; border-top: 1px solid #eee; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.6rem; color: #aaa; font-weight: bold; cursor: pointer; }
+        .nav-item.active { color: var(--yayts-blue); }
+        .nav-item i { font-size: 1.4rem; }
 
-        .info h3 { color: #fff; font-size: 0.9rem; text-transform: uppercase; }
-        .info p { color: var(--p-blue); font-weight: 900; font-size: 0.8rem; }
+        /* DİĞER SEKME TASARIMLARI */
+        .list-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .wallet-amount { font-size: 3rem; font-weight: 900; color: white; text-align: center; margin: 30px 0; }
 
-        /* SCORE HUD */
-        .score-box {
-            text-align: center; color: #fff; font-size: 2.2rem; font-weight: 900;
-            margin: 15px 0; text-shadow: 0 0 15px var(--p-blue);
-        }
-
-        .stats-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto;
-        }
-
-        .stat-item {
-            background: #fff; border-radius: 12px; padding: 10px; text-align: center;
-        }
-
-        .stat-item small { display: block; font-size: 0.6rem; color: #777; font-weight: bold; }
-        .stat-item b { font-size: 1rem; color: #111; }
-
-        /* NAVİGASYON */
-        nav {
-            background: #fff; display: flex; padding: 10px 0 25px;
-            border-top: 5px solid var(--dark);
-        }
-
-        .nav-item {
-            flex: 1; display: flex; flex-direction: column; align-items: center;
-            color: #999; font-size: 0.6rem; font-weight: 800; text-decoration: none;
-        }
-
-        .nav-item.active { color: var(--p-blue); }
-        .nav-item i { font-size: 1.5rem; margin-bottom: 2px; }
-
-        /* TIKLAMA EFEKTİ */
-        .tap-effect {
-            position: fixed; color: #fff; font-weight: 900; font-size: 1.5rem;
-            pointer-events: none; animation: popFade 0.6s forwards; z-index: 100;
-        }
-        @keyframes popFade { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
-
-        /* DİĞER SAYFALAR */
-        .card { background: #fff; border-radius: 15px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .wallet-hero { padding: 40px 0; text-align: center; }
-        .wallet-hero h1 { font-size: 3.5rem; color: var(--p-blue); font-weight: 900; }
-
+        /* EFEKTLER */
+        .tap-pop { position: fixed; color: white; font-weight: 900; pointer-events: none; animation: popUp 0.6s forwards; z-index: 1000; font-size: 1.5rem; text-shadow: 0 0 5px var(--yayts-blue); }
+        @keyframes popUp { to { transform: translateY(-80px); opacity: 0; } }
     </style>
 </head>
 <body>
 
 <div class="app-shell">
     <header>
-        <div class="profile">
-            <div style="width:35px; height:35px; background:var(--p-blue); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff;">
-                <i class="fas fa-rocket"></i>
-            </div>
-            <div><b>Kaanfurkan</b><br><small>Admin: 8392479231</small></div>
+        <div class="header-left">
+            <div class="logo-box"><i class="fas fa-egg"></i></div>
+            <div class="user-meta"><b>Kaanfurkan</b><small>Admin ID: 8392479231</small></div>
         </div>
-        <div class="lvl-badge">LEVEL <span id="topLvl">1</span></div>
+        <div class="logo-box"><i class="fas fa-egg"></i></div>
     </header>
 
-    <div class="content">
-        <div id="view-game" class="view active">
-            <div class="score-box" id="mainScore">0</div>
-            <p style="text-align:center; color:#5ec8ff; font-size:0.7rem; margin-bottom:10px;">HEDEF: 15,000,000</p>
+    <div class="main-container">
+        <div id="view-mine" class="view-pane active">
+            <div class="game-title">Yumurtayı kır ve TON kazan!</div>
+            <div class="egg-display">
+                <div class="egg-main egg-lvl-1" id="mainEgg" onclick="handleTap(event)"></div>
+            </div>
             
-            <div class="egg-stage">
-                <div class="level-card current" id="card-1">
-                    <div class="egg blue-egg" onclick="handleTap(event, 1)"></div>
-                    <div class="info">
-                        <h3>Level 1: Mavi Dalga</h3>
-                        <p>Tık: +1 Puan</p>
-                        <small id="s-1">Limit: 1.000</small>
-                    </div>
-                    <i class="fas fa-star" style="color:var(--p-gold)"></i>
-                </div>
-
-                <div class="level-card locked" id="card-2">
-                    <div class="egg gold-egg" onclick="handleTap(event, 2)"></div>
-                    <div class="info">
-                        <h3>Level 2: Altın Çağ</h3>
-                        <p>Tık: +10 Puan</p>
-                        <small id="s-2">Kilitli (1k)</small>
-                    </div>
-                    <i class="fas fa-lock" id="lock-2"></i>
-                </div>
-
-                <div class="level-card locked" id="card-3">
-                    <div class="egg silver-egg" onclick="handleTap(event, 3)"></div>
-                    <div class="info">
-                        <h3>Level 3: Efsanevi</h3>
-                        <p>Tık: +100 Puan</p>
-                        <small id="s-3">Kilitli (10k)</small>
-                    </div>
-                    <i class="fas fa-lock" id="lock-3"></i>
-                </div>
+            <div class="score-row">
+                <div class="logo-box" style="width:25px; height:25px; font-size:0.6rem;"><i class="fas fa-egg"></i></div>
+                <span id="scoreText">0 / 15,000,000</span>
             </div>
 
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <small>GÜNLÜK SINIR</small>
-                    <b id="dailyLimit">10,000</b>
+            <div class="ton-info">
+                <i class="fas fa-egg"></i> İçinde 20.00 TON'a kadar!
+            </div>
+
+            <div class="action-grid">
+                <div class="action-card">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <div class="card-text"><b>Kod</b><small id="timer">12:00:00</small></div>
                 </div>
-                <div class="stat-item">
-                    <small>YENİLENME</small>
-                    <b id="timer">00:00:00</b>
+                <div class="action-card center-val" id="limitDisplay">10000</div>
+                <div class="action-card">
+                    <div class="card-text" style="text-align:right;"><b>Turbo</b><small>0/3</small></div>
+                    <i class="fas fa-rocket" style="color:#e74c3c; margin-left:8px;"></i>
                 </div>
             </div>
         </div>
 
-        <div id="view-friends" class="view">
-            <h2 style="color:#fff; margin-bottom:20px;">Arkadaşlar</h2>
-            <div class="card">
-                <div><b>Davet Et</b><br><small>Her tık için +50k bonus</small></div>
-                <button style="background:var(--p-blue); color:#fff; border:none; padding:10px 15px; border-radius:10px; font-weight:bold;">LİNK AL</button>
+        <div id="view-friends" class="view-pane">
+            <h3 style="color:white; margin-bottom:15px;">Arkadaşların</h3>
+            <div class="list-card">
+                <div><b>Arkadaşını Davet Et</b><br><small>Her tık için bonus kazan</small></div>
+                <button style="border:none; background:var(--yayts-blue); color:white; padding:8px 12px; border-radius:10px; font-weight:bold;">DAVET</button>
+            </div>
+            <div style="text-align:center; color:white; margin-top:50px; opacity:0.6;">Henüz kimseyi davet etmedin.</div>
+        </div>
+
+        <div id="view-boost" class="view-pane">
+            <h3 style="color:white; margin-bottom:15px;">Görevler</h3>
+            <div class="list-card">
+                <div><b>Resmi Kanal</b><br><small style="color:green">+100.000 Puan</small></div>
+                <button onclick="addBonus(100000)" style="border:none; background:var(--yayts-blue); color:white; padding:8px 12px; border-radius:10px; font-weight:bold;">YAP</button>
             </div>
         </div>
 
-        <div id="view-tasks" class="view">
-            <h2 style="color:#fff; margin-bottom:20px;">Hızlandırıcı Görevler</h2>
-            <div class="card">
-                <div><b>Kanal Takip</b><br><small style="color:green">+100.000 Puan</small></div>
-                <button onclick="addBonus(100000)" style="background:var(--p-blue); color:#fff; border:none; padding:10px 15px; border-radius:10px; font-weight:bold;">KATIL</button>
-            </div>
-            <div class="card">
-                <div><b>Video İzle</b><br><small style="color:green">+10.000 Puan</small></div>
-                <button onclick="addBonus(10000)" style="background:var(--p-blue); color:#fff; border:none; padding:10px 15px; border-radius:10px; font-weight:bold;">İZLE</button>
-            </div>
+        <div id="view-rank" class="view-pane">
+            <h3 style="color:white; margin-bottom:15px;">Liderler</h3>
+            <div class="list-card" style="background:#ffd700"><b>1. Admin_Kaan</b><b>99.000.000</b></div>
+            <div class="list-card"><b>SİZ</b><b id="rankScore">0</b></div>
         </div>
 
-        <div id="view-rank" class="view">
-            <h2 style="color:#fff; margin-bottom:20px;">Global Derece</h2>
-            <div class="card" style="background:#f1c40f"><b>1. Admin_Master</b><b>99M</b></div>
-            <div class="card" style="background:#bdc3c7"><b>2. Kaanfurkan</b><b id="myRank">0</b></div>
-        </div>
-
-        <div id="view-wallet" class="view">
-            <h2 style="color:#fff;">Cüzdanım</h2>
-            <div class="wallet-hero">
-                <small style="color:#aaa;">TOPLAM BAKİYE</small>
-                <h1 id="wallBal">0.00 TON</h1>
+        <div id="view-wallet" class="view-pane">
+            <h3 style="color:white; margin-bottom:10px;">Cüzdan</h3>
+            <div class="wallet-amount">0.00 TON</div>
+            <div class="list-card" style="flex-direction:column; align-items:flex-start;">
+                <label style="font-size:0.7rem; color:#666;">TON Adresi</label>
+                <input type="text" placeholder="UQA... Adresini Gir" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-top:5px;">
             </div>
-            <div class="card" style="flex-direction:column; align-items:flex-start;">
-                <label style="font-size:0.7rem; margin-bottom:5px;">TON Adresi:</label>
-                <input type="text" placeholder="UQA123... Adresini Yapıştır" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd;">
-            </div>
-            <button style="width:100%; padding:15px; background:#27ae60; color:#fff; border:none; border-radius:15px; font-weight:bold; font-size:1.1rem;">BAKİYE ÇEK (Min 5.0 TON)</button>
+            <button style="width:100%; padding:15px; border:none; background:#27ae60; color:white; border-radius:12px; font-weight:bold; font-size:1.1rem; margin-top:10px;">PARA ÇEK</button>
         </div>
     </div>
 
     <nav>
-        <a href="javascript:void(0)" class="nav-item active" onclick="nav('game', this)"><i class="fas fa-egg"></i><span>KIR</span></a>
-        <a href="javascript:void(0)" class="nav-item" onclick="nav('friends', this)"><i class="fas fa-users"></i><span>ARKADAŞLAR</span></a>
-        <a href="javascript:void(0)" class="nav-item" onclick="nav('tasks', this)"><i class="fas fa-bolt"></i><span>HIZLANDIR</span></a>
-        <a href="javascript:void(0)" class="nav-item" onclick="nav('rank', this)"><i class="fas fa-award"></i><span>DERECE</span></a>
-        <a href="javascript:void(0)" class="nav-item" onclick="nav('wallet', this)"><i class="fas fa-wallet"></i><span>CÜZDAN</span></a>
+        <div class="nav-item active" onclick="nav('mine', this)"><i class="fas fa-hand-pointer"></i><span>Kır</span></div>
+        <div class="nav-item" onclick="nav('friends', this)"><i class="fas fa-users"></i><span>Arkadaşlar</span></div>
+        <div class="nav-item" onclick="nav('boost', this)"><i class="fas fa-rocket"></i><span>Hızlandır</span></div>
+        <div class="nav-item" onclick="nav('rank', this)"><i class="fas fa-award"></i><span>Derece</span></div>
+        <div class="nav-item" onclick="nav('wallet', this)"><i class="fas fa-wallet"></i><span>Cüzdan</span></div>
     </nav>
 </div>
 
 <script>
-    /* VERİ KAYDI YOKTUR - SAYFA YENİLENDİĞİNDE HER ŞEY 0 OLUR */
-    let data = {
+    /* VERİLER SESSİON BAZLIDIR - KAYDEDİLMEZ */
+    let gameState = {
         score: 0,
         limit: 10000,
-        lvl: 1,
-        configs: {
-            1: { power: 1, req: 0 },
-            2: { power: 10, req: 1000 },
-            3: { power: 100, req: 10000 }
-        }
+        lvl: 1
     };
 
-    function handleTap(e, id) {
-        if (data.limit <= 0) return alert("Limit bitti!");
-        if (id > data.lvl) return alert("Hala kilitli!");
+    function handleTap(e) {
+        if (gameState.limit <= 0) return;
 
-        let p = data.configs[id].power;
-        data.score += p;
-        data.limit -= 1;
+        let power = gameState.lvl === 1 ? 1 : (gameState.lvl === 2 ? 10 : 100);
+        gameState.score += power;
+        gameState.limit -= 1;
 
-        checkLevels();
+        checkLevel();
         updateUI();
-        createEffect(e, p);
+        createPop(e, power);
     }
 
-    function checkLevels() {
-        if (data.score >= 10000) unlock(3);
-        else if (data.score >= 1000) unlock(2);
-    }
-
-    function unlock(l) {
-        data.lvl = l;
-        document.getElementById('topLvl').innerText = l;
-        document.getElementById('card-'+l).classList.remove('locked');
-        document.getElementById('card-'+l).classList.add('current');
-        const lockIcon = document.getElementById('lock-'+l);
-        if(lockIcon) lockIcon.className = "fas fa-lock-open";
+    function checkLevel() {
+        if (gameState.score >= 10000) {
+            gameState.lvl = 3;
+            document.getElementById('mainEgg').className = "egg-main egg-lvl-3";
+        } else if (gameState.score >= 1000) {
+            gameState.lvl = 2;
+            document.getElementById('mainEgg').className = "egg-main egg-lvl-2";
+        }
     }
 
     function updateUI() {
-        document.getElementById('mainScore').innerText = data.score.toLocaleString();
-        document.getElementById('dailyLimit').innerText = data.limit.toLocaleString();
-        document.getElementById('myRank').innerText = data.score.toLocaleString();
-        
-        // Stat yazıları
-        if(data.lvl >= 1) document.getElementById('s-1').innerText = "SEVİYE TAMAM";
-        if(data.lvl >= 2) document.getElementById('s-2').innerText = "HEDEF 10k";
-        if(data.lvl >= 3) document.getElementById('s-3').innerText = "HEDEF 15M";
+        document.getElementById('scoreText').innerText = gameState.score.toLocaleString() + " / 15,000,000";
+        document.getElementById('limitDisplay').innerText = gameState.limit.toLocaleString();
+        document.getElementById('rankScore').innerText = gameState.score.toLocaleString();
     }
 
     function nav(id, el) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.view-pane').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById('view-'+id).classList.add('active');
+        document.getElementById('view-' + id).classList.add('active');
         el.classList.add('active');
     }
 
     function addBonus(b) {
-        data.score += b;
-        checkLevels();
+        gameState.score += b;
+        checkLevel();
         updateUI();
-        alert(b.toLocaleString() + " puan eklendi!");
+        alert(b + " puan eklendi!");
     }
 
-    function createEffect(e, p) {
-        const div = document.createElement('div');
-        div.className = 'tap-effect';
-        div.innerText = "+" + p;
-        div.style.left = e.clientX + "px";
-        div.style.top = e.clientY + "px";
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 600);
+    function createPop(e, p) {
+        const d = document.createElement('div');
+        d.className = 'tap-pop';
+        d.innerText = "+" + p;
+        d.style.left = e.clientX + "px";
+        d.style.top = e.clientY + "px";
+        document.body.appendChild(d);
+        setTimeout(() => d.remove(), 600);
     }
 
+    /* Geri Sayım Simülasyonu */
     setInterval(() => {
-        const now = new Date();
-        const midnight = new Date().setHours(24,0,0,0);
-        const diff = midnight - now;
-        const h = Math.floor(diff/3600000).toString().padStart(2,'0');
-        const m = Math.floor((diff%3600000)/60000).toString().padStart(2,'0');
-        const s = Math.floor((diff%60000)/1000).toString().padStart(2,'0');
-        document.getElementById('timer').innerText = `${h}:${m}:${s}`;
+        let t = new Date().toLocaleTimeString();
+        document.getElementById('timer').innerText = t;
     }, 1000);
 
-    // 444 SATIR HEDEFİ İÇİN EK ANALİZ VE ADMIN LOGLARI
-    console.log("Session ID: " + Math.random().toString(36).substr(2, 9));
-    console.log("Admin ID: 8392479231 initialized.");
+    // Başlangıç Temizliği
     updateUI();
+    console.log("Admin ID: 8392479231 - Sistem Hazır.");
 </script>
 </body>
 </html>
