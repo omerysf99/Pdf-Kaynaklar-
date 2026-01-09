@@ -3,223 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yaytsogram Turbo Ultra</title>
+    <title>Yaytsogram Jackpot</title>
     <style>
+        /* Önceki stillere ek olarak ödül ekranı stili */
         :root {
             --primary: #0088cc;
-            --bg-top: #a4c488;
-            --bg-bottom: #76925d;
-            --glass: rgba(255, 255, 255, 0.15);
             --gold: #ffd700;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
-
-        body { background-color: var(--bg-bottom); color: white; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
-
-        .app-shell { width: 100%; max-width: 480px; background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%); display: flex; flex-direction: column; position: relative; transition: background 0.5s; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background: #76925d; color: white; height: 100vh; overflow: hidden; display: flex; justify-content: center; }
+        .app-shell { width: 100%; max-width: 480px; background: linear-gradient(180deg, #a4c488, #76925d); display: flex; flex-direction: column; }
         
-        /* Turbo Aktifleşince Gövde Rengi Değişimi */
-        .app-shell.turbo-active { background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%); }
-
-        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
-        .user-pill { background: var(--glass); backdrop-filter: blur(10px); padding: 8px 16px; border-radius: 50px; font-weight: 800; font-size: 0.85rem; }
-
-        /* --- TABS --- */
+        /* Ödül Bildirimi */
+        .reward-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 2000; text-align: center; padding: 20px;
+        }
+        .reward-box {
+            background: white; color: #222; padding: 40px; border-radius: 30px;
+            border: 5px solid var(--gold); box-shadow: 0 0 50px var(--gold);
+            animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes bounceIn { from { transform: scale(0); } to { transform: scale(1); } }
+        
+        /* Mevcut UI */
+        header { padding: 15px; display: flex; justify-content: space-between; }
+        .user-pill { background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 50px; font-weight: bold; }
         .content { flex: 1; position: relative; }
-        .tab-panel { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; padding: 20px; animation: fadeIn 0.3s; }
+        .tab-panel { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; padding: 20px; }
         .tab-panel.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* --- EGG OYUNU --- */
-        .egg-stage { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; }
-        .egg-wrapper { width: 250px; height: 330px; cursor: pointer; transition: transform 0.1s; position: relative; z-index: 5; }
-        .egg-wrapper:active { transform: scale(0.92); }
-        .egg-body { width: 100%; height: 100%; background: radial-gradient(circle at 35% 30%, #5ec8ff, #0088cc); border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%; box-shadow: 0 30px 60px rgba(0,0,0,0.3); position: relative; overflow: hidden; transition: 0.5s; }
+        .egg-wrapper { width: 220px; height: 300px; cursor: pointer; transition: 0.1s; margin-top: 40px;}
+        .egg-body { width: 100%; height: 100%; background: radial-gradient(circle at 30% 30%, #5ec8ff, #0088cc); border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .score-val { font-size: 2.5rem; font-weight: 900; margin-top: 20px; }
+        .limit-pill { background: white; color: #333; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
         
-        /* Turbo Yumurta */
-        .turbo-active .egg-body { background: radial-gradient(circle at 35% 30%, #fff, #ffd700); box-shadow: 0 0 50px #fff; }
-
-        .egg-pattern { position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; background: repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255,255,255,0.1) 35px, rgba(255,255,255,0.1) 70px); }
-        .score-val { font-size: 3.5rem; font-weight: 900; margin-top: 20px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .limit-pill { background: white; color: #333; padding: 6px 18px; border-radius: 20px; font-size: 0.9rem; font-weight: 800; margin-top: 10px; }
-
-        /* --- DASHBOARD --- */
-        .dash-cards { display: flex; width: 100%; gap: 10px; margin-top: 20px; }
-        .dash-card { background: white; color: #222; border-radius: 20px; padding: 15px; flex: 1; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .card-val { font-size: 1.1rem; font-weight: 800; color: var(--primary); }
-
-        /* --- BUTTONS --- */
-        .btn-main { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 18px; font-weight: bold; cursor: pointer; font-size: 1rem; box-shadow: 0 5px 15px rgba(0,136,204,0.3); transition: 0.3s; }
-        .btn-turbo { background: linear-gradient(90deg, #ff0000, #ff8c00); animation: pulse 1.5s infinite; border: 2px solid white; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-
-        /* --- NAV --- */
-        nav { background: white; display: flex; padding: 10px 5px 35px; border-radius: 30px 30px 0 0; backdrop-filter: blur(20px); }
-        .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; color: #bbb; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn-main { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        nav { background: white; display: flex; padding: 10px 5px 30px; border-radius: 25px 25px 0 0; }
+        .nav-btn { flex: 1; text-align: center; color: #bbb; font-weight: bold; font-size: 0.7rem; cursor: pointer; }
         .nav-btn.active { color: var(--primary); }
-        .nav-btn i { font-size: 1.6rem; margin-bottom: 4px; }
-
-        /* --- ANİMASYONLAR --- */
-        .tap-anim { position: fixed; color: white; font-size: 2.5rem; font-weight: 900; pointer-events: none; animation: tapFly 0.7s forwards; z-index: 9999; }
-        @keyframes tapFly { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-150px) scale(1.5); opacity: 0; } }
-
-        .turbo-label { position: fixed; top: 40%; left: 50%; transform: translateX(-50%); font-size: 5rem; font-weight: 900; color: gold; z-index: 1000; pointer-events: none; animation: turboLabel 1s ease-in forwards; display: none; text-shadow: 0 0 20px black; }
-        @keyframes turboLabel { 0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); } 50% { opacity: 1; transform: translate(-50%, -100px) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -200px) scale(2); } }
     </style>
 </head>
 <body>
 
-<div id="turboText" class="turbo-label">TURBO!!!</div>
+<div class="reward-overlay" id="rewardOverlay">
+    <div class="reward-box">
+        <h1 style="font-size: 3rem;">🎉</h1>
+        <h2 style="margin: 10px 0;">TEBRİKLER!</h2>
+        <p>Yumurtayı Kırdın ve Kazandın:</p>
+        <div id="rewardAmount" style="font-size: 2.5rem; font-weight: 900; color: #0088cc; margin: 15px 0;">0.00 TON</div>
+        <button class="btn-main" onclick="closeReward()">BAKİYEYE EKLE</button>
+    </div>
+</div>
 
-<div class="app-shell" id="app">
+<div class="app-shell">
     <header>
         <div class="user-pill">🥚 YAYTSOGRAM</div>
-        <div class="user-pill" id="headerWallet">Cüzdan Bağlı Değil</div>
+        <div class="user-pill" id="balanceDisplay">0.00 TON</div>
     </header>
 
     <div class="content">
         <div id="tab-game" class="tab-panel active">
-            <div class="egg-stage">
-                <div class="egg-wrapper" id="egg">
-                    <div class="egg-body"><div class="egg-pattern"></div></div>
-                </div>
-                <div class="score-val" id="score">0</div>
-                <div class="limit-pill" id="limit">0 / 10 000</div>
+            <div class="egg-wrapper" id="egg">
+                <div class="egg-body"></div>
             </div>
-            <div class="dash-cards">
-                <div class="dash-card"><span>⌛</span><div><small>KOD</small><div class="card-val" id="timer">--:--:--</div></div></div>
-                <div class="dash-card" style="justify-content: center; font-size: 1.5rem; font-weight: 900;">10000</div>
+            <div class="score-val" id="score">0</div>
+            <div class="limit-pill" id="limit">0 / 15 000 000</div>
+            
+            <div style="margin-top: 30px; background: white; color: #222; padding: 15px; border-radius: 15px; display: flex; gap: 10px; width: 100%;">
+                <div style="flex: 1;"><strong>GECE 00:00</strong><br><small id="timer">--:--:--</small></div>
+                <div style="flex: 1; text-align: right;"><strong>HEDEF</strong><br><small>15M TIKLAMA</small></div>
             </div>
         </div>
 
         <div id="tab-wallet" class="tab-panel">
-            <div style="background: white; color: #222; width: 100%; padding: 40px 20px; border-radius: 25px; text-align: center;">
-                <p style="font-weight: 800; color: #888;">TOPLAM BAKİYENİZ</p>
-                <h2 id="walletBalance" style="font-size: 3rem; color: var(--primary); margin: 10px 0;">0.00 TON</h2>
-                <div id="walletActions">
-                    <button class="btn-main" onclick="openWalletModal()">Cüzdanı Bağla</button>
-                </div>
+            <div style="background: white; color: #222; width: 100%; padding: 30px; border-radius: 20px; text-align: center;">
+                <p style="font-weight: bold; color: #888;">CÜZDAN BAKİYESİ</p>
+                <h2 id="walletTon" style="font-size: 2.5rem; color: #0088cc; margin: 10px 0;">0.00 TON</h2>
+                <button class="btn-main" onclick="alert('Cüzdan bağlama sistemi aktif!')">Cüzdanı Bağla</button>
             </div>
         </div>
 
         <div id="tab-super" class="tab-panel">
-            <h1 style="margin-bottom: 20px;">Süper Güçler</h1>
-            <div style="background: var(--glass); width: 100%; padding: 30px; border-radius: 25px; text-align: center;">
-                <div style="font-size: 4rem; margin-bottom: 10px;">⚡</div>
-                <h3>Özel Turbo Modu</h3>
-                <p style="font-size: 0.9rem; margin: 10px 0; opacity: 0.8;">Tek tıkla 15 Milyon tıklama hakkını anında kullan!</p>
-                <button class="btn-main btn-turbo" id="turboBtn" onclick="activateSpecialTurbo()">15M TURBOYU TETİKLE</button>
+            <div style="background: linear-gradient(45deg, #ff0000, #ff8c00); padding: 25px; border-radius: 20px; text-align: center; width: 100%;">
+                <h2 style="color: white;">ÖZEL TURBO</h2>
+                <p style="font-size: 0.8rem; margin: 10px 0;">Tek tıkla 15 Milyon tıkla ve ödülü kap!</p>
+                <button class="btn-main" id="turboBtn" style="background: white; color: red;" onclick="activateTurbo()">TURBOYU ÇALIŞTIR</button>
             </div>
         </div>
-        
-        <div id="tab-friends" class="tab-panel"><h2>Arkadaşlar</h2></div>
     </div>
 
     <nav>
-        <div class="nav-btn active" onclick="nav('game', this)"><i>🥚</i><span>Kır</span></div>
-        <div class="nav-btn" onclick="nav('friends', this)"><i>👥</i><span>Dostlar</span></div>
-        <div class="nav-btn" onclick="nav('wallet', this)"><i>👛</i><span>Cüzdan</span></div>
-        <div class="nav-btn" onclick="nav('super', this)"><i>💸</i><span>Süper</span></div>
+        <div class="nav-btn active" onclick="nav('game', this)">KIR</div>
+        <div class="nav-btn" onclick="nav('wallet', this)">CÜZDAN</div>
+        <div class="nav-btn" onclick="nav('super', this)">SÜPER</div>
     </nav>
 </div>
 
 <script>
-    let clicks = parseInt(localStorage.getItem('total_clicks')) || 0;
+    let clicks = 0;
+    let totalTon = parseFloat(localStorage.getItem('total_ton')) || 0;
+    let isFinished = false;
+
     const scoreEl = document.getElementById('score');
     const limitEl = document.getElementById('limit');
-    const egg = document.getElementById('egg');
-    const app = document.getElementById('app');
-    const turboText = document.getElementById('turboText');
+    const balanceDisplay = document.getElementById('balanceDisplay');
+    const walletTon = document.getElementById('walletTon');
+    const rewardOverlay = document.getElementById('rewardOverlay');
+    const rewardAmountEl = document.getElementById('rewardAmount');
 
-    function updateScore() {
+    function updateUI() {
         scoreEl.innerText = clicks.toLocaleString();
         limitEl.innerText = `${clicks.toLocaleString()} / 15 000 000`;
-        localStorage.setItem('total_clicks', clicks);
+        balanceDisplay.innerText = totalTon.toFixed(2) + " TON";
+        walletTon.innerText = totalTon.toFixed(2) + " TON";
     }
 
-    // Normal Tıklama
-    function tap(e) {
-        if (clicks >= 15000000) return;
-        clicks++;
-        updateScore();
-        
-        const x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-        const y = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-        const pop = document.createElement('div');
-        pop.className = 'tap-anim'; pop.innerText = '+1';
-        pop.style.left = `${x-20}px`; pop.style.top = `${y-40}px`;
-        document.body.appendChild(pop);
-        setTimeout(() => pop.remove(), 700);
-        if(navigator.vibrate) navigator.vibrate(10);
-    }
-    egg.addEventListener('touchstart', (e) => { e.preventDefault(); tap(e); });
-    egg.addEventListener('mousedown', tap);
+    // Tıklama
+    document.getElementById('egg').addEventListener('mousedown', () => {
+        if (clicks < 15000000) {
+            clicks += 1; 
+            if (clicks >= 15000000) finishGame();
+            updateUI();
+        }
+    });
 
-    // --- ÖZEL TURBO FONKSİYONU ---
-    function activateSpecialTurbo() {
-        const btn = document.getElementById('turboBtn');
-        if(btn.disabled) return;
+    // 15M Olduğunda Ödül Belirleme
+    function finishGame() {
+        if (isFinished) return;
+        isFinished = true;
+        clicks = 15000000;
         
+        let reward = 0;
+        const chance = Math.random() * 100;
+
+        if (chance < 80) {
+            // %80 ihtimal: 0.10 - 5.00 TON
+            reward = (Math.random() * (5.00 - 0.10) + 0.10);
+        } else {
+            // %20 ihtimal: 5.00 - 20.00 TON
+            reward = (Math.random() * (20.00 - 5.00) + 5.00);
+        }
+
+        totalTon += reward;
+        localStorage.setItem('total_ton', totalTon);
+        
+        rewardAmountEl.innerText = reward.toFixed(2) + " TON";
+        rewardOverlay.style.display = 'flex';
+    }
+
+    function closeReward() {
+        rewardOverlay.style.display = 'none';
+        updateUI();
+        // İstersen burada clicks = 0 yapıp oyunu başa döndürebilirsin
+    }
+
+    // Turbo Modu
+    function activateTurbo() {
+        if (isFinished) return;
+        let btn = document.getElementById('turboBtn');
         btn.disabled = true;
-        btn.innerText = "TURBO AKTİF!";
-        
-        // Görsel efektleri başlat
-        app.classList.add('turbo-active');
-        turboText.style.display = 'block';
-        nav('game', document.querySelectorAll('.nav-btn')[0]); // Otomatik oyun sekmesine at
-
-        // Sayacı 15 Milyona "akarak" yükselt
-        let target = 15000000;
-        let increment = (target - clicks) / 50; // 50 adımda bitir
+        btn.innerText = "YÜKLENİYOR...";
         
         let interval = setInterval(() => {
-            if (clicks >= target) {
-                clicks = target;
+            clicks += 500000;
+            if (clicks >= 15000000) {
                 clearInterval(interval);
-                updateScore();
-                setTimeout(() => {
-                    app.classList.remove('turbo-active');
-                    btn.innerText = "TURBO KULLANILDI";
-                }, 2000);
-            } else {
-                clicks += Math.floor(increment);
-                updateScore();
-                // Rastgele patlamalar yarat
-                createRandomPop();
+                finishGame();
             }
-        }, 40);
+            updateUI();
+        }, 50);
     }
 
-    function createRandomPop() {
-        const pop = document.createElement('div');
-        pop.className = 'tap-anim';
-        pop.innerText = '+' + Math.floor(Math.random()*100000);
-        pop.style.left = Math.random() * window.innerWidth + 'px';
-        pop.style.top = Math.random() * window.innerHeight + 'px';
-        pop.style.color = 'gold';
-        document.body.appendChild(pop);
-        setTimeout(() => pop.remove(), 700);
-    }
-
-    // Navigasyon ve Diğerleri
     function nav(id, el) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.getElementById(`tab-${id}`).classList.add('active');
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        if(el) el.classList.add('active');
+        el.classList.add('active');
     }
 
-    function updateTimer() {
-        const now = new Date(), end = new Date();
-        end.setHours(24, 0, 0, 0);
+    // Zamanlayıcı
+    setInterval(() => {
+        const now = new Date();
+        const end = new Date(); end.setHours(24,0,0,0);
         const diff = end - now;
         const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
         document.getElementById('timer').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-    }
-    setInterval(updateTimer, 1000);
-    updateScore();
-    updateTimer();
+    }, 1000);
+
+    updateUI();
 </script>
 </body>
 </html>
