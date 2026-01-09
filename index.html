@@ -3,22 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yaytsogram Jackpot</title>
+    <title>Yaytsogram Jackpot Ultra</title>
     <style>
-        /* Önceki stillere ek olarak ödül ekranı stili */
         :root {
             --primary: #0088cc;
+            --bg-top: #a4c488;
+            --bg-bottom: #76925d;
+            --glass: rgba(255, 255, 255, 0.15);
             --gold: #ffd700;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background: #76925d; color: white; height: 100vh; overflow: hidden; display: flex; justify-content: center; }
-        .app-shell { width: 100%; max-width: 480px; background: linear-gradient(180deg, #a4c488, #76925d); display: flex; flex-direction: column; }
-        
-        /* Ödül Bildirimi */
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
+
+        body { background-color: var(--bg-bottom); color: white; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
+
+        .app-shell { width: 100%; max-width: 480px; background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%); display: flex; flex-direction: column; position: relative; transition: background 0.5s; }
+        .app-shell.turbo-active { background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%); }
+
+        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+        .user-pill { background: var(--glass); backdrop-filter: blur(10px); padding: 8px 16px; border-radius: 50px; font-weight: 800; font-size: 0.85rem; }
+
+        /* --- ÖDÜL EKRANI --- */
         .reward-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
             display: none; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 2000; text-align: center; padding: 20px;
+            z-index: 9999; text-align: center; padding: 20px;
         }
         .reward-box {
             background: white; color: #222; padding: 40px; border-radius: 30px;
@@ -26,166 +35,210 @@
             animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         @keyframes bounceIn { from { transform: scale(0); } to { transform: scale(1); } }
-        
-        /* Mevcut UI */
-        header { padding: 15px; display: flex; justify-content: space-between; }
-        .user-pill { background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 50px; font-weight: bold; }
+
+        /* --- TABS --- */
         .content { flex: 1; position: relative; }
-        .tab-panel { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; padding: 20px; }
+        .tab-panel { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; padding: 20px; animation: fadeIn 0.3s; }
         .tab-panel.active { display: flex; }
-        .egg-wrapper { width: 220px; height: 300px; cursor: pointer; transition: 0.1s; margin-top: 40px;}
-        .egg-body { width: 100%; height: 100%; background: radial-gradient(circle at 30% 30%, #5ec8ff, #0088cc); border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-        .score-val { font-size: 2.5rem; font-weight: 900; margin-top: 20px; }
-        .limit-pill { background: white; color: #333; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
-        
-        .btn-main { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        nav { background: white; display: flex; padding: 10px 5px 30px; border-radius: 25px 25px 0 0; }
-        .nav-btn { flex: 1; text-align: center; color: #bbb; font-weight: bold; font-size: 0.7rem; cursor: pointer; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- EGG OYUNU --- */
+        .egg-stage { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; }
+        .egg-wrapper { width: 250px; height: 330px; cursor: pointer; transition: transform 0.1s; position: relative; z-index: 5; }
+        .egg-wrapper:active { transform: scale(0.92); }
+        .egg-body { width: 100%; height: 100%; background: radial-gradient(circle at 35% 30%, #5ec8ff, #0088cc); border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%; box-shadow: 0 30px 60px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
+        .turbo-active .egg-body { background: radial-gradient(circle at 35% 30%, #fff, #ffd700); box-shadow: 0 0 50px #fff; }
+        .score-val { font-size: 3rem; font-weight: 900; margin-top: 20px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .limit-pill { background: white; color: #333; padding: 6px 18px; border-radius: 20px; font-size: 0.9rem; font-weight: 800; margin-top: 10px; }
+
+        /* --- BUTTONS & UI --- */
+        .btn-main { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 18px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px; }
+        .btn-turbo { background: linear-gradient(90deg, #ff0000, #ff8c00); animation: pulse 1.5s infinite; border: 2px solid white; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+        nav { background: white; display: flex; padding: 10px 5px 35px; border-radius: 30px 30px 0 0; }
+        .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; color: #bbb; font-size: 0.7rem; font-weight: 800; cursor: pointer; }
         .nav-btn.active { color: var(--primary); }
+        .nav-btn i { font-size: 1.6rem; margin-bottom: 4px; }
+
+        .tap-anim { position: fixed; color: white; font-size: 2.5rem; font-weight: 900; pointer-events: none; animation: tapFly 0.7s forwards; z-index: 9999; }
+        @keyframes tapFly { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-150px) scale(1.5); opacity: 0; } }
     </style>
 </head>
 <body>
 
 <div class="reward-overlay" id="rewardOverlay">
     <div class="reward-box">
-        <h1 style="font-size: 3rem;">🎉</h1>
+        <h1 style="font-size: 3rem;">🎁</h1>
         <h2 style="margin: 10px 0;">TEBRİKLER!</h2>
-        <p>Yumurtayı Kırdın ve Kazandın:</p>
-        <div id="rewardAmount" style="font-size: 2.5rem; font-weight: 900; color: #0088cc; margin: 15px 0;">0.00 TON</div>
-        <button class="btn-main" onclick="closeReward()">BAKİYEYE EKLE</button>
+        <p>Yumurta Kırıldı! Kazancın:</p>
+        <div id="rewardAmount" style="font-size: 2.8rem; font-weight: 900; color: #0088cc; margin: 20px 0;">0.00 TON</div>
+        <button class="btn-main" onclick="claimReward()">CÜZDANA AKTAR</button>
     </div>
 </div>
 
-<div class="app-shell">
+<div class="app-shell" id="app">
     <header>
         <div class="user-pill">🥚 YAYTSOGRAM</div>
-        <div class="user-pill" id="balanceDisplay">0.00 TON</div>
+        <div class="user-pill" id="headerBalance">0.00 TON</div>
     </header>
 
     <div class="content">
         <div id="tab-game" class="tab-panel active">
-            <div class="egg-wrapper" id="egg">
-                <div class="egg-body"></div>
+            <div class="egg-stage">
+                <div class="egg-wrapper" id="egg">
+                    <div class="egg-body"></div>
+                </div>
+                <div class="score-val" id="score">0</div>
+                <div class="limit-pill" id="limit">0 / 15 000 000</div>
             </div>
-            <div class="score-val" id="score">0</div>
-            <div class="limit-pill" id="limit">0 / 15 000 000</div>
-            
-            <div style="margin-top: 30px; background: white; color: #222; padding: 15px; border-radius: 15px; display: flex; gap: 10px; width: 100%;">
-                <div style="flex: 1;"><strong>GECE 00:00</strong><br><small id="timer">--:--:--</small></div>
-                <div style="flex: 1; text-align: right;"><strong>HEDEF</strong><br><small>15M TIKLAMA</small></div>
+            <div style="display: flex; width: 100%; gap: 10px; margin-top: 10px;">
+                <div style="background: white; color: #222; padding: 15px; border-radius: 15px; flex: 1; text-align: center;">
+                    <small style="font-weight: 800; color: #888;">GECE 00:00</small>
+                    <div id="timer" style="font-weight: 900; color: var(--primary);">--:--:--</div>
+                </div>
+                <div style="background: white; color: #222; padding: 15px; border-radius: 15px; flex: 1; text-align: center; font-weight: 900; font-size: 1.2rem;">
+                    <small style="display:block; font-size: 0.6rem; color: #888;">HEDEF</small> 15M
+                </div>
             </div>
         </div>
 
         <div id="tab-wallet" class="tab-panel">
-            <div style="background: white; color: #222; width: 100%; padding: 30px; border-radius: 20px; text-align: center;">
-                <p style="font-weight: bold; color: #888;">CÜZDAN BAKİYESİ</p>
-                <h2 id="walletTon" style="font-size: 2.5rem; color: #0088cc; margin: 10px 0;">0.00 TON</h2>
-                <button class="btn-main" onclick="alert('Cüzdan bağlama sistemi aktif!')">Cüzdanı Bağla</button>
+            <div style="background: white; color: #222; width: 100%; padding: 40px 20px; border-radius: 25px; text-align: center;">
+                <p style="font-weight: 800; color: #888;">BAKİYENİZ</p>
+                <h2 id="walletBalance" style="font-size: 3rem; color: var(--primary); margin: 10px 0;">0.00 TON</h2>
+                <div id="walletActions">
+                    <button class="btn-main" onclick="connectWallet()">Cüzdanı Bağla</button>
+                </div>
             </div>
         </div>
 
         <div id="tab-super" class="tab-panel">
-            <div style="background: linear-gradient(45deg, #ff0000, #ff8c00); padding: 25px; border-radius: 20px; text-align: center; width: 100%;">
-                <h2 style="color: white;">ÖZEL TURBO</h2>
-                <p style="font-size: 0.8rem; margin: 10px 0;">Tek tıkla 15 Milyon tıkla ve ödülü kap!</p>
-                <button class="btn-main" id="turboBtn" style="background: white; color: red;" onclick="activateTurbo()">TURBOYU ÇALIŞTIR</button>
+            <h1>Süper Güçler</h1>
+            <div style="background: var(--glass); width: 100%; padding: 30px; border-radius: 25px; text-align: center; margin-top: 20px;">
+                <div style="font-size: 4rem;">⚡</div>
+                <h3>15M Özel Turbo</h3>
+                <p style="font-size: 0.8rem; margin: 10px 0; opacity: 0.9;">Hemen 15 milyon tıkla ve rastgele ödülünü al!</p>
+                <button class="btn-main btn-turbo" id="turboBtn" onclick="activateSpecialTurbo()">TURBOYU PATLAT</button>
             </div>
         </div>
+        
+        <div id="tab-friends" class="tab-panel"><h2>Arkadaşlar Yakında!</h2></div>
     </div>
 
     <nav>
-        <div class="nav-btn active" onclick="nav('game', this)">KIR</div>
-        <div class="nav-btn" onclick="nav('wallet', this)">CÜZDAN</div>
-        <div class="nav-btn" onclick="nav('super', this)">SÜPER</div>
+        <div class="nav-btn active" onclick="nav('game', this)"><i>🥚</i><span>Kır</span></div>
+        <div class="nav-btn" onclick="nav('friends', this)"><i>👥</i><span>Dostlar</span></div>
+        <div class="nav-btn" onclick="nav('wallet', this)"><i>👛</i><span>Cüzdan</span></div>
+        <div class="nav-btn" onclick="nav('super', this)"><i>💸</i><span>Süper</span></div>
     </nav>
 </div>
 
 <script>
-    let clicks = 0;
-    let totalTon = parseFloat(localStorage.getItem('total_ton')) || 0;
-    let isFinished = false;
+    let clicks = parseInt(localStorage.getItem('total_clicks')) || 0;
+    let balance = parseFloat(localStorage.getItem('user_balance')) || 0;
+    let isGameOver = false;
 
     const scoreEl = document.getElementById('score');
     const limitEl = document.getElementById('limit');
-    const balanceDisplay = document.getElementById('balanceDisplay');
-    const walletTon = document.getElementById('walletTon');
-    const rewardOverlay = document.getElementById('rewardOverlay');
-    const rewardAmountEl = document.getElementById('rewardAmount');
+    const headerBalance = document.getElementById('headerBalance');
+    const walletBalance = document.getElementById('walletBalance');
 
     function updateUI() {
         scoreEl.innerText = clicks.toLocaleString();
         limitEl.innerText = `${clicks.toLocaleString()} / 15 000 000`;
-        balanceDisplay.innerText = totalTon.toFixed(2) + " TON";
-        walletTon.innerText = totalTon.toFixed(2) + " TON";
+        headerBalance.innerText = balance.toFixed(2) + " TON";
+        walletBalance.innerText = balance.toFixed(2) + " TON";
+        localStorage.setItem('total_clicks', clicks);
+        localStorage.setItem('user_balance', balance);
     }
 
-    // Tıklama
-    document.getElementById('egg').addEventListener('mousedown', () => {
-        if (clicks < 15000000) {
-            clicks += 1; 
-            if (clicks >= 15000000) finishGame();
-            updateUI();
-        }
-    });
-
-    // 15M Olduğunda Ödül Belirleme
-    function finishGame() {
-        if (isFinished) return;
-        isFinished = true;
-        clicks = 15000000;
-        
-        let reward = 0;
-        const chance = Math.random() * 100;
-
-        if (chance < 80) {
-            // %80 ihtimal: 0.10 - 5.00 TON
-            reward = (Math.random() * (5.00 - 0.10) + 0.10);
-        } else {
-            // %20 ihtimal: 5.00 - 20.00 TON
-            reward = (Math.random() * (20.00 - 5.00) + 5.00);
-        }
-
-        totalTon += reward;
-        localStorage.setItem('total_ton', totalTon);
-        
-        rewardAmountEl.innerText = reward.toFixed(2) + " TON";
-        rewardOverlay.style.display = 'flex';
-    }
-
-    function closeReward() {
-        rewardOverlay.style.display = 'none';
+    // Tıklama Sistemi
+    function tap(e) {
+        if (isGameOver || clicks >= 15000000) return;
+        clicks++;
+        if (clicks >= 15000000) triggerWin();
         updateUI();
-        // İstersen burada clicks = 0 yapıp oyunu başa döndürebilirsin
+        
+        const x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const y = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        const pop = document.createElement('div');
+        pop.className = 'tap-anim'; pop.innerText = '+1';
+        pop.style.left = `${x-20}px`; pop.style.top = `${y-40}px`;
+        document.body.appendChild(pop);
+        setTimeout(() => pop.remove(), 700);
+        if(navigator.vibrate) navigator.vibrate(10);
+    }
+    document.getElementById('egg').addEventListener('touchstart', (e) => { e.preventDefault(); tap(e); });
+    document.getElementById('egg').addEventListener('mousedown', tap);
+
+    // --- ÖDÜL MANTIĞI ---
+    function triggerWin() {
+        if (isGameOver) return;
+        isGameOver = true;
+        clicks = 15000000;
+
+        let reward = 0;
+        let chance = Math.random() * 100;
+
+        if (chance < 80) { // %80 ihtimal
+            reward = Math.random() * (5.00 - 0.10) + 0.10;
+        } else { // %20 ihtimal
+            reward = Math.random() * (20.00 - 5.00) + 5.00;
+        }
+
+        balance += reward;
+        document.getElementById('rewardAmount').innerText = reward.toFixed(2) + " TON";
+        document.getElementById('rewardOverlay').style.display = 'flex';
     }
 
-    // Turbo Modu
-    function activateTurbo() {
-        if (isFinished) return;
-        let btn = document.getElementById('turboBtn');
+    function claimReward() {
+        document.getElementById('rewardOverlay').style.display = 'none';
+        updateUI();
+    }
+
+    // --- TURBO MODU ---
+    function activateSpecialTurbo() {
+        const btn = document.getElementById('turboBtn');
+        if(btn.disabled || isGameOver) return;
         btn.disabled = true;
         btn.innerText = "YÜKLENİYOR...";
-        
+        document.getElementById('app').classList.add('turbo-active');
+        nav('game', document.querySelectorAll('.nav-btn')[0]);
+
         let interval = setInterval(() => {
             clicks += 500000;
             if (clicks >= 15000000) {
                 clearInterval(interval);
-                finishGame();
+                triggerWin();
+                document.getElementById('app').classList.remove('turbo-active');
+                btn.innerText = "TURBO BİTTİ";
             }
             updateUI();
         }, 50);
     }
 
+    // Cüzdan Bağlama Simülasyonu
+    function connectWallet() {
+        const addr = prompt("TON Cüzdan Adresinizi Girin:");
+        if(addr) {
+            localStorage.setItem('wallet_addr', addr);
+            document.getElementById('walletActions').innerHTML = `<p style="color:green; font-weight:bold; margin-top:10px;">Bağlı: ${addr.substring(0,6)}...${addr.substring(addr.length-4)}</p><button class="btn-main" style="background:#27ae60" onclick="alert('Ödeme talebi alındı!')">ÖDEME ÇEK</button>`;
+        }
+    }
+
+    // Navigasyon
     function nav(id, el) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.getElementById(`tab-${id}`).classList.add('active');
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
+        if(el) el.classList.add('active');
     }
 
-    // Zamanlayıcı
+    // Saat Sayacı
     setInterval(() => {
-        const now = new Date();
-        const end = new Date(); end.setHours(24,0,0,0);
+        const now = new Date(), end = new Date();
+        end.setHours(24, 0, 0, 0);
         const diff = end - now;
         const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
         document.getElementById('timer').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
