@@ -2,320 +2,159 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yaytsogram Ultimate - Admin 8392479231</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basit Flappy Bird</title>
     <style>
-        :root {
-            --blue: #0088cc;
-            --green: #2ecc71;
-            --yellow: #f1c40f;
-            --purple: #9b59b6;
-            --app-bg: #b4d44d;
-            --white: #ffffff;
-            --glass: rgba(255, 255, 255, 0.2);
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #70c5ce;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
-        
-        body { background: #111; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-
-        .shell {
-            width: 100vw; height: calc(100vw * 1.6); max-width: 420px; max-height: 750px;
-            background: var(--app-bg) radial-gradient(circle at top right, rgba(255,255,255,0.3), transparent);
-            display: flex; flex-direction: column; position: relative; border-radius: 35px; border: 4px solid #333; overflow: hidden;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+        canvas {
+            border: 2px solid #333;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            background-color: #fff;
         }
-
-        /* HEADER */
-        header { 
-            background: var(--white); padding: 15px 20px; display: flex; align-items: center; 
-            justify-content: space-between; border-bottom: 2px solid #ddd; z-index: 1000;
-        }
-        .h-left { display: flex; align-items: center; gap: 12px; }
-        .logo-circle { 
-            width: 40px; height: 40px; background: var(--blue); border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; color: white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .user-data b { font-size: 1rem; color: #333; }
-        .user-data span { font-size: 0.8rem; display: block; margin-top: 2px; }
-
-        /* VIEWS */
-        .main-content { flex: 1; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
-        .view { display: none; flex-direction: column; height: 100%; animation: slideIn 0.3s ease-out; }
-        .view.active { display: flex; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* KIR EKRANI */
-        .egg-stage { 
-            background: var(--glass); border: 2px solid rgba(255,255,255,0.4); border-radius: 25px; 
-            flex: 1; display: flex; align-items: center; justify-content: center; margin: 15px 0;
-            backdrop-filter: blur(10px);
-        }
-        .egg { 
-            width: 75%; height: 80%; border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%; 
-            border: 8px solid white; box-shadow: 0 20px 40px rgba(0,0,0,0.3); 
-            cursor: pointer; transition: 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .egg:active { transform: scale(0.92); }
-        .lvl-b { background: linear-gradient(135deg, #5ec8ff, #0088cc); }
-        .lvl-y { background: linear-gradient(135deg, #f1c40f, #f39c12); }
-        .lvl-p { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
-
-        .score-box { 
-            display: flex; align-items: center; justify-content: center; gap: 12px; 
-            color: white; font-size: 1.6rem; font-weight: 900; margin-bottom: 15px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        /* CARD STYLE FOR ALL SECTIONS */
-        .card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .card-row { display: flex; justify-content: space-between; align-items: center; }
-        .card-info b { font-size: 0.95rem; display: block; color: #2c3e50; }
-        .card-info span { font-size: 0.8rem; color: var(--green); font-weight: bold; }
-        .action-btn { background: var(--blue); color: white; border: none; padding: 10px 18px; border-radius: 12px; font-weight: bold; }
-
-        /* CÜZDAN DETAYLARI */
-        .wallet-hero { 
-            background: linear-gradient(135deg, #2c3e50, #000); border-radius: 25px; 
-            padding: 30px; color: white; margin-bottom: 20px; text-align: center;
-        }
-        .crypto-val { font-size: 2.8rem; font-weight: 900; margin: 10px 0; letter-spacing: -1px; }
-        .usdt-tag { background: rgba(255,255,255,0.15); padding: 6px 15px; border-radius: 12px; font-size: 0.9rem; }
-        .input-field { 
-            width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 15px; 
-            margin-top: 10px; font-weight: bold; outline: none;
-        }
-
-        /* CHECKING OVERLAY */
-        .loading-ovl { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.92); z-index: 5000; display: none; 
-            flex-direction: column; align-items: center; justify-content: center; color: white;
-        }
-        .loader { 
-            width: 50px; height: 50px; border: 6px solid #333; border-top-color: var(--blue); 
-            border-radius: 50%; animation: spin 1s infinite linear; margin-bottom: 20px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* NAVIGATION */
-        nav { background: white; display: flex; padding: 10px 0 30px; border-top: 2px solid #eee; }
-        .nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.65rem; color: #95a5a6; font-weight: 800; cursor: pointer; }
-        .nav-link.active { color: var(--blue); }
-        .nav-link i { font-size: 1.5rem; }
-
-        /* FLOATING POINT */
-        .point-fly { 
-            position: fixed; color: white; font-weight: 900; font-size: 1.8rem; 
-            pointer-events: none; animation: floatUp 0.7s forwards; z-index: 9999; 
-            text-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
-        @keyframes floatUp { to { transform: translateY(-120px); opacity: 0; } }
     </style>
 </head>
 <body>
 
-<div class="shell">
-    <div class="loading-ovl" id="loaderOvl">
-        <div class="loader"></div>
-        <h2 style="letter-spacing: 3px; font-weight: 900;">CHECKING...</h2>
-        <p style="margin-top: 10px; opacity: 0.7;">İşlem Doğrulanıyor (5s)</p>
-    </div>
-
-    <header>
-        <div class="h-left">
-            <div class="logo-circle"><i class="fas fa-egg"></i></div>
-            <div class="user-data">
-                <b>Kaanfurkan 🐺</b>
-                <span>🚀 🥠 🐰 | TR</span>
-            </div>
-        </div>
-        <div style="font-size: 0.7rem; color: #999; text-align: right;">
-            <b>ADMIN ID</b><br>8392479231
-        </div>
-    </header>
-
-    <div class="main-content">
-        <div id="scr-mine" class="view active">
-            <h3 style="color:white; font-size:0.9rem; text-align:center;">Hedef: 71,000,000 Puan</h3>
-            <div class="egg-stage">
-                <div class="egg lvl-b" id="eggBody" onclick="handleTap(event)"></div>
-            </div>
-            <div class="score-box">
-                <i class="fas fa-egg"></i>
-                <span id="scoreTxt">0 / 15,000,000</span>
-            </div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <div class="card" style="text-align:center; padding:12px;">
-                    <small style="color:#7f8c8d; font-size:0.6rem;">ENERJİ</small>
-                    <b id="energyTxt" style="font-size:1.3rem;">10000</b>
-                </div>
-                <div class="card" style="text-align:center; padding:12px;">
-                    <small style="color:#7f8c8d; font-size:0.6rem;">GELİR</small>
-                    <b style="font-size:1.3rem; color:var(--blue);">+1 TIK</b>
-                </div>
-            </div>
-        </div>
-
-        <div id="scr-friends" class="view">
-            <div class="card" style="background:var(--blue); color:white; text-align:center;">
-                <i class="fas fa-users" style="font-size:3rem; margin-bottom:10px;"></i>
-                <h2>Referans Sistemi</h2>
-                <p style="font-size:0.8rem; margin-top:5px;">Arkadaşlarını davet ederek hızlan!</p>
-            </div>
-            <div class="card">
-                <div class="card-row">
-                    <div class="card-info"><b>Standart Davet</b><span>+50,000 Puan</span></div>
-                    <button class="action-btn">DAVET ET</button>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-row">
-                    <div class="card-info"><b>Referans Listesi</b><span>0 Kişi</span></div>
-                    <i class="fas fa-chevron-right" style="color:#ccc;"></i>
-                </div>
-            </div>
-        </div>
-
-        <div id="scr-boost" class="view">
-            <h2 style="color:white; margin-bottom:20px;">🚀 Puan Görevleri</h2>
-            <div class="card">
-                <div class="card-row">
-                    <div class="card-info"><b>Kanal Takibi</b><span>+100,000 Puan</span></div>
-                    <button class="action-btn" onclick="runTask(100000)">YAP</button>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-row">
-                    <div class="card-info"><b>Reklam İzle</b><span>+10,000 Puan</span></div>
-                    <button class="action-btn" onclick="runTask(10000)">İZLE</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="scr-rank" class="view">
-            <h2 style="color:white; margin-bottom:20px;">🏆 Global Derece</h2>
-            <div class="card" style="border-left: 5px solid gold;">
-                <div class="card-row">
-                    <b>1. Admin_Kaan</b>
-                    <b>71,000,000</b>
-                </div>
-            </div>
-            <div class="card" style="border-left: 5px solid silver;">
-                <div class="card-row">
-                    <b>2. User_Wolf</b>
-                    <b>55,200,450</b>
-                </div>
-            </div>
-            <div class="card" style="border-left: 5px solid #0088cc; margin-top: 20px;">
-                <div class="card-row">
-                    <b style="color:var(--blue);">SİZ</b>
-                    <b id="myRankScore">0</b>
-                </div>
-            </div>
-        </div>
-
-        <div id="scr-wallet" class="view">
-            <div class="wallet-hero">
-                <small>TAHMİNİ BAKİYE</small>
-                <div class="crypto-val"><span id="tonVal">0.00</span> TON</div>
-                <div class="usdt-tag" id="usdtVal">≈ 0.00 USDT</div>
-            </div>
-            <div class="card">
-                <div class="card-info"><b style="margin-bottom:10px;">TON Cüzdan Adresi</b></div>
-                <input type="text" class="input-field" placeholder="UQA... Adresini Girin">
-            </div>
-            <div class="card">
-                <div class="card-info"><b style="margin-bottom:10px;">Çekilecek Miktar</b></div>
-                <input type="number" class="input-field" placeholder="Min: 1.00 TON">
-            </div>
-            <button class="action-btn" style="width:100%; padding:18px; font-size:1.1rem; margin-top:10px; background:var(--green);" onclick="alert('Cüzdan bağlandı! Minimum 15M puana ulaştığınızda çekim talebi açılacaktır.')">CÜZDANI BAĞLA</button>
-        </div>
-    </div>
-
-    <nav>
-        <div class="nav-link active" onclick="navigate('mine', this)"><i class="fas fa-hand-pointer"></i><span>Kır</span></div>
-        <div class="nav-link" onclick="navigate('friends', this)"><i class="fas fa-users"></i><span>Davet</span></div>
-        <div class="nav-link" onclick="navigate('boost', this)"><i class="fas fa-bolt"></i><span>Hızlandır</span></div>
-        <div class="nav-link" onclick="navigate('rank', this)"><i class="fas fa-award"></i><span>Derece</span></div>
-        <div class="nav-link" onclick="navigate('wallet', this)"><i class="fas fa-wallet"></i><span>Cüzdan</span></div>
-    </nav>
-</div>
+<canvas id="gameCanvas"></canvas>
 
 <script>
-    /* LOGIC FOR ADMIN 8392479231 
-       CLICK: 1 POINT
-       EXCHANGE: 15M PUAN = 1 TON = 5.30 USDT
-    */
-    let state = { score: 0, energy: 10000 };
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-    function handleTap(e) {
-        if (state.energy <= 0) return;
-        state.score += 1;
-        state.energy -= 1;
-        refresh();
-        spawnPoint(e);
-    }
+    // Canvas boyutları
+    canvas.width = 320;
+    canvas.height = 480;
 
-    function refresh() {
-        const egg = document.getElementById('eggBody');
-        const st = document.getElementById('scoreTxt');
-        const ton = document.getElementById('tonVal');
-        const usdt = document.getElementById('usdtVal');
+    // Oyun Değişkenleri
+    let frames = 0;
+    let score = 0;
+    let gameActive = true;
 
-        // Bakiye Hesaplama
-        let tonCalc = (state.score / 15000000).toFixed(2);
-        ton.innerText = tonCalc;
-        usdt.innerText = "≈ " + (tonCalc * 5.30).toFixed(2) + " USDT";
+    // Kuş Nesnesi
+    const bird = {
+        x: 50,
+        y: 150,
+        w: 34,
+        h: 24,
+        gravity: 0.25,
+        jump: 4.6,
+        velocity: 0,
+        
+        draw() {
+            ctx.fillStyle = "#f7d015";
+            ctx.fillRect(this.x, this.y, this.w, this.h);
+            ctx.strokeStyle = "#000";
+            ctx.strokeRect(this.x, this.y, this.w, this.h);
+        },
 
-        // Seviye Renkleri
-        if (state.score >= 45000000) {
-            egg.className = "egg lvl-p";
-            st.innerText = state.score.toLocaleString() + " / 71,000,000";
-        } else if (state.score >= 15000000) {
-            egg.className = "egg lvl-y";
-            st.innerText = state.score.toLocaleString() + " / 45,000,000";
-        } else {
-            egg.className = "egg lvl-b";
-            st.innerText = state.score.toLocaleString() + " / 15,000,000";
+        update() {
+            this.velocity += this.gravity;
+            this.y += this.velocity;
+
+            // Zemin çarpışması
+            if (this.y + this.h >= canvas.height) {
+                this.y = canvas.height - this.h;
+                gameOver();
+            }
+        },
+
+        flap() {
+            this.velocity = -this.jump;
         }
+    };
 
-        document.getElementById('energyTxt').innerText = state.energy;
-        document.getElementById('myRankScore').innerText = state.score.toLocaleString();
+    // Boru Nesneleri
+    const pipes = {
+        position: [],
+        gap: 100,
+        width: 50,
+
+        update() {
+            if (frames % 100 === 0) {
+                this.position.push({
+                    x: canvas.width,
+                    y: - (Math.random() * 200 + 150)
+                });
+            }
+
+            for (let i = 0; i < this.position.length; i++) {
+                let p = this.position[i];
+                p.x -= 2;
+
+                // Çarpışma kontrolü
+                if (bird.x + bird.w > p.x && bird.x < p.x + this.width &&
+                    (bird.y < p.y + 400 || bird.y + bird.h > p.y + 400 + this.gap)) {
+                    gameOver();
+                }
+
+                // Skor artışı
+                if (p.x + this.width === bird.x) {
+                    score++;
+                }
+
+                // Ekrandan çıkan boruları sil
+                if (p.x + this.width < 0) {
+                    this.position.shift();
+                }
+            }
+        },
+
+        draw() {
+            for (let i = 0; i < this.position.length; i++) {
+                let p = this.position[i];
+                ctx.fillStyle = "#2ecc71";
+                // Üst Boru
+                ctx.fillRect(p.x, p.y, this.width, 400);
+                // Alt Boru
+                ctx.fillRect(p.x, p.y + 400 + this.gap, this.width, 400);
+            }
+        }
+    };
+
+    function gameOver() {
+        gameActive = false;
+        alert("Oyun Bitti! Skorun: " + score);
+        location.reload(); // Sayfayı yenile
     }
 
-    function runTask(reward) {
-        const overlay = document.getElementById('loaderOvl');
-        overlay.style.display = 'flex';
-        setTimeout(() => {
-            overlay.style.display = 'none';
-            state.score += reward;
-            refresh();
-            alert("Ödül Hesabınıza Yüklendi!");
-        }, 5000);
+    // Girdi Kontrolü
+    window.addEventListener("keydown", (e) => {
+        if (e.code === "Space") bird.flap();
+    });
+    canvas.addEventListener("click", () => bird.flap());
+
+    // Ana Oyun Döngüsü
+    function loop() {
+        if (!gameActive) return;
+
+        ctx.fillStyle = "#70c5ce"; // Arka plan rengi
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        pipes.draw();
+        pipes.update();
+        
+        bird.draw();
+        bird.update();
+
+        // Skoru çiz
+        ctx.fillStyle = "#FFF";
+        ctx.font = "25px Arial";
+        ctx.fillText(score, canvas.width/2, 50);
+
+        frames++;
+        requestAnimationFrame(loop);
     }
 
-    function navigate(id, el) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-        document.getElementById('scr-' + id).classList.add('active');
-        el.classList.add('active');
-    }
-
-    function spawnPoint(e) {
-        const p = document.createElement('div');
-        p.className = 'point-fly';
-        p.innerText = "+1";
-        p.style.left = e.clientX + 'px';
-        p.style.top = e.clientY + 'px';
-        document.body.appendChild(p);
-        setTimeout(() => p.remove(), 700);
-    }
-
-    console.log("Admin 8392479231 initialized. Target: 71M.");
-    refresh();
+    loop();
 </script>
 </body>
 </html>
