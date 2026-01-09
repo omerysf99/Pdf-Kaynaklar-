@@ -2,159 +2,104 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basit Flappy Bird</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flappy Wallet UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #70c5ce;
-            overflow: hidden;
-            font-family: 'Arial', sans-serif;
+        body { background-color: #4eb5d3; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .game-container { max-width: 400px; height: 100vh; margin: 0 auto; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+        
+        /* Arka Plan Şehir Görseli Yerine */
+        .city-bg {
+            position: absolute; bottom: 80px; width: 100%; height: 150px;
+            background: linear-gradient(transparent, #89c46e);
+            z-index: -1;
         }
-        canvas {
-            border: 2px solid #333;
-            box-shadow: 0 0 20px rgba(0,0,0,0.2);
-            background-color: #fff;
+
+        /* Zemin Çizgileri */
+        .ground {
+            height: 20px; background: repeating-linear-gradient(45deg, #8bc34a, #8bc34a 10px, #aed581 10px, #aed581 20px);
+            position: absolute; bottom: 60px; width: 100%;
+        }
+
+        /* Alt Menü */
+        .tab-bar { background: #f8f9fa; border-top: 1px solid #ddd; height: 70px; display: flex; justify-content: space-around; align-items: center; }
+        .tab-item { text-align: center; color: #666; font-size: 10px; }
+        .active-tab { color: #0088cc; }
+        
+        /* Karakter (Cüzdan) */
+        .bird {
+            width: 45px; height: 35px; background: #9c5c3c; border: 3px solid #333;
+            border-radius: 8px; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 12px; box-shadow: 0 4px 0 #6d3e26;
         }
     </style>
 </head>
 <body>
 
-<canvas id="gameCanvas"></canvas>
+<div class="game-container">
+    <div class="p-3 grid grid-cols-2 gap-2 z-10">
+        <div class="bg-white rounded-xl p-2 shadow-sm flex items-center justify-between">
+            <div>
+                <div class="text-[10px] text-gray-500 flex items-center">
+                    <span class="text-red-500 mr-1">❤️</span> Attempts today <b class="ml-1 text-blue-600">14</b>
+                </div>
+                <button class="bg-blue-500 text-white text-[12px] px-4 py-1 rounded-full mt-1 w-full font-bold">Increase</button>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-2 shadow-sm text-[10px]">
+            <div class="flex justify-between"><span>🏆 Record today</span> <b class="text-blue-500">7.98</b></div>
+            <div class="flex justify-between"><span>🏆 All-time record</span> <b class="text-blue-500">7.98</b></div>
+            <div class="flex justify-between"><span>🚀 Point multiplier</span> <b class="text-blue-500">x1.14</b></div>
+        </div>
+    </div>
 
-<script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+    <div class="px-3 mt-2 flex flex-col gap-2 z-10">
+        <div class="flex items-center gap-2">
+            <div class="bg-yellow-400 text-white font-bold p-3 rounded-lg text-xs flex-1 shadow-[0_4px_0_#d4ac0d]">CW PASS</div>
+            <div class="bg-blue-500/80 border-2 border-dotted border-white text-white p-3 rounded-lg text-[10px] flex-[2] flex items-center justify-center">
+                🎁 Free daily lottery
+            </div>
+            <div class="bg-gray-400 p-3 rounded-full text-white text-xs">🔊</div>
+        </div>
+        <button class="bg-blue-500 text-white py-2 rounded-lg font-bold shadow-md">💻 Our games</button>
+    </div>
 
-    // Canvas boyutları
-    canvas.width = 320;
-    canvas.height = 480;
-
-    // Oyun Değişkenleri
-    let frames = 0;
-    let score = 0;
-    let gameActive = true;
-
-    // Kuş Nesnesi
-    const bird = {
-        x: 50,
-        y: 150,
-        w: 34,
-        h: 24,
-        gravity: 0.25,
-        jump: 4.6,
-        velocity: 0,
+    <div class="flex-grow relative">
+        <div class="bird">CW</div>
         
-        draw() {
-            ctx.fillStyle = "#f7d015";
-            ctx.fillRect(this.x, this.y, this.w, this.h);
-            ctx.strokeStyle = "#000";
-            ctx.strokeRect(this.x, this.y, this.w, this.h);
-        },
+        <div class="absolute bottom-20 left-1/2 -translate-x-1/2 bg-white border-4 border-gray-400 p-4 rounded-2xl shadow-lg">
+            <div class="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-green-600 border-b-[15px] border-b-transparent ml-1"></div>
+        </div>
+    </div>
 
-        update() {
-            this.velocity += this.gravity;
-            this.y += this.velocity;
+    <div class="city-bg"></div>
+    <div class="ground"></div>
 
-            // Zemin çarpışması
-            if (this.y + this.h >= canvas.height) {
-                this.y = canvas.height - this.h;
-                gameOver();
-            }
-        },
+    <div class="tab-bar z-20">
+        <div class="tab-item active-tab">
+            <div class="text-xl">🎮</div>
+            <div>Flappy</div>
+        </div>
+        <div class="tab-item">
+            <div class="text-xl">⭐</div>
+            <div>Rating</div>
+        </div>
+        <div class="tab-item">
+            <div class="text-xl">👥</div>
+            <div>Friends</div>
+        </div>
+        <div class="tab-item">
+            <div class="text-xl">💰</div>
+            <div>Wallet</div>
+        </div>
+        <div class="tab-item">
+            <div class="text-xl">✅</div>
+            <div>Tasks</div>
+        </div>
+    </div>
+</div>
 
-        flap() {
-            this.velocity = -this.jump;
-        }
-    };
-
-    // Boru Nesneleri
-    const pipes = {
-        position: [],
-        gap: 100,
-        width: 50,
-
-        update() {
-            if (frames % 100 === 0) {
-                this.position.push({
-                    x: canvas.width,
-                    y: - (Math.random() * 200 + 150)
-                });
-            }
-
-            for (let i = 0; i < this.position.length; i++) {
-                let p = this.position[i];
-                p.x -= 2;
-
-                // Çarpışma kontrolü
-                if (bird.x + bird.w > p.x && bird.x < p.x + this.width &&
-                    (bird.y < p.y + 400 || bird.y + bird.h > p.y + 400 + this.gap)) {
-                    gameOver();
-                }
-
-                // Skor artışı
-                if (p.x + this.width === bird.x) {
-                    score++;
-                }
-
-                // Ekrandan çıkan boruları sil
-                if (p.x + this.width < 0) {
-                    this.position.shift();
-                }
-            }
-        },
-
-        draw() {
-            for (let i = 0; i < this.position.length; i++) {
-                let p = this.position[i];
-                ctx.fillStyle = "#2ecc71";
-                // Üst Boru
-                ctx.fillRect(p.x, p.y, this.width, 400);
-                // Alt Boru
-                ctx.fillRect(p.x, p.y + 400 + this.gap, this.width, 400);
-            }
-        }
-    };
-
-    function gameOver() {
-        gameActive = false;
-        alert("Oyun Bitti! Skorun: " + score);
-        location.reload(); // Sayfayı yenile
-    }
-
-    // Girdi Kontrolü
-    window.addEventListener("keydown", (e) => {
-        if (e.code === "Space") bird.flap();
-    });
-    canvas.addEventListener("click", () => bird.flap());
-
-    // Ana Oyun Döngüsü
-    function loop() {
-        if (!gameActive) return;
-
-        ctx.fillStyle = "#70c5ce"; // Arka plan rengi
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        pipes.draw();
-        pipes.update();
-        
-        bird.draw();
-        bird.update();
-
-        // Skoru çiz
-        ctx.fillStyle = "#FFF";
-        ctx.font = "25px Arial";
-        ctx.fillText(score, canvas.width/2, 50);
-
-        frames++;
-        requestAnimationFrame(loop);
-    }
-
-    loop();
-</script>
 </body>
 </html>
