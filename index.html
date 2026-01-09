@@ -3,240 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flappy Wallet Ultimate</title>
+    <title>Flappy Wallet Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
         
         body { 
             background-color: #4eb5d3; 
-            font-family: 'Poppins', sans-serif; 
-            margin: 0; 
-            overflow: hidden;
-            user-select: none;
+            font-family: 'Fredoka', sans-serif; 
+            margin: 0; overflow: hidden; user-select: none;
         }
 
-        .page { display: none; height: calc(100vh - 70px); overflow-y: auto; }
+        .page { display: none; height: calc(100vh - 70px); position: relative; }
         .page.active { display: block; }
 
-        #game-canvas {
+        /* Gelişmiş Oyun Ekranı */
+        #game-container {
             display: none;
             position: absolute;
-            top: 0; left: 0;
-            z-index: 50;
+            inset: 0;
+            z-index: 200;
+            background: #70c5ce;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 40px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 0 #000;
+            z-index: 210;
+        }
+
+        /* Modern Custom Alert Animasyonu */
+        .custom-alert {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            z-index: 300;
+            text-align: center;
+            width: 80%;
+            display: none;
         }
 
         .ground-anim {
-            height: 20px;
-            background: repeating-linear-gradient(45deg, #8bc34a, #8bc34a 10px, #aed581 10px, #aed581 20px);
+            height: 25px;
+            background: repeating-linear-gradient(45deg, #8bc34a, #8bc34a 15px, #aed581 15px, #aed581 30px);
             position: absolute;
             bottom: 70px;
             width: 200%;
-            animation: moveGround 2s linear infinite;
+            animation: moveGround 1.5s linear infinite;
         }
 
-        @keyframes moveGround {
-            from { transform: translateX(0); }
-            to { transform: translateX(-50%); }
-        }
+        @keyframes moveGround { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-        .tab-button.active { color: #0088cc; transform: scale(1.1); }
-        
-        /* Cüzdan Kuş Karakteri */
-        .pixel-bird {
-            width: 40px; height: 30px; background: #9c5c3c;
-            border: 3px solid #333; border-radius: 6px;
-            box-shadow: inset -4px -4px 0 rgba(0,0,0,0.2);
+        .bird-float { animation: floating 2s ease-in-out infinite; }
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
         }
     </style>
 </head>
 <body>
 
-<div class="max-w-md mx-auto h-screen flex flex-col relative bg-[#4eb5d3]">
+<div id="alert-box" class="custom-alert animate__animated">
+    <h2 id="alert-title" class="text-2xl font-bold mb-2"></h2>
+    <p id="alert-msg" class="text-gray-600 mb-4"></p>
+    <button onclick="closeAlert()" class="bg-blue-500 text-white px-6 py-2 rounded-full font-bold shadow-lg">TAMAM</button>
+</div>
+
+<div class="max-w-md mx-auto h-screen flex flex-col relative bg-[#4eb5d3] shadow-2xl">
     
-    <canvas id="game-canvas"></canvas>
+    <div id="game-container">
+        <div id="ui-layer">0</div>
+        <canvas id="game-canvas"></canvas>
+    </div>
 
     <div id="flappy-page" class="page active">
-        <div class="p-4 grid grid-cols-2 gap-3">
-            <div class="bg-white rounded-2xl p-3 shadow-lg">
-                <div class="text-[11px] text-gray-500 font-bold uppercase tracking-tighter">❤️ Attempts Today</div>
+        <div class="p-4 grid grid-cols-2 gap-3 animate__animated animate__fadeInDown">
+            <div class="bg-white rounded-2xl p-3 shadow-lg border-b-4 border-blue-200">
+                <div class="text-[11px] text-gray-400 font-bold uppercase">❤️ Deneme Hakkı</div>
                 <div class="flex items-center justify-between">
-                    <span id="heart-count" class="text-xl font-extrabold text-blue-600">10</span>
-                    <button class="bg-blue-500 text-white text-[10px] px-3 py-1 rounded-full font-bold shadow-md">INCREASE</button>
+                    <span id="heart-count" class="text-2xl font-black text-blue-600">10</span>
+                    <button class="bg-blue-500 text-white text-[10px] px-3 py-1 rounded-full font-bold hover:bg-blue-600 active:scale-95 transition">ARTIR</button>
                 </div>
             </div>
-            <div class="bg-white rounded-2xl p-2 shadow-lg text-[10px] font-bold">
-                <div class="flex justify-between border-b pb-1"><span>🏆 TODAY</span> <span class="text-blue-500">7.98</span></div>
-                <div class="flex justify-between py-1"><span>🏆 ALL-TIME</span> <span class="text-blue-500">7.98</span></div>
-                <div class="flex justify-between pt-1"><span>🚀 MULTIPLIER</span> <span class="text-red-500">x0.00</span></div>
+            <div class="bg-white rounded-2xl p-3 shadow-lg border-b-4 border-blue-200 text-[10px] font-bold">
+                <div class="flex justify-between border-b pb-1"><span>🏆 GÜNLÜK</span> <span id="daily-score-ui" class="text-blue-500">0.00</span></div>
+                <div class="flex justify-between py-1 border-b"><span>🏆 REKOR</span> <span id="best-score-ui" class="text-blue-500">0.00</span></div>
+                <div class="flex justify-between pt-1"><span>🚀 ÇARPAN</span> <span class="text-green-500 font-black">x1.00</span></div>
             </div>
         </div>
 
-        <div class="px-4 flex gap-2">
-            <div class="bg-yellow-400 text-white font-extrabold p-4 rounded-xl text-center text-xs shadow-[0_4px_0_#b8860b] flex-1">CW PASS</div>
-            <div class="bg-blue-600/80 border-2 border-dashed border-white/50 text-white p-4 rounded-xl text-[10px] flex-[2] flex items-center justify-center font-bold">
-                🎁 FREE DAILY LOTTERY
+        <div class="flex-grow flex flex-col items-center justify-center gap-8">
+            <div class="bird-float">
+                <div class="w-14 h-10 bg-[#9c5c3c] border-4 border-black rounded-lg shadow-xl flex items-center justify-center text-white font-bold text-xs">CW</div>
             </div>
-        </div>
-
-        <div class="flex-grow flex flex-col items-center justify-center gap-10 relative">
-            <div class="pixel-bird flex items-center justify-center text-[10px] text-white font-bold">CW</div>
             
-            <button id="play-btn" class="bg-white p-6 rounded-3xl shadow-2xl border-b-8 border-gray-300 active:border-b-0 active:translate-y-1 transition-all">
+            <button id="play-btn" class="group relative bg-white p-8 rounded-full shadow-2xl hover:scale-110 transition-transform active:scale-90">
                 <div class="w-0 h-0 border-t-[20px] border-t-transparent border-l-[35px] border-l-green-500 border-b-[20px] border-b-transparent ml-2"></div>
             </button>
         </div>
     </div>
 
-    <div id="rating-page" class="page p-6">
-        <h1 class="text-2xl font-bold text-white mb-4">Global Ranking</h1>
-        <div class="bg-white/20 rounded-xl p-4 text-white">Liderlik tablosu yükleniyor...</div>
-    </div>
-
-    <div id="friends-page" class="page p-6">
-        <h1 class="text-2xl font-bold text-white mb-4">Friends</h1>
-        <div class="bg-white rounded-xl p-4 text-center">Arkadaşlarını davet et, +5 ❤️ kazan!</div>
-    </div>
-
-    <div id="wallet-page" class="page p-6">
-        <h1 class="text-2xl font-bold text-white mb-4">My Wallet</h1>
-        <div class="bg-blue-900 rounded-2xl p-6 text-white shadow-2xl">
-            <div class="text-sm opacity-70">Balance</div>
-            <div class="text-3xl font-bold">0.00 CW</div>
+    <div id="wallet-page" class="page p-6 text-white">
+        <h1 class="text-3xl font-black mb-6">Cüzdanım</h1>
+        <div class="bg-blue-800/50 p-6 rounded-3xl backdrop-blur-md border border-white/20">
+            <p class="opacity-70">Toplam Bakiye</p>
+            <h2 class="text-4xl font-bold">0.00 CW</h2>
         </div>
     </div>
 
-    <div id="tasks-page" class="page p-6">
-        <h1 class="text-2xl font-bold text-white mb-4">Daily Tasks</h1>
-        <div class="space-y-3">
-            <div class="bg-white p-3 rounded-lg flex justify-between"><span>Follow Twitter</span> <b class="text-green-500">+100 CW</b></div>
-        </div>
-    </div>
-
-    <div class="city-bg absolute bottom-[70px] w-full h-32 bg-gradient-to-t from-[#89c46e] to-transparent -z-10"></div>
     <div class="ground-anim"></div>
 
     <div class="h-[70px] bg-white border-t flex justify-around items-center z-[100]">
-        <button onclick="showPage('flappy')" class="tab-button active text-center flex flex-col items-center">
-            <span class="text-2xl">🎮</span><span class="text-[10px] font-bold">Flappy</span>
-        </button>
-        <button onclick="showPage('rating')" class="tab-button text-center flex flex-col items-center">
-            <span class="text-2xl">⭐</span><span class="text-[10px] font-bold">Rating</span>
-        </button>
-        <button onclick="showPage('friends')" class="tab-button text-center flex flex-col items-center">
-            <span class="text-2xl">👥</span><span class="text-[10px] font-bold">Friends</span>
-        </button>
-        <button onclick="showPage('wallet')" class="tab-button text-center flex flex-col items-center">
-            <span class="text-2xl">💰</span><span class="text-[10px] font-bold">Wallet</span>
-        </button>
-        <button onclick="showPage('tasks')" class="tab-button text-center flex flex-col items-center">
-            <span class="text-2xl">✅</span><span class="text-[10px] font-bold">Tasks</span>
-        </button>
+        <button onclick="showPage('flappy')" class="tab-btn active text-blue-500"><span class="text-2xl block">🎮</span><small class="font-bold">Oyna</small></button>
+        <button onclick="showAlert('Sıralama', 'Çok yakında aktif olacak!')" class="tab-btn text-gray-400"><span class="text-2xl block">⭐</span><small class="font-bold">Sıralama</small></button>
+        <button onclick="showPage('wallet')" class="tab-btn text-gray-400"><span class="text-2xl block">💰</span><small class="font-bold">Cüzdan</small></button>
     </div>
 </div>
 
 <script>
-    // --- SEKME YÖNETİMİ ---
-    function showPage(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        
-        document.getElementById(pageId + '-page').classList.add('active');
-        event.currentTarget.classList.add('active');
-        
-        if(pageId !== 'flappy') {
-            document.getElementById('game-canvas').style.display = 'none';
-        }
+    let hearts = 10;
+    let dailyScore = 0;
+    let bestScore = 0;
+    let currentScore = 0;
+
+    // --- ÖZEL UYARI SİSTEMİ ---
+    function showAlert(title, msg) {
+        const box = document.getElementById('alert-box');
+        document.getElementById('alert-title').innerText = title;
+        document.getElementById('alert-msg').innerText = msg;
+        box.style.display = 'block';
+        box.classList.remove('animate__fadeOut');
+        box.classList.add('animate__bounceIn');
     }
 
-    // --- OYUN MOTORU (FLAPPY BIRD) ---
+    function closeAlert() {
+        const box = document.getElementById('alert-box');
+        box.classList.replace('animate__bounceIn', 'animate__fadeOut');
+        setTimeout(() => box.style.display = 'none', 500);
+    }
+
+    // --- SAYFA YÖNETİMİ ---
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id + '-page').classList.add('active');
+    }
+
+    // --- OYUN MOTORU ---
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
-    let animationId;
-    let hearts = 10; // Herkese 10 kalp!
+    const uiScore = document.getElementById('ui-layer');
+    let pipes = [];
+    let frame = 0;
+    let gameReq;
 
     canvas.width = window.innerWidth > 450 ? 450 : window.innerWidth;
     canvas.height = window.innerHeight - 70;
 
     const bird = {
-        x: 50, y: 200, w: 38, h: 28,
-        gravity: 0.2, jump: 4.5, velocity: 0,
+        x: 50, y: 250, w: 34, h: 24,
+        v: 0, g: 0.25, jump: 5,
         draw() {
-            ctx.fillStyle = "#9c5c3c";
+            ctx.fillStyle = "#f7d015";
             ctx.fillRect(this.x, this.y, this.w, this.h);
-            ctx.strokeStyle = "#333";
-            ctx.lineWidth = 3;
             ctx.strokeRect(this.x, this.y, this.w, this.h);
-            ctx.fillStyle = "white";
-            ctx.font = "bold 10px Arial";
-            ctx.fillText("CW", this.x+8, this.y+18);
         },
         update() {
-            this.velocity += this.gravity;
-            this.y += this.velocity;
-            if(this.y + this.h > canvas.height - 20) this.die();
+            this.v += this.g;
+            this.y += this.v;
+            if(this.y > canvas.height || this.y < 0) this.gameOver();
         },
-        die() {
-            cancelAnimationFrame(animationId);
+        gameOver() {
+            cancelAnimationFrame(gameReq);
             hearts--;
             document.getElementById('heart-count').innerText = hearts;
-            alert("Oyun Bitti! Kalan Kalp: " + hearts);
-            resetGame();
+            
+            // Skor Güncelleme
+            if(currentScore > dailyScore) dailyScore = currentScore;
+            if(currentScore > bestScore) bestScore = currentScore;
+            
+            document.getElementById('daily-score-ui').innerText = dailyScore.toFixed(2);
+            document.getElementById('best-score-ui').innerText = bestScore.toFixed(2);
+
+            showAlert("EYVAH!", `Çarptın kanka! Skorun: ${currentScore}. Kalan Kalp: ${hearts}`);
+            document.getElementById('game-container').style.display = 'none';
         }
     };
 
-    let pipes = [];
-    function spawnPipe() {
-        let gap = 120;
-        let minHeight = 50;
-        let pos = Math.random() * (canvas.height - gap - 200) + 50;
-        pipes.push({ x: canvas.width, y: pos, gap: gap });
-    }
-
-    function resetGame() {
-        bird.y = 200; bird.velocity = 0;
-        pipes = [];
-        canvas.style.display = 'none';
-    }
-
     function gameLoop() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#4eb5d3";
+        ctx.fillStyle = "#70c5ce";
         ctx.fillRect(0,0, canvas.width, canvas.height);
 
-        bird.update();
-        bird.draw();
+        bird.update(); bird.draw();
 
-        if(Date.now() % 1500 < 20) spawnPipe();
+        if(frame % 90 === 0) {
+            pipes.push({ x: canvas.width, y: Math.random() * (canvas.height - 250) + 50, gap: 130 });
+        }
 
         pipes.forEach((p, i) => {
-            p.x -= 2;
+            p.x -= 2.5;
             ctx.fillStyle = "#2ecc71";
             ctx.fillRect(p.x, 0, 50, p.y);
             ctx.fillRect(p.x, p.y + p.gap, 50, canvas.height);
 
-            // Çarpışma
-            if(bird.x + bird.w > p.x && bird.x < p.x + 50 &&
-               (bird.y < p.y || bird.y + bird.h > p.y + p.gap)) {
-                bird.die();
+            if(bird.x + bird.w > p.x && bird.x < p.x + 50 && (bird.y < p.y || bird.y + bird.h > p.y + p.gap)) bird.gameOver();
+            if(p.x === 50) {
+                currentScore++;
+                uiScore.innerText = currentScore;
             }
         });
 
-        animationId = requestAnimationFrame(gameLoop);
+        pipes = pipes.filter(p => p.x > -50);
+        frame++;
+        gameReq = requestAnimationFrame(gameLoop);
     }
 
-    // Play Butonu Tetikleyici
     document.getElementById('play-btn').addEventListener('click', () => {
         if(hearts <= 0) {
-            alert("Kalbin bitti! Admin ID 8392479231 ile iletişime geç.");
+            showAlert("BİTTİ", "Kalbin kalmadı! Admin ID: 8392479231'e ulaş.");
             return;
         }
-        canvas.style.display = 'block';
+        currentScore = 0;
+        uiScore.innerText = "0";
+        pipes = []; bird.y = 250; bird.v = 0;
+        document.getElementById('game-container').style.display = 'block';
         gameLoop();
     });
 
-    window.addEventListener('keydown', (e) => { if(e.code === 'Space') bird.velocity = -bird.jump; });
-    canvas.addEventListener('touchstart', () => bird.velocity = -bird.jump);
+    // Kontroller
+    const flap = () => bird.v = -bird.jump;
+    window.addEventListener('keydown', e => { if(e.code==='Space') flap(); });
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); flap(); });
 
 </script>
 </body>
