@@ -3,207 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yaytsogram Evolution: Local Edition</title>
+    <title>Yaytsogram Pro: Wallet & Tasks</title>
     <style>
         :root {
             --primary: #0088cc;
+            --secondary: #222;
             --bronze: linear-gradient(135deg, #cd7f32, #a0522d);
             --silver: linear-gradient(135deg, #c0c0c0, #708090);
             --gold: linear-gradient(135deg, #ffd700, #daa520);
-            --glass: rgba(255, 255, 255, 0.1);
+            --glass: rgba(255, 255, 255, 0.08);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: #000; color: white; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
 
-        .app-shell { width: 100%; max-width: 480px; background: radial-gradient(circle at top, #2c3e50, #000); display: flex; flex-direction: column; position: relative; }
+        .app-shell { width: 100%; max-width: 480px; background: radial-gradient(circle at top, #1c2e3e, #000); display: flex; flex-direction: column; position: relative; }
 
-        header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .stat-pill { background: var(--glass); padding: 8px 15px; border-radius: 50px; font-weight: 800; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1); }
-        
-        .content { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .tab-panel { display: none; flex-direction: column; align-items: center; width: 100%; animation: fadeIn 0.3s; }
+        /* --- HEADER --- */
+        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass); }
+        .stat-pill { background: var(--glass); padding: 6px 12px; border-radius: 50px; font-weight: 800; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.1); }
+
+        /* --- CONTENT & TABS --- */
+        .content { flex: 1; position: relative; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .tab-panel { display: none; width: 100%; flex-direction: column; align-items: center; animation: fadeIn 0.3s ease; }
         .tab-panel.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- YUMURTA TASARIMI --- */
-        .lvl-name { margin-bottom: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; font-size: 1.2rem; }
-        .egg-container { width: 260px; height: 350px; position: relative; cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center; }
-        .egg-container:active { transform: scale(0.92); }
-        
-        .egg { 
-            width: 100%; height: 100%; border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
-            position: relative; transition: 0.8s ease; box-shadow: 0 40px 70px rgba(0,0,0,0.6);
-            border: 4px solid rgba(255,255,255,0.1);
-        }
-        
-        .lvl1-style { background: var(--bronze); }
-        .lvl2-style { background: var(--silver); }
-        .lvl3-style { background: var(--gold); }
+        /* --- EGG DESIGN --- */
+        .lvl-name { font-weight: 900; letter-spacing: 1px; margin-bottom: 10px; color: #cd7f32; }
+        .egg-wrapper { width: 240px; height: 320px; position: relative; cursor: pointer; transition: 0.1s; margin: 20px 0; }
+        .egg-wrapper:active { transform: scale(0.92); }
+        .egg { width: 100%; height: 100%; border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%; position: relative; border: 2px solid rgba(255,255,255,0.2); transition: 0.5s; }
+        .lvl1-egg { background: var(--bronze); }
+        .lvl2-egg { background: var(--silver); }
+        .lvl3-egg { background: var(--gold); box-shadow: 0 0 40px rgba(255,215,0,0.3); }
 
-        .egg-shine { position: absolute; top: 15%; left: 15%; width: 30%; height: 20%; background: rgba(255,255,255,0.3); border-radius: 50%; filter: blur(10px); }
+        /* --- PROGRESS --- */
+        .score { font-size: 2.8rem; font-weight: 900; }
+        .progress-container { width: 90%; height: 12px; background: #222; border-radius: 20px; margin: 15px 0; overflow: hidden; border: 1px solid #333; }
+        .progress-bar { height: 100%; width: 0%; background: var(--primary); transition: 0.3s; box-shadow: 0 0 10px var(--primary); }
 
-        /* --- SCORE & PROGRESS --- */
-        .score-display { font-size: 3.2rem; font-weight: 900; margin-top: 15px; }
-        .target-display { font-size: 0.85rem; opacity: 0.6; margin-bottom: 10px; font-weight: bold; }
-        .prog-bg { width: 85%; height: 10px; background: #222; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
-        .prog-fill { height: 100%; width: 0%; background: var(--primary); transition: 0.2s; box-shadow: 0 0 15px var(--primary); }
-
-        /* --- OVERLAY (MODAL) --- */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
-        .reward-card { background: white; color: #222; padding: 30px; border-radius: 30px; text-align: center; width: 100%; max-width: 350px; box-shadow: 0 0 40px var(--primary); }
+        /* --- WALLET & CARDS --- */
+        .card { background: var(--glass); width: 100%; padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .input-box { width: 100%; background: #111; border: 1px solid #333; padding: 12px; border-radius: 12px; color: white; margin: 10px 0; }
+        .btn { width: 100%; padding: 14px; border-radius: 15px; border: none; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-withdraw { background: #27ae60; color: white; margin-top: 10px; }
+        .btn-withdraw:disabled { background: #444; cursor: not-allowed; }
 
         /* --- NAV --- */
-        nav { background: #111; display: flex; padding: 10px 5px 35px; border-top: 1px solid #222; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; color: #555; font-size: 0.7rem; font-weight: 700; cursor: pointer; }
+        nav { background: #0a0a0a; display: flex; padding: 12px 5px 30px; border-top: 1px solid #222; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; color: #555; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
-        .nav-item i { font-size: 1.5rem; margin-bottom: 4px; }
+        .nav-item i { font-size: 1.4rem; margin-bottom: 4px; }
 
-        .btn-action { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 900; cursor: pointer; margin-top: 15px; }
-        .tap-anim { position: fixed; color: #fff; font-size: 2.5rem; font-weight: 900; pointer-events: none; animation: tapFly 0.8s forwards; z-index: 999; text-shadow: 0 0 10px #0088cc; }
-        @keyframes tapFly { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-130px); opacity: 0; } }
+        /* --- OVERLAY --- */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
+        .reward-card { background: white; color: #222; padding: 30px; border-radius: 25px; text-align: center; width: 100%; max-width: 320px; }
+
+        .tap-pop { position: fixed; color: white; font-weight: 900; font-size: 2rem; pointer-events: none; animation: flyUp 0.8s forwards; z-index: 1000; text-shadow: 0 0 5px var(--primary); }
+        @keyframes flyUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-120px); opacity: 0; } }
     </style>
 </head>
 <body>
 
 <div class="overlay" id="rewardOverlay">
     <div class="reward-card">
-        <h1 id="rewardIcon" style="font-size: 4rem;">🎁</h1>
-        <h2 id="rewardTitle">TEBRİKLER!</h2>
-        <p id="rewardDesc">Seviye ödülünü kazandın:</p>
-        <div id="rewardVal" style="font-size: 2.8rem; font-weight: 900; color: var(--primary); margin: 20px 0;">0.00 TON</div>
-        <button id="nextLvlBtn" class="btn-action">SONRAKİ SEVİYEYE GEÇ</button>
+        <h1 id="rIcon" style="font-size: 3rem;">🎁</h1>
+        <h2 id="rTitle" style="margin:10px 0">TEBRİKLER!</h2>
+        <p>Yumurtayı kırdın ve ödül kazandın:</p>
+        <div id="rAmount" style="font-size: 2.2rem; font-weight: 900; color: var(--primary); margin: 15px 0;">0.00 TON</div>
+        <button class="btn btn-primary" id="nextBtn">SONRAKİ SEVİYE</button>
     </div>
 </div>
 
 <div class="app-shell">
     <header>
-        <div class="stat-pill" id="lvlBadge">LEVEL 1</div>
-        <div class="stat-pill" id="totalBalance" style="color: #00ccff; border-color: #00ccff;">0.00 TON</div>
+        <div class="stat-pill" id="lvlLabel">LEVEL 1</div>
+        <div class="stat-pill" id="topBalance" style="color:#00ccff">0.00 TON</div>
     </header>
 
     <div class="content">
-        <div id="mine-tab" class="tab-panel active">
+        <div id="tab-mine" class="tab-panel active">
             <div class="lvl-name" id="lvlName">BRONZ YUMURTA</div>
-            <div class="egg-container" id="eggBtn">
-                <div class="egg lvl1-style" id="eggVisual"><div class="egg-shine"></div></div>
+            <div class="egg-wrapper" id="eggBtn">
+                <div class="egg lvl1-egg" id="eggVisual"></div>
             </div>
-            <div class="score-display" id="score">0</div>
-            <div class="target-display" id="targetLabel">HEDEF: 15,000,000</div>
-            <div class="prog-bg"><div class="prog-fill" id="progFill"></div></div>
+            <div class="score" id="score">0</div>
+            <p id="targetTxt" style="opacity: 0.6; font-size: 0.8rem; font-weight: bold;">HEDEF: 15,000,000</p>
+            <div class="progress-container">
+                <div class="progress-bar" id="progBar"></div>
+            </div>
         </div>
 
-        <div id="wallet-tab" class="tab-panel">
+        <div id="tab-wallet" class="tab-panel">
             <h2 style="margin-bottom:20px;">Cüzdanım</h2>
-            <div style="background:var(--glass); padding:30px; border-radius:20px; width:100%; text-align:center;">
-                <p style="opacity:0.6;">Toplam Bakiye</p>
-                <h1 id="walletDisplay" style="font-size:3rem; color:var(--primary);">0.00 TON</h1>
-                <button class="btn-action" onclick="alert('Minimum çekim tutarı 10 TONdur.')">PARA ÇEK</button>
+            <div class="card">
+                <p style="opacity:0.6; font-size:0.8rem;">Çekilebilir Bakiye</p>
+                <h1 id="walletBal" style="font-size: 2.5rem; margin: 10px 0;">0.00 TON</h1>
+                <p style="font-size:0.7rem; color:#888;">Min. Çekim: 5.00 TON</p>
+                <button class="btn btn-withdraw" id="drawBtn" onclick="requestWithdraw()">PARA ÇEK</button>
+            </div>
+            <div class="card">
+                <h3>TON Cüzdan Adresi</h3>
+                <input type="text" id="walletAddr" class="input-box" placeholder="UQA123... Adresini Yapıştır">
+                <button class="btn btn-primary" onclick="saveWallet()">ADRESİ KAYDET</button>
+            </div>
+        </div>
+
+        <div id="tab-tasks" class="tab-panel">
+            <h2 style="margin-bottom:20px;">Görevler</h2>
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div><strong>Kanalımıza Katıl</strong><br><small>+100,000 Puan</small></div>
+                <button class="btn btn-primary" style="width:auto; padding:8px 15px;" onclick="alert('Görev tamamlandı!')">YAP</button>
+            </div>
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div><strong>Arkadaş Davet Et</strong><br><small>Kişi başı +50k</small></div>
+                <button class="btn btn-primary" style="width:auto; padding:8px 15px;" onclick="alert('Link kopyalandı!')">DAVET</button>
             </div>
         </div>
     </div>
 
     <nav>
-        <div class="nav-item active" onclick="switchTab('mine', this)"><i>⛏️</i><span>Kaz</span></div>
-        <div class="nav-item" onclick="switchTab('wallet', this)"><i>👛</i><span>Cüzdan</span></div>
+        <div class="nav-item active" onclick="nav('mine', this)"><i>⛏️</i><span>Kaz</span></div>
+        <div class="nav-item" onclick="nav('tasks', this)"><i>📋</i><span>Görevler</span></div>
+        <div class="nav-item" onclick="nav('wallet', this)"><i>👛</i><span>Cüzdan</span></div>
     </nav>
 </div>
 
 <script>
-    // --- VERİ YÖNETİMİ (LOKAL) ---
-    let lvl = parseInt(localStorage.getItem('yaytso_lvl_idx')) || 1;
-    let clicks = parseInt(localStorage.getItem('yaytso_lvl_clicks')) || 0;
-    let ton = parseFloat(localStorage.getItem('yaytso_ton_total')) || 0;
+    // --- LOKAL VERİLER ---
+    let level = parseInt(localStorage.getItem('y_lvl')) || 1;
+    let clicks = parseInt(localStorage.getItem('y_clicks')) || 0;
+    let balance = parseFloat(localStorage.getItem('y_bal')) || 0;
+    let address = localStorage.getItem('y_addr') || "";
 
-    const configs = {
-        1: { name: "BRONZ YUMURTA", target: 15000000, class: "lvl1-style", color: "#cd7f32", icon: "🎁" },
-        2: { name: "GÜMÜŞ YUMURTA", target: 45000000, class: "lvl2-style", color: "#c0c0c0", icon: "🥈" },
-        3: { name: "ALTIN YUMURTA", target: 71000000, class: "lvl3-style", icon: "🏆" }
+    const confs = {
+        1: { name: "BRONZ YUMURTA", target: 15000000, cls: "lvl1-egg", color: "#cd7f32", icon: "🎁" },
+        2: { name: "GÜMÜŞ YUMURTA", target: 45000000, cls: "lvl2-egg", color: "#c0c0c0", icon: "🥈" },
+        3: { name: "ALTIN YUMURTA", target: 71000000, cls: "lvl3-egg", color: "#ffd700", icon: "🏆" }
     };
 
     function updateUI() {
-        const c = configs[lvl];
+        const c = confs[level] || confs[3];
         document.getElementById('lvlName').innerText = c.name;
         document.getElementById('lvlName').style.color = c.color;
-        document.getElementById('lvlBadge').innerText = "LEVEL " + lvl;
+        document.getElementById('lvlLabel').innerText = "LEVEL " + level;
         document.getElementById('score').innerText = clicks.toLocaleString();
-        document.getElementById('targetLabel').innerText = "HEDEF: " + c.target.toLocaleString();
-        document.getElementById('totalBalance').innerText = ton.toFixed(2) + " TON";
-        document.getElementById('walletDisplay').innerText = ton.toFixed(2) + " TON";
+        document.getElementById('targetTxt').innerText = "HEDEF: " + c.target.toLocaleString();
+        document.getElementById('topBalance').innerText = balance.toFixed(2) + " TON";
+        document.getElementById('walletBal').innerText = balance.toFixed(2) + " TON";
+        document.getElementById('eggVisual').className = "egg " + c.cls;
+        document.getElementById('progBar').style.width = Math.min((clicks/c.target)*100, 100) + "%";
+        document.getElementById('walletAddr').value = address;
         
-        document.getElementById('eggVisual').className = "egg " + c.class;
-        
-        const prog = (clicks / c.target) * 100;
-        document.getElementById('progFill').style.width = Math.min(prog, 100) + "%";
+        // Çekim butonu kontrolü
+        document.getElementById('drawBtn').disabled = balance < 5;
 
-        // Kaydet
-        localStorage.setItem('yaytso_lvl_idx', lvl);
-        localStorage.setItem('yaytso_lvl_clicks', clicks);
-        localStorage.setItem('yaytso_ton_total', ton);
+        localStorage.setItem('y_lvl', level);
+        localStorage.setItem('y_clicks', clicks);
+        localStorage.setItem('y_bal', balance);
     }
 
     function handleTap(e) {
-        if (lvl > 3) return;
-        const c = configs[lvl];
+        const c = confs[level];
+        if (!c) return;
         
         if (clicks < c.target) {
-            clicks += 1; // Normal hız (+1)
-            
+            clicks += 500000; // HIZLI TEST İÇİN YÜKSEK ARTIŞ (+1 yapabilirsiniz)
             if (clicks >= c.target) {
                 clicks = c.target;
-                triggerReward();
+                showReward();
             }
             updateUI();
-            showTapEffect(e);
+            createPop(e);
             if(navigator.vibrate) navigator.vibrate(10);
         }
     }
 
-    function triggerReward() {
-        const c = configs[lvl];
-        let win = 0;
-        let roll = Math.random() * 100;
-
-        if (roll < 80) win = Math.random() * (5 - 0.1) + 0.1;
-        else win = Math.random() * (20 - 5) + 5;
-
-        ton += win;
+    function showReward() {
+        const c = confs[level];
+        let win = Math.random() < 0.8 ? (Math.random()*4 + 0.1) : (Math.random()*10 + 5);
+        balance += win;
         
-        document.getElementById('rewardIcon').innerText = c.icon;
-        document.getElementById('rewardVal').innerText = win.toFixed(2) + " TON";
+        document.getElementById('rAmount').innerText = win.toFixed(2) + " TON";
+        document.getElementById('rIcon').innerText = c.icon;
         document.getElementById('rewardOverlay').style.display = 'flex';
 
-        const btn = document.getElementById('nextLvlBtn');
-        if (lvl < 3) {
-            btn.innerText = "SONRAKİ YUMURTAYA GEÇ (PUAN SIFIRLANIR)";
-            btn.onclick = () => {
-                lvl++;
-                clicks = 0; // Seviye atlayınca puan sıfırlanır
-                document.getElementById('rewardOverlay').style.display = 'none';
-                updateUI();
-            };
-        } else {
-            btn.innerText = "OYUN BİTTİ - TÜM ÖDÜLLER SENİN!";
-            btn.onclick = () => location.reload();
-        }
+        document.getElementById('nextBtn').onclick = () => {
+            if(level < 3) {
+                level++;
+                clicks = 0; // Puan sıfırlanır
+            }
+            document.getElementById('rewardOverlay').style.display = 'none';
+            updateUI();
+        };
     }
 
-    function showTapEffect(e) {
-        const x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-        const y = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-        const d = document.createElement('div');
-        d.className = 'tap-anim';
-        d.innerText = "+1";
-        d.style.left = (x - 15) + "px";
-        d.style.top = (y - 40) + "px";
-        document.body.appendChild(d);
-        setTimeout(() => d.remove(), 800);
+    function saveWallet() {
+        address = document.getElementById('walletAddr').value;
+        if(address.length < 10) return alert("Geçerli bir TON adresi girin!");
+        localStorage.setItem('y_addr', address);
+        alert("Cüzdan adresi kaydedildi!");
     }
 
-    function switchTab(id, el) {
+    function requestWithdraw() {
+        if(!address) return alert("Önce cüzdan adresinizi kaydetmelisiniz!");
+        alert("Çekim talebi alındı! İncelemeden sonra " + address + " adresine gönderilecektir.");
+        balance = 0; // Bakiyeyi sıfırla (simülasyon)
+        updateUI();
+    }
+
+    function nav(tabId, el) {
         document.querySelectorAll('.tab-panel').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(id + '-tab').classList.add('active');
+        document.getElementById('tab-' + tabId).classList.add('active');
         el.classList.add('active');
+    }
+
+    function createPop(e) {
+        const x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const y = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        const p = document.createElement('div');
+        p.className = 'tap-pop'; p.innerText = "+1";
+        p.style.left = (x - 15) + "px"; p.style.top = (y - 40) + "px";
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 800);
     }
 
     document.getElementById('eggBtn').addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(e); });
