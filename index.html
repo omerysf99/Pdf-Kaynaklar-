@@ -3,236 +3,240 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yaytsogram Pro: Wallet & Tasks</title>
+    <title>Yaytsogram Clone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --primary: #0088cc;
-            --secondary: #222;
-            --bronze: linear-gradient(135deg, #cd7f32, #a0522d);
-            --silver: linear-gradient(135deg, #c0c0c0, #708090);
-            --gold: linear-gradient(135deg, #ffd700, #daa520);
-            --glass: rgba(255, 255, 255, 0.08);
+            --bg-color: #a4c639; /* Orijinal yeşil tonu */
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --primary-blue: #0088cc;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: #000; color: white; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            background: linear-gradient(to bottom, #b4d44d, #82a42a); 
+            height: 100vh; display: flex; justify-content: center; overflow: hidden; color: #333;
+        }
 
-        .app-shell { width: 100%; max-width: 480px; background: radial-gradient(circle at top, #1c2e3e, #000); display: flex; flex-direction: column; position: relative; }
+        .app-shell { width: 100%; max-width: 480px; display: flex; flex-direction: column; position: relative; }
 
-        /* --- HEADER --- */
-        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass); }
-        .stat-pill { background: var(--glass); padding: 6px 12px; border-radius: 50px; font-weight: 800; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.1); }
+        /* --- HEADER (Üst Kısım) --- */
+        header { padding: 15px; display: flex; align-items: center; justify-content: space-between; background: white; border-radius: 0 0 20px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .egg-icon-small { width: 40px; height: 40px; background: var(--primary-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
+        .user-details b { font-size: 0.9rem; }
 
-        /* --- CONTENT & TABS --- */
-        .content { flex: 1; position: relative; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .tab-panel { display: none; width: 100%; flex-direction: column; align-items: center; animation: fadeIn 0.3s ease; }
-        .tab-panel.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* --- ANA ALAN --- */
+        .main-container { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; position: relative; }
+        
+        .top-text { color: white; font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        .how-to-btn { background: var(--primary-blue); color: white; padding: 10px 20px; border-radius: 25px; border: none; font-weight: bold; font-size: 0.8rem; cursor: pointer; }
 
-        /* --- EGG DESIGN --- */
-        .lvl-name { font-weight: 900; letter-spacing: 1px; margin-bottom: 10px; color: #cd7f32; }
-        .egg-wrapper { width: 240px; height: 320px; position: relative; cursor: pointer; transition: 0.1s; margin: 20px 0; }
-        .egg-wrapper:active { transform: scale(0.92); }
-        .egg { width: 100%; height: 100%; border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%; position: relative; border: 2px solid rgba(255,255,255,0.2); transition: 0.5s; }
-        .lvl1-egg { background: var(--bronze); }
-        .lvl2-egg { background: var(--silver); }
-        .lvl3-egg { background: var(--gold); box-shadow: 0 0 40px rgba(255,215,0,0.3); }
+        /* --- YUMURTA ALANI --- */
+        .egg-stage { width: 300px; height: 350px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; position: relative; }
+        .egg-stage:active { transform: scale(0.95); }
+        
+        .egg-image { 
+            width: 80%; height: 90%; border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
+            position: relative; transition: 0.5s; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            background-size: cover; background-position: center; border: 4px solid white;
+        }
+        
+        /* Yumurta Görünümleri (Görseldeki desene benzer gradyanlar) */
+        .blue-egg { background: radial-gradient(circle at 30% 30%, #5ec8ff, #0088cc); }
+        .silver-egg { background: radial-gradient(circle at 30% 30%, #ffffff, #bdc3c7); }
+        .gold-egg { background: radial-gradient(circle at 30% 30%, #ffd700, #daa520); }
 
-        /* --- PROGRESS --- */
-        .score { font-size: 2.8rem; font-weight: 900; }
-        .progress-container { width: 90%; height: 12px; background: #222; border-radius: 20px; margin: 15px 0; overflow: hidden; border: 1px solid #333; }
-        .progress-bar { height: 100%; width: 0%; background: var(--primary); transition: 0.3s; box-shadow: 0 0 10px var(--primary); }
+        /* --- SKOR VE İLERLEME --- */
+        .score-row { display: flex; align-items: center; gap: 10px; color: white; font-size: 1.5rem; font-weight: bold; margin: 15px 0; }
+        .ton-info-pill { background: white; padding: 8px 20px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-        /* --- WALLET & CARDS --- */
-        .card { background: var(--glass); width: 100%; padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
-        .input-box { width: 100%; background: #111; border: 1px solid #333; padding: 12px; border-radius: 12px; color: white; margin: 10px 0; }
-        .btn { width: 100%; padding: 14px; border-radius: 15px; border: none; font-weight: 800; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-withdraw { background: #27ae60; color: white; margin-top: 10px; }
-        .btn-withdraw:disabled { background: #444; cursor: not-allowed; }
+        /* --- ALT PANEL (KOD - SAYI - TURBO) --- */
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 95%; margin-bottom: 20px; }
+        .action-box { background: white; border-radius: 15px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 70px; }
+        .action-box small { font-size: 0.6rem; color: #888; }
+        .action-box b { font-size: 1.1rem; }
 
-        /* --- NAV --- */
-        nav { background: #0a0a0a; display: flex; padding: 12px 5px 30px; border-top: 1px solid #222; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; color: #555; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
-        .nav-item.active { color: var(--primary); }
-        .nav-item i { font-size: 1.4rem; margin-bottom: 4px; }
+        /* --- NAVİGASYON --- */
+        nav { background: white; display: flex; padding: 10px 5px 25px 5px; border-radius: 20px 20px 0 0; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; font-size: 0.65rem; color: #666; font-weight: bold; gap: 5px; cursor: pointer; }
+        .nav-item.active { color: var(--primary-blue); }
+        .nav-item i { font-size: 1.4rem; }
 
-        /* --- OVERLAY --- */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
-        .reward-card { background: white; color: #222; padding: 30px; border-radius: 25px; text-align: center; width: 100%; max-width: 320px; }
+        /* --- MODAL --- */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: white; padding: 30px; border-radius: 25px; text-align: center; width: 100%; max-width: 320px; }
+        .btn-claim { background: var(--primary-blue); color: white; width: 100%; padding: 15px; border-radius: 15px; border: none; font-weight: bold; margin-top: 20px; cursor: pointer; }
 
-        .tap-pop { position: fixed; color: white; font-weight: 900; font-size: 2rem; pointer-events: none; animation: flyUp 0.8s forwards; z-index: 1000; text-shadow: 0 0 5px var(--primary); }
-        @keyframes flyUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-120px); opacity: 0; } }
+        .tap-particle { position: fixed; pointer-events: none; color: white; font-weight: bold; font-size: 1.5rem; animation: floatUp 0.8s forwards; z-index: 100; text-shadow: 0 0 5px var(--primary-blue); }
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
     </style>
 </head>
 <body>
 
-<div class="overlay" id="rewardOverlay">
-    <div class="reward-card">
-        <h1 id="rIcon" style="font-size: 3rem;">🎁</h1>
-        <h2 id="rTitle" style="margin:10px 0">TEBRİKLER!</h2>
+<div id="rewardModal" class="modal">
+    <div class="modal-content">
+        <h1 id="mIcon">🥚</h1>
+        <h2 id="mTitle" style="margin: 10px 0;">TEBRİKLER!</h2>
         <p>Yumurtayı kırdın ve ödül kazandın:</p>
-        <div id="rAmount" style="font-size: 2.2rem; font-weight: 900; color: var(--primary); margin: 15px 0;">0.00 TON</div>
-        <button class="btn btn-primary" id="nextBtn">SONRAKİ SEVİYE</button>
+        <h1 id="mAmount" style="color: var(--primary-blue); margin: 15px 0;">0.00 TON</h1>
+        <button class="btn-claim" id="nextLevelBtn">SONRAKİ SEVİYE</button>
     </div>
 </div>
 
 <div class="app-shell">
     <header>
-        <div class="stat-pill" id="lvlLabel">LEVEL 1</div>
-        <div class="stat-pill" id="topBalance" style="color:#00ccff">0.00 TON</div>
+        <div class="user-info">
+            <div class="egg-icon-small"><i class="fas fa-egg"></i></div>
+            <div class="user-details">
+                <span>Yaytsogram</span><br>
+                <b>Kaanfurkan 🐕 🚀 🫓 🐰</b>
+            </div>
+        </div>
+        <div class="egg-icon-small"><i class="fas fa-egg"></i></div>
+        <div style="font-weight: bold; font-size: 0.8rem;">TR</div>
     </header>
 
-    <div class="content">
-        <div id="tab-mine" class="tab-panel active">
-            <div class="lvl-name" id="lvlName">BRONZ YUMURTA</div>
-            <div class="egg-wrapper" id="eggBtn">
-                <div class="egg lvl1-egg" id="eggVisual"></div>
-            </div>
-            <div class="score" id="score">0</div>
-            <p id="targetTxt" style="opacity: 0.6; font-size: 0.8rem; font-weight: bold;">HEDEF: 15,000,000</p>
-            <div class="progress-container">
-                <div class="progress-bar" id="progBar"></div>
-            </div>
+    <div class="main-container">
+        <span class="top-text">Yumurtayı kır ve TON kazan!</span>
+        <button class="how-to-btn">TON'u nasıl alırsınız?</button>
+
+        <div class="egg-stage" id="eggTouchArea">
+            <div class="egg-image blue-egg" id="mainEgg"></div>
         </div>
 
-        <div id="tab-wallet" class="tab-panel">
-            <h2 style="margin-bottom:20px;">Cüzdanım</h2>
-            <div class="card">
-                <p style="opacity:0.6; font-size:0.8rem;">Çekilebilir Bakiye</p>
-                <h1 id="walletBal" style="font-size: 2.5rem; margin: 10px 0;">0.00 TON</h1>
-                <p style="font-size:0.7rem; color:#888;">Min. Çekim: 5.00 TON</p>
-                <button class="btn btn-withdraw" id="drawBtn" onclick="requestWithdraw()">PARA ÇEK</button>
-            </div>
-            <div class="card">
-                <h3>TON Cüzdan Adresi</h3>
-                <input type="text" id="walletAddr" class="input-box" placeholder="UQA123... Adresini Yapıştır">
-                <button class="btn btn-primary" onclick="saveWallet()">ADRESİ KAYDET</button>
-            </div>
+        <div class="score-row">
+            <div class="egg-icon-small" style="width: 30px; height: 30px;"><i class="fas fa-egg" style="font-size: 0.8rem;"></i></div>
+            <span id="scoreDisplay">0 / 15,000,000</span>
         </div>
 
-        <div id="tab-tasks" class="tab-panel">
-            <h2 style="margin-bottom:20px;">Görevler</h2>
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div><strong>Kanalımıza Katıl</strong><br><small>+100,000 Puan</small></div>
-                <button class="btn btn-primary" style="width:auto; padding:8px 15px;" onclick="alert('Görev tamamlandı!')">YAP</button>
+        <div class="ton-info-pill">
+            <i class="fas fa-egg" style="color: var(--primary-blue);"></i>
+            <span>İçinde 20.00 TON'a kadar!</span>
+        </div>
+
+        <div style="flex: 1;"></div>
+
+        <div class="action-grid">
+            <div class="action-box">
+                <div style="display: flex; align-items: center; gap: 5px; justify-content: center;">
+                    <i class="fas fa-money-bill-wave" style="color: #4CAF50;"></i>
+                    <b>Kod</b>
+                </div>
+                <small>11:39:24</small>
             </div>
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div><strong>Arkadaş Davet Et</strong><br><small>Kişi başı +50k</small></div>
-                <button class="btn btn-primary" style="width:auto; padding:8px 15px;" onclick="alert('Link kopyalandı!')">DAVET</button>
+            <div class="action-box">
+                <b style="font-size: 1.5rem;">7704</b>
+            </div>
+            <div class="action-box">
+                <div style="display: flex; align-items: center; gap: 5px; justify-content: center;">
+                    <i class="fas fa-rocket" style="color: #f44336;"></i>
+                    <b>Turbo</b>
+                </div>
+                <small>0/3</small>
             </div>
         </div>
     </div>
 
     <nav>
-        <div class="nav-item active" onclick="nav('mine', this)"><i>⛏️</i><span>Kaz</span></div>
-        <div class="nav-item" onclick="nav('tasks', this)"><i>📋</i><span>Görevler</span></div>
-        <div class="nav-item" onclick="nav('wallet', this)"><i>👛</i><span>Cüzdan</span></div>
+        <div class="nav-item active">
+            <i class="fas fa-egg"></i>
+            <span>Kır</span>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa-users"></i>
+            <span>Arkadaşlar</span>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa-bolt"></i>
+            <span>Hızlandır</span>
+            <div style="width:6px; height:6px; background:red; border-radius:50%; position:absolute; top:12px; right:32%;"></div>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa-award"></i>
+            <span>Derece</span>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa-wallet"></i>
+            <span>Cüzdan</span>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa-hand-pointer"></i>
+            <span>Süper Tıklamalar</span>
+        </div>
     </nav>
 </div>
 
 <script>
-    // --- LOKAL VERİLER ---
-    let level = parseInt(localStorage.getItem('y_lvl')) || 1;
-    let clicks = parseInt(localStorage.getItem('y_clicks')) || 0;
-    let balance = parseFloat(localStorage.getItem('y_bal')) || 0;
-    let address = localStorage.getItem('y_addr') || "";
+    let level = 1;
+    let clicks = 0;
+    let totalTon = 0;
 
-    const confs = {
-        1: { name: "BRONZ YUMURTA", target: 15000000, cls: "lvl1-egg", color: "#cd7f32", icon: "🎁" },
-        2: { name: "GÜMÜŞ YUMURTA", target: 45000000, cls: "lvl2-egg", color: "#c0c0c0", icon: "🥈" },
-        3: { name: "ALTIN YUMURTA", target: 71000000, cls: "lvl3-egg", color: "#ffd700", icon: "🏆" }
+    const config = {
+        1: { target: 15000000, class: 'blue-egg', name: 'Mavi', icon: '🥚' },
+        2: { target: 45000000, class: 'silver-egg', name: 'Gümüş', icon: '🥈' },
+        3: { target: 71000000, class: 'gold-egg', name: 'Altın', icon: '🏆' }
     };
 
-    function updateUI() {
-        const c = confs[level] || confs[3];
-        document.getElementById('lvlName').innerText = c.name;
-        document.getElementById('lvlName').style.color = c.color;
-        document.getElementById('lvlLabel').innerText = "LEVEL " + level;
-        document.getElementById('score').innerText = clicks.toLocaleString();
-        document.getElementById('targetTxt').innerText = "HEDEF: " + c.target.toLocaleString();
-        document.getElementById('topBalance').innerText = balance.toFixed(2) + " TON";
-        document.getElementById('walletBal').innerText = balance.toFixed(2) + " TON";
-        document.getElementById('eggVisual').className = "egg " + c.cls;
-        document.getElementById('progBar').style.width = Math.min((clicks/c.target)*100, 100) + "%";
-        document.getElementById('walletAddr').value = address;
-        
-        // Çekim butonu kontrolü
-        document.getElementById('drawBtn').disabled = balance < 5;
+    const eggBtn = document.getElementById('eggTouchArea');
+    const mainEgg = document.getElementById('mainEgg');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const modal = document.getElementById('rewardModal');
 
-        localStorage.setItem('y_lvl', level);
-        localStorage.setItem('y_clicks', clicks);
-        localStorage.setItem('y_bal', balance);
+    function updateUI() {
+        const cur = config[level];
+        scoreDisplay.innerText = `${clicks.toLocaleString()} / ${cur.target.toLocaleString()}`;
+        mainEgg.className = `egg-image ${cur.class}`;
     }
 
     function handleTap(e) {
-        const c = confs[level];
-        if (!c) return;
-        
-        if (clicks < c.target) {
-            clicks += 500000; // HIZLI TEST İÇİN YÜKSEK ARTIŞ (+1 yapabilirsiniz)
-            if (clicks >= c.target) {
-                clicks = c.target;
+        const cur = config[level];
+        if (clicks < cur.target) {
+            clicks += 500000; // TEST HIZI (Gerçekte +1 yapın)
+            
+            if (clicks >= cur.target) {
+                clicks = cur.target;
                 showReward();
             }
             updateUI();
-            createPop(e);
+            createParticle(e);
             if(navigator.vibrate) navigator.vibrate(10);
         }
     }
 
     function showReward() {
-        const c = confs[level];
-        let win = Math.random() < 0.8 ? (Math.random()*4 + 0.1) : (Math.random()*10 + 5);
-        balance += win;
+        const win = Math.random() < 0.8 ? (Math.random()*5).toFixed(2) : (Math.random()*15 + 5).toFixed(2);
+        totalTon += parseFloat(win);
         
-        document.getElementById('rAmount').innerText = win.toFixed(2) + " TON";
-        document.getElementById('rIcon').innerText = c.icon;
-        document.getElementById('rewardOverlay').style.display = 'flex';
+        document.getElementById('mIcon').innerText = config[level].icon;
+        document.getElementById('mAmount').innerText = win + " TON";
+        modal.style.display = 'flex';
 
-        document.getElementById('nextBtn').onclick = () => {
+        document.getElementById('nextLevelBtn').onclick = () => {
             if(level < 3) {
                 level++;
-                clicks = 0; // Puan sıfırlanır
+                clicks = 0;
             }
-            document.getElementById('rewardOverlay').style.display = 'none';
+            modal.style.display = 'none';
             updateUI();
         };
     }
 
-    function saveWallet() {
-        address = document.getElementById('walletAddr').value;
-        if(address.length < 10) return alert("Geçerli bir TON adresi girin!");
-        localStorage.setItem('y_addr', address);
-        alert("Cüzdan adresi kaydedildi!");
-    }
-
-    function requestWithdraw() {
-        if(!address) return alert("Önce cüzdan adresinizi kaydetmelisiniz!");
-        alert("Çekim talebi alındı! İncelemeden sonra " + address + " adresine gönderilecektir.");
-        balance = 0; // Bakiyeyi sıfırla (simülasyon)
-        updateUI();
-    }
-
-    function nav(tabId, el) {
-        document.querySelectorAll('.tab-panel').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById('tab-' + tabId).classList.add('active');
-        el.classList.add('active');
-    }
-
-    function createPop(e) {
+    function createParticle(e) {
         const x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         const y = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
         const p = document.createElement('div');
-        p.className = 'tap-pop'; p.innerText = "+1";
-        p.style.left = (x - 15) + "px"; p.style.top = (y - 40) + "px";
+        p.className = 'tap-particle';
+        p.innerText = "+1";
+        p.style.left = x + 'px';
+        p.style.top = y + 'px';
         document.body.appendChild(p);
         setTimeout(() => p.remove(), 800);
     }
 
-    document.getElementById('eggBtn').addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(e); });
-    document.getElementById('eggBtn').addEventListener('mousedown', handleTap);
+    eggBtn.addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(e); });
+    eggBtn.addEventListener('mousedown', handleTap);
 
     updateUI();
 </script>
