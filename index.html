@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
-        /* CORE SYSTEM ID: 8392479231 */
+        /* ADMIN ACCESS: 8392479231 */
         :root {
             --bg: #050505;
             --card: #121212;
@@ -18,153 +18,191 @@
             --text: #ffffff;
             --dim: #71717a;
             --danger: #ff4757;
+            --border: rgba(255, 255, 255, 0.05);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
-        .app { max-width: 480px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; position: relative; }
-        .view { flex: 1; overflow-y: auto; padding-bottom: 100px; display: none; }
-        .view.active { display: block; }
-
-        /* MINING & WALLET */
-        .hero { background: radial-gradient(circle at 50% 0%, #11221a 0%, #050505 70%); padding: 30px 20px; text-align: center; }
-        .orb { width: 90px; filter: drop-shadow(0 0 15px var(--primary)); margin-bottom: 10px; }
-        .wallet-card { background: var(--card); margin: 0 20px 20px; padding: 20px; border-radius: 24px; border: 1px solid #1a1a1a; }
-        .w-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #1a1a1a; }
-        .w-item:last-child { border-bottom: none; }
-        .btn-withdraw { background: var(--primary); color: #000; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer; }
-
-        /* MODAL / ÖDEME EKRANI */
-        .modal-overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); z-index: 2000; display: none;
-            align-items: center; justify-content: center; backdrop-filter: blur(10px);
-        }
-        .modal-overlay.active { display: flex; }
-        .withdraw-modal { 
-            width: 90%; max-width: 400px; background: #111; border: 1px solid #222; 
-            border-radius: 30px; padding: 25px; position: relative;
-        }
-        .modal-close { position: absolute; top: 20px; right: 20px; color: var(--dim); font-size: 20px; }
-        .limit-tag { font-size: 11px; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 6px; color: var(--dim); display: inline-block; margin-bottom: 10px; }
         
-        input { 
-            width: 100%; background: #000; border: 1px solid #222; padding: 15px; 
-            border-radius: 15px; color: #fff; margin: 10px 0; font-family: 'JetBrains Mono';
-        }
-        .confirm-btn { background: var(--primary); color: #000; width: 100%; padding: 16px; border-radius: 15px; font-weight: 800; border: none; margin-top: 10px; }
+        .app-shell { width: 100%; max-width: 480px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; position: relative; }
+        .viewport { flex: 1; overflow-y: auto; padding-bottom: 100px; scrollbar-width: none; }
+        .viewport::-webkit-scrollbar { display: none; }
 
-        /* TASKS */
-        .task { background: var(--card); display: flex; align-items: center; padding: 14px; border-radius: 20px; margin: 0 20px 10px; border: 1px solid #1a1a1a; }
-        .nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; background: #0a0a0a; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #1a1a1a; }
+        /* HERO AREA */
+        .hero { background: radial-gradient(circle at 50% 0%, #11221a 0%, #050505 75%); padding: 40px 20px; text-align: center; border-bottom: 1px solid var(--border); }
+        .orb-img { width: 100px; filter: drop-shadow(0 0 20px var(--primary)); animation: float 3s ease-in-out infinite; margin-bottom: 15px; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .mine-val { font-family: 'JetBrains Mono', monospace; font-size: 34px; font-weight: 800; letter-spacing: -1px; }
+
+        /* WALLET CARD */
+        .wallet-card { background: var(--card); margin: 20px; padding: 25px; border-radius: 28px; border: 1px solid var(--border); }
+        .w-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; }
+        .w-item:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .coin-icon { width: 44px; height: 44px; }
+        .coin-info { flex: 1; }
+        .coin-info .amt { font-family: 'JetBrains Mono'; font-size: 16px; color: var(--primary); font-weight: 700; }
+        .btn-cek { background: var(--primary); color: #000; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 800; font-size: 12px; cursor: pointer; }
+
+        /* WITHDRAW MODAL (GÖRSELDEKİYLE AYNI) */
+        .modal-overlay { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); 
+            display: none; align-items: center; justify-content: center; z-index: 9999; 
+        }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.2s ease; }
+        .withdraw-content { 
+            width: 90%; max-width: 380px; background: #0f0f0f; border: 1px solid #222; 
+            border-radius: 32px; padding: 30px; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+        .close-modal { position: absolute; top: 20px; right: 20px; color: var(--dim); font-size: 22px; cursor: pointer; }
+        .modal-header { text-align: center; margin-bottom: 25px; }
+        .limit-info { background: rgba(0,255,163,0.05); color: var(--primary); padding: 8px 15px; border-radius: 10px; font-size: 12px; display: inline-block; margin-top: 10px; font-weight: 700; }
+        
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 12px; color: var(--dim); margin-bottom: 8px; margin-left: 5px; }
+        .input-group input { 
+            width: 100%; background: #000; border: 1px solid #222; padding: 16px; 
+            border-radius: 16px; color: #fff; font-family: 'JetBrains Mono'; font-size: 14px; outline: none;
+        }
+        .input-group input:focus { border-color: var(--primary); }
+        
+        .confirm-btn { 
+            background: var(--primary); color: #000; width: 100%; padding: 18px; 
+            border-radius: 18px; font-weight: 800; font-size: 16px; border: none; margin-top: 10px; transition: 0.2s;
+        }
+        .confirm-btn:active { transform: scale(0.98); }
+
+        /* NAV BAR */
+        .nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; background: rgba(10,10,10,0.98); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); }
+        .nav-item { text-align: center; color: var(--dim); font-size: 11px; cursor: pointer; }
+        .nav-item.active { color: #fff; }
+        .nav-item i { font-size: 22px; display: block; margin-bottom: 5px; }
+
     </style>
 </head>
 <body>
 
-<div class="app">
-    <div id="home" class="view active">
-        <div class="hero">
-            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="orb">
-            <div id="mine-val" style="font-family:'JetBrains Mono'; font-size:32px; font-weight:800;">0.00000000</div>
-            <div style="color:var(--primary); font-size:11px; margin-top:5px;">Hız: 0.00001200 USDT/s</div>
-            <button onclick="collect()" style="background:#fff; width:80%; padding:15px; border-radius:15px; font-weight:800; border:none; margin-top:15px;">Topla</button>
-        </div>
+<div class="app-shell">
+    <div class="viewport">
+        <section class="hero">
+            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="orb-img">
+            <div class="mine-val" id="mine-val">0.00000000</div>
+            <div style="color: var(--primary); font-size: 12px; margin-top: 5px; font-weight: 700;">HIZ: 0.00001200 USDT/s</div>
+            <button onclick="collect()" style="background:#fff; width:85%; padding:18px; border-radius:20px; font-weight:800; border:none; margin-top:20px; font-size:16px;">Topla</button>
+        </section>
 
         <div class="wallet-card">
             <div class="w-item">
-                <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" width="35">
-                <div style="flex:1"><div>USDT</div><div id="usdt-bal" style="color:var(--primary); font-weight:700;">0.00000000</div></div>
-                <button class="btn-withdraw" onclick="openWithdraw('USDT', 10)">Çek</button>
+                <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="coin-icon">
+                <div class="coin-info">
+                    <div style="font-size: 14px; font-weight: 600;">Tether USDT</div>
+                    <div class="amt" id="usdt-bal">0.00000000</div>
+                </div>
+                <button class="btn-cek" onclick="openWithdraw('USDT', 10)">Çek</button>
             </div>
             <div class="w-item">
-                <img src="https://cryptologos.cc/logos/tron-trx-logo.png" width="35">
-                <div style="flex:1"><div>TRX</div><div id="trx-bal" style="color:var(--primary); font-weight:700;">0.00000000</div></div>
-                <button class="btn-withdraw" onclick="openWithdraw('TRX', 62)">Çek</button>
+                <img src="https://cryptologos.cc/logos/tron-trx-logo.png" class="coin-icon">
+                <div class="coin-info">
+                    <div style="font-size: 14px; font-weight: 600;">Tron TRX</div>
+                    <div class="amt" id="trx-bal">0.00000000</div>
+                </div>
+                <button class="btn-cek" onclick="openWithdraw('TRX', 61)">Çek</button>
             </div>
         </div>
 
-        <h4 style="margin: 20px;">Sosyal Görevler & Reklamlar</h4>
-        <div class="task">
-            <div style="width:45px; height:45px; background:rgba(0,255,163,0.1); border-radius:12px; display:flex; align-items:center; justify-content:center; color:var(--primary);"><i class="fas fa-play"></i></div>
-            <div style="flex:1; margin-left:15px;"><h4>Video Reklam</h4><p style="font-size:12px; color:var(--primary);">+0.25 USDT</p></div>
-            <button class="btn-withdraw" style="background:#222; color:#fff;">GİT</button>
+        <h4 style="margin: 0 25px 15px;">Günlük Görevler</h4>
+        <div style="background: var(--card); margin: 0 20px; padding: 15px; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 15px;">
+            <div style="width: 45px; height: 45px; background: rgba(0,255,163,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 20px;"><i class="fas fa-play"></i></div>
+            <div style="flex: 1;">
+                <div style="font-size: 14px; font-weight: 700;">Video Reklam İzle</div>
+                <div style="font-size: 12px; color: var(--primary); font-weight: 800;">+0.25 USDT</div>
+            </div>
+            <button class="btn-cek" style="background: #222; color: #fff;">GİT</button>
         </div>
     </div>
 
-    <div id="friends" class="view">
-        <div style="padding:40px 20px; text-align:center;">
-            <h2>Arkadaşları Davet Et</h2>
-            <p style="color:var(--dim); margin:10px 0 20px;">Başarılı her davet için 5 USDT!</p>
-            <div style="background:var(--primary); color:#000; padding:18px; border-radius:15px; font-weight:800;">Linkini Paylaş</div>
-        </div>
-    </div>
+    <div class="modal-overlay" id="withdrawModal">
+        <div class="withdraw-content">
+            <i class="fas fa-times close-modal" onclick="closeModal()"></i>
+            <div class="modal-header">
+                <h2 id="modalTitle">Para Çekme</h2>
+                <div class="limit-info" id="minLimitLabel">Minimum Çekim: 10 USDT</div>
+            </div>
 
-    <div id="modal" class="modal-overlay">
-        <div class="withdraw-modal">
-            <i class="fas fa-times modal-close" onclick="closeModal()"></i>
-            <h3 id="modal-title">Çekim Yap</h3>
-            <div class="limit-tag" id="modal-limit">Minimum: 10 USDT</div>
+            <div class="input-group">
+                <label>Cüzdan Adresi</label>
+                <input type="text" id="walletAddr" placeholder="Adresinizi buraya yapıştırın...">
+            </div>
+
+            <div class="input-group">
+                <label>Miktar</label>
+                <input type="number" id="drawAmt" placeholder="0.00">
+            </div>
+
+            <button class="confirm-btn" onclick="processWithdrawal()">Talebi Onayla</button>
             
-            <p style="font-size:12px; color:var(--dim); margin-top:10px;">Cüzdan Adresi (BEP20/TRC20)</p>
-            <input type="text" placeholder="0x... veya T..." id="wallet-addr">
-            
-            <p style="font-size:12px; color:var(--dim);">Miktar</p>
-            <input type="number" placeholder="0.00" id="draw-amount">
-            
-            <button class="confirm-btn" onclick="processWithdraw()">Para Çekme Talebi Oluştur</button>
-            <p style="text-align:center; font-size:10px; color:#333; margin-top:15px;">İŞLEM ID: 8392479231</p>
+            <div style="text-align: center; margin-top: 20px; font-size: 10px; color: #333; letter-spacing: 2px;">
+                SYSTEM AUTH: 8392479231
+            </div>
         </div>
     </div>
 
     <nav class="nav">
-        <div class="nav-item" onclick="tab('home')"><i class="fas fa-home"></i><br>Home</div>
-        <div class="nav-item" onclick="tab('friends')"><i class="fas fa-users"></i><br>Friends</div>
+        <div class="nav-item active"><i class="fas fa-home"></i><span>Anasayfa</span></div>
+        <div class="nav-item"><i class="fas fa-bolt"></i><span>Boost</span></div>
+        <div class="nav-item"><i class="fas fa-user-group"></i><span>Arkadaşlar</span></div>
     </nav>
 </div>
 
 <script>
-    let state = { mine: 0.0, usdt: 0.0, trx: 0.0, activeAsset: '', minLimit: 0 };
+    let state = { mine: 0.0, usdt: 0.0, trx: 0.0, activeAsset: '', limit: 0 };
 
+    // Mining engine: 0.000012 per sec
     setInterval(() => {
-        state.mine += 0.0000012; // 100ms update için saniyenin 10'da biri
+        state.mine += 0.0000012; 
         document.getElementById('mine-val').innerText = state.mine.toFixed(8);
     }, 100);
 
     function collect() {
         if(state.mine < 0.000001) return;
-        confetti({ particleCount: 100, spread: 70, origin: { y: 0.8 } });
+        confetti({ particleCount: 150, spread: 70, origin: { y: 0.8 }, colors: ['#00ffa3', '#ffffff'] });
         state.usdt += state.mine;
         state.mine = 0;
-        document.getElementById('usdt-bal').innerText = state.usdt.toFixed(8);
+        syncUI();
     }
 
-    function openWithdraw(asset, min) {
+    function openWithdraw(asset, limit) {
         state.activeAsset = asset;
-        state.minLimit = min;
-        document.getElementById('modal-title').innerText = asset + " Çekim Yap";
-        document.getElementById('modal-limit').innerText = "Minimum Ödeme: " + min + " " + asset;
-        document.getElementById('modal').classList.add('active');
+        state.limit = limit;
+        document.getElementById('modalTitle').innerText = asset + " Çekim";
+        document.getElementById('minLimitLabel').innerText = "Minimum Çekim: " + limit + " " + asset;
+        document.getElementById('withdrawModal').classList.add('active');
     }
 
-    function closeModal() { document.getElementById('modal').classList.remove('active'); }
+    function closeModal() {
+        document.getElementById('withdrawModal').classList.remove('active');
+    }
 
-    function processWithdraw() {
-        const amt = parseFloat(document.getElementById('draw-amount').value);
-        const addr = document.getElementById('wallet-addr').value;
+    function processWithdrawal() {
+        const amt = parseFloat(document.getElementById('drawAmt').value);
+        const addr = document.getElementById('walletAddr').value;
 
-        if(!addr || addr.length < 10) { alert("Lütfen geçerli bir cüzdan adresi girin!"); return; }
-        
-        if(amt < state.minLimit) {
-            alert("Hata: Minimum çekim tutarı " + state.minLimit + " " + state.activeAsset + " olmalıdır!");
-        } else {
-            alert("Tebrikler! Çekim talebiniz alındı. Admin (8392479231) onayından sonra hesabınıza yansıyacaktır.");
-            closeModal();
+        if(!addr || addr.length < 10) {
+            alert("Lütfen geçerli bir cüzdan adresi giriniz!");
+            return;
         }
+
+        if(amt < state.limit || isNaN(amt)) {
+            alert("Hata: Minimum çekim tutarı " + state.limit + " " + state.activeAsset + " olmalıdır!");
+            return;
+        }
+
+        alert("Başarılı! Çekim talebiniz Admin (8392479231) tarafından incelenmek üzere sıraya alındı.");
+        closeModal();
     }
 
-    function tab(id) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
+    function syncUI() {
+        document.getElementById('usdt-bal').innerText = state.usdt.toFixed(8);
+        document.getElementById('trx-bal').innerText = state.trx.toFixed(8);
     }
 </script>
 </body>
