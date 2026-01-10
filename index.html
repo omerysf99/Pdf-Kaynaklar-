@@ -2,237 +2,168 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CW Flappy - Fixed & Final</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earn Tether Dashboard</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { background-color: #f0f4f8; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; user-select: none; }
-        .page { display: none; height: calc(100vh - 85px); position: relative; overflow-y: auto; background: #4eb5d3; }
-        .page.active { display: block; }
-        .bg-white-page { background: #ffffff; }
-
-        /* Piksel Karakter & Zemin */
-        .ground-ui { position: absolute; bottom: 70px; width: 100%; height: 45px; background: #74bf2e; border-top: 5px solid #538021; z-index: 10; }
-        
-        /* Game Over Modal - Görsel 9 ile Aynı */
-        #game-over-modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-            display: none; justify-content: center; align-items: center; z-index: 5000;
+        :root {
+            --bg-color: #0d0d0d;
+            --card-bg: #1a1a1a;
+            --primary-green: #00c853;
+            --text-color: #ffffff;
+            --secondary-text: #b3b3b3;
         }
 
-        #game-canvas { display: none; position: absolute; inset: 0; z-index: 100; cursor: pointer; }
-        .score-live { position: absolute; top: 15%; width: 100%; text-align: center; font-size: 80px; color: white; font-weight: 900; z-index: 200; text-shadow: 4px 4px 0 #000; pointer-events: none; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 450px;
+            width: 100%;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 20px 0 10px;
+            color: var(--primary-green);
+        }
+
+        /* Görsel Kart Tasarımları */
+        .app-screen {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 1px solid #222;
+        }
+
+        .app-screen img {
+            width: 100%;
+            display: block;
+            height: auto;
+        }
+
+        .description {
+            padding: 15px;
+            font-size: 0.9rem;
+            color: var(--secondary-text);
+            line-height: 1.4;
+        }
+
+        .status-badge {
+            background: rgba(0, 200, 83, 0.1);
+            color: var(--primary-green);
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            float: right;
+        }
+
+        /* Alt Gezinti Çubuğu Simülasyonu */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 450px;
+            background: #111;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            border-top: 1px solid #333;
+        }
+
+        .nav-item {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--secondary-text);
+        }
+
+        .nav-item.active {
+            color: var(--primary-green);
+        }
+
+        /* Responsive Düzenleme */
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .container { width: 100%; }
+        }
     </style>
 </head>
 <body>
 
-<div class="max-w-md mx-auto h-screen flex flex-col relative bg-[#4eb5d3]">
-    
-    <div class="bg-white p-3 flex items-center justify-between border-b z-[1000]">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-[#9c5c3c] rounded-lg border-2 border-black flex items-center justify-center text-white font-black text-[10px]">CW</div>
-            <span class="text-[#0088cc] font-black text-lg italic">Flappy</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <span class="text-[9px] font-bold text-gray-400">ID: 8392479231</span>
-            <div class="bg-[#0088cc] text-white text-[10px] px-2 py-1 rounded font-black">EN</div>
-        </div>
-    </div>
+    <div class="container">
+        <header>
+            <span>Admin ID: 8392479231</span>
+            <span style="color: var(--primary-green);">● Live</span>
+        </header>
 
-    <div id="game-layer" style="display:none;">
-        <div class="score-live" id="live-score">0</div>
-        <canvas id="game-canvas"></canvas>
-    </div>
-
-    <div id="flappy-page" class="page active px-4 pt-2">
-        <div class="grid grid-cols-2 gap-2 mt-2">
-            <div class="bg-white rounded-2xl p-3 shadow-sm">
-                <p class="text-[10px] font-bold text-gray-400 uppercase flex items-center gap-1">
-                    <span class="text-red-500">❤️</span> Attempts today <span class="text-blue-500 ml-auto" id="att-count">24</span>
-                </p>
-                <button class="w-full bg-[#0088cc] text-white py-2 rounded-xl mt-2 font-black text-xs">Increase</button>
-            </div>
-            <div class="bg-white rounded-2xl p-3 shadow-sm text-[9px] font-bold space-y-1">
-                <div class="flex justify-between"><span>🏆 Record today</span> <span class="text-blue-500" id="rec-today">2.02</span></div>
-                <div class="flex justify-between"><span>🏆 All-time record</span> <span class="text-blue-500">2.02</span></div>
-                <div class="flex justify-between"><span>🚀 Point multiplier</span> <span class="text-green-500">x1.0</span></div>
+        <div class="section-title">1. Madencilik Paneli</div>
+        <div class="app-screen">
+            <img src="image_44dfb0.jpg" alt="Ana Sayfa Madencilik Ekranı">
+            <div class="description">
+                <span class="status-badge">Aktif</span>
+                <strong>Mining Arayüzü:</strong> USDT üretimi ve cüzdan bakiyelerinin (USDT & TON) anlık takibi.
             </div>
         </div>
 
-        <div class="flex flex-col items-center justify-center mt-32">
-            <div class="w-14 h-10 bg-[#9c5c3c] border-4 border-black rounded-xl flex items-center justify-center animate-bounce">
-                <span class="text-white font-black text-[10px]">CW</span>
-            </div>
-            <button id="start-btn" class="mt-16 bg-white p-8 rounded-3xl shadow-2xl border-b-8 border-gray-100 active:scale-95 transition-all">
-                <div class="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-green-600 border-b-[15px] border-b-transparent ml-1"></div>
-            </button>
-        </div>
-        <div class="ground-ui"></div>
-    </div>
-
-    <div id="wallet-page" class="page bg-white-page px-6 pt-6">
-        <h1 class="text-2xl font-black mb-2">Withdrawal</h1>
-        <div class="bg-gray-50 rounded-[32px] p-8 text-center mt-10">
-            <div class="text-5xl mb-4">👛</div>
-            <p class="text-gray-400 font-bold text-xs uppercase">Balance</p>
-            <h2 class="text-4xl font-black text-[#0088cc]">0.00 TON</h2>
-            <button class="w-full bg-[#0088cc] text-white py-4 rounded-2xl mt-8 font-black shadow-lg">CONNECT WALLET</button>
-        </div>
-    </div>
-
-    <div id="tasks-page" class="page bg-white-page px-4 pt-4">
-        <h2 class="text-xl font-black mb-6">Ads Tasks</h2>
-        <div class="space-y-3">
-            <div class="border p-4 rounded-2xl flex items-center justify-between">
-                <div><p class="font-bold text-sm">Beginner's Kit</p><p class="text-blue-500 text-xs">+10 attempts</p></div>
-                <button class="bg-blue-50 text-blue-500 px-4 py-1 rounded-full font-black text-xs">GO</button>
+        <div class="section-title">2. Kazanç ve Görevler</div>
+        <div class="app-screen">
+            <img src="image_44dfce.jpg" alt="Görev Listesi 1">
+            <div class="description">
+                <strong>Hızlı Görevler:</strong> Kanal takibi ve arkadaş daveti ile yüksek ödüllü USDT kazanma alanı.
             </div>
         </div>
-    </div>
 
-    <div class="h-[85px] bg-white border-t flex justify-around items-center z-[2000]">
-        <button onclick="nav('flappy')" class="flex flex-col items-center gap-1 text-blue-500">
-            <span class="text-xl">🎮</span><span class="text-[9px] font-bold">Flappy</span>
-        </button>
-        <button onclick="nav('wallet')" class="flex flex-col items-center gap-1 text-gray-300">
-            <span class="text-xl">👛</span><span class="text-[9px] font-bold">Wallet</span>
-        </button>
-        <button onclick="nav('tasks')" class="flex flex-col items-center gap-1 text-gray-300">
-            <span class="text-xl">✅</span><span class="text-[9px] font-bold">Tasks</span>
-        </button>
-    </div>
-
-    <div id="game-over-modal">
-        <div class="bg-white rounded-[40px] w-[85%] p-8 text-center shadow-2xl">
-            <h2 class="text-2xl font-black text-gray-800 mb-6 tracking-tighter uppercase">GAME OVER</h2>
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <div class="bg-gray-50 p-4 rounded-2xl border">
-                    <p class="text-[10px] text-gray-400 font-bold uppercase">Record Today</p>
-                    <p class="text-[#0088cc] font-black text-xl" id="modal-rec">0.00</p>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-2xl border">
-                    <p class="text-[10px] text-gray-400 font-bold uppercase">All-time</p>
-                    <p class="text-[#0088cc] font-black text-xl">2.02</p>
-                </div>
-            </div>
-            <div class="space-y-3">
-                <button onclick="initGame()" class="w-full bg-[#0088cc] text-white py-4 rounded-2xl font-black shadow-lg">RESTART</button>
-                <button class="w-full bg-red-500 text-white py-4 rounded-2xl font-black shadow-lg flex items-center justify-center gap-2">
-                    <span class="text-xs">🔥</span> RESTART WITH 2X BOOSTER
-                </button>
-                <button onclick="nav('flappy')" class="w-full bg-blue-50 text-[#0088cc] py-4 rounded-2xl font-black">VIEW RATING</button>
+        <div class="app-screen">
+            <img src="image_44dfe7.jpg" alt="Görev Listesi 2">
+            <div class="description">
+                <strong>Sosyal Medya Görevleri:</strong> Instagram, Facebook ve Twitter etkileşimleri için +0.5 USDT ödüller.
             </div>
         </div>
+
+        <div class="section-title">3. Destek ve Bilgi</div>
+        <div class="app-screen">
+            <img src="image_44dfea.jpg" alt="Binance Bilgi ve Destek">
+            <div class="description">
+                <strong>İletişim:</strong> Geri bildirim merkezi, Telegram kanalı ve resmi şirket adresi bilgileri.
+            </div>
+        </div>
+
+        <div class="section-title">4. Referans (Arkadaş Daveti)</div>
+        <div class="app-screen">
+            <img src="image_44dfee.png" alt="Referans Sekmesi">
+            <div class="description">
+                <span class="status-badge">Komisyon Aktif</span>
+                <strong>Ortaklık Programı:</strong> Paylaşım butonları ve alt üyelerden gelen komisyon detayları.
+            </div>
+        </div>
+
+        <div style="height: 80px;"></div>
     </div>
-</div>
 
-<script>
-    let score = 0;
-    let playing = false;
-    let pipes = [];
-    let frame;
-    let isGameOver = false; // Sonsuz loop engelleyici
+    <div class="nav-bar">
+        <div class="nav-item active">Anasayfa</div>
+        <div class="nav-item">Yükselt</div>
+        <div class="nav-item">Arkadaşlar</div>
+    </div>
 
-    const canvas = document.getElementById('game-canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth > 450 ? 450 : window.innerWidth;
-    canvas.height = window.innerHeight - 85;
-
-    let bird = { x: 50, y: 300, w: 34, h: 26, v: 0, g: 0.25, jump: 5 };
-
-    function nav(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id + '-page').classList.add('active');
-        stopGame();
-    }
-
-    function initGame() {
-        isGameOver = false;
-        playing = true;
-        score = 0;
-        pipes = [];
-        bird.y = 300;
-        bird.v = 0;
-        document.getElementById('live-score').innerText = "0";
-        document.getElementById('game-layer').style.display = 'block';
-        document.getElementById('game-canvas').style.display = 'block';
-        document.getElementById('game-over-modal').style.display = 'none';
-        animate();
-    }
-
-    function animate() {
-        if (!playing || isGameOver) return;
-
-        ctx.fillStyle = "#70c5ce";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        bird.v += bird.g;
-        bird.y += bird.v;
-
-        // Bird drawing
-        ctx.fillStyle = "#9c5c3c";
-        ctx.fillRect(bird.x, bird.y, bird.w, bird.h);
-
-        // Pipe logic
-        if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 250) {
-            pipes.push({ x: canvas.width, y: Math.random() * (canvas.height - 300) + 100, gap: 170, passed: false });
-        }
-
-        pipes.forEach(p => {
-            p.x -= 3;
-            ctx.fillStyle = "#538021";
-            ctx.fillRect(p.x, 0, 60, p.y);
-            ctx.fillRect(p.x, p.y + p.gap, 60, canvas.height);
-
-            // Collision
-            if (bird.x + bird.w > p.x && bird.x < p.x + 60 && (bird.y < p.y || bird.y + bird.h > p.y + p.gap)) {
-                triggerGameOver();
-            }
-
-            if (!p.passed && p.x < bird.x) {
-                p.passed = true;
-                score++;
-                document.getElementById('live-score').innerText = score;
-            }
-        });
-
-        if (bird.y + bird.h > canvas.height || bird.y < 0) triggerGameOver();
-
-        frame = requestAnimationFrame(animate);
-    }
-
-    function triggerGameOver() {
-        if (isGameOver) return; // KRİTİK: Sonsuz loopu burada kesiyoruz
-        isGameOver = true;
-        playing = false;
-        cancelAnimationFrame(frame);
-        
-        document.getElementById('modal-rec').innerText = score.toFixed(2);
-        document.getElementById('game-over-modal').style.display = 'flex';
-    }
-
-    function stopGame() {
-        playing = false;
-        isGameOver = false;
-        document.getElementById('game-layer').style.display = 'none';
-        document.getElementById('game-over-modal').style.display = 'none';
-        cancelAnimationFrame(frame);
-    }
-
-    document.getElementById('start-btn').onclick = initGame;
-    window.onmousedown = (e) => { 
-        if(playing) {
-            e.preventDefault();
-            bird.v = -bird.jump; 
-        }
-    };
-    window.ontouchstart = (e) => {
-        if(playing) {
-            e.preventDefault();
-            bird.v = -bird.jump;
-        }
-    };
-</script>
 </body>
 </html>
