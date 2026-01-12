@@ -3,501 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Earn Tether Pro v4 - Official Admin Build</title>
+    <title>Earn Tether Pro v5 - Offline Mining Edition</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
-        /* --- CSS DEĞİŞKENLERİ --- */
         :root {
             --primary: #00ffa3;
-            --primary-dark: #00d38d;
-            --bg-deep: #050505;
-            --card-bg: #121212;
-            --card-border: #222222;
-            --task-hover: #1c1c1c;
-            --text-main: #ffffff;
-            --text-dim: #888888;
-            --danger: #ff3b30;
-            --tg-blue: #24A1DE;
-            --binance-yellow: #f3ba2f;
-            --green-glow: rgba(0, 255, 163, 0.25);
+            --bg: #050505;
+            --card: #121212;
+            --border: #222;
+            --text: #fff;
+            --dim: #888;
+            --glow: rgba(0, 255, 163, 0.2);
         }
 
-        /* --- SIFIRLAMA VE TEMEL --- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
+        /* Temel Ayarlar */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: #1a1a1a; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; color: var(--text); }
+
+        /* Telefon Frame */
+        .app-container {
+            width: 100%; max-width: 414px; height: 95vh; max-height: 850px;
+            background: var(--bg); border-radius: 45px; border: 8px solid #333;
+            position: relative; display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
         }
 
-        body {
-            background: #1a1a1a;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--text-main);
-            overflow: hidden;
+        /* Üst Bar */
+        .app-header { padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .brand { font-weight: 900; font-size: 17px; display: flex; align-items: center; gap: 6px; }
+        .verify { color: #3897f0; font-size: 14px; }
+
+        /* İçerik Alanı */
+        .scroll-area { flex: 1; overflow-y: auto; padding: 0 18px 100px; scrollbar-width: none; }
+        .scroll-area::-webkit-scrollbar { display: none; }
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- ANASAYFA --- */
+        .mining-card {
+            background: linear-gradient(180deg, #10251e 0%, var(--card) 100%);
+            border-radius: 35px; padding: 35px 20px; text-align: center; border: 1px solid var(--border); margin-top: 10px;
         }
-
-        /* --- TELEFON KASASI (FRAME) --- */
-        .phone-frame {
-            width: 100%;
-            max-width: 414px;
-            height: 94vh;
-            max-height: 880px;
-            background: var(--bg-deep);
-            border-radius: 50px;
-            border: 9px solid #333;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 50px 120px rgba(0,0,0,0.8);
+        .mining-val { font-size: 34px; font-weight: 900; margin: 10px 0; font-variant-numeric: tabular-nums; }
+        .orb {
+            width: 100px; height: 100px; background: #26a17b; border-radius: 50%;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 50px; color: #fff; margin: 20px 0;
+            box-shadow: 0 0 40px var(--glow); animation: pulse 2s infinite ease-in-out;
         }
-
-        /* --- ÜST HEADER (Görsel 69016f) --- */
-        .app-header {
-            padding: 20px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--bg-deep);
-            z-index: 100;
-        }
-
-        .header-close { font-size: 13px; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .header-title { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 16px; letter-spacing: -0.5px; }
-        .verified-icon { color: #3897f0; font-size: 14px; }
-        .header-more { color: var(--text-dim); font-size: 18px; cursor: pointer; }
-
-        /* --- KAYDIRILABİLİR İÇERİK --- */
-        .content-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 18px 120px;
-            scrollbar-width: none;
-            position: relative;
-        }
-
-        .content-container::-webkit-scrollbar { display: none; }
-
-        /* SEKME GİZLEME/GÖSTERME */
-        .tab-view { display: none; }
-        .tab-view.active { display: block; animation: slideIn 0.3s ease-out; }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* --- ANA SAYFA ELEMENTLERİ --- */
-        .mining-hero {
-            background: linear-gradient(180deg, #11251e 0%, var(--card-bg) 100%);
-            border-radius: 35px;
-            padding: 35px 20px;
-            text-align: center;
-            border: 1px solid var(--card-border);
-            margin-top: 10px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .mining-label { font-size: 11px; color: var(--text-dim); letter-spacing: 1.5px; font-weight: 600; margin-bottom: 10px; }
-        .main-balance { font-size: 38px; font-weight: 900; margin: 10px 0; font-variant-numeric: tabular-nums; }
-        
-        .mining-orb-wrapper {
-            position: relative;
-            display: inline-flex;
-            margin: 25px 0;
-        }
-
-        .mining-orb {
-            width: 100px;
-            height: 100px;
-            background: #26a17b;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 50px;
-            color: white;
-            box-shadow: 0 0 40px var(--green-glow);
-            border: 4px solid rgba(255,255,255,0.1);
-            animation: orbPulse 2s infinite alternate ease-in-out;
-        }
-
-        @keyframes orbPulse {
-            0% { transform: scale(1); box-shadow: 0 0 20px var(--green-glow); }
-            100% { transform: scale(1.08); box-shadow: 0 0 60px var(--green-glow); }
-        }
-
-        .mining-speed { font-size: 11px; color: var(--text-dim); margin-bottom: 25px; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
         .btn-main {
-            width: 100%;
-            padding: 16px;
-            border-radius: 16px;
-            border: none;
-            font-weight: 800;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-bottom: 12px;
+            width: 100%; padding: 18px; border-radius: 18px; border: none; font-weight: 900; font-size: 16px; cursor: pointer; transition: 0.2s;
         }
+        .btn-collect { background: #fff; color: #000; margin-bottom: 12px; }
+        .btn-upgrade { background: #1a1a1a; color: #fff; border: 1px solid #333; }
 
-        .btn-collect { background: #ffffff; color: #000; box-shadow: 0 10px 20px rgba(255,255,255,0.1); }
-        .btn-collect:active { transform: scale(0.96); background: #f0f0f0; }
-        
-        /* --- CÜZDAN KARTI --- */
-        .section-header { margin: 30px 0 15px; display: flex; justify-content: space-between; align-items: center; }
-        .section-header h4 { font-size: 17px; font-weight: 800; }
-        .admin-tag { font-size: 10px; color: var(--text-dim); font-family: monospace; }
-
-        .wallet-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border: 1px solid var(--card-border);
-            margin-bottom: 10px;
+        /* Cüzdan Paneli */
+        .wallet-bar {
+            background: var(--card); border-radius: 20px; padding: 15px;
+            display: flex; align-items: center; gap: 15px; border: 1px solid var(--border); margin: 25px 0;
         }
+        .wallet-icon { width: 45px; height: 45px; background: #26a17b; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
-        .wallet-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
-        .wallet-details { flex: 1; }
-        .wallet-balance-text { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
-        .wallet-subtext { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-
-        .btn-action-small {
-            background: #222;
-            color: var(--primary);
-            border: 1px solid #333;
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 800;
-            cursor: pointer;
-        }
-
-        /* --- GÖREV LİSTESİ --- */
-        .task-list { display: flex; flex-direction: column; gap: 12px; }
-        
+        /* Görevler */
+        .section-title { font-size: 18px; font-weight: 800; margin-bottom: 15px; display: flex; justify-content: space-between; }
         .task-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 14px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            border: 1px solid var(--card-border);
-            transition: 0.2s;
+            background: var(--card); border-radius: 20px; padding: 14px;
+            display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); margin-bottom: 10px;
         }
+        .task-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .task-info { flex: 1; }
+        .task-name { font-size: 14px; font-weight: 700; }
+        .task-reward { color: var(--primary); font-size: 12px; font-weight: 800; }
+        .btn-go { background: var(--primary); color: #000; border: none; padding: 7px 18px; border-radius: 20px; font-weight: 800; font-size: 11px; }
 
-        .task-card:active { transform: scale(0.98); background: var(--task-hover); }
+        /* --- ARKADAŞLAR --- */
+        .friend-hero { background: var(--card); border-radius: 30px; padding: 30px 20px; text-align: center; border: 1px solid var(--border); }
+        .social-row { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
+        .soc-btn { width: 50px; height: 50px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #fff; }
 
-        .task-img {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: white;
-        }
-
-        .task-body { flex: 1; }
-        .task-name { font-size: 14px; font-weight: 700; color: #f0f0f0; }
-        .task-reward { font-size: 12px; color: var(--primary); font-weight: 800; margin-top: 2px; }
-
-        .btn-go {
-            background: var(--primary);
-            color: #000;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: 800;
-            font-size: 12px;
-            cursor: pointer;
-        }
-
-        /* --- ARKADAŞLAR SEKME STİLLERİ --- */
-        .friends-hero {
-            background: var(--card-bg);
-            border-radius: 30px;
-            padding: 30px 20px;
-            text-align: center;
-            border: 1px solid var(--card-border);
-        }
-
-        .invite-title { font-size: 22px; font-weight: 900; margin-bottom: 10px; }
-        .invite-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin-bottom: 25px; padding: 0 10px; }
-
-        .social-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 25px;
-        }
-
-        .social-item {
-            height: 50px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            color: white;
-            cursor: pointer;
-        }
-
-        .link-box {
-            background: #000;
-            border: 1px dashed #444;
-            padding: 15px;
-            border-radius: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 10px;
-        }
-
-        .link-text { font-family: monospace; font-size: 12px; color: var(--primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; }
-
-        /* --- ALT NAVİGASYON --- */
+        /* --- ALT NAV --- */
         .bottom-nav {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 85px;
-            background: #0a0a0a;
-            border-top: 1px solid #1a1a1a;
-            display: flex;
-            justify-content: space-around;
-            align-items: flex-start;
-            padding-top: 15px;
-            z-index: 1000;
+            position: absolute; bottom: 0; width: 100%; height: 85px; background: #0a0a0a;
+            border-top: 1px solid #222; display: flex; justify-content: space-around; padding-top: 12px;
         }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            color: var(--text-dim);
-            font-size: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
-            flex: 1;
-        }
-
-        .nav-item i { font-size: 22px; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--dim); font-size: 11px; flex: 1; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
-        .nav-item.active i { transform: translateY(-3px); }
+        .nav-item i { font-size: 22px; }
 
-        /* --- ANİMASYON EFEKTLERİ --- */
-        .collect-animation {
-            position: absolute;
-            color: var(--primary);
-            font-weight: 900;
-            font-size: 20px;
-            pointer-events: none;
-            z-index: 2000;
-            animation: floatUpAnim 1s ease-out forwards;
+        /* Uçan Yazı */
+        .fly-text { position: absolute; color: var(--primary); font-weight: 900; animation: fly 1s forwards; z-index: 99; pointer-events: none; }
+        @keyframes fly { 0% { opacity: 1; } 100% { opacity: 0; transform: translateY(-100px); } }
+
+        /* Popup */
+        .offline-popup {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #fff; color: #000; padding: 25px; border-radius: 30px;
+            width: 80%; text-align: center; z-index: 1000; display: none; box-shadow: 0 0 50px rgba(0,0,0,0.5);
         }
-
-        @keyframes floatUpAnim {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-120px) scale(1.2); }
-        }
-
-        /* --- YÜKSELTME (BOŞ) --- */
-        .empty-state {
-            text-align: center;
-            padding: 100px 20px;
-            color: var(--text-dim);
-        }
-
-        .empty-state i {
-            font-size: 60px;
-            margin-bottom: 20px;
-            color: #222;
-        }
-
     </style>
 </head>
 <body>
 
-<div class="phone-frame">
+<div class="app-container">
     <header class="app-header">
-        <div class="header-close"><i class="fas fa-times"></i> Kapat</div>
-        <div class="header-title">
-            Earn Tether 
-            <i class="fas fa-circle-check verified-icon"></i>
-        </div>
-        <div class="header-more"><i class="fas fa-ellipsis-v"></i></div>
+        <div style="font-size: 13px; color: var(--dim);"><i class="fas fa-times"></i> Kapat</div>
+        <div class="brand">Earn Tether <i class="fas fa-circle-check verify"></i></div>
+        <div style="font-size: 12px; color: var(--dim);">v5.0.1</div>
     </header>
 
-    <div class="content-container">
+    <div class="scroll-area">
         
-        <div id="tab-home" class="tab-view active">
-            <section class="mining-hero">
-                <div class="mining-label">MADENCİLİK HAVUZU</div>
-                <div class="main-balance" id="mining-display">0.00000000</div>
-                
-                <div class="mining-orb-wrapper">
-                    <div class="mining-orb">₮</div>
-                </div>
-
-                <div class="mining-speed">
-                    <i class="fas fa-bolt" style="color:var(--primary)"></i> 
-                    Mevcut Hız: 0.000115750 USDT/s
-                </div>
-
-                <button class="btn-main btn-collect" onclick="handleCollect(event)">Bakiyeyi Topla</button>
-                <button class="btn-main" style="background: #1a1a1a; color: #fff; border: 1px solid #333;">Yükseltme Satın Al</button>
-            </section>
-
-            <div class="section-header">
-                <h4>Cüzdanın</h4>
-                <div class="admin-tag">ID: 8392479231</div>
+        <div id="home" class="tab-content active">
+            <div class="mining-card">
+                <div style="font-size: 11px; color: var(--dim); letter-spacing: 1px;">HAVUZDA BİRİKEN</div>
+                <div class="mining-val" id="m-val">0.00000000</div>
+                <div class="orb">₮</div>
+                <div style="font-size: 11px; color: var(--dim); margin-bottom: 20px;">Hız: 0.00011575 USDT/s</div>
+                <button class="btn-main btn-collect" onclick="collect(event)">Bakiyeyi Topla</button>
+                <button class="btn-main btn-upgrade">Hızı Artır</button>
             </div>
 
-            <div class="wallet-card">
-                <div class="wallet-icon" style="background: #26a17b;">
-                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" width="28">
+            <div class="wallet-bar">
+                <div class="wallet-icon"><i class="fas fa-wallet"></i></div>
+                <div style="flex:1">
+                    <div id="w-val" style="font-size: 18px; font-weight: 900;">0.0000 USDT</div>
+                    <div style="font-size: 10px; color: var(--dim);">Admin ID: 8392479231</div>
                 </div>
-                <div class="wallet-details">
-                    <div class="wallet-balance-text" id="wallet-display">0.0000 USDT</div>
-                    <div class="wallet-subtext">≈ $0.00 USD</div>
-                </div>
-                <button class="btn-action-small">Para Çek</button>
+                <button class="btn-go" style="background:#222; color:#fff; border:1px solid #333">Çek</button>
             </div>
 
-            <div class="section-header">
-                <h4>Kazanmaya Başla</h4>
-                <div style="font-size: 10px; color: var(--primary); font-weight: 800;">TÜMÜNÜ GÖR</div>
-            </div>
-
+            <div class="section-title">Sosyal Görevler <span style="background:red; font-size:9px; padding:2px 5px; border-radius:4px;">YENİ</span></div>
             <div class="task-list">
-                <div class="task-card">
-                    <div class="task-img" style="background: var(--tg-blue);"><i class="fab fa-telegram-plane"></i></div>
-                    <div class="task-body">
-                        <div class="task-name">Telegram Kanalına Katıl</div>
-                        <div class="task-reward">+2.50 USDT</div>
-                    </div>
-                    <button class="btn-go">GİT</button>
-                </div>
-
-                <div class="task-card">
-                    <div class="task-img" style="background: var(--binance-yellow); color: black;"><i class="fas fa-university"></i></div>
-                    <div class="task-body">
-                        <div class="task-name">Binance Haberlerini Oku</div>
-                        <div class="task-reward">+0.50 USDT</div>
-                    </div>
-                    <button class="btn-go">GİT</button>
-                </div>
-
-                <div class="task-card">
-                    <div class="task-img" style="background: linear-gradient(45deg, #f09433, #bc1888);"><i class="fab fa-instagram"></i></div>
-                    <div class="task-body">
-                        <div class="task-name">Instagram Takip Et</div>
-                        <div class="task-reward">+0.75 USDT</div>
-                    </div>
-                    <button class="btn-go">GİT</button>
-                </div>
-
-                <div class="task-card">
-                    <div class="task-img" style="background: #1877F2;"><i class="fab fa-facebook-f"></i></div>
-                    <div class="task-body">
-                        <div class="task-name">Facebook Beğeni Görevi</div>
-                        <div class="task-reward">+0.50 USDT</div>
-                    </div>
-                    <button class="btn-go">GİT</button>
-                </div>
-
-                <div class="task-card">
-                    <div class="task-img" style="background: #ff0000;"><i class="fab fa-youtube"></i></div>
-                    <div class="task-body">
-                        <div class="task-name">Yeni Videoyu İzle</div>
-                        <div class="task-reward">+1.20 USDT</div>
-                    </div>
-                    <button class="btn-go">GİT</button>
-                </div>
-
-                <div class="task-card">
-                    <div class="task-img" style="background: #000; border:1px solid #333;"><i class="fab fa-x-twitter"></i></div>
-                    <div class="task-body">
-                        <div class="task-name">X Hesabını Takip Et</div>
-                        <div class="task-reward">+0.50 USDT</div>
-                    </div>
-                    <button class="btn-go">GİT</button>
-                </div>
-
-                <div class="task-card">
-                    <div class="task-img" style="background: #5865F2;"><i class="fab fa-discord"></i></div>
-                    <div class="task-body">
-                        <div class="task-name">Discord Sunucuna Katıl</div>
-                        <div class="task-reward">+1.50 USDT</div>
-                    </div>
-                    <button class="btn-go">GİT</button>
-                </div>
+                <div class="task-card"><div class="task-icon" style="background:#24A1DE"><i class="fab fa-telegram"></i></div>
+                    <div class="task-info"><div class="task-name">Telegram Kanalı</div><div class="task-reward">+2.5 USDT</div></div><button class="btn-go">GİT</button></div>
+                <div class="task-card"><div class="task-icon" style="background:#ff0000"><i class="fab fa-youtube"></i></div>
+                    <div class="task-info"><div class="task-name">Tanıtım Videosu</div><div class="task-reward">+1.0 USDT</div></div><button class="btn-go">İZLE</button></div>
+                <div class="task-card"><div class="task-icon" style="background:#f3ba2f; color:#000"><i class="fas fa-coins"></i></div>
+                    <div class="task-info"><div class="task-name">Binance Kayıt</div><div class="task-reward">+5.0 USDT</div></div><button class="btn-go">YAP</button></div>
+                <div class="task-card"><div class="task-icon" style="background:#bc1888"><i class="fab fa-instagram"></i></div>
+                    <div class="task-info"><div class="task-name">Instagram Takip</div><div class="task-reward">+0.5 USDT</div></div><button class="btn-go">GİT</button></div>
+                <div class="task-card"><div class="task-icon" style="background:#000; border:1px solid #333"><i class="fab fa-x-twitter"></i></div>
+                    <div class="task-info"><div class="task-name">Twitter Takip</div><div class="task-reward">+0.5 USDT</div></div><button class="btn-go">GİT</button></div>
+                <div class="task-card"><div class="task-icon" style="background:#5865F2"><i class="fab fa-discord"></i></div>
+                    <div class="task-info"><div class="task-name">Discord Katılım</div><div class="task-reward">+1.5 USDT</div></div><button class="btn-go">KATIL</button></div>
             </div>
         </div>
 
-        <div id="tab-upgrade" class="tab-view">
-            <div class="empty-state">
-                <i class="fas fa-layer-group"></i>
-                <h2>Çok Yakında!</h2>
-                <p>Mağaza ve hız yükseltmeleri şu an geliştirme aşamasındadır.</p>
+        <div id="upgrade" class="tab-content">
+            <div style="text-align:center; padding-top:100px; color:var(--dim)">
+                <i class="fas fa-bolt" style="font-size:60px; margin-bottom:20px;"></i>
+                <h2>Yükseltmeler Yakında</h2>
+                <p style="padding:20px">Daha hızlı USDT kazmak için yeni donanımlar eklenecektir.</p>
             </div>
         </div>
 
-        <div id="tab-friends" class="tab-view">
-            <div class="friends-hero">
-                <div class="invite-title">5 USDT Hediye Kazan!</div>
-                <div class="invite-desc">Her başarılı davet için cüzdanına anında nakit ödül ekle. Sınır yok, daha fazla arkadaş daha fazla kazanç!</div>
-                
-                <button class="btn-main" style="background: var(--primary); color: #000;">Hemen Paylaş</button>
-
-                <div class="social-grid">
-                    <div class="social-item" style="background: #25D366;"><i class="fab fa-whatsapp"></i></div>
-                    <div class="social-item" style="background: var(--tg-blue);"><i class="fab fa-telegram"></i></div>
-                    <div class="social-item" style="background: #0084FF;"><i class="fab fa-facebook-messenger"></i></div>
-                    <div class="social-item" style="background: #444;"><i class="fas fa-envelope"></i></div>
+        <div id="friends" class="tab-content">
+            <div class="friend-hero">
+                <i class="fas fa-user-plus" style="font-size:50px; color:var(--primary); margin-bottom:15px;"></i>
+                <h2>5 USDT Hediye!</h2>
+                <p class="invite-desc">Arkadaşlarını davet et, her aktif madenci için bakiyene 5.00 USDT eklensin.</p>
+                <div class="social-row">
+                    <div class="soc-btn" style="background:#25D366"><i class="fab fa-whatsapp"></i></div>
+                    <div class="soc-btn" style="background:#24A1DE"><i class="fab fa-telegram"></i></div>
+                    <div class="soc-btn" style="background:#000"><i class="fab fa-x-twitter"></i></div>
                 </div>
-
-                <div class="link-box">
-                    <div class="link-text">t.me/EarnTetherBot?ref=839247</div>
-                    <i class="far fa-copy" style="color: var(--text-dim); cursor: pointer;" onclick="alert('Kopyalandı!')"></i>
-                </div>
-            </div>
-
-            <div class="section-header" style="margin-top: 30px;">
-                <h4>Davet İstatistikleri</h4>
-            </div>
-
-            <div class="task-list">
-                <div class="task-card">
-                    <div class="task-img" style="background: #333;"><i class="fas fa-users"></i></div>
-                    <div class="task-body">
-                        <div class="task-name">Toplam Referans</div>
-                        <div class="task-reward">0 Kişi</div>
-                    </div>
-                </div>
-                <div class="task-card">
-                    <div class="task-img" style="background: #333;"><i class="fas fa-gift"></i></div>
-                    <div class="task-body">
-                        <div class="task-name">Ref Kazancı</div>
-                        <div class="task-reward">0.00 USDT</div>
-                    </div>
+                <div style="background:#000; padding:15px; border-radius:15px; border:1px dashed #444; color:var(--primary); font-size:12px;">
+                    t.me/EarnTetherBot?ref=839247
                 </div>
             </div>
         </div>
@@ -505,81 +180,99 @@
     </div>
 
     <nav class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('home', this)">
-            <i class="fas fa-house"></i>
-            <span>Anasayfa</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('upgrade', this)">
-            <i class="fas fa-bolt"></i>
-            <span>Yükselt</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('friends', this)">
-            <i class="fas fa-user-plus"></i>
-            <span>Arkadaşlar</span>
-        </div>
+        <div class="nav-item active" onclick="nav(this, 'home')"><i class="fas fa-home"></i><span>Anasayfa</span></div>
+        <div class="nav-item" onclick="nav(this, 'upgrade')"><i class="fas fa-bolt"></i><span>Yükselt</span></div>
+        <div class="nav-item" onclick="nav(this, 'friends')"><i class="fas fa-user-friends"></i><span>Arkadaşlar</span></div>
     </nav>
+
+    <div id="off-popup" class="offline-popup">
+        <h3 style="margin-bottom:10px;">Hoş Geldin!</h3>
+        <p id="off-msg" style="font-size:14px; margin-bottom:20px;"></p>
+        <button class="btn-main" style="background:#000; color:#fff;" onclick="this.parentElement.style.display='none'">Harika!</button>
+    </div>
 </div>
 
 <script>
-    /* --- STATE MANAGEMENT --- */
-    let miningBalance = 0.000000000;
-    let walletBalance = 0.000000000;
-    const miningSpeed = 0.000115750; // Saniyede
+    /* --- AYARLAR VE DEĞİŞKENLER --- */
+    let m_amt = 0.0; // Havuzdaki
+    let w_amt = 0.0; // Cüzdandaki
+    const SPEED = 0.00011575; // Saniyede kazanç
+    const ADMIN_ID = "8392479231";
 
-    const miningDisplay = document.getElementById('mining-display');
-    const walletDisplay = document.getElementById('wallet-display');
+    /* --- OFFLINE SİSTEMİ (ÇALIŞMA MANTIĞI) --- */
+    function initApp() {
+        // Kayıtlı verileri yükle
+        const savedWallet = localStorage.getItem('wallet_' + ADMIN_ID);
+        const lastTime = localStorage.getItem('last_time_' + ADMIN_ID);
+        const savedMining = localStorage.getItem('mining_' + ADMIN_ID);
 
-    /* --- MADENCİLİK MOTORU --- */
-    // Her 100ms'de bir (0.1 sn) güncellenerek akıcılık sağlanır.
+        if(savedWallet) w_amt = parseFloat(savedWallet);
+        if(savedMining) m_amt = parseFloat(savedMining);
+
+        if(lastTime) {
+            const now = Date.now();
+            const diff = (now - parseInt(lastTime)) / 1000; // Saniye cinsinden fark
+            const offlineEarned = diff * SPEED;
+            
+            if(offlineEarned > 0.0001) {
+                m_amt += offlineEarned;
+                document.getElementById('off-msg').innerText = `Dışarıdayken havuzuna ${offlineEarned.toFixed(6)} USDT eklendi!`;
+                document.getElementById('off-popup').style.display = 'block';
+            }
+        }
+        updateUI();
+    }
+
+    /* --- CANLI SAYAÇ --- */
     setInterval(() => {
-        miningBalance += (miningSpeed / 10);
-        miningDisplay.innerText = miningBalance.toFixed(8);
+        m_amt += (SPEED / 10);
+        document.getElementById('m-val').innerText = m_amt.toFixed(8);
+        // Her 5 saniyede bir durumu kaydet (Olası kapanmalara karşı)
+        saveData();
     }, 100);
 
-    /* --- TOPLAMA İŞLEMİ --- */
-    function handleCollect(e) {
-        if (miningBalance <= 0.0001) return;
+    /* --- TOPLAMA --- */
+    function collect(e) {
+        if(m_amt <= 0) return;
 
-        // 1. Animasyon Oluştur
-        const rect = e.target.getBoundingClientRect();
-        const anim = document.createElement('div');
-        anim.className = 'collect-animation';
-        anim.innerText = '+' + miningBalance.toFixed(4);
-        anim.style.left = e.clientX + 'px';
-        anim.style.top = e.clientY + 'px';
-        document.body.appendChild(anim);
+        // Uçan Metin
+        const f = document.createElement('div');
+        f.className = 'fly-text';
+        f.innerText = '+' + m_amt.toFixed(4);
+        f.style.left = e.clientX + 'px';
+        f.style.top = e.clientY + 'px';
+        document.body.appendChild(f);
+        setTimeout(() => f.remove(), 1000);
 
-        // 2. Bakiyeyi Aktar
-        walletBalance += miningBalance;
-        miningBalance = 0;
-
-        // 3. UI Güncelle
-        walletDisplay.innerText = walletBalance.toFixed(4) + " USDT";
-        miningDisplay.innerText = "0.00000000";
-
-        // 4. Elementi Temizle
-        setTimeout(() => anim.remove(), 1000);
-
-        // 5. Hafif Haptic/Geri Bildirim
-        e.target.style.transform = "scale(0.95)";
-        setTimeout(() => e.target.style.transform = "scale(1)", 100);
+        // Aktar
+        w_amt += m_amt;
+        m_amt = 0;
+        updateUI();
+        saveData();
     }
 
-    /* --- SEKME YÖNETİMİ --- */
-    function switchTab(tabId, el) {
-        // Tüm sekmeleri kapat
-        document.querySelectorAll('.tab-view').forEach(tab => tab.classList.remove('active'));
-        // Hedef sekmeyi aç
-        document.getElementById('tab-' + tabId).classList.add('active');
-        
-        // Nav ikonlarını güncelle
-        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+    /* --- VERİ KAYDETME --- */
+    function saveData() {
+        localStorage.setItem('wallet_' + ADMIN_ID, w_amt);
+        localStorage.setItem('mining_' + ADMIN_ID, m_amt);
+        localStorage.setItem('last_time_' + ADMIN_ID, Date.now());
+    }
+
+    function updateUI() {
+        document.getElementById('w-val').innerText = w_amt.toFixed(4) + " USDT";
+        document.getElementById('m-val').innerText = m_amt.toFixed(8);
+    }
+
+    /* --- NAVİGASYON --- */
+    function nav(el, tabId) {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         el.classList.add('active');
-
-        // Sayfa en üste kaydır
-        document.querySelector('.content-container').scrollTop = 0;
+        document.getElementById(tabId).classList.add('active');
     }
-</script>
 
+    // Uygulamayı Başlat
+    window.onload = initApp;
+</script>
 </body>
 </html>
