@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>USDT Kazan - Para Çek</title>
     
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -30,50 +26,13 @@
             padding-bottom: 80px;
         }
 
-        /* LOADING SCREEN - DÜZELTİLMİŞ */
-        #loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #0f172a;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-
-        .loader {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(59, 130, 246, 0.3);
-            border-radius: 50%;
-            border-top-color: #3b82f6;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-
-        .loading-text {
-            color: #94a3b8;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
         /* SAYFA SİSTEMİ */
         .page {
             display: none;
-            animation: fadeIn 0.3s ease;
         }
 
         .page.active {
             display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         /* HEADER */
@@ -693,11 +652,6 @@
             color: white;
         }
 
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -710,12 +664,6 @@
     </style>
 </head>
 <body>
-    <!-- YÜKLENİYOR EKRANI -->
-    <div id="loading-screen">
-        <div class="loader"></div>
-        <div class="loading-text">USDT Görev Uygulaması Yükleniyor...</div>
-    </div>
-
     <!-- ÇEKİM MODAL -->
     <div id="withdraw-modal" class="modal">
         <div class="modal-content">
@@ -764,7 +712,7 @@
     </div>
 
     <!-- ANA SAYFA -->
-    <div id="home-page" class="page">
+    <div id="home-page" class="page active">
         <div class="header">
             <div class="user-info">
                 <i class="fas fa-user"></i> Kullanıcı
@@ -964,66 +912,25 @@
     </div>
 
     <script>
-        // SAYFA YÜKLENDİĞİNDE - DÜZELTİLMİŞ VERSİYON
+        // SAYFA YÜKLENDİĞİNDE
         document.addEventListener('DOMContentLoaded', function() {
-            // Loading ekranını 1 saniye sonra kapat
-            setTimeout(() => {
-                hideLoadingScreen();
-                initializeApp();
-            }, 1000);
+            // Uygulamayı başlat
+            initializeApp();
         });
 
-        function hideLoadingScreen() {
-            const loadingScreen = document.getElementById('loading-screen');
-            loadingScreen.style.opacity = '0';
-            loadingScreen.style.transition = 'opacity 0.3s ease';
-            
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-                document.getElementById('home-page').classList.add('active');
-            }, 300);
-        }
-
         function initializeApp() {
-            console.log("Uygulama başlatılıyor...");
+            console.log("USDT Kazan uygulaması başlatılıyor...");
             
             // Verileri yükle
             loadData();
             
-            // Firebase'i başlatmaya çalış (opsiyonel)
-            tryInitializeFirebase();
-            
-            // Bakiye güncelleme başlat
-            updateBalances();
-            updateStats();
-            
             // Event listener'ları ekle
             setupEventListeners();
             
-            console.log("Uygulama başarıyla başlatıldı!");
-        }
-
-        function tryInitializeFirebase() {
-            // Firebase config
-            const firebaseConfig = {
-                apiKey: "AIzaSyAIstjXKAAgVr-AyVY-a1tlab-TquP1EwI",
-                authDomain: "sanakod-e6b22.firebaseapp.com",
-                projectId: "sanakod-e6b22",
-                storageBucket: "sanakod-e6b22.firebasestorage.app",
-                messagingSenderId: "567585215373",
-                appId: "1:567585215373:web:d4ec6e5541da2872df63c4",
-                measurementId: "G-P0J921DX96"
-            };
+            // Otomatik gelir sistemini başlat
+            startAutoIncome();
             
-            try {
-                // Firebase'i başlat
-                if (firebase.apps.length === 0) {
-                    firebase.initializeApp(firebaseConfig);
-                    console.log("Firebase başarıyla başlatıldı!");
-                }
-            } catch (error) {
-                console.log("Firebase başlatma hatası, local storage kullanılacak:", error);
-            }
+            console.log("Uygulama başarıyla başlatıldı!");
         }
 
         // VERİLER
@@ -1084,7 +991,10 @@
             document.getElementById('withdraw-amount').addEventListener('input', updateRequirements);
             
             // Çekim talep butonu
-            document.getElementById('withdraw-modal').querySelector('.modal-btn.primary').addEventListener('click', processWithdraw);
+            const withdrawBtn = document.querySelector('#withdraw-modal .modal-btn.primary');
+            if (withdrawBtn) {
+                withdrawBtn.addEventListener('click', processWithdraw);
+            }
             
             // Kopyala butonu
             document.getElementById('copy-btn').addEventListener('click', copyReferralLink);
@@ -1095,11 +1005,113 @@
                     switchTab(this.getAttribute('data-page'));
                 });
             });
+        }
+
+        // OTOMATİK GELİR SİSTEMİNİ BAŞLAT
+        function startAutoIncome() {
+            // İlk güncelleme
+            updateBalances();
             
-            // Modal kapatma
-            document.getElementById('withdraw-modal').querySelector('.close-modal').addEventListener('click', closeWithdrawModal);
-            document.getElementById('withdraw-modal').querySelector('.modal-btn.secondary').addEventListener('click', closeWithdrawModal);
+            // Her saniye güncelle
+            setInterval(updateBalances, 1000);
+        }
+
+        // BAKİYE GÜNCELLEME
+        function updateBalances() {
+            const now = Date.now();
+            const secondsPassed = (now - lastUpdate) / 1000;
             
-            // Modal dışına tıklama
-            document.getElementById('withdraw-modal').addEventListener('click', function(e) {
-               
+            // Otomatik gelir
+            collectedAmount += autoIncomeRate * secondsPassed;
+            lastUpdate = now;
+            
+            // Ekran güncelleme
+            document.getElementById('collected-amount').textContent = collectedAmount.toFixed(6);
+            document.getElementById('wallet-amount').textContent = walletAmount.toFixed(6);
+            
+            // Topla butonu
+            if (collectedAmount > 0) {
+                document.getElementById('collect-btn').innerHTML = `<i class="fas fa-coins"></i> Topla (${collectedAmount.toFixed(3)})`;
+            }
+            
+            // Verileri kaydet
+            localStorage.setItem('collectedAmount', collectedAmount);
+            localStorage.setItem('walletAmount', walletAmount);
+        }
+
+        // STATS GÜNCELLE
+        function updateStats() {
+            document.getElementById('ad-count').textContent = adCount;
+            document.getElementById('ref-count').textContent = refCount;
+            document.getElementById('current-ads').textContent = adCount;
+            document.getElementById('current-refs').textContent = refCount;
+            
+            localStorage.setItem('adCount', adCount);
+            localStorage.setItem('refCount', refCount);
+        }
+
+        // GÖREV DURUMLARINI YÜKLE
+        function loadTaskStatus() {
+            // Kanal görevi
+            if (taskStatus.channel) {
+                const btn = document.getElementById('channel-btn');
+                btn.innerHTML = '<i class="fas fa-check"></i> TAMAMLANDI';
+                btn.disabled = true;
+                btn.style.background = '#10b981';
+            }
+            
+            // Haber görevi
+            if (taskStatus.news) {
+                const btn = document.getElementById('news-btn');
+                btn.innerHTML = '<i class="fas fa-check"></i> TAMAMLANDI';
+                btn.disabled = true;
+                btn.style.background = '#10b981';
+            }
+            
+            // Instagram görevi
+            if (taskStatus.instagram) {
+                const btn = document.getElementById('instagram-btn');
+                btn.innerHTML = '<i class="fas fa-check"></i> TAMAMLANDI';
+                btn.disabled = true;
+                btn.style.background = '#10b981';
+            }
+        }
+
+        // GÖREV TAMAMLAMA
+        function completeTask(taskId, amount) {
+            // Reklam hariç diğer görevler sadece 1 defa
+            if (taskId !== 'ad') {
+                if (taskStatus[taskId]) {
+                    showNotification('Bu görevi zaten tamamladınız!', 'warning');
+                    return;
+                }
+                taskStatus[taskId] = true;
+                localStorage.setItem(`task_${taskId}`, 'completed');
+            } else {
+                // Reklam sayısını artır
+                adCount++;
+                updateStats();
+            }
+            
+            // USDT ekle
+            collectedAmount += amount;
+            updateBalances();
+            
+            // Bildirim
+            showNotification(`+${amount} USDT kazandınız!`, 'success');
+            
+            // Butonu güncelle
+            if (taskId !== 'ad') {
+                loadTaskStatus();
+            }
+        }
+
+        // TOPLA BUTONU
+        function collectBalance() {
+            if (collectedAmount > 0) {
+                walletAmount += collectedAmount;
+                collectedAmount = 0;
+                updateBalances();
+                showNotification('USDT cüzdana aktarıldı!', 'success');
+            } else {
+                showNotification('Henüz toplanacak USDT
