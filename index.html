@@ -3,106 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Earn Tether Pro v4.0 - Animated Edition</title>
+    <title>Tether Max Ultimate - 8392479231</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <style>
         :root {
-            --primary: #00ffa3; --bg: #030303; --card: #0d0d0d; --text: #fff;
-            --border: #1a1a1a; --danger: #ff4757;
+            --primary: #00ffa3; --bg: #050505; --card: #111; --text: #fff;
+            --border: #222; --danger: #ff4757; --binance: #f3ba2f;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; justify-content: center; }
 
-        .app { width: 100%; max-width: 420px; height: 100vh; position: relative; display: flex; flex-direction: column; border: 1px solid var(--border); }
+        /* Ana Konteynır */
+        .app { width: 100%; max-width: 430px; height: 100vh; position: relative; display: flex; flex-direction: column; border-left: 1px solid var(--border); border-right: 1px solid var(--border); background: radial-gradient(circle at top, #0a2018 0%, #050505 100%); }
         .viewport { flex: 1; overflow-y: auto; padding: 20px 20px 120px; }
-        
-        /* Mining Card */
-        .m-card { background: var(--card); border-radius: 35px; padding: 40px 20px; text-align: center; border: 1px solid var(--border); position: relative; }
-        .pool-val { font-family: 'Orbitron'; font-size: 38px; font-weight: 900; color: var(--primary); margin: 20px 0; }
-        
-        /* Animation Overlay (Yeşil/Kırmızı) */
+        .viewport::-webkit-scrollbar { display: none; }
+
+        /* Header */
+        header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
+        .logo { font-family: 'Orbitron'; font-weight: 900; color: var(--primary); font-size: 14px; letter-spacing: 1px; }
+
+        /* Mining Kartı */
+        .m-card { background: var(--card); border-radius: 40px; padding: 50px 20px; text-align: center; border: 1px solid var(--border); position: relative; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .pool-val { font-family: 'Orbitron'; font-size: 42px; font-weight: 900; color: var(--primary); margin: 25px 0; text-shadow: 0 0 15px rgba(0,255,163,0.3); }
+
+        /* Animasyon Katmanları */
         .status-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: none; align-items: center; justify-content: center;
-            border-radius: 35px; z-index: 10; backdrop-filter: blur(5px);
+            z-index: 100; border-radius: 40px; backdrop-filter: blur(8px);
         }
-        .status-overlay i { font-size: 80px; transform: scale(0); transition: 0.3s; }
-        .status-overlay.active { display: flex; animation: fadeIn 0.3s forwards; }
-        .status-overlay.active i { transform: scale(1.2); animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .status-overlay.active { display: flex; animation: zoomFade 0.4s ease-out; }
+        .status-overlay i { font-size: 100px; filter: drop-shadow(0 0 20px currentColor); }
+        
+        .success-mode { background: rgba(0, 255, 163, 0.1); color: var(--primary); }
+        .error-mode { background: rgba(255, 71, 87, 0.1); color: var(--danger); }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes zoomFade { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 
-        .success-bg { background: rgba(0, 255, 163, 0.15); color: var(--primary); }
-        .error-bg { background: rgba(255, 71, 87, 0.15); color: var(--danger); }
+        /* Butonlar */
+        .btn-main { width: 100%; padding: 22px; border-radius: 20px; border: none; font-weight: 900; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 25px; }
+        .btn-claim { background: #fff; color: #000; box-shadow: 0 0 20px rgba(255,255,255,0.1); }
+        .btn-claim:disabled { background: #222; color: #444; box-shadow: none; cursor: not-allowed; }
+        .btn-claim.ready { background: var(--primary); animation: pulseGreen 2s infinite; }
 
-        /* Buttons & Stats */
-        .btn-main { width: 100%; padding: 18px; border-radius: 18px; border: none; font-weight: 900; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 20px; }
-        .btn-claim { background: #fff; color: #000; }
-        .btn-claim:disabled { opacity: 0.3; cursor: not-allowed; }
+        @keyframes pulseGreen { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 163, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(0, 255, 163, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 163, 0); } }
 
-        .stat-box { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 20px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
+        /* Cüzdan ve Statlar */
+        .stat-row { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 25px; border-radius: 25px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .wallet-amount { font-family: 'Orbitron'; font-size: 24px; font-weight: 900; }
 
-        /* Nav */
-        nav { position: absolute; bottom: 0; width: 100%; height: 90px; background: #000; display: flex; border-top: 1px solid var(--border); }
-        .nav-item { flex: 1; text-align: center; padding-top: 15px; color: #555; cursor: pointer; font-size: 11px; }
+        /* Görevler */
+        .task-list { margin-top: 35px; }
+        .task-card { background: var(--card); padding: 18px; border-radius: 22px; border: 1px solid var(--border); display: flex; align-items: center; gap: 15px; margin-bottom: 12px; }
+        .task-card.done { opacity: 0.2; pointer-events: none; filter: grayscale(1); }
+        .t-icon { width: 50px; height: 50px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+
+        /* Navigasyon */
+        nav { position: absolute; bottom: 0; width: 100%; height: 95px; background: #000; display: flex; border-top: 1px solid var(--border); z-index: 1000; }
+        .nav-item { flex: 1; text-align: center; padding-top: 18px; color: #555; cursor: pointer; transition: 0.3s; }
         .nav-item.active { color: #fff; }
-        .nav-item i { font-size: 24px; display: block; margin-bottom: 5px; }
+        .nav-item i { font-size: 26px; display: block; margin-bottom: 5px; }
 
-        /* Tasks */
-        .task { background: var(--card); padding: 15px; border-radius: 18px; display: flex; align-items: center; gap: 15px; margin-top: 12px; border: 1px solid var(--border); }
-        .task.done { opacity: 0.2; pointer-events: none; }
+        /* Modal */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-box { background: var(--card); width: 85%; padding: 40px 30px; border-radius: 35px; border: 1px solid var(--border); text-align: center; }
+        input { width: 100%; padding: 20px; background: #000; border: 1px solid var(--border); border-radius: 18px; color: #fff; margin: 20px 0; text-align: center; font-size: 16px; font-family: 'Orbitron'; }
     </style>
 </head>
 <body>
 
 <div class="app">
+    <header>
+        <div class="logo">TETHER MAX PRO</div>
+        <div style="font-size: 10px; font-weight: 900; color: var(--primary);">ID: 8392479231</div>
+    </header>
+
     <div class="viewport">
-        <div id="v-home" class="view active">
-            <div class="m-card" id="main_card">
-                <div id="anim_overlay" class="status-overlay">
-                    <i id="anim_icon" class="fas"></i>
+        <div id="v-home" class="view">
+            <div class="m-card">
+                <div id="fx-layer" class="status-overlay">
+                    <i id="fx-icon" class="fas"></i>
                 </div>
 
-                <div class="pool-val" id="p_pool">0.00000000</div>
-                <div style="width: 100px; height: 100px; margin: 0 auto; border: 2px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px var(--primary);">
-                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png?v=025" width="50">
+                <div class="pool-val" id="p-pool">0.00000000</div>
+                <div style="width: 120px; height: 120px; margin: 0 auto; border: 3px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative;">
+                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png?v=025" width="60" style="z-index: 2;">
+                    <div style="position: absolute; width: 100%; height: 100%; border: 2px dashed var(--primary); border-radius: 50%; animation: spin 10s linear infinite;"></div>
                 </div>
-                <button class="btn-main btn-claim" id="c_btn" onclick="handleClaim()">BAKİYEYİ TOPLA</button>
+                <button class="btn-main btn-claim" id="claim-btn" onclick="processClaim()">BAKİYEYİ TOPLA</button>
+                <p style="font-size: 10px; color: #555; margin-top: 10px;">Limit: 0.00000010 USDT</p>
             </div>
 
-            <div class="stat-box">
+            <div class="stat-row">
                 <div>
-                    <div id="p_wallet" style="font-size: 20px; font-weight: 900;">0.000000</div>
-                    <div style="font-size: 11px; color: #666;">CÜZDAN BAKİYESİ</div>
+                    <div class="wallet-amount" id="p-wallet">0.000000</div>
+                    <div style="font-size: 11px; color: #666; font-weight: 900;">CÜZDAN (USDT)</div>
                 </div>
-                <i class="fas fa-wallet" style="color: var(--primary); font-size: 24px;"></i>
+                <button onclick="openW()" style="background: var(--primary); border: none; padding: 12px 20px; border-radius: 12px; font-weight: 900; font-size: 12px;">ÇEKİM</button>
             </div>
 
-            <h4 style="margin-top: 25px; margin-bottom: 10px;">GÖREVLER</h4>
-            <div class="task" id="t-bin">
-                <i class="fab fa-bitcoin" style="color: #f3ba2f; font-size: 24px;"></i>
-                <div style="flex:1;"><b>Binance News</b><br><small>+0.05 $</small></div>
-                <button onclick="doTask('bin', 0.05, 'https://t.me/BinanceBrazilNews')" style="background: var(--primary); border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900;">KATIL</button>
+            <div class="task-list">
+                <h3 style="margin-bottom: 20px; font-size: 18px;">GÖREVLER</h3>
+                
+                <div class="task-card" id="t-bin">
+                    <div class="t-icon" style="background: var(--binance); color: #000;"><i class="fab fa-bitcoin"></i></div>
+                    <div style="flex: 1;"><b>Binance News</b><br><small style="color:var(--primary)">+0.05 $USDT</small></div>
+                    <button onclick="runTask('bin', 0.05, 'https://t.me/BinanceBrazilNews')" style="background: var(--primary); border: none; padding: 10px 18px; border-radius: 30px; font-weight: 900; font-size: 11px;">KATIL</button>
+                </div>
+
+                <div class="task-card" id="t-tg">
+                    <div class="t-icon" style="background: #24A1DE;"><i class="fab fa-telegram-plane"></i></div>
+                    <div style="flex: 1;"><b>Resmi Kanal</b><br><small style="color:var(--primary)">+0.05 $USDT</small></div>
+                    <button onclick="runTask('tg', 0.05, 'https://t.me/earntether2026')" style="background: var(--primary); border: none; padding: 10px 18px; border-radius: 30px; font-weight: 900; font-size: 11px;">KATIL</button>
+                </div>
             </div>
         </div>
 
-        <div id="v-team" class="view" style="display:none;">
-            <div style="background: linear-gradient(90deg, #1d976c, #00ffa3); border-radius: 25px; padding: 40px 20px; color: #000; text-align: center;">
-                <h2>EKİP KUR</h2>
-                <p>Referans ID: 8392479231</p>
+        <div id="v-team" class="view" style="display: none;">
+            <div style="background: linear-gradient(135deg, #1d976c, #00ffa3); border-radius: 35px; padding: 50px 25px; color: #000; text-align: center;" onclick="copyLink()">
+                <h1 style="font-weight: 900;">ARKADAŞLARINI ÇAĞIR</h1>
+                <p style="font-weight: 700; margin-top: 10px; opacity: 0.8;">%10 Komisyon Kazanın!</p>
+                <div style="font-size: 50px; margin-top: 20px;">🤝</div>
+            </div>
+            <div class="stat-row" style="flex-direction: column; gap: 15px; margin-top: 30px;">
+                <p style="font-size: 12px; font-weight: 800; color: #666;">DAVET LİNKİNİZ</p>
+                <div id="ref-link" style="color: var(--primary); font-size: 12px; font-weight: 900; border: 1px dashed var(--border); padding: 15px; width: 100%; text-align: center; border-radius: 15px;">Yükleniyor...</div>
+                <button class="btn-main" style="background: var(--primary); color:#000; margin-top: 0;" onclick="copyLink()">KOPYALA</button>
             </div>
         </div>
     </div>
 
+    <div class="modal" id="w-modal">
+        <div class="modal-box">
+            <h2 style="font-family: 'Orbitron'; color: var(--primary);">PARA ÇEK</h2>
+            <input type="text" id="w-addr" placeholder="USDT BEP20 ADRESİ">
+            <input type="number" id="w-amt" placeholder="MİKTAR (MİN 5)">
+            <button class="btn-main" style="background: var(--primary); color:#000;" onclick="sendWithdraw()">TALEBİ GÖNDER</button>
+            <button class="btn-main" style="background: transparent; color: #555;" onclick="closeW()">KAPAT</button>
+        </div>
+    </div>
+
     <nav>
-        <div class="nav-item active" onclick="tab('v-home', this)"><i class="fas fa-home"></i>Ev</div>
+        <div class="nav-item active" onclick="tab('v-home', this)"><i class="fas fa-microchip"></i>Ev</div>
         <div class="nav-item" onclick="tab('v-team', this)"><i class="fas fa-users"></i>Ekip</div>
     </nav>
 </div>
@@ -110,6 +158,7 @@
 
 
 <script>
+    // FIREBASE YAPILANDIRMASI
     const firebaseConfig = {
         apiKey: "AIzaSyAIstjXKAAgVr-AyVY-a1tlab-TquP1EwI",
         authDomain: "sanakod-e6b22.firebaseapp.com",
@@ -121,81 +170,122 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const UID = "8392479231";
-    const LIMIT = 0.0000001; // Senin toplama sınırın
-    const SPEED = 0.000001;
+    const ADMIN_ID = "8392479231";
+    const LIMIT = 0.0000001; 
+    const POWER = 0.0000012; 
 
-    let user = { pool: 0, wallet: 0, tasks: [], last: Date.now() };
+    let data = { pool: 0, wallet: 0, tasks: [], last: Date.now() };
 
     async function init() {
+        document.getElementById('ref-link').innerText = "https://t.me/EarnTetherBot?start=" + ADMIN_ID;
+
         try {
-            const snap = await db.collection('users').doc(UID).get();
+            const snap = await db.collection('users').doc(ADMIN_ID).get();
             if(snap.exists) {
                 const d = snap.data();
-                user.pool = Number(d.pool) || 0;
-                user.wallet = Number(d.wallet) || 0;
-                user.tasks = d.tasks || [];
-                user.last = Number(d.last) || Date.now();
-                const gap = (Date.now() - user.last) / 1000;
-                user.pool += (gap * SPEED);
+                // NaN Korumalı Yükleme
+                data.pool = Number(d.pool) || 0;
+                data.wallet = Number(d.wallet) || 0;
+                data.tasks = d.tasks || [];
+                data.last = Number(d.last) || Date.now();
+
+                const diff = (Date.now() - data.last) / 1000;
+                data.pool += (diff * POWER);
             }
-            user.tasks.forEach(t => document.getElementById('t-'+t)?.classList.add('done'));
-            updateUI();
+            data.tasks.forEach(t => document.getElementById('t-'+t)?.classList.add('done'));
+            refreshUI();
             setInterval(loop, 100);
         } catch(e) { setInterval(loop, 100); }
     }
 
     function loop() {
-        if(isNaN(user.pool)) user.pool = 0;
-        user.pool += (SPEED / 10);
-        document.getElementById('p_pool').innerText = user.pool.toFixed(8);
-        
-        // Buton kilidi
-        document.getElementById('c_btn').disabled = (user.pool < LIMIT);
-        if(Math.random() > 0.98) save();
+        if(isNaN(data.pool)) data.pool = 0;
+        data.pool += (POWER / 10);
+        document.getElementById('p-pool').innerText = data.pool.toFixed(8);
+
+        // Limit Kontrolü ve Buton Parlaması
+        const btn = document.getElementById('claim-btn');
+        if(data.pool >= LIMIT) {
+            btn.disabled = false;
+            btn.classList.add('ready');
+        } else {
+            btn.disabled = true;
+            btn.classList.remove('ready');
+        }
+
+        if(Math.random() > 0.99) save();
     }
 
-    function updateUI() {
-        document.getElementById('p_wallet').innerText = (Number(user.wallet) || 0).toFixed(6);
+    function refreshUI() {
+        const wal = Number(data.wallet) || 0;
+        document.getElementById('p-wallet').innerText = wal.toFixed(6);
     }
 
     async function save() {
-        user.last = Date.now();
-        await db.collection('users').doc(UID).set(user);
+        data.last = Date.now();
+        await db.collection('users').doc(ADMIN_ID).set(data);
     }
 
-    function triggerAnim(type) {
-        const overlay = document.getElementById('anim_overlay');
-        const icon = document.getElementById('anim_icon');
+    // Animasyon Tetikleyici
+    function playFx(type) {
+        const layer = document.getElementById('fx-layer');
+        const icon = document.getElementById('fx-icon');
         
-        overlay.className = 'status-overlay active ' + (type === 'ok' ? 'success-bg' : 'error-bg');
+        layer.className = 'status-overlay active ' + (type === 'ok' ? 'success-mode' : 'error-mode');
         icon.className = 'fas ' + (type === 'ok' ? 'fa-check-circle' : 'fa-times-circle');
         
-        setTimeout(() => { overlay.classList.remove('active'); }, 1500);
+        if(navigator.vibrate) navigator.vibrate(type === 'ok' ? 50 : [50, 50, 50]);
+
+        setTimeout(() => { layer.classList.remove('active'); }, 1500);
     }
 
-    function handleClaim() {
-        if(user.pool >= LIMIT) {
-            user.wallet += user.pool;
-            user.pool = 0;
-            updateUI();
+    function processClaim() {
+        if(data.pool >= LIMIT) {
+            data.wallet += data.pool;
+            data.pool = 0;
+            refreshUI();
             save();
-            triggerAnim('ok'); // Yeşil Onay
+            playFx('ok'); // YEŞİL ONAY
         } else {
-            triggerAnim('no'); // Kırmızı Red
+            playFx('no'); // KIRMIZI RED
         }
     }
 
-    function doTask(id, rew, link) {
+    async function sendWithdraw() {
+        const addr = document.getElementById('w-addr').value;
+        const amt = parseFloat(document.getElementById('w-amt').value);
+
+        if(amt < 5 || isNaN(amt) || addr.length < 10) {
+            playFx('no');
+            return alert("Geçersiz miktar veya adres!");
+        }
+
+        if(amt > data.wallet) {
+            playFx('no');
+            return alert("Yetersiz bakiye!");
+        }
+
+        await db.collection('withdrawals').add({
+            uid: ADMIN_ID, addr: addr, amount: amt, status: "Pending", date: new Date()
+        });
+
+        data.wallet -= amt;
+        closeW();
+        refreshUI();
+        save();
+        playFx('ok');
+    }
+
+    function runTask(id, rew, link) {
         window.open(link, '_blank');
         setTimeout(() => {
-            if(!user.tasks.includes(id)) {
-                user.wallet += rew;
-                user.tasks.push(id);
+            if(!data.tasks.includes(id)) {
+                data.wallet += rew;
+                data.tasks.push(id);
                 document.getElementById('t-'+id).classList.add('done');
-                updateUI();
+                refreshUI();
                 save();
-                triggerAnim('ok');
+                playFx('ok');
             }
         }, 3000);
     }
@@ -206,6 +296,12 @@
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         el.classList.add('active');
     }
+
+    function openW() { document.getElementById('w-modal').style.display = 'flex'; }
+    function closeW() { document.getElementById('w-modal').style.display = 'none'; }
+    function copyLink() { navigator.clipboard.writeText(document.getElementById('ref-link').innerText); alert("Kopyalandı!"); }
+
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     window.onload = init;
 </script>
