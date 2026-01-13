@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USDT Görev Uygulaması</title>
+    <title>USDT Kazan - Para Çek</title>
+    
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -30,7 +30,7 @@
             padding-bottom: 80px;
         }
 
-        /* LOADING SCREEN */
+        /* LOADING SCREEN - DÜZELTİLMİŞ */
         #loading-screen {
             position: fixed;
             top: 0;
@@ -46,22 +46,34 @@
         }
 
         .loader {
-            width: 60px;
-            height: 60px;
-            border: 4px solid #3b82f6;
-            border-top: 4px solid transparent;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(59, 130, 246, 0.3);
             border-radius: 50%;
+            border-top-color: #3b82f6;
             animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+        }
+
+        .loading-text {
+            color: #94a3b8;
+            font-size: 16px;
+            font-weight: 600;
         }
 
         /* SAYFA SİSTEMİ */
         .page {
             display: none;
+            animation: fadeIn 0.3s ease;
         }
 
         .page.active {
             display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* HEADER */
@@ -71,6 +83,7 @@
             border-bottom-left-radius: 25px;
             border-bottom-right-radius: 25px;
             text-align: center;
+            position: relative;
         }
 
         .logo-container {
@@ -103,6 +116,16 @@
             font-weight: bold;
         }
 
+        .user-info {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
         /* BAKİYE KARTI */
         .balance-card {
             background: rgba(255, 255, 255, 0.1);
@@ -110,6 +133,7 @@
             padding: 20px;
             margin: 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
         }
 
         .balance-label {
@@ -162,14 +186,42 @@
             color: white;
         }
 
-        .transfer-btn {
-            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+        .withdraw-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             color: white;
         }
 
         .action-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* STATS */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 12px;
         }
 
         /* CÜZDAN */
@@ -216,6 +268,12 @@
             padding: 20px;
             margin-bottom: 15px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            border-color: #3b82f6;
         }
 
         .task-header {
@@ -334,6 +392,18 @@
             width: 100%;
             max-width: 350px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .modal-header {
@@ -448,34 +518,6 @@
 
         .modal-btn:hover {
             transform: translateY(-2px);
-        }
-
-        /* STATS */
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin: 20px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .stat-value {
-            font-size: 28px;
-            font-weight: bold;
-            color: #3b82f6;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            color: #94a3b8;
-            font-size: 12px;
         }
 
         /* REFERANS SAYFASI */
@@ -671,22 +713,23 @@
     <!-- YÜKLENİYOR EKRANI -->
     <div id="loading-screen">
         <div class="loader"></div>
-        <div style="color: white; font-size: 18px; font-weight: 600;">Yükleniyor...</div>
+        <div class="loading-text">USDT Görev Uygulaması Yükleniyor...</div>
     </div>
 
-    <!-- TRANSFER MODAL -->
-    <div id="transfer-modal" class="modal">
+    <!-- ÇEKİM MODAL -->
+    <div id="withdraw-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title">
-                    <i class="fas fa-exchange-alt"></i> USDT Çekim
+                    <i class="fas fa-money-bill-wave"></i> USDT Çekim
                 </div>
-                <button class="close-modal" onclick="closeModal()">×</button>
+                <button class="close-modal" onclick="closeWithdrawModal()">×</button>
             </div>
             
             <div class="form-group">
-                <label class="form-label">Çekilecek USDT Miktarı</label>
-                <input type="number" id="withdraw-amount" class="form-input" placeholder="Örnek: 10" min="1" step="0.1">
+                <label class="form-label">Çekilecek USDT Miktarı ($)</label>
+                <input type="number" id="withdraw-amount" class="form-input" placeholder="Örnek: 1" min="1" step="1">
+                <small style="color: #94a3b8; font-size: 12px;">1$ = 100 reklam + 3 referans gerektirir</small>
             </div>
             
             <div class="form-group">
@@ -714,7 +757,7 @@
             </div>
             
             <div class="modal-actions">
-                <button class="modal-btn secondary" onclick="closeModal()">İptal</button>
+                <button class="modal-btn secondary" onclick="closeWithdrawModal()">İptal</button>
                 <button class="modal-btn primary" onclick="processWithdraw()">Çekim Talep Et</button>
             </div>
         </div>
@@ -723,12 +766,15 @@
     <!-- ANA SAYFA -->
     <div id="home-page" class="page">
         <div class="header">
+            <div class="user-info">
+                <i class="fas fa-user"></i> Kullanıcı
+            </div>
             <div class="logo-container">
                 <div class="logo-icon">
                     <i class="fas fa-coins"></i>
                 </div>
                 <div class="app-name">
-                    <h1>USDT Görev</h1>
+                    <h1>USDT Kazan</h1>
                 </div>
             </div>
             
@@ -758,8 +804,8 @@
             <button id="collect-btn" class="action-btn collect-btn">
                 <i class="fas fa-coins"></i> Topla
             </button>
-            <button id="transfer-btn" class="action-btn transfer-btn">
-                <i class="fas fa-exchange-alt"></i> Çekim
+            <button id="withdraw-main-btn" class="action-btn withdraw-btn">
+                <i class="fas fa-money-bill-wave"></i> Para Çek
             </button>
         </div>
 
@@ -918,184 +964,142 @@
     </div>
 
     <script>
-        // FIREBASE CONFIG
-        const firebaseConfig = {
-            apiKey: "AIzaSyAIstjXKAAgVr-AyVY-a1tlab-TquP1EwI",
-            authDomain: "sanakod-e6b22.firebaseapp.com",
-            projectId: "sanakod-e6b22",
-            storageBucket: "sanakod-e6b22.firebasestorage.app",
-            messagingSenderId: "567585215373",
-            appId: "1:567585215373:web:d4ec6e5541da2872df63c4",
-            measurementId: "G-P0J921DX96"
-        };
+        // SAYFA YÜKLENDİĞİNDE - DÜZELTİLMİŞ VERSİYON
+        document.addEventListener('DOMContentLoaded', function() {
+            // Loading ekranını 1 saniye sonra kapat
+            setTimeout(() => {
+                hideLoadingScreen();
+                initializeApp();
+            }, 1000);
+        });
 
-        // Firebase başlatma
-        let db;
-        let userId;
-        
-        function initializeFirebase() {
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loading-screen');
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.3s ease';
+            
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                document.getElementById('home-page').classList.add('active');
+            }, 300);
+        }
+
+        function initializeApp() {
+            console.log("Uygulama başlatılıyor...");
+            
+            // Verileri yükle
+            loadData();
+            
+            // Firebase'i başlatmaya çalış (opsiyonel)
+            tryInitializeFirebase();
+            
+            // Bakiye güncelleme başlat
+            updateBalances();
+            updateStats();
+            
+            // Event listener'ları ekle
+            setupEventListeners();
+            
+            console.log("Uygulama başarıyla başlatıldı!");
+        }
+
+        function tryInitializeFirebase() {
+            // Firebase config
+            const firebaseConfig = {
+                apiKey: "AIzaSyAIstjXKAAgVr-AyVY-a1tlab-TquP1EwI",
+                authDomain: "sanakod-e6b22.firebaseapp.com",
+                projectId: "sanakod-e6b22",
+                storageBucket: "sanakod-e6b22.firebasestorage.app",
+                messagingSenderId: "567585215373",
+                appId: "1:567585215373:web:d4ec6e5541da2872df63c4",
+                measurementId: "G-P0J921DX96"
+            };
+            
             try {
                 // Firebase'i başlat
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore();
-                
-                console.log("Firebase başarıyla başlatıldı!");
-                
-                // Anonim kullanıcı oluştur veya var olanı kullan
-                firebase.auth().signInAnonymously()
-                    .then(() => {
-                        console.log("Anonim giriş başarılı");
-                        firebase.auth().onAuthStateChanged((user) => {
-                            if (user) {
-                                userId = user.uid;
-                                console.log("User ID:", userId);
-                                loadUserData();
-                                hideLoadingScreen();
-                            }
-                        });
-                    })
-                    .catch((error) => {
-                        console.error("Anonim giriş hatası:", error);
-                        // Firebase bağlantısı başarısız olursa local storage kullan
-                        hideLoadingScreen();
-                    });
-                    
+                if (firebase.apps.length === 0) {
+                    firebase.initializeApp(firebaseConfig);
+                    console.log("Firebase başarıyla başlatıldı!");
+                }
             } catch (error) {
-                console.error("Firebase başlatma hatası:", error);
-                hideLoadingScreen();
+                console.log("Firebase başlatma hatası, local storage kullanılacak:", error);
             }
         }
 
-        function hideLoadingScreen() {
-            document.getElementById('loading-screen').style.display = 'none';
-            document.getElementById('home-page').classList.add('active');
-        }
-
-        // SAYFA YÜKLENDİĞİNDE
-        window.addEventListener('DOMContentLoaded', function() {
-            // Firebase'i başlat
-            initializeFirebase();
-            
-            // Bakiye güncelleme
-            updateBalances();
-            loadTaskStatus();
-            updateStats();
-            setInterval(updateBalances, 1000);
-        });
-
         // VERİLER
-        let collectedAmount = parseFloat(localStorage.getItem('collectedAmount')) || 0;
-        let walletAmount = parseFloat(localStorage.getItem('walletAmount')) || 0;
+        let collectedAmount = 0;
+        let walletAmount = 0;
         let autoIncomeRate = 0.0000123;
         let lastUpdate = Date.now();
-        let adCount = parseInt(localStorage.getItem('adCount')) || 0;
-        let refCount = parseInt(localStorage.getItem('refCount')) || 0;
+        let adCount = 0;
+        let refCount = 0;
         
         // Görev durumları
         let taskStatus = {
-            channel: localStorage.getItem('task_channel') === 'completed',
-            news: localStorage.getItem('task_news') === 'completed',
-            instagram: localStorage.getItem('task_instagram') === 'completed'
+            channel: false,
+            news: false,
+            instagram: false
         };
 
-        // FIREBASE'DEN KULLANICI VERİSİNİ YÜKLE
-        function loadUserData() {
-            if (!db || !userId) return;
+        // VERİLERİ YÜKLE
+        function loadData() {
+            // LocalStorage'dan verileri yükle
+            collectedAmount = parseFloat(localStorage.getItem('collectedAmount')) || 0;
+            walletAmount = parseFloat(localStorage.getItem('walletAmount')) || 0;
+            adCount = parseInt(localStorage.getItem('adCount')) || 0;
+            refCount = parseInt(localStorage.getItem('refCount')) || 0;
             
-            const userRef = db.collection('users').doc(userId);
+            // Görev durumlarını yükle
+            taskStatus.channel = localStorage.getItem('task_channel') === 'completed';
+            taskStatus.news = localStorage.getItem('task_news') === 'completed';
+            taskStatus.instagram = localStorage.getItem('task_instagram') === 'completed';
             
-            userRef.get().then((doc) => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    // Firestore'dan verileri yükle
-                    collectedAmount = data.collectedAmount || 0;
-                    walletAmount = data.walletAmount || 0;
-                    adCount = data.adCount || 0;
-                    refCount = data.refCount || 0;
-                    
-                    // Local storage'a da kaydet
-                    localStorage.setItem('collectedAmount', collectedAmount);
-                    localStorage.setItem('walletAmount', walletAmount);
-                    localStorage.setItem('adCount', adCount);
-                    localStorage.setItem('refCount', refCount);
-                    
-                    // UI'yi güncelle
-                    updateBalances();
-                    updateStats();
-                    
-                    console.log("Firestore'dan veriler yüklendi");
-                } else {
-                    // Kullanıcı yoksa oluştur
-                    saveUserToFirebase();
-                }
-            }).catch((error) => {
-                console.error("Firestore'dan veri yükleme hatası:", error);
-            });
+            // UI'yi güncelle
+            updateUI();
         }
 
-        // KULLANICI VERİSİNİ FIREBASE'E KAYDET
-        function saveUserToFirebase() {
-            if (!db || !userId) return;
+        // UI'Yİ GÜNCELLE
+        function updateUI() {
+            // Bakiye güncelle
+            updateBalances();
+            updateStats();
             
-            const userData = {
-                collectedAmount: collectedAmount,
-                walletAmount: walletAmount,
-                adCount: adCount,
-                refCount: refCount,
-                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-            };
+            // Görev durumlarını yükle
+            loadTaskStatus();
             
-            db.collection('users').doc(userId).set(userData)
-                .then(() => {
-                    console.log("Kullanıcı verisi Firestore'a kaydedildi");
-                })
-                .catch((error) => {
-                    console.error("Firestore'a kaydetme hatası:", error);
-                });
-        }
-
-        // ÇEKİM TALEBİNİ FIREBASE'E KAYDET
-        function saveWithdrawalToFirebase(amount, address) {
-            if (!db || !userId) return;
-            
-            const withdrawalData = {
-                userId: userId,
-                amount: amount,
-                walletAddress: address,
-                requiredAds: Math.ceil(amount * 100),
-                requiredRefs: Math.ceil(amount * 3),
-                status: 'pending',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            db.collection('withdrawals').add(withdrawalData)
-                .then((docRef) => {
-                    console.log("Çekim talebi kaydedildi ID:", docRef.id);
-                    showNotification(`${amount} USDT çekim talebiniz Firestore'a kaydedildi!`);
-                })
-                .catch((error) => {
-                    console.error("Çekim talebi kaydetme hatası:", error);
-                    showNotification("Çekim talebi kaydedilirken hata oluştu!");
-                });
-        }
-
-        // STATS GÜNCELLE
-        function updateStats() {
-            document.getElementById('ad-count').textContent = adCount;
-            document.getElementById('ref-count').textContent = refCount;
+            // Çekim modalı için mevcut değerleri ayarla
             document.getElementById('current-ads').textContent = adCount;
             document.getElementById('current-refs').textContent = refCount;
         }
 
-        // BAKİYE GÜNCELLEME
-        function updateBalances() {
-            const now = Date.now();
-            const secondsPassed = (now - lastUpdate) / 1000;
+        // EVENT LISTENER'LARI AYARLA
+        function setupEventListeners() {
+            // Topla butonu
+            document.getElementById('collect-btn').addEventListener('click', collectBalance);
             
-            // Otomatik gelir
-            collectedAmount += autoIncomeRate * secondsPassed;
-            lastUpdate = now;
+            // Para çek butonu
+            document.getElementById('withdraw-main-btn').addEventListener('click', openWithdrawModal);
             
-            // Ekran güncelleme
-            document.getElementById('collected-amount').textContent = collectedAmount.toFixed(2);
-            document.getElementById('wallet-amount').textContent = walletAmount.toFixed(
+            // Çekim miktarı değiştiğinde
+            document.getElementById('withdraw-amount').addEventListener('input', updateRequirements);
+            
+            // Çekim talep butonu
+            document.getElementById('withdraw-modal').querySelector('.modal-btn.primary').addEventListener('click', processWithdraw);
+            
+            // Kopyala butonu
+            document.getElementById('copy-btn').addEventListener('click', copyReferralLink);
+            
+            // Tab geçişleri
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    switchTab(this.getAttribute('data-page'));
+                });
+            });
+            
+            // Modal kapatma
+            document.getElementById('withdraw-modal').querySelector('.close-modal').addEventListener('click', closeWithdrawModal);
+            document.getElementById('withdraw-modal').querySelector('.modal-btn.secondary').addEventListener('click', closeWithdrawModal);
+            
+            // Modal dışına tıklama
+            document.getElementById('withdraw-modal').addEventListener('click', function(e) {
+               
