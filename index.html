@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Earn Tether Pro - Admin 8392479231</title>
+    <title>Earn Tether Pro - 8392479231</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <style>
         :root {
             --primary: #00ffa3; --bg: #0a0a0a; --card: #151515; --text: #ffffff;
-            --dim: #888; --border: #222;
+            --dim: #888; --border: #222; --binance: #f3ba2f;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -22,144 +21,169 @@
 
         .app-shell { width: 100%; max-width: 414px; height: 100vh; position: relative; display: flex; flex-direction: column; border: 1px solid var(--border); }
         
+        /* Layout Components */
         header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid var(--border); }
-        .h-title { font-weight: 800; display: flex; align-items: center; gap: 6px; }
-        .h-title i { color: #3897f0; }
-
         .viewport { flex: 1; overflow-y: auto; padding: 0 15px 110px; scrollbar-width: none; }
         .viewport::-webkit-scrollbar { display: none; }
 
-        /* Mining Area */
-        .mining-container {
+        /* Mining Visuals */
+        .mining-hero {
             background: #1a2f28 url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-            border-radius: 24px; padding: 35px 20px; text-align: center; margin-top: 15px; border: 1px solid rgba(0,255,163,0.2);
+            border-radius: 28px; padding: 40px 20px; text-align: center; margin-top: 15px; border: 1px solid rgba(0,255,163,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .pool-val { font-size: 38px; font-weight: 700; font-family: monospace; letter-spacing: -1px; margin-bottom: 20px; }
-        .main-orb { width: 110px; height: 110px; background: rgba(0,255,163,0.1); border: 4px solid var(--primary); border-radius: 50%; margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(0,255,163,0.2); }
-        .main-orb img { width: 60px; }
+        .pool-counter { font-size: 42px; font-weight: 900; font-family: 'Courier New', monospace; letter-spacing: -1px; margin-bottom: 20px; color: var(--primary); }
+        .orb-outer { width: 120px; height: 120px; background: rgba(0,255,163,0.05); border: 2px solid rgba(0,255,163,0.3); border-radius: 50%; margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; position: relative; }
+        .orb-inner { width: 90px; height: 90px; background: rgba(0,255,163,0.1); border: 4px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 40px rgba(0,255,163,0.3); animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        .btn { width: 100%; padding: 16px; border-radius: 14px; border: none; font-weight: 800; cursor: pointer; transition: 0.2s; }
-        .btn-white { background: #fff; color: #000; margin-bottom: 10px; }
-        .btn-dark { background: rgba(255,255,255,0.1); color: #fff; }
+        .btn { width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 16px; }
+        .btn-main { background: #fff; color: #000; margin-bottom: 12px; }
+        .btn-sub { background: rgba(255,255,255,0.08); color: #fff; }
 
-        /* Wallet */
-        .wallet-card { background: var(--card); padding: 18px; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; margin-top: 15px; }
-        .w-balance { font-weight: 900; font-size: 18px; }
-        .draw-btn { background: var(--primary); color: #000; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 900; font-size: 13px; }
+        /* Balance Card */
+        .balance-card { background: var(--card); padding: 20px; border-radius: 22px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; margin-top: 20px; }
+        .draw-btn { background: var(--primary); color: #000; border: none; padding: 12px 22px; border-radius: 12px; font-weight: 900; font-size: 14px; cursor: pointer; }
 
-        /* Friends Section (İstediğin Yeşil Banner) */
-        .ref-hero { background: linear-gradient(90deg, #1d976c, #00ffa3); border-radius: 20px; padding: 30px; text-align: center; color: #000; position: relative; cursor: pointer; margin-top: 15px; }
-        .ref-hero h3 { font-weight: 900; font-size: 22px; }
-        .hand-icon { position: absolute; right: 25px; bottom: -8px; font-size: 45px; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        /* Task System */
+        .task-list { margin-top: 25px; }
+        .task-item { background: var(--card); padding: 16px; border-radius: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--border); margin-bottom: 12px; transition: 0.3s; }
+        .task-item.completed { opacity: 0.3; filter: grayscale(1); pointer-events: none; transform: scale(0.95); }
+        .t-icon { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; }
+        .t-info { flex: 1; }
+        .t-title { font-weight: 800; font-size: 15px; margin-bottom: 2px; }
+        .t-reward { color: var(--primary); font-size: 13px; font-weight: 900; }
+        .t-btn { background: var(--primary); color: #000; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 900; font-size: 12px; }
 
-        /* Task Cards */
-        .task-card { background: var(--card); padding: 14px; border-radius: 18px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--border); margin-bottom: 10px; }
-        .task-card.done { opacity: 0.4; pointer-events: none; }
-        .t-go { background: var(--primary); color: #000; border: none; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 12px; }
+        /* Friends (Green Banner) */
+        .ref-section { background: linear-gradient(135deg, #1d976c, #00ffa3); border-radius: 24px; padding: 35px 25px; text-align: center; color: #000; position: relative; margin-top: 20px; cursor: pointer; overflow: hidden; }
+        .ref-section h3 { font-weight: 900; font-size: 24px; letter-spacing: -0.5px; }
+        .hand-anim { position: absolute; right: 20px; bottom: -10px; font-size: 55px; animation: wave 2s infinite; }
+        @keyframes wave { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-20deg) translateY(-10px); } }
 
-        /* Withdraw Modal */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-box { background: var(--card); width: 85%; padding: 25px; border-radius: 24px; border: 1px solid var(--border); }
-        .modal-box input { width: 100%; padding: 15px; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 12px; margin-bottom: 15px; outline: none; }
+        /* Modal Design */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .modal-content { background: var(--card); width: 100%; max-width: 350px; padding: 30px; border-radius: 30px; border: 1px solid var(--border); text-align: center; }
+        .modal-content input { width: 100%; padding: 18px; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 15px; margin: 15px 0; outline: none; font-size: 16px; }
+        .modal-content input:focus { border-color: var(--primary); }
 
         /* Navigation */
-        nav { position: absolute; bottom: 0; width: 100%; height: 85px; background: #000; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding-top: 12px; }
-        .nav-item { color: var(--dim); text-align: center; font-size: 11px; flex: 1; cursor: pointer; }
-        .nav-item.active { color: #fff; }
-        .nav-item i { font-size: 24px; display: block; margin-bottom: 5px; }
+        nav { position: absolute; bottom: 0; width: 100%; height: 90px; background: #000; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding-top: 15px; }
+        .nav-btn { color: var(--dim); text-align: center; font-size: 12px; flex: 1; cursor: pointer; transition: 0.3s; }
+        .nav-btn.active { color: #fff; }
+        .nav-btn i { font-size: 26px; display: block; margin-bottom: 6px; }
 
-        .view { display: none; }
-        .view.active { display: block; }
+        .view-pane { display: none; animation: fadeIn 0.4s ease; }
+        .view-pane.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <div class="app-shell">
     <header>
-        <div style="font-size:14px; opacity:0.8;"><i class="fas fa-times"></i> Kapat</div>
-        <div class="h-title">Earn Tether <i class="fas fa-check-circle"></i></div>
-        <i class="fas fa-ellipsis-v"></i>
+        <div style="font-size:14px; opacity:0.7;"><i class="fas fa-chevron-left"></i> Geri</div>
+        <div style="font-weight:900; font-size:18px;">Earn Tether <i class="fas fa-check-circle" style="color:#3897f0;"></i></div>
+        <i class="fas fa-cog" style="opacity:0.6;"></i>
     </header>
 
     <div class="viewport">
-        <div id="v-home" class="view active">
-            <div class="mining-container">
-                <div class="pool-val" id="poolTxt">0.00000000</div>
-                <div class="main-orb"><img src="https://cryptologos.cc/logos/tether-usdt-logo.png?v=025"></div>
-                <button class="btn btn-white" onclick="collectPool()">Topla</button>
-                <button class="btn btn-dark" onclick="switchView('v-upgrade')">Yükselt</button>
+        <div id="v-home" class="view-pane active">
+            <div class="mining-hero">
+                <div class="pool-counter" id="poolDisplay">0.00000000</div>
+                <div class="orb-outer">
+                    <div class="orb-inner">
+                        <img src="https://cryptologos.cc/logos/tether-usdt-logo.png?v=025" width="55">
+                    </div>
+                </div>
+                <button class="btn btn-main" onclick="claimMining()">Kazancı Topla</button>
+                <button class="btn btn-sub" onclick="navTo('v-market')">Hızlandırıcı Al</button>
             </div>
 
-            <div class="wallet-card">
+            <div class="balance-card">
                 <div>
-                    <div class="w-balance" id="walletTxt">0.000000</div>
-                    <div style="font-size:12px; color:var(--dim);">Cüzdan Bakiyesi</div>
+                    <div id="walletDisplay" style="font-weight:900; font-size:20px;">0.000000</div>
+                    <div style="font-size:12px; color:var(--dim); font-weight:600;">TOPLAM BAKİYE (USDT)</div>
                 </div>
-                <button class="draw-btn" onclick="openWithdraw()">Para Çek</button>
+                <button class="draw-btn" onclick="toggleW(true)">Çekim Yap</button>
             </div>
 
-            <div style="margin: 25px 0 15px; font-weight: 800;">Görevler</div>
-            <div id="taskList">
-                <div class="task-card" id="task-resmi">
-                    <div style="width:45px; height:45px; background:#24A1DE; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px;"><i class="fab fa-telegram-plane"></i></div>
-                    <div style="flex:1;"><div style="font-weight:700; font-size:14px;">Resmi Kanal</div><div style="color:var(--primary); font-size:12px; font-weight:800;">+0.05 $USDT</div></div>
-                    <button class="t-go" onclick="doTask('resmi', 0.05, 'https://t.me/earntether2026')">GO</button>
+            <div class="task-list">
+                <div style="font-weight:900; font-size:18px; margin-bottom:15px;">Para Kazandıran Görevler</div>
+                
+                <div class="task-item" id="task-binance">
+                    <div class="t-icon" style="background:var(--binance); color:#000;"><i class="fab fa-bitcoin"></i></div>
+                    <div class="t-info">
+                        <div class="t-title">Binance News Katıl</div>
+                        <div class="t-reward">+0.05 $USDT</div>
+                    </div>
+                    <button class="t-btn" onclick="execTask('binance', 0.05, 'https://t.me/BinanceBrazilNews')">KATIL</button>
                 </div>
-                <div class="task-card" id="task-insta">
-                    <div style="width:45px; height:45px; background:#E1306C; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px;"><i class="fab fa-instagram"></i></div>
-                    <div style="flex:1;"><div style="font-weight:700; font-size:14px;">Instagram Takip</div><div style="color:var(--primary); font-size:12px; font-weight:800;">+0.05 $USDT</div></div>
-                    <button class="t-go" onclick="doTask('insta', 0.05, 'https://t.me/instagramNewsBrazil')">GO</button>
+
+                <div class="task-item" id="task-official">
+                    <div class="t-icon" style="background:#24A1DE;"><i class="fab fa-telegram-plane"></i></div>
+                    <div class="t-info">
+                        <div class="t-title">Resmi Kanalı Takip Et</div>
+                        <div class="t-reward">+0.05 $USDT</div>
+                    </div>
+                    <button class="t-btn" onclick="execTask('official', 0.05, 'https://t.me/earntether2026')">KATIL</button>
                 </div>
-                <div class="task-card">
-                    <div style="width:45px; height:45px; background:#9d50bb; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px;"><i class="fas fa-play-circle"></i></div>
-                    <div style="flex:1;"><div style="font-weight:700; font-size:14px;">Reklam İzle</div><div style="color:var(--primary); font-size:12px; font-weight:800;" id="ad-label">Kalan: 20/20 (+0.0003)</div></div>
-                    <button class="t-go" onclick="watchAd()">İZLE</button>
+
+                <div class="task-item">
+                    <div class="t-icon" style="background:#ff4d4d;"><i class="fas fa-video"></i></div>
+                    <div class="t-info">
+                        <div class="t-title">Video Reklam İzle</div>
+                        <div class="t-reward" id="ad-status">Kalan: 20/20 (+0.0003)</div>
+                    </div>
+                    <button class="t-btn" onclick="playAd()">İZLE</button>
                 </div>
             </div>
         </div>
 
-        <div id="v-friends" class="view">
-            <div class="ref-hero" onclick="copyRef()">
-                <h3>Arkadaşlarla paylaş</h3>
-                <div class="hand-icon">👆</div>
+        <div id="v-friends" class="view-pane">
+            <div class="ref-section" onclick="copyInvite()">
+                <h3>Arkadaşlarını Davet Et</h3>
+                <p style="font-weight:700; margin-top:5px; opacity:0.9;">Her davet için bonus kazanın!</p>
+                <div class="hand-anim">👆</div>
             </div>
-            <div style="background:var(--card); border-radius:24px; padding:30px 20px; text-align:center; margin-top:20px; border:1px solid var(--border);">
-                <div style="font-weight:800; font-size:18px;">Ortaklık Geliri</div>
-                <div style="font-size:45px; font-weight:900; color:var(--primary); margin:15px 0;">$0</div>
-                <button class="btn btn-white" style="background:var(--primary); border-radius:30px; width:160px;">Çekim</button>
+            
+            <div style="background:var(--card); border-radius:25px; padding:40px 20px; text-align:center; margin-top:20px; border:1px solid var(--border);">
+                <i class="fas fa-wallet" style="font-size:40px; color:var(--primary); margin-bottom:15px;"></i>
+                <div style="font-weight:800; color:var(--dim);">REFERANS KAZANCI</div>
+                <div style="font-size:45px; font-weight:900; color:var(--primary); margin:10px 0;">$0.00</div>
+                <button class="btn btn-main" style="background:var(--primary); border-radius:50px; width:180px; font-size:14px;">Aktar</button>
             </div>
         </div>
 
-        <div id="v-upgrade" class="view">
-            <div style="padding:100px 20px; text-align:center;">
-                <i class="fas fa-rocket" style="font-size:50px; color:var(--primary);"></i>
-                <h2 style="margin-top:20px;">Market Yakında</h2>
-                <p style="color:var(--dim);">Kazım hızınızı artıracak donanımlar burada olacak.</p>
+        <div id="v-market" class="view-pane">
+            <div style="padding:100px 20px; text-align:center; opacity:0.5;">
+                <i class="fas fa-tools" style="font-size:60px; margin-bottom:20px;"></i>
+                <h2 style="font-weight:900;">Market Bakımda</h2>
+                <p>Yeni kazım cihazları çok yakında eklenecek.</p>
             </div>
         </div>
     </div>
 
-    <div class="modal" id="drawModal">
-        <div class="modal-box">
-            <h2 style="margin-bottom:10px;">Para Çek</h2>
-            <p style="font-size:12px; color:var(--dim); margin-bottom:20px;">Minimum çekim 5$ (USDT BEP20)</p>
-            <input type="text" id="wAddr" placeholder="Cüzdan Adresi">
-            <input type="number" id="wAmt" placeholder="Tutar (Min 5)">
-            <button class="btn btn-white" style="background:var(--primary);" onclick="processWithdraw()">Talebi Gönder</button>
-            <button class="btn btn-dark" onclick="closeWithdraw()">İptal</button>
+    <div class="modal-overlay" id="wModal">
+        <div class="modal-content">
+            <h2 style="font-weight:900;">Para Çekme</h2>
+            <p style="font-size:13px; color:var(--dim); margin-top:10px;">Minimum Çekim Tutarı: 5.00 USDT</p>
+            <input type="text" id="wAddress" placeholder="BEP20 / TRC20 Adresiniz">
+            <input type="number" id="wAmount" placeholder="Tutar (Örn: 5.25)">
+            <button class="btn btn-main" style="background:var(--primary);" onclick="submitWithdraw()">Talebi Onayla</button>
+            <button class="btn btn-sub" onclick="toggleW(false)">Vazgeç</button>
         </div>
     </div>
 
     <nav>
-        <div class="nav-item active" onclick="switchView('v-home', this)"><i class="fas fa-home"></i>Ev</div>
-        <div class="nav-item" onclick="switchView('v-upgrade', this)"><i class="fas fa-bolt"></i>Market</div>
-        <div class="nav-item" onclick="switchView('v-friends', this)"><i class="fas fa-users"></i>Ekip</div>
+        <div class="nav-btn active" onclick="navTo('v-home', this)"><i class="fas fa-home"></i>Anasayfa</div>
+        <div class="nav-btn" onclick="navTo('v-market', this)"><i class="fas fa-bolt"></i>Market</div>
+        <div class="nav-btn" onclick="navTo('v-friends', this)"><i class="fas fa-users"></i>Ekip</div>
     </nav>
 </div>
 
 <script>
-    // FIREBASE YAPILANDIRMASI
+    // --- FIREBASE SETUP ---
     const firebaseConfig = {
         apiKey: "AIzaSyAIstjXKAAgVr-AyVY-a1tlab-TquP1EwI",
         authDomain: "sanakod-e6b22.firebaseapp.com",
@@ -172,112 +196,112 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const ADMIN_ID = "8392479231";
-    const MINE_RATE = 0.000001;
+    const RATE = 0.000001; // Saniyede kazım hızı
 
-    let user = { pool: 0, wallet: 0, ads: 20, tasks: [], last: Date.now() };
+    let userData = { pool: 0, wallet: 0, ads: 20, tasks: [], lastUpdate: Date.now() };
 
-    async function init() {
-        const doc = await db.collection('users').doc(ADMIN_ID).get();
-        if(doc.exists) {
-            user = doc.data();
-            const diff = (Date.now() - user.last) / 1000;
-            user.pool += (diff * MINE_RATE);
-            user.tasks.forEach(t => document.getElementById('task-'+t)?.classList.add('done'));
+    // --- CORE LOGIC ---
+    async function startApp() {
+        const userDoc = await db.collection('users').doc(ADMIN_ID).get();
+        if(userDoc.exists) {
+            userData = userDoc.data();
+            const elapsed = (Date.now() - userData.lastUpdate) / 1000;
+            userData.pool += (elapsed * RATE);
+            userData.tasks.forEach(t => document.getElementById('task-'+t)?.classList.add('completed'));
         }
-        updateUI();
-        setInterval(tick, 100);
+        updateDisplay();
+        setInterval(miningTick, 100);
     }
 
-    function tick() {
-        user.pool += (MINE_RATE / 10);
-        document.getElementById('poolTxt').innerText = user.pool.toFixed(8);
-        if(Math.random() > 0.98) syncDB();
+    function miningTick() {
+        userData.pool += (RATE / 10);
+        document.getElementById('poolDisplay').innerText = userData.pool.toFixed(8);
+        if(Math.random() > 0.99) saveToCloud();
     }
 
-    async function collectPool() {
-        if(user.pool < 0.00001) return;
-        user.wallet += user.pool;
-        user.pool = 0;
-        updateUI();
-        await syncDB();
-        alert("Bakiye cüzdana aktarıldı!");
+    async function claimMining() {
+        if(userData.pool < 0.00001) return;
+        userData.wallet += userData.pool;
+        userData.pool = 0;
+        updateDisplay();
+        await saveToCloud();
+        alert("Kazanç cüzdanınıza başarıyla eklendi!");
     }
 
-    function openWithdraw() { document.getElementById('drawModal').style.display = 'flex'; }
-    function closeWithdraw() { document.getElementById('drawModal').style.display = 'none'; }
+    function toggleW(show) { document.getElementById('wModal').style.display = show ? 'flex' : 'none'; }
 
-    async function processWithdraw() {
-        const addr = document.getElementById('wAddr').value;
-        const amt = parseFloat(document.getElementById('wAmt').value);
-        
-        if(amt < 5) return alert("Minimum 5$ çekebilirsiniz.");
-        if(amt > user.wallet) return alert("Bakiye yetersiz.");
-        if(addr.length < 10) return alert("Geçersiz cüzdan.");
+    async function submitWithdraw() {
+        const addr = document.getElementById('wAddress').value;
+        const amt = parseFloat(document.getElementById('wAmount').value);
+
+        if(amt < 5) return alert("Hata: Minimum çekim 5$ olmalıdır.");
+        if(amt > userData.wallet) return alert("Hata: Yetersiz bakiye.");
+        if(addr.length < 10) return alert("Hata: Lütfen geçerli bir cüzdan adresi girin.");
 
         await db.collection('withdrawals').add({
-            userId: ADMIN_ID,
+            uid: ADMIN_ID,
             address: addr,
             amount: amt,
-            status: "Beklemede",
-            date: new Date()
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            status: 'Pending'
         });
 
-        user.wallet -= amt;
-        closeWithdraw();
-        updateUI();
-        await syncDB();
-        alert("Çekim talebi admin paneline iletildi!");
+        userData.wallet -= amt;
+        toggleW(false);
+        updateDisplay();
+        await saveToCloud();
+        alert("Çekim talebiniz işleme alındı! 24 saat içinde kontrol edilecektir.");
     }
 
-    function doTask(id, reward, url) {
-        window.open(url, '_blank');
+    async function execTask(id, reward, link) {
+        window.open(link, '_blank');
         setTimeout(async () => {
-            if(!user.tasks.includes(id)) {
-                user.wallet += reward;
-                user.tasks.push(id);
-                document.getElementById('task-'+id).classList.add('done');
-                updateUI();
-                await syncDB();
+            if(!userData.tasks.includes(id)) {
+                userData.wallet += reward;
+                userData.tasks.push(id);
+                document.getElementById('task-'+id).classList.add('completed');
+                updateDisplay();
+                await saveToCloud();
             }
         }, 3000);
     }
 
-    function watchAd() {
-        if(user.ads <= 0) return alert("Limit bitti.");
-        alert("Reklam izleniyor (10sn)...");
+    function playAd() {
+        if(userData.ads <= 0) return alert("Bugünkü reklam limitiniz doldu.");
+        alert("Reklam oynatılıyor... (Lütfen 10 saniye bekleyin)");
         setTimeout(async () => {
-            user.wallet += 0.0003;
-            user.ads--;
-            updateUI();
-            await syncDB();
+            userData.wallet += 0.0003;
+            userData.ads--;
+            updateDisplay();
+            await saveToCloud();
         }, 10000);
     }
 
-    function updateUI() {
-        document.getElementById('walletTxt').innerText = user.wallet.toFixed(6);
-        document.getElementById('ad-label').innerText = `Kalan: ${user.ads}/20 (+0.0003)`;
+    function updateDisplay() {
+        document.getElementById('walletDisplay').innerText = userData.wallet.toFixed(6);
+        document.getElementById('ad-status').innerText = `Kalan: ${userData.ads}/20 (+0.0003)`;
     }
 
-    async function syncDB() {
-        user.last = Date.now();
-        await db.collection('users').doc(ADMIN_ID).set(user);
+    async function saveToCloud() {
+        userData.lastUpdate = Date.now();
+        await db.collection('users').doc(ADMIN_ID).set(userData);
     }
 
-    function switchView(id, el) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    function navTo(id, el) {
+        document.querySelectorAll('.view-pane').forEach(v => v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         if(el) {
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
         }
     }
 
-    function copyRef() {
+    function copyInvite() {
         navigator.clipboard.writeText("https://t.me/EarnTetherBot?start=" + ADMIN_ID);
-        alert("Link kopyalandı!");
+        alert("Davet linki kopyalandı! Arkadaşlarını davet etmeye başla.");
     }
 
-    window.onload = init;
+    window.onload = startApp;
 </script>
 </body>
 </html>
