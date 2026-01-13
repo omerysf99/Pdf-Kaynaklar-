@@ -3,272 +3,429 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tether Max Pro - Elite Edition</title>
+    <title>TETHER MAX ULTRA PRO v7</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --p-neon: #00ffa3;
-            --bg-deep: #050505;
-            --bg-card: #0e0e0e;
-            --border: #1a1a1a;
+            --p-neon-2: #00d1ff;
+            --bg-deep: #020202;
+            --bg-card: #0a0a0a;
+            --bg-item: #121212;
             --text-gray: #888;
+            --danger: #ff4444;
             --gold: #f3ba2f;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Rajdhani', sans-serif; -webkit-user-select: none; }
-        body { background: var(--bg-deep); color: #fff; height: 100vh; overflow: hidden; }
+        /* --- CORE STYLES --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Rajdhani', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg-deep); color: #fff; height: 100vh; overflow: hidden; user-select: none; }
 
-        /* --- ONBOARDING MODAL --- */
-        #onboarding-screen {
-            position: fixed; inset: 0; background: #000; z-index: 10000; display: none;
-            flex-direction: column; align-items: center; justify-content: center; padding: 40px;
-        }
-        .neon-border-box {
-            border: 2px solid var(--p-neon); box-shadow: 0 0 15px var(--p-neon);
-            padding: 30px; border-radius: 20px; text-align: center; width: 100%;
-        }
+        /* --- ANIMATIONS --- */
+        @keyframes pulse-neon { 0% { box-shadow: 0 0 5px var(--p-neon); } 50% { box-shadow: 0 0 20px var(--p-neon); } 100% { box-shadow: 0 0 5px var(--p-neon); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        /* --- PRELOADER --- */
+        #preloader { position: fixed; inset: 0; background: #000; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .loader-circle { width: 80px; height: 80px; border: 3px solid #111; border-top: 3px solid var(--p-neon); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* --- LAYOUT --- */
-        .app-container { width: 100%; max-width: 480px; height: 100vh; margin: 0 auto; display: flex; flex-direction: column; position: relative; }
-        header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); }
+        .app-container { width: 100%; max-width: 500px; height: 100vh; margin: 0 auto; display: flex; flex-direction: column; position: relative; }
         
-        .scroller { flex: 1; overflow-y: auto; padding-bottom: 110px; }
-        .view-panel { display: none; padding: 20px; }
-        .view-panel.active { display: block; animation: slideIn 0.3s ease-out; }
+        header { padding: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; background: linear-gradient(to bottom, #000, transparent); }
+        .user-pill { background: var(--glass); border: var(--border); padding: 5px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 13px; }
+        .lvl-badge { background: var(--p-neon); color: #000; padding: 2px 6px; border-radius: 4px; font-weight: 900; font-family: 'Orbitron'; font-size: 10px; }
 
-        /* --- STAT CARDS --- */
-        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .mini-card { background: var(--bg-card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); }
-        .card-label { font-size: 10px; color: var(--text-gray); text-transform: uppercase; letter-spacing: 1px; }
-        .card-val { font-family: 'Orbitron'; font-size: 16px; color: #fff; margin-top: 5px; }
+        .scroller { flex: 1; overflow-y: auto; padding: 10px 20px 120px 20px; scrollbar-width: none; }
+        .scroller::-webkit-scrollbar { display: none; }
 
-        /* --- MINING UI --- */
-        .mining-area { text-align: center; padding: 40px 0; }
-        .pool-display { font-family: 'Orbitron'; font-size: 42px; font-weight: 900; color: var(--p-neon); text-shadow: 0 0 20px rgba(0,255,163,0.4); margin: 20px 0; }
-        .speed-badge { display: inline-block; background: var(--p-neon); color: #000; padding: 4px 12px; border-radius: 20px; font-weight: 900; font-size: 12px; margin-bottom: 10px; }
-
-        /* --- FRIENDS LIST --- */
-        .ref-list-item { 
-            background: #111; border: 1px solid var(--border); padding: 15px; 
-            border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+        /* --- MINING VIEW --- */
+        .mining-orb-wrap { padding: 30px 0; text-align: center; position: relative; }
+        .orb-main { 
+            width: 240px; height: 240px; margin: 0 auto; background: radial-gradient(circle, var(--p-neon-dim) 0%, transparent 70%);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative;
+            border: 1px solid rgba(0, 255, 163, 0.2); animation: float 4s ease-in-out infinite;
         }
-        .ref-info b { font-family: 'Orbitron'; color: var(--p-neon); font-size: 13px; }
-        .bonus-tag { color: var(--gold); font-size: 11px; font-weight: bold; }
+        .orb-icon { width: 100px; filter: drop-shadow(0 0 15px var(--p-neon)); }
+        .pool-counter { font-family: 'Orbitron'; font-size: 48px; font-weight: 900; color: #fff; margin: 20px 0; letter-spacing: -2px; }
+        
+        /* --- CARDS --- */
+        .glass-card { background: var(--bg-card); border: var(--border); border-radius: 24px; padding: 20px; margin-bottom: 15px; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .card-title { font-family: 'Orbitron'; font-size: 14px; color: var(--text-gray); letter-spacing: 1px; }
+
+        /* --- GRID STATS --- */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .stat-box { background: var(--bg-item); border: var(--border); padding: 15px; border-radius: 18px; }
+        .stat-label { font-size: 11px; color: var(--text-gray); margin-bottom: 5px; display: block; }
+        .stat-val { font-family: 'Orbitron'; font-size: 16px; color: var(--p-neon); }
+
+        /* --- TASK LIST --- */
+        .task-item { 
+            background: var(--bg-item); border: var(--border); padding: 16px; border-radius: 16px; 
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+            transition: 0.2s;
+        }
+        .task-item:active { background: #1a1a1a; transform: scale(0.98); }
+        .task-info { display: flex; align-items: center; gap: 15px; }
+        .task-icon-circle { width: 40px; height: 40px; background: #000; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+        /* --- MARKET / UPGRADE --- */
+        .upgrade-card { 
+            background: linear-gradient(45deg, #0a0a0a, #151515); border: var(--border); 
+            padding: 20px; border-radius: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 15px;
+        }
+        .upgrade-img { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; }
+        .upgrade-btn { background: var(--p-neon); color: #000; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 800; font-family: 'Orbitron'; font-size: 12px; }
+
+        /* --- NAVIGATION --- */
+        nav { 
+            position: absolute; bottom: 0; width: 100%; height: 90px; 
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); border-top: var(--border);
+            display: flex; justify-content: space-around; align-items: center; padding-bottom: 20px; z-index: 100;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #444; text-decoration: none; transition: 0.3s; }
+        .nav-item i { font-size: 20px; }
+        .nav-item span { font-size: 11px; font-weight: 700; }
+        .nav-item.active { color: var(--p-neon); text-shadow: 0 0 10px var(--p-neon); }
+
+        /* --- MODALS --- */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: var(--bg-card); border: var(--border); width: 100%; border-radius: 30px; padding: 30px; position: relative; animation: slideUp 0.3s ease-out; }
 
         /* --- BUTTONS --- */
-        .btn-main { 
-            background: var(--p-neon); color: #000; border: none; padding: 18px; 
-            border-radius: 16px; font-weight: 900; width: 100%; font-family: 'Orbitron';
-            cursor: pointer; box-shadow: 0 5px 15px rgba(0,255,163,0.2);
+        .btn-prime { 
+            background: var(--p-neon); color: #000; border: none; width: 100%; padding: 20px; 
+            border-radius: 20px; font-weight: 900; font-family: 'Orbitron'; font-size: 16px;
+            box-shadow: 0 10px 20px rgba(0, 255, 163, 0.2); cursor: pointer;
         }
-        .btn-main:active { transform: scale(0.98); }
+        .btn-prime:disabled { background: #222; color: #444; box-shadow: none; }
 
-        /* --- NAV --- */
-        nav { position: absolute; bottom: 0; width: 100%; height: 85px; background: #000; display: flex; border-top: 1px solid var(--border); }
-        .nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; text-decoration: none; font-weight: 700; }
-        .nav-link.active { color: var(--p-neon); }
-        .nav-link i { font-size: 22px; margin-bottom: 4px; }
+        .view { display: none; }
+        .view.active { display: block; }
 
-        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div id="onboarding-screen">
-    <div class="neon-border-box">
-        <i class="fas fa-microchip" style="font-size: 40px; color: var(--p-neon); margin-bottom: 15px;"></i>
-        <h2 style="font-family: 'Orbitron'; margin-bottom: 10px;">GÜVENLİ GİRİŞ</h2>
-        <p style="color: var(--text-gray); font-size: 13px;">Sizi davet eden madencinin ID kodunu girerek kazım hızınızı <b>+%10</b> artırın.</p>
-        
-        <input type="number" id="referrer-input" style="width: 100%; background: #000; border: 1px solid #333; padding: 15px; border-radius: 10px; color: #fff; margin: 20px 0; text-align: center; font-family: 'Orbitron';" placeholder="DAVET KODU">
-        
-        <button class="btn-main" onclick="processReferral()">SİSTEME BAĞLAN</button>
-        <button style="background:none; border:none; color: #444; margin-top: 15px; text-decoration: underline;" onclick="closeOnboarding()">Referansım yok, devam et</button>
-    </div>
+<div id="preloader">
+    <div class="loader-circle"></div>
+    <p style="margin-top: 20px; font-family: 'Orbitron'; color: var(--p-neon); font-size: 12px; letter-spacing: 2px;">SECURE CONNECTION...</p>
 </div>
 
 <div class="app-container">
     <header>
-        <div>
-            <div style="font-family: 'Orbitron'; font-weight: 900; color: var(--p-neon); font-size: 18px;">TETHER MAX</div>
-            <div style="font-size: 10px; color: #555;">NETWORK STATUS: <span style="color: var(--p-neon);">ACTIVE</span></div>
+        <div class="user-pill">
+            <div class="lvl-badge">LVL <span id="ui-lvl">1</span></div>
+            <span id="ui-username" style="font-weight: 700;">Madenci</span>
         </div>
-        <div style="text-align: right;">
-            <div style="font-size: 10px; color: #555;">USER ID</div>
-            <div id="my-id-display" style="font-family: 'Orbitron'; font-size: 12px; color: #fff;">...</div>
+        <div class="user-pill" style="color: var(--gold);">
+            <i class="fas fa-wallet"></i>
+            <span id="ui-wallet" style="font-family: 'Orbitron'; font-weight: 900;">0.0000</span>
         </div>
     </header>
 
     <div class="scroller">
-        <div id="view-home" class="view-panel active">
-            <div class="mining-area">
-                <div class="speed-badge"><i class="fas fa-bolt"></i> HIZ: <span id="speed-ui">1.0</span>x</div>
-                <div class="pool-display" id="pool-ui">0.00000000</div>
-                <button class="btn-main" onclick="claimRewards()">KAZANCI TOPLA</button>
+        <div id="v-mining" class="view active">
+            <div class="mining-orb-wrap">
+                <div class="orb-main">
+                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png?v=025" class="orb-icon" alt="USDT">
+                </div>
+                <div class="pool-counter" id="ui-pool">0.00000000</div>
+                <button class="btn-prime" onclick="Game.claim()">HAVUZU BOŞALT</button>
             </div>
 
-            <div class="stat-row">
-                <div class="mini-card">
-                    <div class="card-label">Cüzdan Bakiyesi</div>
-                    <div class="card-val"><span id="wallet-ui">0.0000</span> <small style="font-size: 10px; color: var(--p-neon);">USDT</small></div>
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <span class="stat-label">SAATLİK KAZANÇ</span>
+                    <span class="stat-val" id="ui-rate">0.00018</span> <small>USDT</small>
                 </div>
-                <div class="mini-card">
-                    <div class="card-label">Referanslar</div>
-                    <div class="card-val"><span id="ref-count-ui">0</span> <small style="font-size: 10px; color: var(--gold);">KİŞİ</small></div>
+                <div class="stat-box">
+                    <span class="stat-label">HIZ ÇARPANI</span>
+                    <span class="stat-val" id="ui-mult">1.0x</span>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="card-header">
+                    <span class="card-title">SON İŞLEMLER</span>
+                    <i class="fas fa-history" style="color: #333;"></i>
+                </div>
+                <div id="ui-history">
+                    <p style="color: #222; font-size: 12px; text-align: center;">Henüz işlem yok.</p>
                 </div>
             </div>
         </div>
 
-        <div id="view-friends" class="view-panel">
-            <h3 style="font-family: 'Orbitron'; margin-bottom: 15px;">EKİBİNİZ</h3>
-            <div class="mini-card" style="margin-bottom: 20px; border-style: dashed; text-align: center;">
-                <div class="card-label">SENİN DAVET KODUN</div>
-                <div id="copy-box" style="font-family: 'Orbitron'; font-size: 28px; color: var(--p-neon); margin: 10px 0;" onclick="copyMyID()">...</div>
-                <p style="font-size: 11px; color: #555;">Dokun ve Kopyala</p>
+        <div id="v-upgrades" class="view">
+            <h2 style="font-family: 'Orbitron'; margin-bottom: 20px; font-size: 20px; color: var(--p-neon);">MARKET</h2>
+            
+            <div class="upgrade-card">
+                <div class="upgrade-img" style="background: #1ed760; display:flex; align-items:center; justify-content:center;"><i class="fas fa-microchip fa-2x"></i></div>
+                <div style="flex:1">
+                    <div style="font-weight: 700;">RTX 5090 Miner</div>
+                    <div style="font-size: 12px; color: var(--text-gray);">Hız: +0.5x / Saat</div>
+                </div>
+                <button class="upgrade-btn" onclick="Game.buyUpgrade('cpu_1', 10)">10 USDT</button>
             </div>
 
-            <div id="referrals-list">
+            <div class="upgrade-card">
+                <div class="upgrade-img" style="background: #f3ba2f; display:flex; align-items:center; justify-content:center;"><i class="fas fa-server fa-2x"></i></div>
+                <div style="flex:1">
+                    <div style="font-weight: 700;">Cloud Server</div>
+                    <div style="font-size: 12px; color: var(--text-gray);">Hız: +2.0x / Saat</div>
+                </div>
+                <button class="upgrade-btn" onclick="Game.buyUpgrade('srv_1', 50)">50 USDT</button>
+            </div>
+        </div>
+
+        <div id="v-tasks" class="view">
+            <h2 style="font-family: 'Orbitron'; margin-bottom: 20px; font-size: 20px; color: var(--p-neon-2);">GÖREVLER</h2>
+            
+            <div class="task-item" onclick="Game.doTask('tg_join', 0.5, 'https://t.me/example')">
+                <div class="task-info">
+                    <div class="task-icon-circle" style="color: #24A1DE;"><i class="fab fa-telegram-plane"></i></div>
+                    <div>
+                        <div style="font-weight: 700;">Kanala Katıl</div>
+                        <div style="font-size: 12px; color: var(--p-neon);">+0.50 USDT</div>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right" style="color: #222;"></i>
+            </div>
+
+            <div class="task-item" onclick="Game.doTask('yt_sub', 1.0, 'https://youtube.com')">
+                <div class="task-info">
+                    <div class="task-icon-circle" style="color: #FF0000;"><i class="fab fa-youtube"></i></div>
+                    <div>
+                        <div style="font-weight: 700;">Abone Ol</div>
+                        <div style="font-size: 12px; color: var(--p-neon);">+1.00 USDT</div>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right" style="color: #222;"></i>
+            </div>
+        </div>
+
+        <div id="v-friends" class="view">
+            <div class="glass-card" style="text-align: center; background: linear-gradient(to bottom, #111, #050505);">
+                <i class="fas fa-users" style="font-size: 40px; color: var(--p-neon); margin-bottom: 15px;"></i>
+                <h3 style="font-family: 'Orbitron';">ARKADAŞLARINI ÇAĞIR</h3>
+                <p style="font-size: 13px; color: var(--text-gray); margin: 10px 0;">Her aktif referans için kazım hızın %10 artar ve anında 0.1 USDT kazanırsın.</p>
+                
+                <div style="background:#000; padding:15px; border-radius:15px; border: 1px dashed #333; margin: 20px 0;">
+                    <span style="font-size: 10px; color: #444; display: block; margin-bottom: 5px;">SENİN DAVET LİNKİN</span>
+                    <span id="ui-link" style="font-family: 'Orbitron'; font-size: 14px; color: #fff;">t.me/bot?start=8392479231</span>
+                </div>
+                <button class="btn-prime" onclick="Game.copyLink()">LİNKİ KOPYALA</button>
+            </div>
+
+            <div id="ui-refs-list" style="margin-top: 20px;">
                 </div>
         </div>
     </div>
 
     <nav>
-        <a href="#" class="nav-link active" onclick="switchTab('view-home', this)"><i class="fas fa-terminal"></i><span>Terminal</span></a>
-        <a href="#" class="nav-link" onclick="switchTab('view-friends', this)"><i class="fas fa-network-wired"></i><span>Network</span></a>
+        <a href="javascript:void(0)" class="nav-item active" onclick="Game.switchNav('v-mining', this)">
+            <i class="fas fa-terminal"></i><span>TERMINAL</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" onclick="Game.switchNav('v-upgrades', this)">
+            <i class="fas fa-bolt"></i><span>MARKET</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" onclick="Game.switchNav('v-tasks', this)">
+            <i class="fas fa-tasks"></i><span>GÖREVLER</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" onclick="Game.switchNav('v-friends', this)">
+            <i class="fas fa-users"></i><span>NETWORK</span>
+        </a>
     </nav>
 </div>
 
+<div id="modal-welcome" class="modal">
+    <div class="modal-content">
+        <h2 style="font-family: 'Orbitron'; color: var(--p-neon); margin-bottom: 15px;">HOŞ GELDİN!</h2>
+        <p style="color: var(--text-gray); font-size: 14px; line-height: 1.6;">Tether Max sistemine giriş yaptın. Kim tarafından davet edildin? (Opsiyonel)</p>
+        <input type="number" id="ref-input" placeholder="Referans ID" style="width:100%; padding:15px; margin:20px 0; border-radius:12px; background:#111; border:1px solid #333; color:#fff; text-align:center;">
+        <button class="btn-prime" onclick="Game.initUser()">MADENCİLİĞE BAŞLA</button>
+    </div>
+</div>
+
+
+
 <script>
-    // --- APP DATA ---
+/**
+ * TETHER MAX CORE ENGINE v7.0
+ * Multi-view, Real-time Sync, Advanced Logic
+ */
+
+const Game = (() => {
+    // --- STATE ---
     let user = {
         id: "8392479231",
+        username: "User",
         wallet: 0,
         pool: 0,
-        referrals: [], // Getirdiği kişilerin ID'leri
-        invitedBy: null,
-        multiplier: 1.0,
-        isNew: true
+        lvl: 1,
+        mult: 1.0,
+        referrals: [],
+        tasks: {},
+        upgrades: {},
+        lastSave: Date.now()
     };
 
-    // Firebase (Bilgileri doldurun)
-    const firebaseConfig = { databaseURL: "https://PROJE-ID.firebaseio.com" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const TG = window.Telegram.WebApp;
+    const FB_URL = "https://PROJENİZ-ID.firebaseio.com"; // BURAYI DEĞİŞTİR
 
-    function init() {
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        if(tg.initDataUnsafe?.user) user.id = tg.initDataUnsafe.user.id.toString();
-
-        document.getElementById('my-id-display').innerText = user.id;
-        document.getElementById('copy-box').innerText = user.id;
+    // --- INITIALIZATION ---
+    const init = () => {
+        TG.expand();
+        TG.enableClosingConfirmation();
+        
+        if(TG.initDataUnsafe?.user) {
+            user.id = TG.initDataUnsafe.user.id.toString();
+            user.username = TG.initDataUnsafe.user.first_name;
+        }
 
         // Firebase Sync
-        db.ref('users/' + user.id).once('value').then((snap) => {
+        firebase.initializeApp({ databaseURL: FB_URL });
+        const db = firebase.database();
+
+        db.ref('users/' + user.id).once('value').then(snap => {
             if(snap.exists()) {
-                user = snap.val();
-                if(!user.referrals) user.referrals = [];
-                closeOnboarding();
+                user = { ...user, ...snap.val() };
+                finishLoading();
             } else {
-                document.getElementById('onboarding-screen').style.display = 'flex';
+                document.getElementById('modal-welcome').style.display = 'flex';
+                document.getElementById('preloader').style.display = 'none';
             }
             updateUI();
-            startMining();
         });
-    }
 
-    function startMining() {
-        setInterval(() => {
-            // Temel hız: 0.00000005 * Çarpan
-            user.pool += (0.00000005 * user.multiplier);
-            document.getElementById('pool-ui').innerText = user.pool.toFixed(8);
-        }, 1000);
-    }
+        // Main Loop (Mining)
+        setInterval(tick, 1000);
+        // Sync Loop
+        setInterval(save, 30000);
+    };
 
-    // --- LOGIC ---
-    function processReferral() {
-        const refID = document.getElementById('referrer-input').value.trim();
-        if(!refID || refID === user.id) return alert("Geçersiz Kod!");
+    const tick = () => {
+        const baseRate = 0.00000005; // Temel saniyelik kazanç
+        const currentRate = baseRate * user.mult * user.lvl;
+        user.pool += currentRate;
+        
+        // UI Update (Sadece aktifse performansı koru)
+        document.getElementById('ui-pool').innerText = user.pool.toFixed(8);
+        document.getElementById('ui-rate').innerText = (currentRate * 3600).toFixed(5);
+    };
 
-        db.ref('users/' + refID).once('value').then((snap) => {
-            if(snap.exists()) {
-                user.invitedBy = refID;
-                user.multiplier = 1.1; // Davetle gelene %10 hız bonusu
-                
-                // Davet edene ödül: 0.05 USDT + Referans listesine ekle
-                db.ref('users/' + refID + '/wallet').set(firebase.database.ServerValue.increment(0.05));
-                db.ref('users/' + refID + '/referrals').push(user.id);
-                // Davet edenin çarpanını da güncelle (Her ref +0.1 hız)
-                db.ref('users/' + refID + '/multiplier').set(firebase.database.ServerValue.increment(0.1));
-
-                completeSignup();
-                Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-            } else {
-                alert("Sistemde böyle bir madenci bulunamadı.");
-            }
-        });
-    }
-
-    function claimRewards() {
-        if(user.pool < 0.00001) return;
+    const claim = () => {
+        if(user.pool < 0.000001) return;
+        
         user.wallet += user.pool;
+        addHistory("Havuz Boşaltıldı", user.pool.toFixed(6));
         user.pool = 0;
+        
+        TG.HapticFeedback.notificationOccurred('success');
         save();
         updateUI();
-        Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-    }
+    };
 
-    function updateUI() {
-        document.getElementById('wallet-ui').innerText = user.wallet.toFixed(4);
-        document.getElementById('ref-count-ui').innerText = user.referrals.length;
-        document.getElementById('speed-ui').innerText = user.multiplier.toFixed(1);
+    const buyUpgrade = (key, price) => {
+        if(user.wallet < price) return TG.showAlert("Yetersiz bakiye!");
+        
+        user.wallet -= price;
+        user.mult += (key === 'cpu_1' ? 0.5 : 2.0);
+        user.upgrades[key] = (user.upgrades[key] || 0) + 1;
+        
+        addHistory("Yükseltme Satın Alındı", `-${price} USDT`);
+        TG.HapticFeedback.impactOccurred('heavy');
+        save();
+        updateUI();
+    };
 
-        // Referans Listesi Render
-        const listDiv = document.getElementById('referrals-list');
-        listDiv.innerHTML = '';
-        if(user.referrals.length === 0) {
-            listDiv.innerHTML = '<p style="color:#333; text-align:center;">Henüz alt ekibiniz yok.</p>';
-        } else {
-            user.referrals.forEach(refId => {
-                listDiv.innerHTML += `
-                    <div class="ref-list-item">
-                        <div class="ref-info"><b>ID: ${refId}</b><br><span class="bonus-tag">Aktif Katkı</span></div>
-                        <div style="color:var(--p-neon)">+0.1x Speed</div>
-                    </div>
-                `;
+    const doTask = (id, reward, link) => {
+        if(user.tasks[id]) return TG.showAlert("Bu görev zaten tamamlandı!");
+        
+        window.open(link, '_blank');
+        
+        setTimeout(() => {
+            user.wallet += reward;
+            user.tasks[id] = true;
+            addHistory("Görev Tamamlandı", `+${reward} USDT`);
+            save();
+            updateUI();
+            TG.showAlert("Ödül hesabınıza eklendi!");
+        }, 3000);
+    };
+
+    const save = () => {
+        firebase.database().ref('users/' + user.id).set(user);
+        console.log("Auto-save completed.");
+    };
+
+    const updateUI = () => {
+        document.getElementById('ui-wallet').innerText = user.wallet.toFixed(4);
+        document.getElementById('ui-lvl').innerText = user.lvl;
+        document.getElementById('ui-username').innerText = user.username;
+        document.getElementById('ui-mult').innerText = user.mult.toFixed(1) + "x";
+        document.getElementById('ui-link').innerText = "t.me/bot?start=" + user.id;
+    };
+
+    const addHistory = (title, val) => {
+        const hist = document.getElementById('ui-history');
+        if(hist.innerHTML.includes("Henüz işlem yok")) hist.innerHTML = '';
+        
+        const item = document.createElement('div');
+        item.className = 'task-item';
+        item.style.padding = '10px';
+        item.innerHTML = `<span>${title}</span><span style="color:var(--p-neon)">${val}</span>`;
+        hist.prepend(item);
+    };
+
+    const switchNav = (viewId, el) => {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        el.classList.add('active');
+    };
+
+    const copyLink = () => {
+        const link = "https://t.me/bot?start=" + user.id;
+        navigator.clipboard.writeText(link);
+        TG.showAlert("Davet linki kopyalandı!");
+    };
+
+    const initUser = () => {
+        const refOwner = document.getElementById('ref-input').value;
+        if(refOwner && refOwner !== user.id) {
+            // Referans sahibine ödül gönder
+            firebase.database().ref('users/' + refOwner).once('value', s => {
+                if(s.exists()){
+                    firebase.database().ref('users/' + refOwner + '/wallet').set(firebase.database.ServerValue.increment(0.1));
+                    firebase.database().ref('users/' + refOwner + '/mult').set(firebase.database.ServerValue.increment(0.1));
+                }
             });
         }
-    }
-
-    function completeSignup() {
-        user.isNew = false;
+        document.getElementById('modal-welcome').style.display = 'none';
         save();
-        closeOnboarding();
-    }
+        finishLoading();
+    };
 
-    function save() { db.ref('users/' + user.id).set(user); }
-    function closeOnboarding() { document.getElementById('onboarding-screen').style.display = 'none'; }
-    
-    function copyMyID() {
-        const link = "https://t.me/BotUserIsmi?start=" + user.id;
-        navigator.clipboard.writeText(link);
-        Telegram.WebApp.showAlert("Referans linkiniz kopyalandı! Arkadaşlarını davet ederek kazım hızını artır.");
-    }
+    const finishLoading = () => {
+        document.getElementById('preloader').style.display = 'none';
+    };
 
-    function switchTab(viewId, el) {
-        document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
-        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
-    }
+    return { init, claim, buyUpgrade, doTask, switchNav, copyLink, initUser };
+})();
 
-    window.onload = init;
+window.onload = Game.init;
 </script>
 
 </body>
