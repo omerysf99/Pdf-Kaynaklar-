@@ -3,345 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tether Max Elite - Professional Task & Mining Bot</title>
+    <title>Tether Max Elite - Smart Traffic Edition</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Orbitron:wght@600;900&display=swap" rel="stylesheet">
 
     <style>
-        /* --- CSS ARCHITECTURE --- */
         :root {
             --primary: #00ffa3;
-            --primary-soft: rgba(0, 255, 163, 0.1);
             --bg: #050505;
             --card: #121212;
-            --card-light: #1c1c1c;
-            --text: #ffffff;
-            --gray: #888888;
-            --danger: #ff4757;
-            --tg-theme-bg-color: #050505;
+            --gray: #888;
+            --text: #fff;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; justify-content: center; }
-        
-        /* App Shell */
-        .app-shell { width: 100%; max-width: 440px; height: 100vh; background: radial-gradient(circle at 50% 0%, #0d2b20 0%, #050505 100%); display: flex; flex-direction: column; position: relative; }
+        .app { width: 100%; max-width: 440px; height: 100vh; background: radial-gradient(circle at top, #0d2b20, #050505); display: flex; flex-direction: column; position: relative; }
 
-        /* Modern Header */
-        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 100; }
-        .logo { font-family: 'Orbitron'; font-weight: 900; font-size: 14px; color: var(--primary); display: flex; align-items: center; gap: 8px; letter-spacing: 1px; }
-        .admin-id { font-size: 10px; color: var(--gray); font-weight: 800; }
+        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); border-bottom: 1px solid #222; z-index: 10; }
+        .logo { font-family: 'Orbitron'; font-size: 14px; color: var(--primary); display: flex; align-items: center; gap: 8px; }
 
-        /* Main Content Scroller */
-        .scroller { flex: 1; overflow-y: auto; padding-bottom: 100px; scroll-behavior: smooth; }
+        .scroller { flex: 1; overflow-y: auto; padding-bottom: 100px; }
         .scroller::-webkit-scrollbar { display: none; }
 
-        /* Mining Section */
-        .mining-section { padding: 30px 20px; text-align: center; border-bottom: 1px solid #111; position: relative; }
-        .m-val { font-family: 'Orbitron'; font-size: 36px; font-weight: 900; color: #fff; margin-bottom: 20px; text-shadow: 0 0 15px rgba(0,255,163,0.3); }
-        .m-visual { width: 120px; height: 120px; margin: 0 auto 20px; border: 2px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; }
-        .m-visual::after { content: ''; position: absolute; width: 140px; height: 140px; border: 1px dashed var(--primary); border-radius: 50%; animation: spin 20s linear infinite; opacity: 0.3; }
-        .m-visual img { width: 60px; filter: drop-shadow(0 0 10px var(--primary)); }
+        /* Mining & Wallet */
+        .hero { padding: 30px 20px; text-align: center; border-bottom: 1px solid #111; }
+        .m-val { font-family: 'Orbitron'; font-size: 36px; font-weight: 900; margin-bottom: 15px; }
+        .orb { width: 110px; height: 110px; margin: 0 auto 20px; border: 2px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(0,255,163,0.2); }
+        .orb img { width: 55px; }
         
-        .m-info { font-size: 12px; color: var(--gray); margin-bottom: 25px; font-weight: 600; }
-        .btn-collect { width: 100%; background: #ffffff; color: #000; padding: 18px; border-radius: 15px; font-weight: 900; border: none; font-size: 16px; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
-        .btn-collect:active { transform: scale(0.97); }
-        .btn-upgrade { width: 100%; background: #222; color: #fff; padding: 15px; border-radius: 15px; font-weight: 700; border: 1px solid #333; margin-top: 10px; font-size: 14px; }
+        .btn-main { width: 100%; background: #fff; color: #000; padding: 18px; border-radius: 15px; font-weight: 900; border: none; font-size: 16px; cursor: pointer; }
 
-        /* Wallet Display (Görseldeki Birebir) */
-        .section-tag { padding: 25px 20px 12px; font-size: 17px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; color: #fff; }
-        .wallet-card { background: var(--card-light); margin: 0 15px 12px; padding: 18px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #252525; }
-        .w-left { display: flex; align-items: center; gap: 15px; }
-        .w-icon { width: 50px; height: 50px; border-radius: 50%; background: #000; display: flex; align-items: center; justify-content: center; border: 1px solid #333; }
-        .w-info b { display: block; font-size: 18px; font-family: 'Orbitron'; margin-bottom: 2px; }
-        .w-info span { font-size: 12px; color: var(--gray); font-weight: 700; }
-        .btn-draw { background: var(--primary); color: #000; border: none; padding: 12px 22px; border-radius: 12px; font-weight: 900; font-size: 13px; }
+        /* Wallet Box */
+        .section-tag { padding: 25px 20px 10px; font-size: 16px; font-weight: 800; display: flex; justify-content: space-between; }
+        .wallet-card { background: #1a1a1a; margin: 0 15px 10px; padding: 18px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
+        .w-info b { display: block; font-size: 18px; font-family: 'Orbitron'; }
+        .w-info span { font-size: 11px; color: var(--gray); }
+        .btn-draw { background: var(--primary); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 12px; }
 
-        /* Task Cards */
-        .task-card { background: var(--card); margin: 0 15px 10px; padding: 15px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #1a1a1a; }
-        .task-card.disabled { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
-        .t-left { display: flex; align-items: center; gap: 15px; }
-        .t-img { width: 45px; height: 45px; border-radius: 12px; background: #000; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--primary); }
-        .t-info b { display: block; font-size: 14px; margin-bottom: 3px; }
-        .t-info span { font-size: 12px; color: var(--primary); font-weight: 800; }
-        .btn-go { background: var(--primary-soft); color: var(--primary); border: 1px solid var(--primary); padding: 8px 18px; border-radius: 10px; font-size: 11px; font-weight: 800; }
+        /* Tasks */
+        .task-box { background: var(--card); margin: 0 15px 10px; padding: 15px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #1a1a1a; }
+        .task-box.done { opacity: 0.3; pointer-events: none; }
+        .t-info b { display: block; font-size: 14px; }
+        .t-info span { font-size: 12px; color: var(--primary); font-weight: 700; }
 
-        /* Friends Section (Görseldeki Banner) */
-        .friends-page { padding: 15px; }
-        .bonus-box { background: var(--card); border: 2px dashed var(--primary); border-radius: 25px; padding: 25px; margin-bottom: 20px; text-align: center; }
-        .ref-input { width: 100%; background: #000; border: 1px solid #333; padding: 15px; border-radius: 12px; color: var(--primary); text-align: center; font-family: 'Orbitron'; font-size: 20px; margin: 15px 0; outline: none; }
+        /* Friends Area */
+        .friends-view { padding: 15px; }
+        .invite-banner { background: linear-gradient(90deg, #1d976c, #34e89e); padding: 25px; border-radius: 15px; color: #000; font-weight: 900; text-align: center; border: none; width: 100%; font-size: 18px; margin-bottom: 20px; }
         
-        .invite-banner { background: linear-gradient(90deg, #1d976c 0%, #34e89e 100%); width: 100%; padding: 28px; border-radius: 20px; color: #000; font-weight: 900; font-size: 19px; border: none; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; }
-        
-        .social-row { display: flex; justify-content: center; gap: 12px; margin-bottom: 30px; }
-        .social-item { width: 55px; height: 55px; border-radius: 15px; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; border: 1px solid #333; }
-        
-        .partner-card { background: #151515; border-radius: 20px; padding: 25px; text-align: center; border: 1px solid #222; margin-bottom: 20px; }
-        .p-total { font-size: 42px; font-family: 'Orbitron'; font-weight: 900; color: var(--primary); margin: 15px 0; }
-        .btn-p-draw { background: var(--primary); color: #000; border: none; padding: 14px 45px; border-radius: 30px; font-weight: 900; font-size: 15px; }
+        /* ÖNEMLİ: Bu panel başlangıçta gizli */
+        #bonus-input-panel { display: none; background: var(--card); border: 2px dashed var(--primary); border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: center; }
 
-        /* Navigation Bar */
-        nav { position: absolute; bottom: 0; width: 100%; height: 90px; background: rgba(0,0,0,0.95); display: flex; border-top: 1px solid #222; backdrop-filter: blur(20px); }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--gray); text-decoration: none; gap: 6px; }
+        .social-row { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
+        .soc-btn { width: 50px; height: 50px; border-radius: 12px; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 1px solid #333; }
+
+        /* Navigation */
+        nav { position: absolute; bottom: 0; width: 100%; height: 85px; background: #000; border-top: 1px solid #222; display: flex; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--gray); font-size: 10px; font-weight: 700; gap: 5px; }
         .nav-item.active { color: #fff; }
-        .nav-item i { font-size: 24px; }
-        .nav-item span { font-size: 10px; font-weight: 800; letter-spacing: 1px; }
+        .nav-item i { font-size: 22px; }
 
-        /* Ad Overlay System */
-        #ad-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .timer-orb { width: 110px; height: 110px; border: 5px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 38px; font-family: 'Orbitron'; color: var(--primary); box-shadow: 0 0 30px var(--primary-soft); }
+        /* Ad Overlay */
+        #ad-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .timer { width: 90px; height: 90px; border: 4px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-family: 'Orbitron'; color: var(--primary); }
 
-        /* Animations */
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .view { display: none; } .view.active { display: block; }
     </style>
 </head>
 <body>
 
-<div class="app-shell">
+<div class="app">
     <header>
-        <div class="logo"><i class="fas fa-gem"></i> TETHER MAX</div>
-        <div class="admin-id">ADMIN ID: 8392479231</div>
+        <div class="logo"><i class="fas fa-bolt"></i> TETHER MAX</div>
+        <div style="font-size: 10px; color: var(--gray);">ID: 8392479231</div>
     </header>
 
     <div class="scroller">
         <div id="v-home" class="view active">
-            <div class="mining-section">
+            <div class="hero">
                 <div class="m-val" id="pool-ui">0.00000000</div>
-                <div class="m-visual">
-                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png?v=025">
-                </div>
-                <div class="m-info">Aktif Kazım Gücü: 0.000115750 USDT/s</div>
-                <button class="btn-collect" onclick="collectPool()">BAKİYEYİ TOPLA</button>
-                <button class="btn-upgrade" onclick="alert('Yükseltme marketi yakında aktif olacak!')">HIZI ARTIR (UPGRADE)</button>
+                <div class="orb"><img src="https://cryptologos.cc/logos/tether-usdt-logo.png?v=025"></div>
+                <button class="btn-main" onclick="collect()">BAKİYEYİ TOPLA</button>
             </div>
 
-            <div class="section-tag">
-                Cüzdan Bakiyesi 
-                <i class="fas fa-history"></i>
-            </div>
-
+            <div class="section-tag">Cüzdan Bakiyesi <i class="fas fa-history"></i></div>
             <div class="wallet-card">
-                <div class="w-left">
-                    <div class="w-icon"><img src="https://cryptologos.cc/logos/tether-usdt-logo.png?v=025" width="28"></div>
-                    <div class="w-info">
-                        <b id="wallet-ui">0.000000</b>
-                        <span id="usd-val">≈ $0.00</span>
-                    </div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png?v=025" width="30">
+                    <div class="w-info"><b id="bal-ui">0.000000</b><span>≈ $<span id="usd-ui">0.00</span></span></div>
                 </div>
-                <button class="btn-draw" onclick="alert('Minimum Çekim: 10 USDT')">Para Çek</button>
+                <button class="btn-draw" onclick="alert('Min: 10 USDT')">Çek</button>
             </div>
 
-            <div class="section-tag">Günlük Görevler</div>
-            <div class="task-card" id="task-ad-box">
-                <div class="t-left">
-                    <div class="t-img" style="color:#ff4757;"><i class="fas fa-play-circle"></i></div>
-                    <div class="t-info">
-                        <b>Video Reklam İzle</b>
-                        <span>+0.00035$</span>
-                        <div style="font-size:10px; color:var(--gray);" id="ad-limit-txt">Kalan Hak: 20/20</div>
-                    </div>
+            <div class="section-tag">Görevler</div>
+            <div class="task-box" id="task-ad">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <i class="fas fa-video" style="color:red; font-size:20px;"></i>
+                    <div class="t-info"><b>Reklam İzle</b><span id="ad-txt">+0.00035$ (20/20)</span></div>
                 </div>
-                <button class="btn-go" onclick="startAd()">İZLE</button>
-            </div>
-
-            <div class="section-tag">Sosyal Görevler</div>
-            <div class="task-card" id="task-chan">
-                <div class="t-left">
-                    <div class="t-img" style="color:#0088cc;"><i class="fab fa-telegram"></i></div>
-                    <div class="t-info"><b>Resmi Kanal</b><span>+0.07$</span></div>
-                </div>
-                <button class="btn-go" onclick="runTask('chan', 0.07, 'https://t.me/earntether')">KATIL</button>
-            </div>
-
-            <div class="task-card" id="task-bin">
-                <div class="t-left">
-                    <div class="t-img" style="color:#f3ba2f;"><i class="fas fa-shield-halved"></i></div>
-                    <div class="t-info"><b>Binance Registry</b><span>+0.05$</span></div>
-                </div>
-                <button class="btn-go" onclick="runTask('bin', 0.05, 'https://binance.com')">BAŞLAT</button>
-            </div>
-
-            <div class="task-card" id="task-insta">
-                <div class="t-left">
-                    <div class="t-img" style="color:#e1306c;"><i class="fab fa-instagram"></i></div>
-                    <div class="t-info"><b>Instagram Takip</b><span>+0.05$</span></div>
-                </div>
-                <button class="btn-go" onclick="runTask('insta', 0.05, 'https://instagram.com')">TAKİP ET</button>
+                <button class="btn-draw" onclick="watchAd()">İZLE</button>
             </div>
         </div>
 
         <div id="v-friends" class="view">
-            <div class="friends-page">
-                <div class="bonus-box" id="bonus-panel">
-                    <b style="font-size:14px; letter-spacing:1px;">DAVET KODU GİRİN</b>
-                    <p style="font-size:11px; color:var(--gray); margin-top:5px;">Kod girerek anında 0.50$ kazanın.</p>
-                    <input type="number" class="ref-input" id="invite-entry" placeholder="Kod Buraya">
-                    <button class="btn-collect" style="padding:12px; background:var(--primary)" onclick="applyInvite()">BONUSU ONAYLA</button>
+            <div class="friends-view">
+                <div id="bonus-input-panel">
+                    <b>DAVET KODU GİRİN</b>
+                    <input type="number" id="ref-input" placeholder="Kod Buraya" style="width:100%; margin:15px 0; padding:12px; background:#000; border:1px solid #333; color:var(--primary); text-align:center; border-radius:10px; font-family:'Orbitron';">
+                    <button class="btn-main" style="padding:10px; font-size:13px;" onclick="claimBonus()">BONUSU AL (0.50$)</button>
                 </div>
 
-                <button class="invite-banner" onclick="copyRef()">
-                    Arkadaşlarla paylaş <i class="fas fa-hand-pointer"></i>
-                </button>
+                <button class="invite-banner" onclick="copyRef()">Arkadaşlarla paylaş <i class="fas fa-hand-pointer"></i></button>
 
                 <div class="social-row">
-                    <div class="social-item" style="background:#25D366"><i class="fab fa-whatsapp"></i></div>
-                    <div class="social-item" style="background:#0084FF"><i class="fab fa-facebook-messenger"></i></div>
-                    <div class="social-item" style="background:#00E676"><i class="fab fa-line"></i></div>
-                    <div class="social-item" style="background:#000000"><i class="fab fa-x-twitter"></i></div>
-                    <div class="social-item" onclick="copyRef()"><i class="fas fa-link"></i></div>
+                    <div class="soc-btn" style="color:#25D366"><i class="fab fa-whatsapp"></i></div>
+                    <div class="soc-btn" style="color:#0084FF"><i class="fab fa-facebook-messenger"></i></div>
+                    <div class="soc-btn" style="color:#00E676"><i class="fab fa-line"></i></div>
+                    <div class="soc-btn" style="color:#fff"><i class="fab fa-x-twitter"></i></div>
                 </div>
 
-                <div class="partner-card">
-                    <h4 style="font-size:16px;">Ortaklık programları</h4>
-                    <p style="font-size:11px; color:var(--gray); margin-top:5px;">Pazarlamayı teşvik eden kişi ön satışa döndüğünde, bir komisyon alacaksınız.</p>
-                    <div class="p-total">$0</div>
-                    <button class="btn-p-draw" onclick="alert('Komisyon çekimi için min. $10 gerekir.')">Çekim</button>
-                    <div style="margin-top:15px; font-size:11px; color:var(--primary); text-decoration:underline;">Komisyon detayları</div>
+                <div class="wallet-card" style="flex-direction:column; gap:15px; text-align:center;">
+                    <h4>Ortaklık Kazancı</h4>
+                    <div style="font-size:32px; font-family:'Orbitron'; color:var(--primary);">$0</div>
+                    <button class="btn-draw" style="padding:12px 40px; border-radius:20px;">Çekim Yap</button>
                 </div>
-
-                <div class="section-tag" style="padding-left:0;">Arkadaşlarım (0)</div>
-                <div style="text-align:center; padding:30px; color:var(--gray); font-size:12px;">Henüz kimseyi davet etmediniz.</div>
             </div>
         </div>
     </div>
 
-    <div id="ad-screen">
-        <p style="margin-bottom:20px; color:var(--gray); letter-spacing:2px;">GÜVENLİ REKLAM İZLENİYOR</p>
-        <div class="timer-orb" id="ad-timer">15</div>
-        <p style="margin-top:30px; font-weight:800; font-size:14px;">LÜTFEN AYRILMAYIN...</p>
+    <div id="ad-overlay">
+        <p style="color:var(--gray); margin-bottom:20px;">REKLAM İZLENİYOR...</p>
+        <div class="timer" id="ad-sec">15</div>
     </div>
 
     <nav>
-        <div class="nav-item active" onclick="tab('v-home', this)"><i class="fas fa-home-alt"></i><span>Anasayfa</span></div>
-        <div class="nav-item" onclick="tab('v-friends', this)"><i class="fas fa-user-plus"></i><span>Arkadaşlar</span></div>
+        <div class="nav-item active" onclick="tab('v-home', this)"><i class="fas fa-home"></i><span>ANASAYFA</span></div>
+        <div class="nav-item" onclick="tab('v-friends', this)"><i class="fas fa-users"></i><span>ARKADAŞLAR</span></div>
     </nav>
 </div>
 
 <script>
-    /* --- JAVASCRIPT LOGIC ENGINE --- */
-    
     const ADMIN_ID = "8392479231";
-    let appState = {
-        wallet: 0.0,
-        pool: 0.0,
-        ads: 20,
-        doneTasks: [],
-        isRefClaimed: false
-    };
+    let state = { bal: 0, pool: 0, ads: 20, isRefClaimed: false };
 
-    // 1. Madencilik Döngüsü
-    function initMining() {
+    function init() {
+        // 1. Madencilik Başlat
         setInterval(() => {
-            appState.pool += (0.000115750 / 10);
-            document.getElementById('pool-ui').innerText = appState.pool.toFixed(8);
+            state.pool += (0.000115750 / 10);
+            document.getElementById('pool-ui').innerText = state.pool.toFixed(8);
         }, 100);
-        
-        loadData();
-        refreshUI();
+
+        // 2. GOOGLE/TELEGRAM KONTROLÜ
+        checkReferralStatus();
     }
 
-    // 2. Havuz Toplama
-    function collectPool() {
-        if(appState.pool <= 0) return;
-        appState.wallet += appState.pool;
-        appState.pool = 0;
-        saveData();
-        refreshUI();
-        alert("Havuzdaki bakiye cüzdanınıza aktarıldı!");
+    function checkReferralStatus() {
+        // URL'de start parametresi varsa panel gösterilir
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasStartParam = urlParams.has('start');
+        
+        // Eğer Telegram'dan bir referansla geldiyse paneli göster
+        if(hasStartParam && !state.isRefClaimed) {
+            document.getElementById('bonus-input-panel').style.display = 'block';
+        } else {
+            // Google'dan veya direkt girdiyse panel gizli kalır
+            document.getElementById('bonus-input-panel').style.display = 'none';
+        }
     }
 
-    // 3. Reklam Sistemi (0.00035$)
-    function startAd() {
-        if(appState.ads <= 0) return alert("Günlük reklam limitine ulaştınız!");
-        
-        const screen = document.getElementById('ad-screen');
-        const timerTxt = document.getElementById('ad-timer');
-        screen.style.display = 'flex';
-        
-        let count = 15;
-        const countdown = setInterval(() => {
-            count--;
-            timerTxt.innerText = count;
-            if(count <= 0) {
-                clearInterval(countdown);
-                screen.style.display = 'none';
-                timerTxt.innerText = "15";
-                
-                appState.wallet += 0.00035;
-                appState.ads--;
-                saveData();
-                refreshUI();
-                alert("Ödül kazanıldı: +0.00035$");
+    function collect() {
+        if(state.pool <= 0) return;
+        state.bal += state.pool;
+        state.pool = 0;
+        updateUI();
+    }
+
+    function watchAd() {
+        if(state.ads <= 0) return;
+        const ov = document.getElementById('ad-overlay');
+        ov.style.display = 'flex';
+        let s = 15;
+        const t = setInterval(() => {
+            s--; document.getElementById('ad-sec').innerText = s;
+            if(s <= 0) {
+                clearInterval(t); ov.style.display = 'none';
+                state.bal += 0.00035; state.ads--; updateUI();
+                document.getElementById('ad-sec').innerText = "15";
             }
         }, 1000);
     }
 
-    // 4. Sosyal Görevler
-    function runTask(id, reward, url) {
-        if(appState.doneTasks.includes(id)) return;
-        window.open(url, '_blank');
-        
-        setTimeout(() => {
-            appState.wallet += reward;
-            appState.doneTasks.push(id);
-            saveData();
-            refreshUI();
-            alert("Görev tamamlandı! Ödül: " + reward + "$");
-        }, 5000);
+    function claimBonus() {
+        const val = document.getElementById('ref-input').value;
+        if(val && val !== ADMIN_ID) {
+            state.bal += 0.50;
+            state.isRefClaimed = true;
+            document.getElementById('bonus-input-panel').style.display = 'none';
+            updateUI();
+            alert("0.50$ Bonus Eklendi!");
+        }
     }
 
-    // 5. Referans Bonusu
-    function applyInvite() {
-        const val = document.getElementById('invite-entry').value;
-        if(!val || val === ADMIN_ID) return alert("Geçersiz kod girişi!");
-        
-        appState.wallet += 0.50;
-        appState.isRefClaimed = true;
-        saveData();
-        refreshUI();
-        alert("Hoşgeldin Bonusu: 0.50$ Alındı!");
+    function updateUI() {
+        document.getElementById('bal-ui').innerText = state.bal.toFixed(6);
+        document.getElementById('usd-ui').innerText = state.bal.toFixed(2);
+        document.getElementById('ad-txt').innerText = "+0.00035$ ("+state.ads+"/20)";
+        if(state.ads <= 0) document.getElementById('task-ad').classList.add('done');
     }
 
-    // 6. UI Güncelleme
-    function refreshUI() {
-        document.getElementById('wallet-ui').innerText = appState.wallet.toFixed(6);
-        document.getElementById('usd-val').innerText = "≈ $" + (appState.wallet * 1.0).toFixed(2);
-        document.getElementById('ad-limit-txt').innerText = "Kalan Hak: " + appState.ads + "/20";
-        
-        if(appState.ads <= 0) document.getElementById('task-ad-box').classList.add('disabled');
-        
-        appState.doneTasks.forEach(t => {
-            const el = document.getElementById('task-' + t);
-            if(el) el.classList.add('disabled');
-        });
-
-        if(appState.isRefClaimed) document.getElementById('bonus-panel').style.display = 'none';
-    }
-
-    // Navigation
-    function tab(viewId, el) {
+    function tab(id, el) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
+        document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         el.classList.add('active');
     }
 
     function copyRef() {
         navigator.clipboard.writeText("https://t.me/TetherEliteBot?start=" + ADMIN_ID);
-        alert("Referans linkiniz kopyalandı!");
+        alert("Referans linki kopyalandı!");
     }
 
-    // Local Storage
-    function saveData() { localStorage.setItem('tether_max_save', JSON.stringify(appState)); }
-    function loadData() {
-        const data = localStorage.getItem('tether_max_save');
-        if(data) appState = JSON.parse(data);
-    }
-
-    window.onload = initMining;
+    window.onload = init;
 </script>
 </body>
 </html>
