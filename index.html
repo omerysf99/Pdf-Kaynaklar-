@@ -1,203 +1,274 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tether Max Pro - Referral Edition</title>
-    
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tether Max Pro - Elite Edition</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 
-    <style>
-        :root {
-            --p-neon: #00ffa3;
-            --bg-deep: #050505;
-            --bg-card: #0e0e0e;
-            --border-color: #222;
-            --text-gray: #a0a0a0;
-        }
+    <style>
+        :root {
+            --p-neon: #00ffa3;
+            --bg-deep: #050505;
+            --bg-card: #0e0e0e;
+            --border: #1a1a1a;
+            --text-gray: #888;
+            --gold: #f3ba2f;
+        }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-user-select: none; }
-        body { background: var(--bg-deep); color: #fff; height: 100vh; overflow: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Rajdhani', sans-serif; -webkit-user-select: none; }
+        body { background: var(--bg-deep); color: #fff; height: 100vh; overflow: hidden; }
 
-        /* --- ONBOARDING OVERLAY --- */
-        #onboarding-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999; display: none;
-            flex-direction: column; align-items: center; justify-content: center;
-            padding: 30px; text-align: center;
-        }
-        .welcome-icon { font-size: 60px; color: var(--p-neon); margin-bottom: 20px; }
-        .invite-input {
-            width: 100%; max-width: 300px; background: #111; border: 1px solid #333;
-            padding: 15px; border-radius: 15px; color: #fff; text-align: center;
-            font-size: 18px; font-family: 'Orbitron'; margin: 20px 0;
-        }
-        .invite-input:focus { border-color: var(--p-neon); outline: none; }
+        /* --- ONBOARDING MODAL --- */
+        #onboarding-screen {
+            position: fixed; inset: 0; background: #000; z-index: 10000; display: none;
+            flex-direction: column; align-items: center; justify-content: center; padding: 40px;
+        }
+        .neon-border-box {
+            border: 2px solid var(--p-neon); box-shadow: 0 0 15px var(--p-neon);
+            padding: 30px; border-radius: 20px; text-align: center; width: 100%;
+        }
 
-        /* Ana UI stilleri (Öncekiyle aynı, scroller ve nav dahil) */
-        .root-container { width: 100%; max-width: 480px; height: 100vh; margin: 0 auto; display: flex; flex-direction: column; position: relative; }
-        header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        .scroller { flex: 1; overflow-y: auto; padding-bottom: 100px; }
-        .view-panel { display: none; } .view-panel.active { display: block; }
-        
-        /* Butonlar */
-        .btn-prime { background: var(--p-neon); color: #000; border: none; padding: 15px 30px; border-radius: 15px; font-weight: 900; width: 100%; cursor: pointer; }
-        .btn-skip { background: transparent; color: #555; border: none; margin-top: 15px; font-size: 12px; text-decoration: underline; }
+        /* --- LAYOUT --- */
+        .app-container { width: 100%; max-width: 480px; height: 100vh; margin: 0 auto; display: flex; flex-direction: column; position: relative; }
+        header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); }
+        
+        .scroller { flex: 1; overflow-y: auto; padding-bottom: 110px; }
+        .view-panel { display: none; padding: 20px; }
+        .view-panel.active { display: block; animation: slideIn 0.3s ease-out; }
 
-        /* Navigation */
-        nav { position: absolute; bottom: 0; width: 100%; height: 80px; background: #000; display: flex; border-top: 1px solid #222; }
-        .nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #555; text-decoration: none; }
-        .nav-link.active { color: var(--p-neon); }
-        
-        /* Madencilik ve Diğer Kartlar */
-        .mining-card { padding: 40px 20px; text-align: center; }
-        .pool-amount { font-family: 'Orbitron'; font-size: 35px; color: var(--p-neon); margin: 20px 0; }
-    </style>
+        /* --- STAT CARDS --- */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .mini-card { background: var(--bg-card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); }
+        .card-label { font-size: 10px; color: var(--text-gray); text-transform: uppercase; letter-spacing: 1px; }
+        .card-val { font-family: 'Orbitron'; font-size: 16px; color: #fff; margin-top: 5px; }
+
+        /* --- MINING UI --- */
+        .mining-area { text-align: center; padding: 40px 0; }
+        .pool-display { font-family: 'Orbitron'; font-size: 42px; font-weight: 900; color: var(--p-neon); text-shadow: 0 0 20px rgba(0,255,163,0.4); margin: 20px 0; }
+        .speed-badge { display: inline-block; background: var(--p-neon); color: #000; padding: 4px 12px; border-radius: 20px; font-weight: 900; font-size: 12px; margin-bottom: 10px; }
+
+        /* --- FRIENDS LIST --- */
+        .ref-list-item { 
+            background: #111; border: 1px solid var(--border); padding: 15px; 
+            border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .ref-info b { font-family: 'Orbitron'; color: var(--p-neon); font-size: 13px; }
+        .bonus-tag { color: var(--gold); font-size: 11px; font-weight: bold; }
+
+        /* --- BUTTONS --- */
+        .btn-main { 
+            background: var(--p-neon); color: #000; border: none; padding: 18px; 
+            border-radius: 16px; font-weight: 900; width: 100%; font-family: 'Orbitron';
+            cursor: pointer; box-shadow: 0 5px 15px rgba(0,255,163,0.2);
+        }
+        .btn-main:active { transform: scale(0.98); }
+
+        /* --- NAV --- */
+        nav { position: absolute; bottom: 0; width: 100%; height: 85px; background: #000; display: flex; border-top: 1px solid var(--border); }
+        .nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; text-decoration: none; font-weight: 700; }
+        .nav-link.active { color: var(--p-neon); }
+        .nav-link i { font-size: 22px; margin-bottom: 4px; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body>
 
 <div id="onboarding-screen">
-    <div class="welcome-icon"><i class="fas fa-user-plus"></i></div>
-    <h2 style="font-family: 'Orbitron';">TETHER MAX</h2>
-    <p style="color: var(--text-gray); font-size: 14px; margin-top: 10px;">Sizi kim davet etti? <br> (Davet edenin ID kodunu girin)</p>
-    
-    <input type="number" id="referrer-input" class="invite-input" placeholder="Referans ID">
-    
-    <button class="btn-prime" onclick="submitReferral()">SİSTEME GİRİŞ YAP</button>
-    <button class="btn-skip" onclick="closeOnboarding()">Referansım yok, geç</button>
+    <div class="neon-border-box">
+        <i class="fas fa-microchip" style="font-size: 40px; color: var(--p-neon); margin-bottom: 15px;"></i>
+        <h2 style="font-family: 'Orbitron'; margin-bottom: 10px;">GÜVENLİ GİRİŞ</h2>
+        <p style="color: var(--text-gray); font-size: 13px;">Sizi davet eden madencinin ID kodunu girerek kazım hızınızı <b>+%10</b> artırın.</p>
+        
+        <input type="number" id="referrer-input" style="width: 100%; background: #000; border: 1px solid #333; padding: 15px; border-radius: 10px; color: #fff; margin: 20px 0; text-align: center; font-family: 'Orbitron';" placeholder="DAVET KODU">
+        
+        <button class="btn-main" onclick="processReferral()">SİSTEME BAĞLAN</button>
+        <button style="background:none; border:none; color: #444; margin-top: 15px; text-decoration: underline;" onclick="closeOnboarding()">Referansım yok, devam et</button>
+    </div>
 </div>
 
-<div class="root-container">
-    <header>
-        <div style="font-family: 'Orbitron'; font-weight: 900; color: var(--p-neon);">TETHER MAX</div>
-        <div style="font-size: 10px; color: #555;">ID: <span id="my-id-display">8392479231</span></div>
-    </header>
+<div class="app-container">
+    <header>
+        <div>
+            <div style="font-family: 'Orbitron'; font-weight: 900; color: var(--p-neon); font-size: 18px;">TETHER MAX</div>
+            <div style="font-size: 10px; color: #555;">NETWORK STATUS: <span style="color: var(--p-neon);">ACTIVE</span></div>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 10px; color: #555;">USER ID</div>
+            <div id="my-id-display" style="font-family: 'Orbitron'; font-size: 12px; color: #fff;">...</div>
+        </div>
+    </header>
 
-    <div class="scroller">
-        <div id="view-dashboard" class="view-panel active">
-            <div class="mining-card">
-                <span style="font-size: 12px; color: #888;">TOPLANACAK TUTAR</span>
-                <div class="pool-amount" id="pool-display">0.00000000</div>
-                <button class="btn-prime" onclick="claimRewards()">HAVUZU BOŞALT</button>
-            </div>
-        </div>
+    <div class="scroller">
+        <div id="view-home" class="view-panel active">
+            <div class="mining-area">
+                <div class="speed-badge"><i class="fas fa-bolt"></i> HIZ: <span id="speed-ui">1.0</span>x</div>
+                <div class="pool-display" id="pool-ui">0.00000000</div>
+                <button class="btn-main" onclick="claimRewards()">KAZANCI TOPLA</button>
+            </div>
 
-        <div id="view-friends" class="view-panel">
-            <div style="padding: 20px;">
-                <h3 style="margin-bottom: 20px;">Referans Programı</h3>
-                <div style="background: #111; padding: 20px; border-radius: 20px; border: 1px dashed #333;">
-                    <p style="font-size: 12px; color: #888;">SİZİN DAVET KODUNUZ</p>
-                    <div id="copy-id-box" style="font-family: 'Orbitron'; font-size: 24px; color: var(--p-neon); margin: 10px 0;" onclick="copyMyID()">8392479231</div>
-                    <button class="btn-prime" style="padding: 10px;" onclick="copyMyID()">LİNKİ KOPYALA</button>
-                </div>
-            </div>
-        </div>
-    </div>
+            <div class="stat-row">
+                <div class="mini-card">
+                    <div class="card-label">Cüzdan Bakiyesi</div>
+                    <div class="card-val"><span id="wallet-ui">0.0000</span> <small style="font-size: 10px; color: var(--p-neon);">USDT</small></div>
+                </div>
+                <div class="mini-card">
+                    <div class="card-label">Referanslar</div>
+                    <div class="card-val"><span id="ref-count-ui">0</span> <small style="font-size: 10px; color: var(--gold);">KİŞİ</small></div>
+                </div>
+            </div>
+        </div>
 
-    <nav>
-        <a href="#" class="nav-link active" onclick="switchView('view-dashboard', this)"><i class="fas fa-home"></i><span>Panel</span></a>
-        <a href="#" class="nav-link" onclick="switchView('view-friends', this)"><i class="fas fa-users"></i><span>Referans</span></a>
-    </nav>
+        <div id="view-friends" class="view-panel">
+            <h3 style="font-family: 'Orbitron'; margin-bottom: 15px;">EKİBİNİZ</h3>
+            <div class="mini-card" style="margin-bottom: 20px; border-style: dashed; text-align: center;">
+                <div class="card-label">SENİN DAVET KODUN</div>
+                <div id="copy-box" style="font-family: 'Orbitron'; font-size: 28px; color: var(--p-neon); margin: 10px 0;" onclick="copyMyID()">...</div>
+                <p style="font-size: 11px; color: #555;">Dokun ve Kopyala</p>
+            </div>
+
+            <div id="referrals-list">
+                </div>
+        </div>
+    </div>
+
+    <nav>
+        <a href="#" class="nav-link active" onclick="switchTab('view-home', this)"><i class="fas fa-terminal"></i><span>Terminal</span></a>
+        <a href="#" class="nav-link" onclick="switchTab('view-friends', this)"><i class="fas fa-network-wired"></i><span>Network</span></a>
+    </nav>
 </div>
 
 <script>
-    // --- APP STATE ---
-    let user = {
-        id: "8392479231",
-        wallet: 0,
-        pool: 0,
-        invitedBy: null,
-        isNew: true
-    };
+    // --- APP DATA ---
+    let user = {
+        id: "8392479231",
+        wallet: 0,
+        pool: 0,
+        referrals: [], // Getirdiği kişilerin ID'leri
+        invitedBy: null,
+        multiplier: 1.0,
+        isNew: true
+    };
 
-    // Firebase Config (Kendi bilgilerinizi buraya girin)
-    const firebaseConfig = { databaseURL: "https://PROJE-ID.firebaseio.com" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    // Firebase (Bilgileri doldurun)
+    const firebaseConfig = { databaseURL: "https://PROJE-ID.firebaseio.com" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    function init() {
-        // 1. Telegram ID Al
-        const tg = window.Telegram.WebApp;
-        if(tg.initDataUnsafe?.user) {
-            user.id = tg.initDataUnsafe.user.id.toString();
-        }
-        
-        document.getElementById('my-id-display').innerText = user.id;
-        document.getElementById('copy-id-box').innerText = user.id;
+    function init() {
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        if(tg.initDataUnsafe?.user) user.id = tg.initDataUnsafe.user.id.toString();
 
-        // 2. Kullanıcıyı Kontrol Et
-        db.ref('users/' + user.id).once('value').then((snap) => {
-            if(snap.exists()) {
-                user = snap.val();
-                closeOnboarding();
-            } else {
-                // Yeni kullanıcıysa ekranı göster
-                document.getElementById('onboarding-screen').style.display = 'flex';
-            }
-            updateUI();
-        });
+        document.getElementById('my-id-display').innerText = user.id;
+        document.getElementById('copy-box').innerText = user.id;
 
-        // Mining Loop
-        setInterval(() => {
-            user.pool += 0.00000005;
-            document.getElementById('pool-display').innerText = user.pool.toFixed(8);
-        }, 1000);
-    }
+        // Firebase Sync
+        db.ref('users/' + user.id).once('value').then((snap) => {
+            if(snap.exists()) {
+                user = snap.val();
+                if(!user.referrals) user.referrals = [];
+                closeOnboarding();
+            } else {
+                document.getElementById('onboarding-screen').style.display = 'flex';
+            }
+            updateUI();
+            startMining();
+        });
+    }
 
-    // --- REFERANS MANTIĞI ---
-    function submitReferral() {
-        const refID = document.getElementById('referrer-input').value.trim();
-        
-        if(!refID) return alert("Lütfen bir ID girin veya geç butonuna basın.");
-        if(refID === user.id) return alert("Kendi kodunuzu kullanamazsınız!");
+    function startMining() {
+        setInterval(() => {
+            // Temel hız: 0.00000005 * Çarpan
+            user.pool += (0.00000005 * user.multiplier);
+            document.getElementById('pool-ui').innerText = user.pool.toFixed(8);
+        }, 1000);
+    }
 
-        // Davet edeni kontrol et
-        db.ref('users/' + refID).once('value').then((snap) => {
-            if(snap.exists()) {
-                user.invitedBy = refID;
-                // Davet edene ödül ver (Örn: 0.05 USDT)
-                db.ref('users/' + refID + '/wallet').set(firebase.database.ServerValue.increment(0.05));
-                db.ref('users/' + refID + '/referrals').push(user.id);
-                
-                alert("Referans onaylandı! 0.05 USDT bonus gönderildi.");
-                completeSignup();
-            } else {
-                alert("Geçersiz Referans ID! Lütfen kontrol edin.");
-            }
-        });
-    }
+    // --- LOGIC ---
+    function processReferral() {
+        const refID = document.getElementById('referrer-input').value.trim();
+        if(!refID || refID === user.id) return alert("Geçersiz Kod!");
 
-    function completeSignup() {
-        user.isNew = false;
-        db.ref('users/' + user.id).set(user);
-        closeOnboarding();
-    }
+        db.ref('users/' + refID).once('value').then((snap) => {
+            if(snap.exists()) {
+                user.invitedBy = refID;
+                user.multiplier = 1.1; // Davetle gelene %10 hız bonusu
+                
+                // Davet edene ödül: 0.05 USDT + Referans listesine ekle
+                db.ref('users/' + refID + '/wallet').set(firebase.database.ServerValue.increment(0.05));
+                db.ref('users/' + refID + '/referrals').push(user.id);
+                // Davet edenin çarpanını da güncelle (Her ref +0.1 hız)
+                db.ref('users/' + refID + '/multiplier').set(firebase.database.ServerValue.increment(0.1));
 
-    function closeOnboarding() {
-        document.getElementById('onboarding-screen').style.display = 'none';
-        user.isNew = false;
-        // Eğer referansız giriyorsa kaydet
-        db.ref('users/' + user.id).update({isNew: false});
-    }
+                completeSignup();
+                Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+            } else {
+                alert("Sistemde böyle bir madenci bulunamadı.");
+            }
+        });
+    }
 
-    function copyMyID() {
-        const link = "https://t.me/BotunuzunLinki?start=" + user.id;
-        navigator.clipboard.writeText(link);
-        alert("Davet linkiniz kopyalandı!");
-    }
+    function claimRewards() {
+        if(user.pool < 0.00001) return;
+        user.wallet += user.pool;
+        user.pool = 0;
+        save();
+        updateUI();
+        Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+    }
 
-    function switchView(viewId, el) {
-        document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
-        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
-    }
+    function updateUI() {
+        document.getElementById('wallet-ui').innerText = user.wallet.toFixed(4);
+        document.getElementById('ref-count-ui').innerText = user.referrals.length;
+        document.getElementById('speed-ui').innerText = user.multiplier.toFixed(1);
 
-    window.onload = init;
+        // Referans Listesi Render
+        const listDiv = document.getElementById('referrals-list');
+        listDiv.innerHTML = '';
+        if(user.referrals.length === 0) {
+            listDiv.innerHTML = '<p style="color:#333; text-align:center;">Henüz alt ekibiniz yok.</p>';
+        } else {
+            user.referrals.forEach(refId => {
+                listDiv.innerHTML += `
+                    <div class="ref-list-item">
+                        <div class="ref-info"><b>ID: ${refId}</b><br><span class="bonus-tag">Aktif Katkı</span></div>
+                        <div style="color:var(--p-neon)">+0.1x Speed</div>
+                    </div>
+                `;
+            });
+        }
+    }
+
+    function completeSignup() {
+        user.isNew = false;
+        save();
+        closeOnboarding();
+    }
+
+    function save() { db.ref('users/' + user.id).set(user); }
+    function closeOnboarding() { document.getElementById('onboarding-screen').style.display = 'none'; }
+    
+    function copyMyID() {
+        const link = "https://t.me/BotUserIsmi?start=" + user.id;
+        navigator.clipboard.writeText(link);
+        Telegram.WebApp.showAlert("Referans linkiniz kopyalandı! Arkadaşlarını davet ederek kazım hızını artır.");
+    }
+
+    function switchTab(viewId, el) {
+        document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    window.onload = init;
 </script>
 
 </body>
