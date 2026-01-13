@@ -4,81 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Earn Tether Pro - Admin 8392479231</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
     <style>
-        /* --- CSS ARCHITECTURE --- */
         :root {
-            --primary: #00ffa3;
-            --bg: #0a0a0a;
-            --card: #151515;
-            --text: #ffffff;
-            --dim: #888;
-            --border: #222;
-            --error: #ff4d4d;
+            --primary: #00ffa3; --bg: #0a0a0a; --card: #151515; --text: #ffffff;
+            --dim: #888; --border: #222;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); height: 100vh; display: flex; justify-content: center; overflow: hidden; }
 
-        .app-shell { width: 100%; max-width: 414px; height: 100vh; position: relative; display: flex; flex-direction: column; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+        .app-shell { width: 100%; max-width: 414px; height: 100vh; position: relative; display: flex; flex-direction: column; border: 1px solid var(--border); }
         
-        /* Header */
-        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid var(--border); z-index: 10; }
-        .h-back { font-size: 14px; cursor: pointer; opacity: 0.8; }
-        .h-title { font-weight: 800; display: flex; align-items: center; gap: 5px; font-size: 16px; }
-        .h-title i { color: #3897f0; font-size: 14px; }
+        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid var(--border); }
+        .h-title { font-weight: 800; display: flex; align-items: center; gap: 6px; }
+        .h-title i { color: #3897f0; }
 
-        /* Main Viewport */
         .viewport { flex: 1; overflow-y: auto; padding: 0 15px 110px; scrollbar-width: none; }
         .viewport::-webkit-scrollbar { display: none; }
 
-        /* Mining Section */
-        .mine-card {
+        /* Mining Area */
+        .mining-container {
             background: #1a2f28 url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-            border-radius: 25px; padding: 35px 20px; text-align: center; margin-top: 15px; border: 1px solid rgba(0,255,163,0.2);
+            border-radius: 24px; padding: 35px 20px; text-align: center; margin-top: 15px; border: 1px solid rgba(0,255,163,0.2);
         }
-        .pool-val { font-size: 38px; font-weight: 700; margin: 10px 0; font-family: monospace; letter-spacing: -1px; }
-        .orb { width: 110px; height: 110px; background: rgba(0,255,163,0.1); border: 4px solid var(--primary); border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(0,255,163,0.2); }
-        .orb img { width: 60px; }
+        .pool-val { font-size: 38px; font-weight: 700; font-family: monospace; letter-spacing: -1px; margin-bottom: 20px; }
+        .main-orb { width: 110px; height: 110px; background: rgba(0,255,163,0.1); border: 4px solid var(--primary); border-radius: 50%; margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(0,255,163,0.2); }
+        .main-orb img { width: 60px; }
 
-        .btn { width: 100%; padding: 16px; border-radius: 14px; border: none; font-weight: 800; font-size: 16px; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
-        .btn:active { transform: scale(0.98); }
-        .btn-white { background: #fff; color: #000; }
+        .btn { width: 100%; padding: 16px; border-radius: 14px; border: none; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn-white { background: #fff; color: #000; margin-bottom: 10px; }
         .btn-dark { background: rgba(255,255,255,0.1); color: #fff; }
 
         /* Wallet */
         .wallet-card { background: var(--card); padding: 18px; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; margin-top: 15px; }
-        .w-icon { width: 45px; height: 45px; border-radius: 50%; border: 1px solid #26a17b; display: flex; align-items: center; justify-content: center; background: rgba(38,161,123,0.1); }
-        .btn-draw { background: var(--primary); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer; }
+        .w-balance { font-weight: 900; font-size: 18px; }
+        .draw-btn { background: var(--primary); color: #000; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 900; font-size: 13px; }
 
-        /* Tasks */
-        .task { background: var(--card); padding: 14px; border-radius: 18px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--border); margin-bottom: 10px; }
-        .task.done { opacity: 0.4; pointer-events: none; }
-        .t-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #fff; }
-        .t-go { background: var(--primary); color: #000; border: none; padding: 8px 20px; border-radius: 25px; font-weight: 900; font-size: 13px; cursor: pointer; }
-
-        /* Friends Section */
-        .ref-banner { background: linear-gradient(90deg, #1d976c, #00ffa3); border-radius: 18px; padding: 30px; text-align: center; color: #000; position: relative; cursor: pointer; margin-top: 15px; }
-        .ref-banner h3 { font-weight: 900; font-size: 22px; }
-        .hand { position: absolute; right: 25px; bottom: -8px; font-size: 45px; animation: bounce 2s infinite; }
+        /* Friends Section (İstediğin Yeşil Banner) */
+        .ref-hero { background: linear-gradient(90deg, #1d976c, #00ffa3); border-radius: 20px; padding: 30px; text-align: center; color: #000; position: relative; cursor: pointer; margin-top: 15px; }
+        .ref-hero h3 { font-weight: 900; font-size: 22px; }
+        .hand-icon { position: absolute; right: 25px; bottom: -8px; font-size: 45px; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        .social-row { display: flex; justify-content: center; gap: 12px; margin: 25px 0; }
-        .soc-btn { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 22px; cursor: pointer; }
+        /* Task Cards */
+        .task-card { background: var(--card); padding: 14px; border-radius: 18px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--border); margin-bottom: 10px; }
+        .task-card.done { opacity: 0.4; pointer-events: none; }
+        .t-go { background: var(--primary); color: #000; border: none; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 12px; }
 
-        .aff-card { background: var(--card); border-radius: 24px; padding: 30px 20px; text-align: center; border: 1px solid var(--border); }
-        .aff-val { font-size: 50px; font-weight: 900; color: var(--primary); margin: 15px 0; }
-
-        /* Modal / Popup */
+        /* Withdraw Modal */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-box { background: var(--card); width: 85%; border-radius: 25px; padding: 25px; border: 1px solid var(--border); }
-        .modal-box h2 { margin-bottom: 15px; font-size: 20px; }
-        .modal-box input { width: 100%; padding: 15px; background: #000; border: 1px solid var(--border); border-radius: 12px; color: #fff; margin-bottom: 12px; outline: none; }
-        .modal-box input:focus { border-color: var(--primary); }
+        .modal-box { background: var(--card); width: 85%; padding: 25px; border-radius: 24px; border: 1px solid var(--border); }
+        .modal-box input { width: 100%; padding: 15px; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 12px; margin-bottom: 15px; outline: none; }
 
         /* Navigation */
         nav { position: absolute; bottom: 0; width: 100%; height: 85px; background: #000; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding-top: 12px; }
-        .nav-item { color: var(--dim); text-align: center; font-size: 11px; cursor: pointer; flex: 1; }
+        .nav-item { color: var(--dim); text-align: center; font-size: 11px; flex: 1; cursor: pointer; }
         .nav-item.active { color: #fff; }
         .nav-item i { font-size: 24px; display: block; margin-bottom: 5px; }
 
@@ -90,184 +77,193 @@
 
 <div class="app-shell">
     <header>
-        <div class="h-back"><i class="fas fa-times"></i> Kapat</div>
+        <div style="font-size:14px; opacity:0.8;"><i class="fas fa-times"></i> Kapat</div>
         <div class="h-title">Earn Tether <i class="fas fa-check-circle"></i></div>
-        <div style="font-size: 18px;"><i class="fas fa-ellipsis-v"></i></div>
+        <i class="fas fa-ellipsis-v"></i>
     </header>
 
     <div class="viewport">
         <div id="v-home" class="view active">
-            <div class="mine-card">
-                <div style="font-size: 12px; font-weight: 800;">USDT</div>
+            <div class="mining-container">
                 <div class="pool-val" id="poolTxt">0.00000000</div>
-                <div class="orb"><img src="https://cryptologos.cc/logos/tether-usdt-logo.png?v=025"></div>
-                <div style="font-size: 11px; margin-bottom: 25px; opacity: 0.8;">Hız: 0.00000100 USDT/s</div>
-                <button class="btn btn-white" onclick="collect()">Topla</button>
-                <button class="btn btn-dark" onclick="showView('v-upgrade')">Yükselt</button>
+                <div class="main-orb"><img src="https://cryptologos.cc/logos/tether-usdt-logo.png?v=025"></div>
+                <button class="btn btn-white" onclick="collectPool()">Topla</button>
+                <button class="btn btn-dark" onclick="switchView('v-upgrade')">Yükselt</button>
             </div>
 
-            <div style="margin: 25px 0 15px; font-weight: 800;">Cüzdan Bakiyesi</div>
             <div class="wallet-card">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div class="w-icon"><img src="https://cryptologos.cc/logos/tether-usdt-logo.png?v=025" width="24"></div>
-                    <div>
-                        <div id="walletTxt" style="font-weight:900; font-size: 18px;">0.000000</div>
-                        <div style="font-size:12px; color:var(--dim);">≈ $0.00</div>
-                    </div>
+                <div>
+                    <div class="w-balance" id="walletTxt">0.000000</div>
+                    <div style="font-size:12px; color:var(--dim);">Cüzdan Bakiyesi</div>
                 </div>
-                <button class="btn-draw" onclick="openWithdraw()">Para Çek</button>
+                <button class="draw-btn" onclick="openWithdraw()">Para Çek</button>
             </div>
 
-            <div style="margin: 30px 0 15px; font-weight: 800;">Günlük Görevler</div>
-            <div class="task" id="t-resmi">
-                <div class="t-icon" style="background:#24A1DE;"><i class="fab fa-telegram-plane"></i></div>
-                <div style="flex:1;">
-                    <div style="font-size:14px; font-weight:700;">Resmi Kanal</div>
-                    <div style="color:var(--primary); font-size:12px; font-weight:800;">+0.05 $USDT</div>
+            <div style="margin: 25px 0 15px; font-weight: 800;">Görevler</div>
+            <div id="taskList">
+                <div class="task-card" id="task-resmi">
+                    <div style="width:45px; height:45px; background:#24A1DE; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px;"><i class="fab fa-telegram-plane"></i></div>
+                    <div style="flex:1;"><div style="font-weight:700; font-size:14px;">Resmi Kanal</div><div style="color:var(--primary); font-size:12px; font-weight:800;">+0.05 $USDT</div></div>
+                    <button class="t-go" onclick="doTask('resmi', 0.05, 'https://t.me/earntether2026')">GO</button>
                 </div>
-                <button class="t-go" onclick="doTask('resmi', 0.05, 'https://t.me/earntether2026')">GO</button>
-            </div>
-            <div class="task" id="t-insta">
-                <div class="t-icon" style="background:#E1306C;"><i class="fab fa-instagram"></i></div>
-                <div style="flex:1;">
-                    <div style="font-size:14px; font-weight:700;">Instagram Katıl</div>
-                    <div style="color:var(--primary); font-size:12px; font-weight:800;">+0.05 $USDT</div>
+                <div class="task-card" id="task-insta">
+                    <div style="width:45px; height:45px; background:#E1306C; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px;"><i class="fab fa-instagram"></i></div>
+                    <div style="flex:1;"><div style="font-weight:700; font-size:14px;">Instagram Takip</div><div style="color:var(--primary); font-size:12px; font-weight:800;">+0.05 $USDT</div></div>
+                    <button class="t-go" onclick="doTask('insta', 0.05, 'https://t.me/instagramNewsBrazil')">GO</button>
                 </div>
-                <button class="t-go" onclick="doTask('insta', 0.05, 'https://t.me/instagramNewsBrazil')">GO</button>
-            </div>
-            <div class="task" id="t-binance">
-                <div class="t-icon" style="background:#f3ba2f; color:#000;"><i class="fas fa-bold"></i></div>
-                <div style="flex:1;">
-                    <div style="font-size:14px; font-weight:700;">Binance News</div>
-                    <div style="color:var(--primary); font-size:12px; font-weight:800;">+0.05 $USDT</div>
+                <div class="task-card">
+                    <div style="width:45px; height:45px; background:#9d50bb; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px;"><i class="fas fa-play-circle"></i></div>
+                    <div style="flex:1;"><div style="font-weight:700; font-size:14px;">Reklam İzle</div><div style="color:var(--primary); font-size:12px; font-weight:800;" id="ad-label">Kalan: 20/20 (+0.0003)</div></div>
+                    <button class="t-go" onclick="watchAd()">İZLE</button>
                 </div>
-                <button class="t-go" onclick="doTask('binance', 0.05, 'https://t.me/BinanceBrazilNews')">GO</button>
-            </div>
-            <div class="task">
-                <div class="t-icon" style="background:#9d50bb;"><i class="fas fa-play-circle"></i></div>
-                <div style="flex:1;">
-                    <div style="font-size:14px; font-weight:700;">Reklam İzle</div>
-                    <div style="color:var(--primary); font-size:12px; font-weight:800;" id="ad-info">Kalan: 20/20 (+0.0003)</div>
-                </div>
-                <button class="t-go" onclick="watchAd()">İZLE</button>
             </div>
         </div>
 
         <div id="v-friends" class="view">
-            <div class="ref-banner" onclick="copyRef()">
+            <div class="ref-hero" onclick="copyRef()">
                 <h3>Arkadaşlarla paylaş</h3>
-                <div class="hand">👆</div>
+                <div class="hand-icon">👆</div>
             </div>
-            <div class="social-row">
-                <div class="soc-btn" style="background:#25D366;"><i class="fab fa-whatsapp"></i></div>
-                <div class="soc-btn" style="background:#0084FF;"><i class="fab fa-facebook-messenger"></i></div>
-                <div class="soc-btn" style="background:#00C300;"><i class="fab fa-line"></i></div>
-                <div class="soc-btn" style="background:#444;" onclick="copyRef()"><i class="fas fa-link"></i></div>
-            </div>
-            <div class="aff-card">
-                <div style="font-weight:800; font-size:18px;">Ortaklık Programları</div>
-                <p style="font-size:12px; color:var(--dim); margin:10px 0;">Minimum çekim limitine ulaştığınızda komisyonunuzu talep edebilirsiniz.</p>
-                <div class="aff-val">$0</div>
-                <button class="btn btn-white" style="background:var(--primary); width:150px; border-radius:30px; font-size:14px;">Çekim</button>
+            <div style="background:var(--card); border-radius:24px; padding:30px 20px; text-align:center; margin-top:20px; border:1px solid var(--border);">
+                <div style="font-weight:800; font-size:18px;">Ortaklık Geliri</div>
+                <div style="font-size:45px; font-weight:900; color:var(--primary); margin:15px 0;">$0</div>
+                <button class="btn btn-white" style="background:var(--primary); border-radius:30px; width:160px;">Çekim</button>
             </div>
         </div>
 
         <div id="v-upgrade" class="view">
-            <div style="padding: 100px 20px; text-align: center;">
-                <i class="fas fa-rocket" style="font-size: 50px; color: var(--primary);"></i>
-                <h2 style="margin-top:20px;">Market Kapalı</h2>
-                <p style="color:var(--dim); margin-top:10px;">Yeni cihazlar yakında eklenecektir.</p>
+            <div style="padding:100px 20px; text-align:center;">
+                <i class="fas fa-rocket" style="font-size:50px; color:var(--primary);"></i>
+                <h2 style="margin-top:20px;">Market Yakında</h2>
+                <p style="color:var(--dim);">Kazım hızınızı artıracak donanımlar burada olacak.</p>
             </div>
         </div>
     </div>
 
-    <div class="modal" id="w-modal">
+    <div class="modal" id="drawModal">
         <div class="modal-box">
-            <h2>Para Çek (USDT)</h2>
-            <p style="font-size:12px; color:var(--dim); margin-bottom:15px;">Minimum Çekim: 5.00 USDT</p>
-            <input type="text" id="w-address" placeholder="BEP20 / TRC20 Adresi">
-            <input type="number" id="w-amount" placeholder="Tutar (Örn: 5.50)">
-            <button class="btn btn-white" style="background:var(--primary);" onclick="processWithdraw()">ONAYLA</button>
-            <button class="btn btn-dark" onclick="closeWithdraw()">İPTAL</button>
+            <h2 style="margin-bottom:10px;">Para Çek</h2>
+            <p style="font-size:12px; color:var(--dim); margin-bottom:20px;">Minimum çekim 5$ (USDT BEP20)</p>
+            <input type="text" id="wAddr" placeholder="Cüzdan Adresi">
+            <input type="number" id="wAmt" placeholder="Tutar (Min 5)">
+            <button class="btn btn-white" style="background:var(--primary);" onclick="processWithdraw()">Talebi Gönder</button>
+            <button class="btn btn-dark" onclick="closeWithdraw()">İptal</button>
         </div>
     </div>
 
     <nav>
-        <div class="nav-item active" onclick="showView('v-home', this)"><i class="fas fa-home"></i>Ev</div>
-        <div class="nav-item" onclick="showView('v-upgrade', this)"><i class="fas fa-microchip"></i>Yükselt</div>
-        <div class="nav-item" onclick="showView('v-friends', this)"><i class="fas fa-users"></i>Arkadaşlar</div>
+        <div class="nav-item active" onclick="switchView('v-home', this)"><i class="fas fa-home"></i>Ev</div>
+        <div class="nav-item" onclick="switchView('v-upgrade', this)"><i class="fas fa-bolt"></i>Market</div>
+        <div class="nav-item" onclick="switchView('v-friends', this)"><i class="fas fa-users"></i>Ekip</div>
     </nav>
 </div>
 
 <script>
-    const ADMIN_ID = "8392479231";
-    const SPEED = 0.000001;
-    let db = { pool: 0, wallet: 0, ads: 20, tasks: [], last: Date.now() };
+    // FIREBASE YAPILANDIRMASI
+    const firebaseConfig = {
+        apiKey: "AIzaSyAIstjXKAAgVr-AyVY-a1tlab-TquP1EwI",
+        authDomain: "sanakod-e6b22.firebaseapp.com",
+        projectId: "sanakod-e6b22",
+        storageBucket: "sanakod-e6b22.firebasestorage.app",
+        messagingSenderId: "567585215373",
+        appId: "1:567585215373:web:d4ec6e5541da2872df63c4"
+    };
 
-    function init() {
-        const saved = localStorage.getItem('tether_db_' + ADMIN_ID);
-        if(saved) {
-            db = JSON.parse(saved);
-            db.pool += ((Date.now() - db.last) / 1000) * SPEED;
-            db.tasks.forEach(t => document.getElementById('t-'+t)?.classList.add('done'));
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const ADMIN_ID = "8392479231";
+    const MINE_RATE = 0.000001;
+
+    let user = { pool: 0, wallet: 0, ads: 20, tasks: [], last: Date.now() };
+
+    async function init() {
+        const doc = await db.collection('users').doc(ADMIN_ID).get();
+        if(doc.exists) {
+            user = doc.data();
+            const diff = (Date.now() - user.last) / 1000;
+            user.pool += (diff * MINE_RATE);
+            user.tasks.forEach(t => document.getElementById('task-'+t)?.classList.add('done'));
         }
         updateUI();
-        setInterval(() => {
-            db.pool += (SPEED / 10);
-            document.getElementById('poolTxt').innerText = db.pool.toFixed(8);
-            if(Math.random() > 0.98) save();
-        }, 100);
+        setInterval(tick, 100);
     }
 
-    function collect() {
-        if(db.pool < 0.000001) return;
-        db.wallet += db.pool; db.pool = 0;
-        updateUI(); save();
+    function tick() {
+        user.pool += (MINE_RATE / 10);
+        document.getElementById('poolTxt').innerText = user.pool.toFixed(8);
+        if(Math.random() > 0.98) syncDB();
     }
 
-    function openWithdraw() { document.getElementById('w-modal').style.display = 'flex'; }
-    function closeWithdraw() { document.getElementById('w-modal').style.display = 'none'; }
+    async function collectPool() {
+        if(user.pool < 0.00001) return;
+        user.wallet += user.pool;
+        user.pool = 0;
+        updateUI();
+        await syncDB();
+        alert("Bakiye cüzdana aktarıldı!");
+    }
 
-    function processWithdraw() {
-        const addr = document.getElementById('w-address').value;
-        const amt = parseFloat(document.getElementById('w-amount').value);
-        if(!addr || addr.length < 10) return alert("Geçerli bir adres girin!");
-        if(amt < 5) return alert("Minimum çekim 5$ olmalıdır!");
-        if(amt > db.wallet) return alert("Yetersiz bakiye!");
+    function openWithdraw() { document.getElementById('drawModal').style.display = 'flex'; }
+    function closeWithdraw() { document.getElementById('drawModal').style.display = 'none'; }
+
+    async function processWithdraw() {
+        const addr = document.getElementById('wAddr').value;
+        const amt = parseFloat(document.getElementById('wAmt').value);
         
-        alert("Talep Alındı! Kontrol edildikten sonra " + addr + " adresine gönderilecektir.");
-        db.wallet -= amt;
-        closeWithdraw(); updateUI(); save();
+        if(amt < 5) return alert("Minimum 5$ çekebilirsiniz.");
+        if(amt > user.wallet) return alert("Bakiye yetersiz.");
+        if(addr.length < 10) return alert("Geçersiz cüzdan.");
+
+        await db.collection('withdrawals').add({
+            userId: ADMIN_ID,
+            address: addr,
+            amount: amt,
+            status: "Beklemede",
+            date: new Date()
+        });
+
+        user.wallet -= amt;
+        closeWithdraw();
+        updateUI();
+        await syncDB();
+        alert("Çekim talebi admin paneline iletildi!");
     }
 
     function doTask(id, reward, url) {
         window.open(url, '_blank');
-        setTimeout(() => {
-            if(!db.tasks.includes(id)) {
-                db.wallet += reward; db.tasks.push(id);
-                document.getElementById('t-'+id).classList.add('done');
-                updateUI(); save();
+        setTimeout(async () => {
+            if(!user.tasks.includes(id)) {
+                user.wallet += reward;
+                user.tasks.push(id);
+                document.getElementById('task-'+id).classList.add('done');
+                updateUI();
+                await syncDB();
             }
-        }, 2000);
+        }, 3000);
     }
 
     function watchAd() {
-        if(db.ads <= 0) return alert("Limit doldu!");
-        alert("Reklam izleniyor... (10sn)");
-        setTimeout(() => {
-            db.wallet += 0.0003; db.ads--;
-            updateUI(); save();
+        if(user.ads <= 0) return alert("Limit bitti.");
+        alert("Reklam izleniyor (10sn)...");
+        setTimeout(async () => {
+            user.wallet += 0.0003;
+            user.ads--;
+            updateUI();
+            await syncDB();
         }, 10000);
     }
 
     function updateUI() {
-        document.getElementById('walletTxt').innerText = db.wallet.toFixed(6);
-        document.getElementById('ad-info').innerText = `Kalan: ${db.ads}/20 (+0.0003)`;
+        document.getElementById('walletTxt').innerText = user.wallet.toFixed(6);
+        document.getElementById('ad-label').innerText = `Kalan: ${user.ads}/20 (+0.0003)`;
     }
 
-    function save() { db.last = Date.now(); localStorage.setItem('tether_db_' + ADMIN_ID, JSON.stringify(db)); }
+    async function syncDB() {
+        user.last = Date.now();
+        await db.collection('users').doc(ADMIN_ID).set(user);
+    }
 
-    function showView(id, el) {
+    function switchView(id, el) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         if(el) {
@@ -278,7 +274,7 @@
 
     function copyRef() {
         navigator.clipboard.writeText("https://t.me/EarnTetherBot?start=" + ADMIN_ID);
-        alert("Referans linki kopyalandı!");
+        alert("Link kopyalandı!");
     }
 
     window.onload = init;
