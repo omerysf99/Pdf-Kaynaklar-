@@ -2,8 +2,9 @@ import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-# Bot token'ınızı buraya girin
-BOT_TOKEN = 8202149683:AAH06aJ3yY_L8_mcbnziGOKP81e_BI381sA
+# DİKKAT: Bu token paylaşıldığı için GÜVENLİ DEĞİL!
+# Lütfen hemen yeni token alın ve değiştirin!
+BOT_TOKEN = "8202149683:AAH06aJ3yY_L8_mcbnziGOKP81e_BI381sA"
 
 # Log ayarları
 logging.basicConfig(
@@ -18,12 +19,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     """Botu başlat"""
     # Bot uygulamasını oluştur
-    application = Application.builder().token(8202149683:AAH06aJ3yY_L8_mcbnziGOKP81e_BI381sA).build()
+    application = Application.builder().token(BOT_TOKEN).build()
 
     # Komut handler'larını ekle
     application.add_handler(CommandHandler("start", start))
 
     # Botu başlat
+    print("Bot başlatılıyor...")
+    print("⚠️  UYARI: Bu token güvenli değil! Hemen değiştirin!")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
