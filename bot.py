@@ -3,7 +3,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 # Bot token'ınızı buraya girin
-BOT_TOKEN = "BOT_TOKEN_BURAYA_GIRIN"
+BOT_TOKEN = 8202149683:AAH06aJ3yY_L8_mcbnziGOKP81e_BI381sA
 
 # Log ayarları
 logging.basicConfig(
