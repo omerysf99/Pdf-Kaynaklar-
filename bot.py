@@ -1,33 +1,914 @@
-import logging
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+import os
+import time
+import json
+import requests
+from datetime import datetime, timedelta
+import threading
+import sqlite3
+from flask import Flask, jsonify, request
+import hashlib
+import pytz
+from typing import Dict, List
+import uuid
+import random
 
-# DİKKAT: Bu token paylaşıldığı için GÜVENLİ DEĞİL!
-# Lütfen hemen yeni token alın ve değiştirin!
-BOT_TOKEN = "8202149683:AAH06aJ3yY_L8_mcbnziGOKP81e_BI381sA"
+# Telegram Ayarları
+TOKEN = "8202149683:AAH06aJ3yY_L8_mcbnziGOKP81e_BI381sA"
+ADMIN_IDS = ["7904032877"]  # Admin ID'leri
+SUPPORT_USERNAME = "@AlperenTHE"
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL", "")
+STATS_CHANNEL = "@TaskizLive"
+BOT_USERNAME = "BinanceUsdtFuny_bot"
+BOT_NAME = "Binance USDT Bot"
 
-# Log ayarları
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+# Zorunlu Kanallar
+MANDATORY_CHANNELS = [
+    {
+        'username': 'TaskizLive',
+        'link': 'https://t.me/TaskizLive',
+        'name': 'İstatistik Kanalı',
+        'emoji': '📊'
+    }
+]
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Kullanıcı /start yazdığında çalışacak fonksiyon"""
-    await update.message.reply_text("selam mk")
+BASE_URL = f"https://api.telegram.org/bot{TOKEN}/"
 
-def main():
-    """Botu başlat"""
-    # Bot uygulamasını oluştur
-    application = Application.builder().token(BOT_TOKEN).build()
+# Dil Ayarları
+SUPPORTED_LANGUAGES = {
+    'tr': {'name': 'Türkçe', 'flag': '🇹🇷'},
+    'en': {'name': 'English', 'flag': '🇺🇸'},
+    'ru': {'name': 'Русский', 'flag': '🇷🇺'},
+    'es': {'name': 'Español', 'flag': '🇪🇸'},
+    'pt': {'name': 'Português', 'flag': '🇵🇹'},
+}
 
-    # Komut handler'larını ekle
-    application.add_handler(CommandHandler("start", start))
+# Sistem Ayarları
+MIN_WITHDRAW = 0.30
+MIN_REFERRALS_FOR_WITHDRAW = 10
+REF_WELCOME_BONUS = 0.005
+REF_TASK_COMMISSION = 0.25
 
-    # Botu başlat
-    print("Bot başlatılıyor...")
-    print("⚠️  UYARI: Bu token güvenli değil! Hemen değiştirin!")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+# Flask App
+app = Flask(__name__)
 
-if __name__ == "__main__":
-    main()
+# Telegram API Fonksiyonları
+def send_message(chat_id, text, reply_markup=None, parse_mode='Markdown'):
+    url = BASE_URL + "sendMessage"
+    payload = {
+        'chat_id': chat_id,
+        'text': text,
+        'parse_mode': parse_mode,
+        'disable_web_page_preview': True
+    }
+    
+    if reply_markup:
+        payload['reply_markup'] = json.dumps(reply_markup)
+    
+    try:
+        response = requests.post(url, json=payload, timeout=10)
+        return response.json()
+    except Exception as e:
+        print(f"❌ Mesaj gönderme hatası: {e}")
+        return None
+
+def delete_message(chat_id, message_id):
+    url = BASE_URL + "deleteMessage"
+    payload = {'chat_id': chat_id, 'message_id': message_id}
+    try:
+        requests.post(url, json=payload, timeout=5)
+    except:
+        pass
+
+def answer_callback_query(callback_query_id, text=None, show_alert=False):
+    url = BASE_URL + "answerCallbackQuery"
+    payload = {'callback_query_id': callback_query_id}
+    
+    if text:
+        payload['text'] = text
+    if show_alert:
+        payload['show_alert'] = show_alert
+    
+    try:
+        requests.post(url, json=payload, timeout=5)
+    except:
+        pass
+
+def get_chat_member(chat_id, user_id):
+    url = BASE_URL + "getChatMember"
+    payload = {'chat_id': chat_id, 'user_id': user_id}
+    
+    try:
+        response = requests.post(url, json=payload, timeout=10)
+        data = response.json()
+        if data.get('ok'):
+            status = data['result']['status']
+            return status in ['member', 'administrator', 'creator']
+        return False
+    except:
+        return False
+
+# Database Sınıfı
+class Database:
+    def __init__(self, db_path='taskizbot_real.db'):
+        self.db_path = db_path
+        self.connection = sqlite3.connect(db_path, check_same_thread=False)
+        self.connection.row_factory = sqlite3.Row
+        self.cursor = self.connection.cursor()
+        self.setup_database()
+        print("✅ Veritabanı başlatıldı")
+    
+    def setup_database(self):
+        # Kullanıcılar
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INTEGER PRIMARY KEY,
+                username TEXT,
+                first_name TEXT,
+                last_name TEXT,
+                language TEXT DEFAULT 'tr',
+                balance REAL DEFAULT 0,
+                user_type TEXT DEFAULT 'earner',
+                referral_code TEXT UNIQUE,
+                referred_by INTEGER,
+                tasks_completed INTEGER DEFAULT 0,
+                total_earned REAL DEFAULT 0,
+                total_referrals INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                status TEXT DEFAULT 'active'
+            )
+        ''')
+        
+        # Bakiye İşlemleri
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS balance_transactions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                amount REAL,
+                transaction_type TEXT,
+                description TEXT,
+                admin_id INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Görevler
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
+                description TEXT,
+                reward REAL,
+                max_participants INTEGER,
+                current_participants INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'active',
+                task_type TEXT DEFAULT 'general',
+                created_by INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Görev Katılımları
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS task_participations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_id INTEGER,
+                user_id INTEGER,
+                status TEXT DEFAULT 'pending',
+                proof_url TEXT,
+                reviewed_by INTEGER,
+                reviewed_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(task_id, user_id)
+            )
+        ''')
+        
+        # Çekim Talepleri
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS withdrawals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                amount REAL,
+                trx_address TEXT,
+                status TEXT DEFAULT 'pending',
+                tx_hash TEXT,
+                admin_note TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                processed_at TIMESTAMP
+            )
+        ''')
+        
+        # Referanslar
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS referrals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                referrer_id INTEGER,
+                referred_id INTEGER UNIQUE,
+                earned_amount REAL DEFAULT 0,
+                status TEXT DEFAULT 'active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # İstatistikler
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS stats (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date DATE UNIQUE,
+                total_users INTEGER DEFAULT 0,
+                active_users INTEGER DEFAULT 0,
+                new_users INTEGER DEFAULT 0,
+                tasks_completed INTEGER DEFAULT 0,
+                withdrawals_pending INTEGER DEFAULT 0,
+                withdrawals_paid REAL DEFAULT 0,
+                total_volume REAL DEFAULT 0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Admin İşlem Logları
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS admin_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                admin_id INTEGER,
+                action TEXT,
+                target_id INTEGER,
+                details TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Örnek görevler ekle
+        self.add_sample_tasks()
+        self.connection.commit()
+    
+    def add_sample_tasks(self):
+        count = self.cursor.execute('SELECT COUNT(*) FROM tasks').fetchone()[0]
+        if count == 0:
+            sample_tasks = [
+                ('Telegram Kanalına Katıl', '@TaskizLive kanalımıza katılın', 0.05, 1000, 'channel_join', 1),
+                ('Botu Beğenin', 'Botu favorilere ekleyin', 0.03, 500, 'like', 1),
+                ('Gönderi Paylaşımı', 'Belirtilen gönderiyi paylaşın', 0.08, 300, 'share', 1),
+                ('Twitter Takip', 'Twitter hesabımızı takip edin', 0.10, 200, 'social', 1),
+                ('YouTube Video İzle', 'Belirtilen videoyu izleyin', 0.15, 150, 'youtube', 1),
+                ('Google Play Puan Ver', 'Uygulamaya puan verin', 0.20, 100, 'review', 1),
+                ('Facebook Beğeni', 'Sayfamızı beğenin', 0.12, 250, 'social', 1),
+                ('Instagram Takip', 'Instagram hesabımızı takip edin', 0.18, 180, 'social', 1),
+                ('Telegram Grubuna Katıl', 'Grubumuza katılın', 0.07, 400, 'channel_join', 1),
+                ('Anket Doldurun', 'Kısa anketi doldurun', 0.25, 80, 'survey', 1),
+            ]
+            for task in sample_tasks:
+                self.cursor.execute('''
+                    INSERT INTO tasks (title, description, reward, max_participants, task_type, created_by)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', task)
+            self.connection.commit()
+    
+    def get_user(self, user_id):
+        self.cursor.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
+        row = self.cursor.fetchone()
+        if row:
+            user = dict(row)
+            # Aktif referans sayısı
+            self.cursor.execute('SELECT COUNT(*) FROM referrals WHERE referrer_id = ? AND status = ?', 
+                              (user_id, 'active'))
+            user['total_referrals'] = self.cursor.fetchone()[0]
+            return user
+        return None
+    
+    def create_user(self, user_id, username, first_name, last_name, language='tr', referred_by=None):
+        # Kullanıcı var mı kontrol et
+        existing = self.get_user(user_id)
+        if existing:
+            return existing
+        
+        # Referans kodu oluştur
+        referral_code = str(uuid.uuid4())[:8].upper()
+        
+        # Yeni kullanıcı ekle
+        self.cursor.execute('''
+            INSERT INTO users (user_id, username, first_name, last_name, language, referral_code, referred_by, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
+        ''', (user_id, username, first_name, last_name, language, referral_code, referred_by))
+        
+        # Referans bonusu
+        if referred_by:
+            # Referans kaydı
+            self.cursor.execute('''
+                INSERT INTO referrals (referrer_id, referred_id, earned_amount, status)
+                VALUES (?, ?, ?, 'active')
+            ''', (referred_by, user_id, REF_WELCOME_BONUS))
+            
+            # Bakiye güncelle
+            self.cursor.execute('''
+                UPDATE users 
+                SET balance = balance + ?, 
+                    total_referrals = total_referrals + 1
+                WHERE user_id = ?
+            ''', (REF_WELCOME_BONUS, referred_by))
+            
+            # Bakiye işlemi logu
+            self.cursor.execute('''
+                INSERT INTO balance_transactions (user_id, amount, transaction_type, description)
+                VALUES (?, ?, 'referral_bonus', ?)
+            ''', (referred_by, REF_WELCOME_BONUS, f'Yeni üye bonusu: {user_id}'))
+        
+        self.connection.commit()
+        return self.get_user(user_id)
+    
+    # ADMIN FONKSİYONLARI
+    def admin_add_balance(self, user_id, amount, admin_id, reason=""):
+        """Admin bakiye ekler"""
+        try:
+            # Bakiye güncelle
+            self.cursor.execute('''
+                UPDATE users SET balance = balance + ? WHERE user_id = ?
+            ''', (amount, user_id))
+            
+            # İşlem logu
+            self.cursor.execute('''
+                INSERT INTO balance_transactions (user_id, amount, transaction_type, admin_id, description)
+                VALUES (?, ?, 'admin_add', ?, ?)
+            ''', (user_id, amount, admin_id, reason or "Admin tarafından eklendi"))
+            
+            # Admin log
+            self.cursor.execute('''
+                INSERT INTO admin_logs (admin_id, action, target_id, details)
+                VALUES (?, 'add_balance', ?, ?)
+            ''', (admin_id, user_id, f"Amount: ${amount}, Reason: {reason}"))
+            
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f"Admin bakiye ekleme hatası: {e}")
+            return False
+    
+    def admin_create_task(self, title, description, reward, max_participants, task_type, admin_id):
+        """Admin görev oluşturur"""
+        try:
+            self.cursor.execute('''
+                INSERT INTO tasks (title, description, reward, max_participants, task_type, created_by)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (title, description, reward, max_participants, task_type, admin_id))
+            
+            task_id = self.cursor.lastrowid
+            
+            # Admin log
+            self.cursor.execute('''
+                INSERT INTO admin_logs (admin_id, action, target_id, details)
+                VALUES (?, 'create_task', ?, ?)
+            ''', (admin_id, task_id, f"Title: {title}, Reward: ${reward}"))
+            
+            self.connection.commit()
+            return task_id
+        except Exception as e:
+            print(f"Görev oluşturma hatası: {e}")
+            return None
+    
+    def admin_process_withdrawal(self, withdrawal_id, status, admin_id, tx_hash=None, note=""):
+        """Admin çekim işlemini işler"""
+        try:
+            # Çekim bilgilerini al
+            self.cursor.execute('SELECT * FROM withdrawals WHERE id = ?', (withdrawal_id,))
+            withdrawal = self.cursor.fetchone()
+            if not withdrawal:
+                return False
+            
+            withdrawal = dict(withdrawal)
+            
+            if status == 'approved':
+                # Onaylandı
+                self.cursor.execute('''
+                    UPDATE withdrawals 
+                    SET status = 'completed', 
+                        tx_hash = ?,
+                        admin_note = ?,
+                        processed_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                ''', (tx_hash, note, withdrawal_id))
+                
+                # İstatistik güncelle
+                self.cursor.execute('''
+                    INSERT OR REPLACE INTO stats (date, withdrawals_paid)
+                    VALUES (DATE('now'), COALESCE((SELECT withdrawals_paid FROM stats WHERE date = DATE('now')), 0) + ?)
+                ''', (withdrawal['amount'],))
+                
+            elif status == 'rejected':
+                # Reddedildi - bakiye iade
+                self.cursor.execute('''
+                    UPDATE withdrawals SET status = 'rejected', admin_note = ? WHERE id = ?
+                ''', (note, withdrawal_id))
+                
+                # Bakiye iade
+                self.cursor.execute('''
+                    UPDATE users SET balance = balance + ? WHERE user_id = ?
+                ''', (withdrawal['amount'], withdrawal['user_id']))
+                
+                # Bakiye işlemi logu
+                self.cursor.execute('''
+                    INSERT INTO balance_transactions (user_id, amount, transaction_type, admin_id, description)
+                    VALUES (?, ?, 'withdrawal_refund', ?, ?)
+                ''', (withdrawal['user_id'], withdrawal['amount'], admin_id, f"Çekim reddi iadesi: #{withdrawal_id}"))
+            
+            # Admin log
+            self.cursor.execute('''
+                INSERT INTO admin_logs (admin_id, action, target_id, details)
+                VALUES (?, 'process_withdrawal', ?, ?)
+            ''', (admin_id, withdrawal_id, f"Status: {status}, Amount: ${withdrawal['amount']}"))
+            
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f"Çekim işleme hatası: {e}")
+            return False
+    
+    def admin_get_stats(self):
+        """Admin istatistikleri"""
+        stats = {}
+        
+        # Genel istatistikler
+        self.cursor.execute('SELECT COUNT(*) FROM users')
+        stats['total_users'] = self.cursor.fetchone()[0]
+        
+        self.cursor.execute('SELECT COUNT(*) FROM users WHERE last_active > datetime("now", "-1 day")')
+        stats['active_users'] = self.cursor.fetchone()[0]
+        
+        self.cursor.execute('SELECT COUNT(*) FROM users WHERE created_at > datetime("now", "-1 day")')
+        stats['new_users'] = self.cursor.fetchone()[0]
+        
+        self.cursor.execute('SELECT SUM(balance) FROM users')
+        stats['total_balance'] = self.cursor.fetchone()[0] or 0
+        
+        self.cursor.execute('SELECT COUNT(*) FROM withdrawals WHERE status = "pending"')
+        stats['pending_withdrawals'] = self.cursor.fetchone()[0]
+        
+        self.cursor.execute('SELECT SUM(amount) FROM withdrawals WHERE status = "pending"')
+        stats['pending_amount'] = self.cursor.fetchone()[0] or 0
+        
+        self.cursor.execute('SELECT SUM(amount) FROM withdrawals WHERE status = "completed"')
+        stats['total_withdrawn'] = self.cursor.fetchone()[0] or 0
+        
+        self.cursor.execute('SELECT COUNT(*) FROM tasks WHERE status = "active"')
+        stats['active_tasks'] = self.cursor.fetchone()[0]
+        
+        return stats
+    
+    def admin_get_recent_withdrawals(self, limit=10):
+        """Son çekim talepleri"""
+        self.cursor.execute('''
+            SELECT w.*, u.username, u.first_name 
+            FROM withdrawals w
+            LEFT JOIN users u ON w.user_id = u.user_id
+            ORDER BY w.created_at DESC
+            LIMIT ?
+        ''', (limit,))
+        return [dict(row) for row in self.cursor.fetchall()]
+    
+    def admin_get_user_by_id_or_username(self, search_term):
+        """Kullanıcı ara"""
+        try:
+            user_id = int(search_term)
+            self.cursor.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
+        except:
+            self.cursor.execute('SELECT * FROM users WHERE username LIKE ? OR first_name LIKE ?', 
+                              (f"%{search_term}%", f"%{search_term}%"))
+        
+        row = self.cursor.fetchone()
+        if row:
+            return dict(row)
+        return None
+    
+    def admin_get_all_users(self, limit=50, offset=0):
+        """Tüm kullanıcılar"""
+        self.cursor.execute('''
+            SELECT * FROM users 
+            ORDER BY created_at DESC 
+            LIMIT ? OFFSET ?
+        ''', (limit, offset))
+        return [dict(row) for row in self.cursor.fetchall()]
+    
+    # GENEL FONKSİYONLARI
+    def update_last_active(self, user_id):
+        self.cursor.execute('UPDATE users SET last_active = CURRENT_TIMESTAMP WHERE user_id = ?', (user_id,))
+        self.connection.commit()
+    
+    def get_active_tasks(self, user_id=None):
+        """Aktif görevleri getir"""
+        if user_id:
+            # Kullanıcının katılmadığı görevler
+            self.cursor.execute('''
+                SELECT t.* FROM tasks t
+                WHERE t.status = 'active' 
+                AND t.current_participants < t.max_participants
+                AND NOT EXISTS (
+                    SELECT 1 FROM task_participations tp 
+                    WHERE tp.task_id = t.id AND tp.user_id = ?
+                )
+                ORDER BY t.created_at DESC
+            ''', (user_id,))
+        else:
+            self.cursor.execute('''
+                SELECT * FROM tasks 
+                WHERE status = 'active' 
+                AND current_participants < max_participants
+                ORDER BY created_at DESC
+            ''')
+        return [dict(row) for row in self.cursor.fetchall()]
+    
+    def complete_task(self, user_id, task_id, proof_url=None):
+        """Görevi tamamla"""
+        try:
+            # Görevi al
+            self.cursor.execute('SELECT * FROM tasks WHERE id = ?', (task_id,))
+            task = self.cursor.fetchone()
+            if not task:
+                return None
+            task = dict(task)
+            
+            # Zaten katıldı mı?
+            self.cursor.execute('SELECT COUNT(*) FROM task_participations WHERE task_id = ? AND user_id = ?', 
+                              (task_id, user_id))
+            if self.cursor.fetchone()[0] > 0:
+                return None
+            
+            # Katılım kaydı oluştur
+            self.cursor.execute('''
+                INSERT INTO task_participations (task_id, user_id, status, proof_url)
+                VALUES (?, ?, 'pending', ?)
+            ''', (task_id, user_id, proof_url))
+            
+            # Görev katılımcı sayısını artır
+            self.cursor.execute('''
+                UPDATE tasks SET current_participants = current_participants + 1 
+                WHERE id = ?
+            ''', (task_id,))
+            
+            self.connection.commit()
+            return task['reward']
+        except Exception as e:
+            print(f"Görev tamamlama hatası: {e}")
+            return None
+    
+    def approve_task_completion(self, participation_id, admin_id):
+        """Admin görev tamamlamayı onaylar"""
+        try:
+            # Katılım bilgilerini al
+            self.cursor.execute('''
+                SELECT tp.*, t.reward, t.title 
+                FROM task_participations tp
+                JOIN tasks t ON tp.task_id = t.id
+                WHERE tp.id = ?
+            ''', (participation_id,))
+            participation = self.cursor.fetchone()
+            if not participation:
+                return False
+            
+            participation = dict(participation)
+            
+            # Onayla
+            self.cursor.execute('''
+                UPDATE task_participations 
+                SET status = 'approved', reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ''', (admin_id, participation_id))
+            
+            # Kullanıcıya ödül ver
+            reward = participation['reward']
+            self.cursor.execute('''
+                UPDATE users 
+                SET balance = balance + ?, 
+                    tasks_completed = tasks_completed + 1,
+                    total_earned = total_earned + ?
+                WHERE user_id = ?
+            ''', (reward, reward, participation['user_id']))
+            
+            # Bakiye işlemi logu
+            self.cursor.execute('''
+                INSERT INTO balance_transactions (user_id, amount, transaction_type, description)
+                VALUES (?, ?, 'task_reward', ?)
+            ''', (participation['user_id'], reward, f"Görev: {participation['title']}"))
+            
+            # Referans komisyonu
+            user = self.get_user(participation['user_id'])
+            if user and user['referred_by']:
+                commission = reward * REF_TASK_COMMISSION
+                self.cursor.execute('''
+                    UPDATE users SET balance = balance + ? WHERE user_id = ?
+                ''', (commission, user['referred_by']))
+                
+                # Referans kazancı güncelle
+                self.cursor.execute('''
+                    UPDATE referrals SET earned_amount = earned_amount + ? 
+                    WHERE referred_id = ?
+                ''', (commission, participation['user_id']))
+                
+                # Bakiye log
+                self.cursor.execute('''
+                    INSERT INTO balance_transactions (user_id, amount, transaction_type, description)
+                    VALUES (?, ?, 'referral_commission', ?)
+                ''', (user['referred_by'], commission, f"Referans komisyonu: {participation['user_id']}"))
+
+            # Admin log
+            self.cursor.execute('''
+                INSERT INTO admin_logs (admin_id, action, target_id, details)
+                VALUES (?, 'approve_task', ?, ?)
+            ''', (admin_id, participation_id, f"Reward: ${reward}, User: {participation['user_id']}"))
+            
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f"Görev onaylama hatası: {e}")
+            return False
+    
+    def reject_task_completion(self, participation_id, admin_id, reason=""):
+        """Admin görev tamamlamayı reddeder"""
+        try:
+            self.cursor.execute('''
+                UPDATE task_participations 
+                SET status = 'rejected', reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ''', (admin_id, participation_id))
+            
+            # Admin log
+            self.cursor.execute('''
+                INSERT INTO admin_logs (admin_id, action, target_id, details)
+                VALUES (?, 'reject_task', ?, ?)
+            ''', (admin_id, participation_id, f"Reason: {reason}"))
+            
+            self.connection.commit()
+            return True
+        except Exception as e:
+            print(f"Görev reddetme hatası: {e}")
+            return False
+    
+    def get_pending_task_completions(self):
+        """Onay bekleyen görev tamamlamaları"""
+        self.cursor.execute('''
+            SELECT tp.*, u.username, u.first_name, t.title, t.reward
+            FROM task_participations tp
+            JOIN users u ON tp.user_id = u.user_id
+            JOIN tasks t ON tp.task_id = t.id
+            WHERE tp.status = 'pending'
+            ORDER BY tp.created_at DESC
+        ''')
+        return [dict(row) for row in self.cursor.fetchall()]
+
+# Bot Sınıfı
+class TaskizBot:
+    def __init__(self):
+        self.db = Database()
+        self.user_states = {}
+        print(f"🤖 {BOT_NAME} başlatıldı!")
+    
+    def handle_update(self, update):
+        try:
+            if 'message' in update:
+                self.handle_message(update['message'])
+            elif 'callback_query' in update:
+                self.handle_callback_query(update['callback_query'])
+        except Exception as e:
+            print(f"Hata: {e}")
+    
+    def handle_message(self, message):
+        if 'text' not in message:
+            return
+        
+        user_id = message['from']['id']
+        text = message['text']
+        
+        # Admin paneli kontrolü
+        if str(user_id) in ADMIN_IDS and text == "/admin":
+            self.show_admin_panel(user_id)
+            return
+        
+        # Referans kontrolü
+        referred_by = None
+        if text.startswith('/start'):
+            parts = text.split()
+            if len(parts) > 1:
+                ref_code = parts[1]
+                self.db.cursor.execute('SELECT user_id FROM users WHERE referral_code = ?', (ref_code,))
+                row = self.db.cursor.fetchone()
+                if row:
+                    referred_by = row[0]
+        
+        user = self.db.get_user(user_id)
+        
+        if not user:
+            # Yeni kullanıcı
+            username = message['from'].get('username', '')
+            first_name = message['from'].get('first_name', '')
+            last_name = message['from'].get('last_name', '')
+            
+            user = self.db.create_user(user_id, username, first_name, last_name, 'tr', referred_by)
+            
+            # Grup bildirimi
+            group_msg = f"""
+👤 *YENİ ÜYE*
+━━━━━━━━━━━━
+🎉 {first_name} {last_name or ''}
+🆔 {user_id}
+📅 {datetime.now().strftime('%H:%M')}
+            """
+            try:
+                send_message(STATS_CHANNEL, group_msg)
+            except:
+                pass
+            
+            self.show_language_selection(user_id)
+            return
+        
+        self.db.update_last_active(user_id)
+        
+        # Admin mesajları
+        if str(user_id) in ADMIN_IDS:
+            if text.startswith("/addbalance"):
+                self.handle_admin_add_balance(user_id, text)
+                return
+            elif text.startswith("/createtask"):
+                self.handle_admin_create_task(user_id, text)
+                return
+        
+        # TRX adresi bekleniyor
+        if user_id in self.user_states and self.user_states[user_id]['action'] == 'waiting_trx':
+            self.handle_trx_address(user_id, text, user)
+            return
+        
+        # Normal komutlar
+        self.process_command(user_id, text, user)
+    
+    def handle_trx_address(self, user_id, text, user):
+        """TRX adresi alındığında"""
+        if user_id in self.user_states:
+            amount = self.user_states[user_id].get('withdraw_amount', 0)
+            
+            # Çekim kaydı
+            self.db.cursor.execute('''
+                INSERT INTO withdrawals (user_id, amount, trx_address, status)
+                VALUES (?, ?, ?, 'pending')
+            ''', (user_id, amount, text, 'pending'))
+            
+            # Bakiye düş
+            self.db.cursor.execute('UPDATE users SET balance = balance - ? WHERE user_id = ?', (amount, user_id))
+            self.db.connection.commit()
+            
+            # GRUP BİLDİRİMİ: ÇEKİM TALEBİ
+            group_msg = f"""
+🏧 *YENİ ÇEKİM TALEBİ*
+━━━━━━━━━━━━
+👤 {user['first_name']}
+💰 ${amount}
+🔗 TRX: {text[:10]}...
+⏰ {datetime.now().strftime('%H:%M')}
+            """
+            try:
+                send_message(STATS_CHANNEL, group_msg)
+            except:
+                pass
+            
+            send_message(user_id, f"✅ Çekim talebin alındı!\n💰 ${amount}\n⏳ 24-48 saat")
+            del self.user_states[user_id]
+            time.sleep(1)
+            self.show_main_menu(user_id, user['language'])
+    
+    def process_command(self, user_id, text, user):
+        """Normal komutları işle"""
+        lang = user['language']
+        
+        if text.startswith('/'):
+            cmd = text.split()[0]
+            if cmd == '/start':
+                self.show_main_menu(user_id, lang)
+            elif cmd == '/tasks':
+                self.show_tasks(user_id)
+            elif cmd == '/balance':
+                self.show_balance(user_id)
+            elif cmd == '/withdraw':
+                self.show_withdraw(user_id)
+            elif cmd == '/deposit':
+                self.show_deposit(user_id)
+            elif cmd == '/referral':
+                self.show_referral(user_id)
+            elif cmd == '/profile':
+                self.show_profile(user_id)
+            elif cmd == '/help':
+                self.show_help(user_id)
+            else:
+                self.show_main_menu(user_id, lang)
+        else:
+            # Basit buton işlemleri
+            if text in ["🎯 Görevler", "Tasks"]:
+                self.show_tasks(user_id)
+            elif text in ["💰 Bakiye", "Balance"]:
+                self.show_balance(user_id)
+            elif text in ["🏧 Çek", "Withdraw"]:
+                self.show_withdraw(user_id)
+            elif text in ["💳 Yükle", "Deposit"]:
+                self.show_deposit(user_id)
+            elif text in ["👥 Davet", "Referral"]:
+                self.show_referral(user_id)
+            elif text in ["👤 Profil", "Profile"]:
+                self.show_profile(user_id)
+            elif text in ["❓ Yardım", "Help"]:
+                self.show_help(user_id)
+            else:
+                self.show_main_menu(user_id, lang)
+    
+    def show_language_selection(self, user_id):
+        """Dil seçimi göster"""
+        text = """
+🌍 *DİL SEÇİMİ / LANGUAGE SELECTION*
+
+Lütfen kullanmak istediğiniz dili seçiniz. Bu seçim botun tüm mesajlarında kullanılacaktır.
+
+Please select your preferred language. This choice will be used for all bot messages.
+        """
+        
+        keyboard = {
+            'inline_keyboard': [
+                [{'text': '🇹🇷 Türkçe - Türk Dili', 'callback_data': 'lang_tr'}],
+                [{'text': '🇺🇸 English - English Language', 'callback_data': 'lang_en'}],
+                [{'text': '🇷🇺 Русский - Русский язык', 'callback_data': 'lang_ru'}],
+                [{'text': '🇪🇸 Español - Español', 'callback_data': 'lang_es'}],
+                [{'text': '🇵🇹 Português - Português', 'callback_data': 'lang_pt'}],
+                [{'text': '🏠 Ana Menüye Dön / Back to Main Menu', 'callback_data': 'main_menu'}]
+            ]
+        }
+        
+        send_message(user_id, text, reply_markup=keyboard)
+    
+    def handle_callback_query(self, callback_query):
+        data = callback_query['data']
+        user_id = callback_query['from']['id']
+        callback_id = callback_query['id']
+        
+        try:
+            # Admin callback'leri
+            if str(user_id) in ADMIN_IDS and data.startswith("admin_"):
+                self.handle_admin_callback(user_id, data, callback_id, callback_query)
+                return
+            
+            # Normal kullanıcı callback'leri
+            if data.startswith('lang_'):
+                lang = data.split('_')[1]
+                self.db.cursor.execute('UPDATE users SET language = ? WHERE user_id = ?', (lang, user_id))
+                self.db.connection.commit()
+                answer_callback_query(callback_id, "✅ Dil seçildi / Language selected")
+                self.show_main_menu(user_id, lang)
+            
+            elif data == 'main_menu':
+                user = self.db.get_user(user_id)
+                if user:
+                    self.show_main_menu(user_id, user['language'])
+            
+            elif data == 'show_tasks':
+                self.show_tasks(user_id)
+            
+            elif data == 'show_balance':
+                self.show_balance(user_id)
+            
+            elif data == 'show_withdraw':
+                self.show_withdraw(user_id)
+            
+            elif data == 'show_deposit':
+                self.show_deposit(user_id)
+            
+            elif data == 'show_referral':
+                self.show_referral(user_id)
+            
+            elif data == 'show_profile':
+                self.show_profile(user_id)
+            
+            elif data.startswith('join_task_'):
+                task_id = int(data.split('_')[2])
+                self.join_task(user_id, task_id, callback_id)
+            
+            elif data == 'refresh_tasks':
+                self.show_tasks(user_id)
+                answer_callback_query(callback_id, "🔄 Görevler yenilendi / Tasks refreshed")
+            
+            elif data == 'start_withdrawal':
+                self.start_withdrawal_process(user_id, callback_id)
+            
+            elif data == 'copy_ref':
+                user = self.db.get_user(user_id)
+                if user:
+                    answer_callback_query(callback_id, f"📋 Referans Kodunuz: {user['referral_code']}\nBu kodu kopyalayıp paylaşabilirsiniz.", True)
+            
+        except Exception as e:
+            print(f"Callback error: {e}")
+            answer_callback_query(callback_id, "❌ Bir hata oluştu / An error occurred")
+    
+    # ANA MENÜ GÖSTERİMİ
+    def show_main_menu(self, user_id, lang='tr'):
+        """Ana menüyü göster"""
+        user = self.db.get_user(user_id)
+        if not user:
+            return
+        
+        welcome_texts = {
+            'tr': f"""
+🌟 *HOŞ GELDİN {user['first_name']}!* 🌟
+
+🚀 {BOT_NAME} - Telegram'ın en kazançlı görev
