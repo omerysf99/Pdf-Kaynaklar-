@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CGPT AI - Mining & Wallet</title>
+    <title>ChatGPT AI Mining - Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -11,48 +11,80 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0b0e11; color: #fff; margin: 0; overflow-x: hidden; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .neon-green { color: #c1ff00; }
-        .bg-zinc-card { background: #1a1d21; border: 1px solid #2d3139; }
-        .nav-active { color: #c1ff00 !important; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap');
         
-        /* Sayı titremesini önleyen kritik stil */
-        .balance-flow { 
-            font-variant-numeric: tabular-nums; 
-            display: inline-block;
-            min-width: 1ch;
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #0b0e11; 
+            color: #fff; 
+            margin: 0; 
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .action-btn {
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Titreme Önleyici: Sabit genişlikli rakamlar */
+        .tabular { 
+            font-variant-numeric: tabular-nums;
+            display: inline-block;
+        }
+
+        .neon-border { 
+            border: 1px solid rgba(193, 255, 0, 0.2);
+            box-shadow: 0 0 15px rgba(193, 255, 0, 0.05);
+        }
+
+        .glass-card {
             background: #1a1d21;
-            border-radius: 12px;
+            border: 1px solid #2d3139;
+        }
+
+        .nav-active { color: #c1ff00 !important; }
+
+        /* İlerleme Çubuğu Animasyonu */
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #c1ff00, #88ff00);
+            border-radius: 10px;
+            transition: width 1s linear;
+        }
+
+        .action-grid-btn {
+            background: #1a1d21;
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 12px 0;
-            gap: 8px;
+            padding: 15px 5px;
+            gap: 10px;
+            border: 1px solid #2d3139;
         }
 
-        .action-icon {
-            width: 44px;
-            height: 44px;
+        .icon-box {
+            width: 48px;
+            height: 48px;
             background: #23282e;
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #c1ff00;
+            font-size: 20px;
         }
+
+        @keyframes fan-rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .fan-anim { animation: fan-rotate 15s linear infinite; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useCallback } = React;
 
         const ADMIN_ID = "8392479231";
         const DAILY_RATE = 0.98;
@@ -60,153 +92,212 @@
 
         const App = () => {
             const [tab, setTab] = useState('home');
-            const [mainBal, setMainBal] = useState(() => Number(localStorage.getItem('cgpt_v4_main')) || 0.0500);
-            const [pending, setPending] = useState(0);
-            const [lastTs, setLastTs] = useState(() => Number(localStorage.getItem('cgpt_v4_ts')) || Date.now());
+            
+            // --- GÜVENLİ STATE BAŞLATMA ---
+            const [mainBal, setMainBal] = useState(() => {
+                const saved = localStorage.getItem('cgpt_v5_main');
+                const num = parseFloat(saved);
+                return (!isNaN(num)) ? num : 0.0500;
+            });
 
-            // Mining Motoru (Titremesiz)
+            const [pending, setPending] = useState(0);
+            
+            const [lastTs, setLastTs] = useState(() => {
+                const saved = localStorage.getItem('cgpt_v5_ts');
+                const num = parseInt(saved);
+                return (!isNaN(num)) ? num : Date.now();
+            });
+
+            // --- TİTREMESİZ MİNING MOTORU ---
             useEffect(() => {
                 let frame;
-                const tick = () => {
+                const update = () => {
                     const diff = (Date.now() - lastTs) / 1000;
-                    setPending(diff * SEC_RATE);
-                    frame = requestAnimationFrame(tick);
+                    if (diff > 0) {
+                        setPending(diff * SEC_RATE);
+                    }
+                    frame = requestAnimationFrame(update);
                 };
-                frame = requestAnimationFrame(tick);
+                frame = requestAnimationFrame(update);
                 return () => cancelAnimationFrame(frame);
             }, [lastTs]);
 
+            // Kayıt Sistemi
             useEffect(() => {
-                localStorage.setItem('cgpt_v4_main', mainBal.toString());
+                localStorage.setItem('cgpt_v5_main', mainBal.toString());
             }, [mainBal]);
 
-            const claim = () => {
-                if(pending < 0.0001) return;
+            const handleClaim = () => {
+                if (pending < 0.0001) return;
                 setMainBal(prev => prev + pending);
                 const now = Date.now();
                 setLastTs(now);
-                localStorage.setItem('cgpt_v4_ts', now.toString());
-                if(window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+                setPending(0);
+                localStorage.setItem('cgpt_v5_ts', now.toString());
             };
 
             return (
-                <div className="max-w-md mx-auto min-h-screen pb-24 px-4 pt-4">
-                    {/* Üst Bilgi */}
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden">
-                            <img src="https://i.ibb.co/L8m8n9n/blue-fan.png" className="w-full h-full object-cover" />
+                <div className="max-w-md mx-auto min-h-screen pb-28 px-4 pt-4 relative overflow-hidden">
+                    
+                    {/* Üst Profil Barı */}
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full border border-zinc-700 overflow-hidden bg-zinc-800">
+                                <img src="https://i.ibb.co/L8m8n9n/blue-fan.png" className="w-full h-full object-cover" />
+                            </div>
+                            <div>
+                                <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-tight">Chalpus Yeniden</h3>
+                                <div className="bg-[#c1ff00] text-black text-[9px] font-black px-2 py-0.5 rounded mt-0.5 inline-block">CHATGPT MINER</div>
+                            </div>
                         </div>
-                        <div className="flex-1">
-                            <h2 className="text-sm font-bold">Chalpus Yeniden</h2>
-                            <span className="bg-[#c1ff00] text-black text-[10px] font-black px-2 py-0.5 rounded-md uppercase">CGPT Miner</span>
+                        <div className="flex gap-2">
+                            <div className="bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-800 flex items-center gap-2">
+                                <i className="fas fa-globe text-[10px] text-zinc-500"></i>
+                                <span className="text-[10px] font-bold">Türkçe</span>
+                            </div>
+                            <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-800">
+                                <i className="far fa-bell text-xs text-zinc-400"></i>
+                            </div>
                         </div>
-                        <i className="far fa-bell text-zinc-500"></i>
                     </div>
 
                     {tab === 'home' && (
-                        <div className="animate-in fade-in space-y-6">
-                            <div className="bg-zinc-card p-4 rounded-2xl flex justify-between items-center">
-                                <div className="flex items-center gap-2">
-                                    <i className="fas fa-microchip neon-green text-xs"></i>
-                                    <span className="text-xs font-bold text-zinc-400">CGPT Madencisi</span>
-                                </div>
-                                <span className="neon-green font-black text-sm">0.082 <small className="opacity-50">CGPT/H</small></span>
+                        <div className="space-y-4 animate-in fade-in duration-500">
+                            {/* Hız Göstergesi */}
+                            <div className="glass-card p-4 rounded-2xl flex justify-between items-center">
+                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Mining Speed</span>
+                                <span className="text-[#c1ff00] font-black text-sm tabular">0.082 <small className="text-[9px] opacity-60">CGPT/H</small></span>
                             </div>
 
-                            <div className="bg-zinc-card p-4 rounded-2xl flex justify-between items-center">
+                            {/* Ana Bakiye */}
+                            <div className="glass-card p-4 rounded-2xl flex justify-between items-center">
                                 <div className="flex items-center gap-2">
-                                    <i className="fas fa-wallet text-zinc-500 text-xs"></i>
-                                    <span className="text-xs font-bold">TOPLAM BAKİYE</span>
+                                    <i className="fas fa-brain text-[#c1ff00] text-xs"></i>
+                                    <span className="text-[11px] font-bold text-zinc-300 uppercase">ChatGPT AI</span>
                                 </div>
-                                <span className="neon-green font-black text-xl balance-flow">{mainBal.toFixed(4)}</span>
+                                <span className="text-[#c1ff00] font-black text-xl tabular">{mainBal.toFixed(4)}</span>
                             </div>
 
-                            <div className="flex flex-col items-center py-6">
-                                <div className="relative w-64 h-64">
-                                    <img src="https://i.ibb.co/L8m8n9n/blue-fan.png" className="w-full h-full object-contain animate-[spin_10s_linear_infinite]" />
+                            {/* Ana Madenci Alanı */}
+                            <div className="flex flex-col items-center py-8">
+                                <div className="relative w-64 h-64 flex items-center justify-center">
+                                    <img src="https://i.ibb.co/L8m8n9n/blue-fan.png" className="w-full h-full object-contain fan-anim opacity-90" />
                                     <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="w-12 h-12 bg-black/80 border border-[#c1ff00]/30 rounded-full flex items-center justify-center backdrop-blur-md">
-                                            <i className="fas fa-brain neon-green"></i>
+                                        <div className="w-12 h-12 bg-black/80 border border-[#c1ff00]/40 rounded-full flex items-center justify-center backdrop-blur-sm">
+                                            <i className="fas fa-bolt text-[#c1ff00] text-xl"></i>
                                         </div>
                                     </div>
+                                    {/* Müşteri Destek İkonu */}
+                                    <div className="absolute bottom-10 right-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center shadow-lg">
+                                        <i className="fas fa-headset text-blue-500 text-xl"></i>
+                                    </div>
                                 </div>
-                                <div className="mt-8 text-center h-20">
-                                    <h1 className="text-4xl font-black mono balance-flow">{pending.toFixed(6)}</h1>
-                                    <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mt-1">Biriken CGPT AI</p>
+
+                                <div className="mt-6 text-center h-14">
+                                    <h2 className="text-3xl font-black mono tabular tracking-tighter">{pending.toFixed(4)} <small className="text-xs text-zinc-500">CGPT</small></h2>
+                                    <p className="text-[10px] text-zinc-600 font-bold uppercase mt-1 tracking-widest">Kazılan Miktar</p>
                                 </div>
-                                <button onClick={claim} disabled={pending < 0.0001} className={`mt-4 w-60 py-4 rounded-2xl font-black transition-all ${pending >= 0.0001 ? 'bg-[#c1ff00] text-black shadow-lg shadow-[#c1ff00]/10' : 'bg-zinc-800 text-zinc-600'}`}>CLAIM</button>
+
+                                {/* İlerleme Çubuğu */}
+                                <div className="w-full bg-zinc-900 h-3 rounded-full mt-6 overflow-hidden border border-zinc-800">
+                                    <div className="progress-fill" style={{width: '75%'}}></div>
+                                </div>
+                                <p className="text-[10px] font-mono text-zinc-500 mt-2">23:07:13</p>
+
+                                <button onClick={handleClaim} disabled={pending < 0.0001} className={`mt-6 w-full py-4 rounded-2xl font-black transition-all uppercase tracking-widest ${pending >= 0.0001 ? 'bg-[#c1ff00] text-black shadow-lg shadow-[#c1ff00]/20 active:scale-95' : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'}`}>Claim AI</button>
+                            </div>
+
+                            {/* Görev Merkezi */}
+                            <div className="pt-4">
+                                <h3 className="text-sm font-black uppercase mb-4 px-1">Görev Merkezi</h3>
+                                <div className="glass-card p-5 rounded-3xl flex justify-between items-center group">
+                                    <div>
+                                        <p className="text-sm font-bold">Günlük giriş</p>
+                                        <p className="text-[#c1ff00] text-xs font-black mt-1">+0.05 <i className="fas fa-brain text-[10px]"></i></p>
+                                    </div>
+                                    <button className="bg-zinc-800 text-zinc-400 px-4 py-2 rounded-xl text-[10px] font-black uppercase">Tamamlanmış</button>
+                                </div>
                             </div>
                         </div>
                     )}
 
                     {tab === 'ben' && (
                         <div className="animate-in fade-in space-y-4">
-                            {/* Ana Bakiye Kartı */}
-                            <div className="bg-zinc-card p-5 rounded-2xl flex justify-between items-center">
-                                <div className="flex items-center gap-2">
-                                    <i className="fas fa-brain neon-green text-sm"></i>
-                                    <span className="text-sm font-bold uppercase">CGPT AI</span>
+                            {/* Üst Bakiye Kartı */}
+                            <div className="glass-card p-5 rounded-2xl flex justify-between items-center border-l-4 border-[#c1ff00]">
+                                <div className="flex items-center gap-3">
+                                    <i className="fas fa-brain text-[#c1ff00] text-lg"></i>
+                                    <span className="text-sm font-bold uppercase tracking-tight">ChatGPT AI</span>
                                 </div>
-                                <span className="neon-green font-black text-2xl balance-flow">{mainBal.toFixed(4)}</span>
+                                <span className="text-[#c1ff00] font-black text-2xl tabular">{mainBal.toFixed(4)}</span>
                             </div>
 
-                            {/* USDT Cüzdan Kartı */}
-                            <div className="bg-zinc-card p-5 rounded-2xl space-y-4">
-                                <div className="flex justify-between items-start">
+                            {/* USDT Kartı */}
+                            <div className="glass-card p-6 rounded-3xl space-y-6">
+                                <div className="flex justify-between items-center">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 bg-[#26a17b] rounded-full flex items-center justify-center">
-                                            <i className="fas fa-dollar-sign text-[10px] text-white"></i>
+                                        <div className="w-6 h-6 bg-[#26a17b] rounded-full flex items-center justify-center text-[10px] text-white">
+                                            <i className="fas fa-dollar-sign"></i>
                                         </div>
-                                        <span className="text-sm font-bold uppercase">USDT</span>
-                                        <span className="text-[10px] text-zinc-500 font-bold uppercase">Aracılık Cüzdanı</span>
+                                        <span className="text-sm font-bold">USDT</span>
+                                        <span className="text-[10px] text-zinc-500 font-bold">Aracılık Cüzdanı</span>
                                     </div>
-                                    <span className="neon-green font-black text-2xl tracking-tighter">0.00</span>
+                                    <span className="text-[#c1ff00] font-black text-2xl tabular tracking-tighter">0.00</span>
                                 </div>
-                                <div className="flex justify-end">
-                                    <div className="text-right">
-                                        <span className="neon-green font-black text-2xl tracking-tighter">0.00</span>
-                                        <p className="text-[10px] text-zinc-500 font-bold uppercase">Cüzdanı Yeniden Yükle</p>
+                                
+                                <div className="flex justify-between items-center pt-4 border-t border-zinc-800/50">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] text-zinc-500 font-bold uppercase">Cüzdanı Yeniden Yükle</span>
                                     </div>
+                                    <span className="text-[#c1ff00] font-black text-2xl tabular tracking-tighter">0.00</span>
                                 </div>
                             </div>
 
-                            {/* İşlem Butonları */}
-                            <div className="grid grid-cols-4 gap-3 pt-4">
-                                <div className="action-btn">
-                                    <div className="action-icon"><i className="fas fa-suitcase-rolling"></i></div>
-                                    <span className="text-[9px] font-bold text-center">Yeniden şarj et</span>
-                                </div>
-                                <div className="action-btn">
-                                    <div className="action-icon"><i className="fas fa-hand-holding-usd"></i></div>
-                                    <span className="text-[9px] font-bold text-center">Geri çekilmek</span>
-                                </div>
-                                <div className="action-btn">
-                                    <div className="action-icon"><i className="fas fa-chart-line"></i></div>
-                                    <span className="text-[9px] font-bold text-center">Mali Kayıtlar</span>
-                                </div>
-                                <div className="action-btn">
-                                    <div className="action-icon"><i className="fas fa-exchange-alt"></i></div>
-                                    <span className="text-[9px] font-bold text-center">CGPT&USDT</span>
-                                </div>
+                            {/* Dörtlü İşlem Grid */}
+                            <div className="grid grid-cols-4 gap-3 pt-2">
+                                {[
+                                    {i: 'fa-suitcase-rolling', n: 'Yeniden şarj et'},
+                                    {i: 'fa-hand-holding-usd', n: 'Geri çekilmek'},
+                                    {i: 'fa-chart-line', n: 'Mali Kayıtlar'},
+                                    {i: 'fa-exchange-alt', n: 'CGPT&USDT'}
+                                ].map((item, idx) => (
+                                    <div key={idx} className="action-grid-btn active:scale-95 transition-transform cursor-pointer">
+                                        <div className="icon-box"><i className={`fas ${item.i}`}></i></div>
+                                        <span className="text-[9px] font-bold text-center leading-tight text-zinc-400">{item.n}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-8 px-2">
+                                <button className="w-full py-4 text-red-500 font-black uppercase text-[10px] tracking-widest bg-red-500/5 rounded-2xl border border-red-500/10">Oturumu Kapat</button>
                             </div>
                         </div>
                     )}
 
-                    {/* Navigasyon */}
-                    <nav className="fixed bottom-0 left-0 right-0 bg-[#0b0e11] border-t border-zinc-800 flex justify-around py-5 z-50">
+                    {/* Takım & Diğer Sekmeler (Placeholder) */}
+                    {(tab === 'lider' || tab === 'update' || tab === 'takim') && (
+                        <div className="flex flex-col items-center justify-center py-20 opacity-30">
+                            <i className="fas fa-rocket text-5xl mb-4"></i>
+                            <p className="font-black uppercase text-sm tracking-widest">Çok Yakında</p>
+                        </div>
+                    )}
+
+                    {/* Sabit Alt Navigasyon */}
+                    <nav className="fixed bottom-0 left-0 right-0 bg-[#0b0e11] border-t border-zinc-800 flex justify-around items-center py-4 z-50">
                         {[
                             {id:'home', i:'fa-seedling', n:'Bana ait'},
                             {id:'lider', i:'fa-medal', n:'Liderlik'},
-                            {id:'update', i:'fa-sync', n:'Güncelleme'},
+                            {id:'update', i:'fa-rocket', n:'Güncelleme'},
                             {id:'takim', i:'fa-users', n:'Takım'},
                             {id:'ben', i:'fa-box', n:'Ben'}
                         ].map(x => (
-                            <button key={x.id} onClick={() => setTab(x.id)} className={`flex flex-col items-center gap-1 ${tab === x.id ? 'nav-active' : 'text-zinc-600'}`}>
+                            <button key={x.id} onClick={() => setTab(x.id)} className={`flex flex-col items-center gap-1 transition-colors ${tab === x.id ? 'nav-active' : 'text-zinc-600'}`}>
                                 <i className={`fas ${x.i} text-xl`}></i>
                                 <span className="text-[9px] font-bold uppercase tracking-tighter">{x.n}</span>
                             </button>
                         ))}
                     </nav>
+
                 </div>
             );
         };
