@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NVIDIA Elite Miner - OS v2.5</title>
+    <title>NVIDIA Elite Miner OS - v3.5 Full Protocol</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@700&display=swap');
 
         :root {
             --nv-green: #76b900;
@@ -22,262 +23,255 @@
             --nv-border: #1a1a1a;
         }
 
-        body {
-            background-color: var(--nv-bg);
-            color: #ffffff;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
+        body { background-color: var(--nv-bg); color: white; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; user-select: none; }
+        
+        .fan-active { animation: fan-spin 1.5s linear infinite; }
+        @keyframes fan-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* Fan Dönüş Animasyonu - Hız Değişkeniyle */
-        @keyframes fan-spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
+        .nv-card { background: linear-gradient(145deg, #0d0d0d 0%, #050505 100%); border: 1px solid var(--nv-border); border-radius: 1.5rem; transition: all 0.2s; }
+        .nv-card:active { transform: scale(0.97); }
 
-        .mining-active .fan-main {
-            animation: fan-spin 1.5s linear infinite;
-        }
+        .content-area { height: calc(100vh - 180px); overflow-y: auto; scrollbar-width: none; padding-bottom: 100px; }
+        .content-area::-webkit-scrollbar { display: none; }
 
-        .glass-header {
-            background: rgba(3, 3, 3, 0.85);
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid var(--nv-border);
-        }
-
-        .nv-card {
-            background: linear-gradient(145deg, #0d0d0d 0%, #050505 100%);
-            border: 1px solid var(--nv-border);
-            border-radius: 1.5rem;
-        }
-
-        .nav-active {
-            color: var(--nv-green);
-            position: relative;
-        }
-
-        .nav-active::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            width: 5px;
-            height: 5px;
-            background: var(--nv-green);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--nv-green);
-        }
-
-        /* Neon Progress Bar */
-        .progress-container {
-            height: 14px;
-            background: #111;
-            border-radius: 100px;
-            border: 1px solid #1a1a1a;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #76b900, #adff2f);
-            box-shadow: 0 0 15px rgba(118, 185, 0, 0.5);
-            transition: width 0.5s ease;
-        }
-
-        .mono-tech { font-family: 'JetBrains Mono', monospace; }
-
-        /* Kaydırma Alanı Ayarı */
-        .content-scroll {
-            height: calc(100vh - 180px);
-            overflow-y: auto;
-            scrollbar-width: none;
-        }
-        .content-scroll::-webkit-scrollbar { display: none; }
-
-        /* Tıklama Efekti */
-        .click-bounce:active { transform: scale(0.96); }
+        .nav-active { color: var(--nv-green); filter: drop-shadow(0 0 5px var(--nv-green)); }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        .loading-bar { height: 4px; background: #111; overflow: hidden; position: relative; }
+        .loading-bar-fill { height: 100%; background: var(--nv-green); width: 0%; transition: width 0.5s linear; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
-
-        // --- ALT BİLEŞENLER ---
-
-        const StatBox = ({ label, value, unit, color }) => (
-            <div className="nv-card p-4 flex-1">
-                <div className="flex justify-between items-start mb-1">
-                    <span className="text-[10px] font-extrabold text-zinc-500 uppercase tracking-tighter">{label}</span>
-                    <i className={`fas fa-microchip text-[10px] ${color}`}></i>
-                </div>
-                <div className="flex items-baseline gap-1">
-                    <span className={`text-lg font-black ${color}`}>{value}</span>
-                    <span className="text-[9px] text-zinc-600 font-bold">{unit}</span>
-                </div>
-            </div>
-        );
-
-        // --- ANA UYGULAMA ---
+        const { useState, useEffect } = React;
 
         const App = () => {
+            // --- STATE YÖNETİMİ ---
             const [tab, setTab] = useState('mine');
-            const [nvidiaBal, setNvidiaBal] = useState(0.2135);
-            const [isMining, setIsMining] = useState(true);
-            const [timeLeft, setTimeLeft] = useState(77025);
-            const adminId = "8392479231";
+            const [balance, setBalance] = useState(() => parseFloat(localStorage.getItem('nv_bal')) || 0.2135);
+            const [usdtBalance, setUsdtBalance] = useState(0.00);
+            const [mineRate, setMineRate] = useState(0.082); // NVIDIA/H
+            const [adminId] = useState("8392479231");
 
-            // Madencilik Botu Döngüsü
+            // --- MADENCİLİK MOTORU ---
             useEffect(() => {
-                let interval;
-                if (isMining) {
-                    interval = setInterval(() => {
-                        setNvidiaBal(prev => prev + 0.0000227); // Saatlik 0.082'ye tekabül eder
-                        setTimeLeft(prev => (prev > 0 ? prev - 1 : 86400));
-                    }, 1000);
-                }
-                return () => clearInterval(interval);
-            }, [isMining]);
+                const timer = setInterval(() => {
+                    setBalance(prev => {
+                        const newBal = prev + (mineRate / 3600);
+                        localStorage.setItem('nv_bal', newBal);
+                        return newBal;
+                    });
+                }, 1000);
+                return () => clearInterval(timer);
+            }, [mineRate]);
 
-            const formatTime = (s) => {
-                const h = Math.floor(s / 3600);
-                const m = Math.floor((s % 3600) / 60);
-                const sec = s % 60;
-                return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+            // --- FONKSİYONLAR ---
+            const notify = (title, text, icon) => {
+                Swal.fire({ title, text, icon, background: '#0d0d0d', color: '#fff', confirmButtonColor: '#76b900' });
+            };
+
+            const copyRef = () => {
+                navigator.clipboard.writeText(`https://t.me/NvidiaMinerBot?start=${adminId}`);
+                notify('Başarılı!', 'Referans linki kopyalandı.', 'success');
+            };
+
+            const upgradeGpu = (cost, speed) => {
+                if (balance >= cost) {
+                    setBalance(prev => prev - cost);
+                    setMineRate(prev => prev + speed);
+                    notify('Tebrikler!', 'Donanım yükseltildi, kazım hızı arttı.', 'success');
+                } else {
+                    notify('Yetersiz Bakiye', 'Daha fazla NVIDIA biriktirmelisin.', 'error');
+                }
             };
 
             return (
-                <div className="max-w-md mx-auto h-screen relative flex flex-col shadow-2xl border-x border-zinc-900 bg-black">
+                <div className="max-w-md mx-auto h-screen relative flex flex-col border-x border-zinc-900 bg-black overflow-hidden">
                     
-                    {/* Üst Bar */}
-                    <header className="glass-header p-4 flex justify-between items-center z-50">
+                    {/* Header */}
+                    <header className="p-4 flex justify-between items-center bg-black/50 backdrop-blur-md sticky top-0 z-50">
                         <div className="flex items-center gap-3">
-                            <div className="relative">
-                                <img src="Image 1 (1).jpg" className="w-10 h-10 rounded-full border border-zinc-800 object-cover" />
-                                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
-                            </div>
+                            <img src="avatar.jpg" className="w-10 h-10 rounded-full border border-zinc-800 object-cover" 
+                                 onError={e => e.target.src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Chalpus"} />
                             <div>
                                 <h2 className="text-xs font-black">Chalpus Yeniden</h2>
-                                <div className="flex items-center gap-1">
-                                    <span className="text-[9px] px-2 py-0.5 bg-zinc-900 text-zinc-400 rounded-md border border-zinc-800">LVL 42</span>
-                                    <span className="text-[9px] font-bold text-[#76b900]">PRO MINER</span>
-                                </div>
+                                <span className="text-[9px] text-[#76b900] font-bold uppercase tracking-widest leading-none">Elite Operator</span>
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <div className="p-2 px-3 bg-zinc-900/50 rounded-xl border border-zinc-800 flex items-center gap-2">
-                                <i className="fas fa-globe text-zinc-500 text-xs"></i>
-                                <span className="text-xs font-bold">Türkçe</span>
-                            </div>
+                             <div className="bg-zinc-900 px-3 py-1.5 rounded-xl border border-zinc-800 text-[10px] font-bold">ID: {adminId}</div>
                         </div>
                     </header>
 
-                    {/* Ana İçerik */}
-                    <main className="flex-1 content-scroll px-5 pt-6 pb-24">
+                    {/* Main Content Area */}
+                    <main className="flex-1 content-area p-4">
                         
+                        {/* 1. SEKME: BANA AİT (MADENCİ) */}
                         {tab === 'mine' && (
-                            <div className={`flex flex-col items-center animate-in fade-in duration-700 ${isMining ? 'mining-active' : ''}`}>
-                                {/* Stat Panel */}
-                                <div className="flex gap-3 w-full mb-8">
-                                    <StatBox label="NVIDIA MINER" value="0.082" unit="NVIDIA/H" color="text-[#76b900]" />
-                                    <StatBox label="POWER SUPPLY" value="0.0500" unit="kW/H" color="text-blue-500" />
+                            <div className="flex flex-col items-center animate-in fade-in duration-500">
+                                <div className="grid grid-cols-2 gap-3 w-full mb-6">
+                                    <div className="nv-card p-4">
+                                        <p className="text-[9px] text-zinc-500 font-bold mb-1 uppercase">Hız (Rate)</p>
+                                        <span className="text-sm font-black text-[#76b900]">{mineRate.toFixed(3)} NV/H</span>
+                                    </div>
+                                    <div className="nv-card p-4">
+                                        <p className="text-[9px] text-zinc-500 font-bold mb-1 uppercase">Durum</p>
+                                        <span className="text-sm font-black text-blue-500 animate-pulse">AKTİF</span>
+                                    </div>
                                 </div>
 
-                                {/* Görseldeki Mavi Fan Ünitesi */}
-                                <div className="relative my-6 group">
-                                    {/* Arka Parlama Efekti */}
-                                    <div className="absolute inset-0 bg-blue-600/10 blur-[80px] rounded-full scale-125"></div>
-                                    
-                                    {/* Fan Container */}
-                                    <div className="w-72 h-72 rounded-full border-[10px] border-zinc-900 shadow-[0_0_40px_rgba(0,130,255,0.1)] relative overflow-hidden bg-black flex items-center justify-center">
-                                        {/* nvdia.jpg buraya eklendi */}
-                                        <img 
-                                            src="nvdia.jpg" 
-                                            className="fan-main w-full h-full object-cover opacity-90 transition-transform duration-1000"
-                                        />
-                                        
-                                        {/* Merkez Logo */}
+                                <div className="relative my-6 flex items-center justify-center">
+                                    <div className="absolute inset-0 bg-blue-500/10 blur-[80px] rounded-full scale-150"></div>
+                                    <div className="w-64 h-64 rounded-full border-[10px] border-zinc-900 overflow-hidden relative shadow-2xl">
+                                        <img src="nvdia.jpg" className="w-full h-full object-cover fan-active opacity-80" 
+                                             onError={e => e.target.src="https://images.unsplash.com/photo-1624705002806-5d72df19c3ad?w=500"} />
                                         <div className="absolute inset-0 flex items-center justify-center">
-                                            <div className="w-16 h-16 bg-black/80 backdrop-blur-md rounded-full border border-white/10 flex items-center justify-center shadow-2xl">
-                                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg" className="w-8 opacity-90" />
+                                            <div className="bg-black/40 p-2 rounded-full backdrop-blur-md">
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg" className="w-8" />
                                             </div>
                                         </div>
-
-                                        {/* Tarama Çizgisi Animasyonu */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-blue-500/5 to-transparent w-full h-20 -translate-y-full animate-[scan_3s_linear_infinite]"></div>
                                     </div>
                                 </div>
 
-                                {/* Bakiye Ekranı */}
                                 <div className="text-center mt-6">
-                                    <p className="text-[10px] font-black text-zinc-500 tracking-[0.3em] mb-2">CURRENT MINED ASSETS</p>
-                                    <h1 className="text-4xl font-black mono-tech tracking-tighter">
-                                        {nvidiaBal.toFixed(4)} <span className="text-sm font-normal text-zinc-500 italic">NVIDIA</span>
-                                    </h1>
+                                    <p className="text-[10px] text-zinc-600 font-black tracking-[0.4em] mb-2 uppercase">Hesap Bakiyesi</p>
+                                    <h1 className="text-5xl font-black mono tracking-tighter text-white">{balance.toFixed(4)}</h1>
+                                    <p className="text-xs text-zinc-500 font-bold mt-1">NVIDIA TOKEN</p>
                                 </div>
+                            </div>
+                        )}
 
-                                {/* Progress ve Sayaç */}
-                                <div className="w-full mt-10 space-y-3">
-                                    <div className="progress-container">
-                                        <div className="progress-fill" style={{ width: '28%' }}></div>
-                                    </div>
-                                    <div className="flex justify-between items-center px-1">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                            <span className="text-[10px] font-black text-zinc-400 uppercase">System Online</span>
+                        {/* 2. SEKME: LİDERLİK */}
+                        {tab === 'leader' && (
+                            <div className="animate-in slide-in-from-right duration-300">
+                                <h3 className="text-lg font-black mb-4">Küresel Sıralama</h3>
+                                {[
+                                    { rank: 1, name: "AlphaMiner", score: "360,399", icon: "🥇" },
+                                    { rank: 2, name: "CryptoKing", score: "142,500", icon: "🥈" },
+                                    { rank: 3, name: "NvidiaFan88", score: "89,120", icon: "🥉" },
+                                    { rank: 4, name: "User_8392", score: balance.toFixed(0), icon: "#4" }
+                                ].map(u => (
+                                    <div key={u.rank} className="nv-card p-4 mb-3 flex justify-between items-center">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xl">{u.icon}</span>
+                                            <span className="font-bold">{u.name}</span>
                                         </div>
-                                        <span className="mono-tech text-sm font-bold text-zinc-300">{formatTime(timeLeft)}</span>
+                                        <span className="mono text-[#76b900] font-bold">{u.score} NV</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* 3. SEKME: GÜNCELLEME (GPU MARKET) */}
+                        {tab === 'update' && (
+                            <div className="animate-in zoom-in duration-300">
+                                <h3 className="text-lg font-black mb-4">Donanım Mağazası</h3>
+                                <div className="space-y-4">
+                                    {[
+                                        { id: 1, name: "RTX 4060 Ti", speed: 0.05, cost: 0.1, color: "text-blue-400" },
+                                        { id: 2, name: "RTX 4080 Super", speed: 0.15, cost: 0.5, color: "text-purple-400" },
+                                        { id: 3, name: "RTX 4090 Elite", speed: 0.40, cost: 1.2, color: "text-orange-400" },
+                                    ].map(gpu => (
+                                        <div key={gpu.id} className="nv-card p-5 flex justify-between items-center border-l-4 border-l-[#76b900]">
+                                            <div>
+                                                <h4 className={`font-black ${gpu.color}`}>{gpu.name}</h4>
+                                                <p className="text-[10px] text-zinc-500 font-bold">Hız Artışı: +{gpu.speed} NV/H</p>
+                                            </div>
+                                            <button onClick={() => upgradeGpu(gpu.cost, gpu.speed)} className="bg-[#76b900] text-black px-4 py-2 rounded-xl font-black text-xs active:scale-90 transition-all">
+                                                {gpu.cost} NV
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 4. SEKME: TAKIM */}
+                        {tab === 'team' && (
+                            <div className="animate-in slide-in-from-bottom duration-300">
+                                <div className="nv-card p-6 border-dashed border-zinc-700 bg-zinc-900/20">
+                                    <h3 className="text-xl font-black mb-2">Ekibini Kur</h3>
+                                    <p className="text-xs text-zinc-500 mb-6 font-medium leading-relaxed">Referansınla katılan her arkadaşının kazancından %10 komisyon alırsın.</p>
+                                    <div className="bg-black p-4 rounded-2xl border border-zinc-800 flex justify-between items-center mb-6">
+                                        <span className="text-[9px] mono text-zinc-500 truncate mr-2">t.me/NvidiaMinerBot?start={adminId}</span>
+                                        <button onClick={copyRef} className="bg-[#76b900] text-black text-[10px] font-black px-4 py-2 rounded-lg">KOPYALA</button>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-zinc-900/50 p-4 rounded-2xl text-center">
+                                            <p className="text-xl font-black text-white">0</p>
+                                            <p className="text-[9px] text-zinc-500 font-bold uppercase">Üye Sayısı</p>
+                                        </div>
+                                        <div className="bg-zinc-900/50 p-4 rounded-2xl text-center">
+                                            <p className="text-xl font-black text-[#76b900]">0.00</p>
+                                            <p className="text-[9px] text-zinc-500 font-bold uppercase">Toplam Bonus</p>
+                                        </div>
                                     </div>
                                 </div>
-
-                                {/* Alt Aksiyon Butonu */}
-                                <button className="w-full mt-10 py-5 nv-card border-b-4 border-zinc-800 flex items-center justify-center gap-3 click-bounce group">
-                                    <i className="fas fa-bolt text-[#76b900] group-hover:animate-bounce"></i>
-                                    <span className="font-black text-sm uppercase tracking-widest">Hızı İkiye Katla</span>
-                                </button>
                             </div>
                         )}
 
-                        {/* Diğer sekmeler buraya gelecek... */}
-                        {tab !== 'mine' && (
-                            <div className="flex flex-col items-center justify-center h-64 text-zinc-600">
-                                <i className="fas fa-layer-group text-4xl mb-4"></i>
-                                <p className="text-sm font-bold uppercase tracking-widest">{tab} Bölümü Hazırlanıyor</p>
+                        {/* 5. SEKME: BEN (CÜZDAN) */}
+                        {tab === 'wallet' && (
+                            <div className="animate-in fade-in duration-300">
+                                <div className="nv-card p-6 bg-gradient-to-br from-zinc-900 to-black mb-4">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Kullanılabilir Bakiye</p>
+                                        <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" className="w-6 h-6" />
+                                    </div>
+                                    <h2 className="text-4xl font-black mono tracking-tighter">{usdtBalance.toFixed(2)} <span className="text-sm font-normal text-zinc-500 italic">USDT</span></h2>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <button onClick={() => notify('Para Yatırma', 'Yükleme adresi: 0x839...TRX', 'info')} className="nv-card p-5 flex flex-col items-center gap-2">
+                                        <i className="fas fa-wallet text-green-500"></i>
+                                        <span className="text-[10px] font-black uppercase">YATIR</span>
+                                    </button>
+                                    <button onClick={() => notify('Para Çekme', 'Minimum çekim tutarı 10 USDT.', 'warning')} className="nv-card p-5 flex flex-col items-center gap-2">
+                                        <i className="fas fa-hand-holding-dollar text-blue-500"></i>
+                                        <span className="text-[10px] font-black uppercase">ÇEK</span>
+                                    </button>
+                                </div>
+
+                                <div className="nv-card overflow-hidden">
+                                    <div className="p-4 border-b border-zinc-900 flex justify-between text-xs font-bold">
+                                        <span className="text-zinc-500">Operatör Durumu</span>
+                                        <span className="text-[#76b900]">DOĞRULANDI</span>
+                                    </div>
+                                    <div className="p-4 flex justify-between text-xs font-bold">
+                                        <span className="text-zinc-500">Donanım Lisansı</span>
+                                        <span className="text-zinc-300">Pro-Elite v3.5</span>
+                                    </div>
+                                </div>
                             </div>
                         )}
+
                     </main>
 
-                    {/* Alt Navigasyon (Görseldeki Gibi) */}
-                    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto h-24 bg-black/90 backdrop-blur-xl border-t border-zinc-900 px-6 flex justify-between items-center z-50">
-                        <NavItem active={tab === 'mine'} onClick={() => setTab('mine')} icon="fa-burst" label="Bana ait" />
-                        <NavItem active={tab === 'leader'} onClick={() => setTab('leader')} icon="fa-user-tie" label="Liderlik" />
-                        <NavItem active={tab === 'update'} onClick={() => setTab('update')} icon="fa-rocket" label="Güncelleme" />
-                        <NavItem active={tab === 'team'} onClick={() => setTab('team')} icon="fa-users" label="Takım" />
-                        <NavItem active={tab === 'wallet'} onClick={() => setTab('wallet')} icon="fa-cube" label="Ben" />
+                    {/* Navigation Bar */}
+                    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto h-24 bg-black/90 backdrop-blur-xl border-t border-zinc-900 px-4 flex justify-between items-center z-50">
+                        <NavItem id="mine" active={tab === 'mine'} icon="fa-burst" label="Bana ait" onClick={setTab} />
+                        <NavItem id="leader" active={tab === 'leader'} icon="fa-user-tie" label="Liderlik" onClick={setTab} />
+                        <NavItem id="update" active={tab === 'update'} icon="fa-rocket" label="Güncelleme" onClick={setTab} />
+                        <NavItem id="team" active={tab === 'team'} icon="fa-users" label="Takım" onClick={setTab} />
+                        <NavItem id="wallet" active={tab === 'wallet'} icon="fa-cube" label="Ben" onClick={setTab} />
                     </nav>
 
-                    {/* Filigran Bilgi */}
-                    <div className="fixed bottom-1 left-0 right-0 text-center pointer-events-none">
-                        <p className="text-[8px] text-zinc-700 font-bold uppercase">
-                            @TheCityUKUAI_Bot | Operator ID-{adminId} | v2.5 Stable
-                        </p>
-                    </div>
-
-                    {/* Destek Botu İkonu */}
-                    <button className="fixed right-6 bottom-28 w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(0,130,255,0.3)] border-4 border-black z-40 click-bounce">
-                         <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" className="w-8 h-8 brightness-200" />
+                    {/* Help Bot */}
+                    <button onClick={() => notify('Canlı Destek', 'Operatör şu an meşgul. Lütfen sonra deneyin.', 'info')} 
+                            className="fixed right-6 bottom-28 w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center shadow-lg border-4 border-black z-40 active:scale-90 transition-all">
+                        <i className="fas fa-headset text-white text-xl"></i>
                     </button>
 
                 </div>
             );
         };
 
-        const NavItem = ({ active, onClick, icon, label }) => (
-            <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all ${active ? 'nav-active scale-110' : 'text-zinc-500 opacity-60'}`}>
+        const NavItem = ({ id, active, icon, label, onClick }) => (
+            <button onClick={() => onClick(id)} className={`flex flex-col items-center gap-1.5 flex-1 transition-all ${active ? 'nav-active scale-110' : 'text-zinc-500 opacity-50'}`}>
                 <i className={`fas ${icon} text-lg`}></i>
-                <span className="text-[9px] font-extrabold uppercase tracking-tighter">{label}</span>
+                <span className="text-[8px] font-extrabold uppercase tracking-tighter whitespace-nowrap">{label}</span>
             </button>
         );
 
