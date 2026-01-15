@@ -3,198 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NVAI - 7/24 Mining</title>
+    <title>NVAI - Pure Mining</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --bg: #0a0a0a;
             --card-bg: #141414;
-            --nv-green: #c1ff00; /* Neon Yeşil referansı */
-            --nv-blue: #0088ff;
+            --nv-green: #c1ff00; /* Referans yeşil */
+            --nv-blue: #0088ff;  /* Referans mavi */
             --text-dim: #8e8e93;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
         body { background-color: var(--bg); color: #fff; overflow: hidden; height: 100vh; }
 
-        /* App Shell */
+        /* Sayfa Yapısı */
         .page { display: none; height: 100vh; padding: 15px; padding-bottom: 90px; overflow-y: auto; }
-        .page.active { display: block; animation: fadeIn 0.3s forwards; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .page.active { display: block; animation: slideFade 0.3s ease-out; }
+        @keyframes slideFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Header */
+        /* Üst Bar */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; }
         .user-info { display: flex; align-items: center; gap: 10px; }
         .avatar { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #333; }
-        .lang-btn { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 5px 12px; border-radius: 20px; font-size: 13px; }
 
-        /* Stat Cards */
+        /* Bilgi Kartları */
         .stat-card { background: var(--card-bg); border: 1px solid #222; border-radius: 12px; padding: 12px 15px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .miner-label { background: var(--nv-green); color: #000; font-weight: 800; padding: 3px 10px; border-radius: 15px; font-size: 11px; }
-        .main-balance-val { color: var(--nv-green); font-weight: bold; font-size: 18px; }
+        .miner-tag { background: var(--nv-green); color: #000; font-weight: 800; padding: 4px 12px; border-radius: 20px; font-size: 11px; text-transform: uppercase; }
+        .val-text { color: var(--nv-green); font-weight: bold; font-size: 18px; font-family: monospace; }
 
-        /* Mining Center */
-        .mining-display { text-align: center; margin: 30px 0; position: relative; }
-        .fan-wrap { width: 220px; height: 220px; margin: 0 auto; position: relative; }
-        .fan-img { width: 100%; animation: fanRotate 3s linear infinite; filter: drop-shadow(0 0 15px rgba(0, 136, 255, 0.3)); }
-        @keyframes fanRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .fan-core { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 45px; height: 45px; background: #000; border: 2px solid var(--nv-green); border-radius: 10px; display: flex; align-items: center; justify-content: center; z-index: 5; }
+        /* Merkez Mining Alanı */
+        .mining-area { text-align: center; margin: 40px 0; position: relative; }
+        .fan-container { width: 240px; height: 240px; margin: 0 auto; position: relative; }
+        .fan-img { width: 100%; animation: fanSpin 3s linear infinite; filter: drop-shadow(0 0 20px rgba(0, 136, 255, 0.4)); }
+        @keyframes fanSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .chip-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 45px; height: 45px; background: #000; border: 2px solid var(--nv-green); border-radius: 10px; display: flex; align-items: center; justify-content: center; z-index: 5; box-shadow: 0 0 15px var(--nv-green); }
 
-        .pending-title { font-size: 14px; color: var(--text-dim); margin-top: 20px; }
-        .pending-val { font-size: 28px; font-weight: bold; margin: 5px 0 15px; font-family: monospace; }
+        .pending-box { margin: 25px 0; }
+        .pending-label { font-size: 14px; color: var(--text-dim); margin-bottom: 5px; }
+        .pending-value { font-size: 32px; font-weight: 800; font-family: monospace; letter-spacing: 1px; }
 
-        /* Claim Button */
-        .claim-btn { background: var(--nv-green); color: #000; border: none; width: 180px; padding: 12px; border-radius: 25px; font-weight: 900; font-size: 16px; cursor: pointer; box-shadow: 0 0 15px var(--nv-green); transition: 0.2s; }
-        .claim-btn:disabled { background: #333; color: #666; box-shadow: none; cursor: not-allowed; }
+        /* Claim Butonu */
+        .claim-btn { background: var(--nv-green); color: #000; border: none; width: 200px; padding: 15px; border-radius: 30px; font-weight: 900; font-size: 18px; letter-spacing: 1px; cursor: pointer; transition: 0.3s; box-shadow: 0 0 20px rgba(193, 255, 0, 0.3); }
+        .claim-btn:disabled { background: #222; color: #555; box-shadow: none; cursor: not-allowed; }
         .claim-btn:active { transform: scale(0.95); }
 
-        /* Progress */
-        .progress-box { width: 90%; margin: 20px auto; }
-        .bar-bg { width: 100%; height: 10px; background: #111; border-radius: 10px; border: 1px solid #222; overflow: hidden; }
-        .bar-fill { width: 0%; height: 100%; background: var(--nv-green); transition: width 1s linear; }
-        .timer { font-family: monospace; font-size: 14px; margin-top: 8px; color: var(--text-dim); }
-
-        /* Nav */
+        /* Alt Menü */
         .nav { position: fixed; bottom: 0; width: 100%; height: 80px; background: #000; border-top: 1px solid #111; display: flex; justify-content: space-around; align-items: center; z-index: 100; }
-        .nav-item { text-align: center; color: var(--text-dim); text-decoration: none; font-size: 10px; flex: 1; }
-        .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
-        .nav-item.active { color: var(--nv-green); }
+        .nav-link { text-align: center; color: var(--text-dim); text-decoration: none; font-size: 10px; flex: 1; transition: 0.2s; }
+        .nav-link i { font-size: 22px; display: block; margin-bottom: 5px; }
+        .nav-link.active { color: var(--nv-green); }
 
         /* Popup */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-box { background: var(--card-bg); width: 80%; padding: 30px; border-radius: 20px; border: 1px solid var(--nv-green); text-align: center; }
+        .popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .popup-box { background: var(--card-bg); width: 80%; padding: 30px; border-radius: 25px; border: 1px solid var(--nv-green); text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="p-bana-ait" class="page active">
-    <div class="header">
-        <div class="user-info">
-            <img src="https://via.placeholder.com/40" class="avatar">
-            <span style="font-weight: bold; font-size: 14px;">Chalpus Yeniden</span>
+    <div id="p-home" class="page active">
+        <header class="header">
+            <div class="user-info">
+                <img src="https://via.placeholder.com/40" class="avatar">
+                <span style="font-weight: bold;">Chalpus Yeniden</span>
+            </div>
+            <div style="display: flex; gap: 15px; color: var(--text-dim);">
+                <i class="fas fa-globe"></i>
+                <i class="fas fa-bell"></i>
+            </div>
+        </header>
+
+        <div class="stat-card">
+            <span class="miner-tag">NVIDIA Miner</span>
+            <span class="val-text">0.082 <small style="font-size: 10px;">NV/H</small></span>
         </div>
-        <button class="lang-btn">Türkçe</button>
-    </div>
 
-    <div class="stat-card">
-        <span class="miner-label">NVIDIA Miner</span>
-        <span class="main-balance-val">0.082 <small style="font-size: 10px;">NV/H</small></span>
-    </div>
-    <div class="stat-card">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <i class="fab fa-nvidia" style="color: var(--nv-green);"></i>
-            <span style="font-weight: bold;">MAIN BALANCE</span>
+        <div class="stat-card">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fab fa-nvidia" style="color: var(--nv-green);"></i>
+                <span style="font-weight: bold; font-size: 14px;">MAIN BALANCE</span>
+            </div>
+            <span class="val-text" id="main-balance">0.0000</span>
         </div>
-        <span class="main-balance-val" id="main-balance">0.0000</span>
-    </div>
 
-    <div class="mining-display">
-        <div class="fan-wrap">
-            <img src="https://i.ibb.co/L8m8n9n/blue-fan.png" class="fan-img" id="fan"> <div class="fan-core"><i class="fas fa-microchip" style="color: var(--nv-green); font-size: 20px;"></i></div>
-        </div>
-        
-        <div class="pending-title">Claim Edilebilir Bakiye</div>
-        <div class="pending-val" id="pending-balance">0.00000000</div>
-        
-        <button class="claim-btn" id="claim-btn" onclick="performClaim()">CLAIM</button>
-        
-        <div class="progress-box">
-            <div class="bar-bg"><div class="bar-fill" id="p-bar"></div></div>
-            <div class="timer" id="timer">24:00:00</div>
+        <div class="mining-area">
+            <div class="fan-container">
+                <img src="https://i.ibb.co/L8m8n9n/blue-fan.png" class="fan-img" id="mainFan">
+                <div class="chip-icon"><i class="fas fa-microchip" style="color: var(--nv-green); font-size: 22px;"></i></div>
+            </div>
+
+            <div class="pending-box">
+                <div class="pending-label">Claim Edilebilir Bakiye</div>
+                <div class="pending-value" id="pending-balance">0.000000</div>
+            </div>
+
+            <button class="claim-btn" id="claimBtn" onclick="claimRewards()" disabled>CLAIM</button>
         </div>
     </div>
-</div>
 
-<nav class="nav">
-    <a href="#" class="nav-item active"><i class="fas fa-seedling"></i>Bana ait</a>
-    <a href="#" class="nav-item"><i class="fas fa-medal"></i>Liderlik</a>
-    <a href="#" class="nav-item"><i class="fas fa-rocket"></i>Güncelleme</a>
-    <a href="#" class="nav-item"><i class="fas fa-users"></i>Takım</a>
-    <a href="#" class="nav-item"><i class="fas fa-user"></i>Ben</a>
-</nav>
+    <div id="p-ben" class="page">
+        <div style="text-align: center; margin-top: 50px;">
+            <img src="https://via.placeholder.com/100" style="border-radius: 50%; border: 3px solid var(--nv-green);">
+            <h2 style="margin-top: 15px;">Chalpus Yeniden</h2>
+            <p style="color: var(--text-dim);">Admin ID: 8392479231</p>
+        </div>
+        </div>
 
-<div id="modal" class="modal">
-    <div class="modal-box">
-        <i class="fas fa-check-circle" style="font-size: 50px; color: var(--nv-green);"></i>
-        <h3 style="margin-top: 15px;">BAŞARILI</h3>
-        <p id="modal-msg" style="color: var(--text-dim); margin-top: 10px;"></p>
-        <button class="claim-btn" style="margin-top: 20px; width: 100%;" onclick="closeModal()">TAMAM</button>
+    <nav class="nav">
+        <a href="javascript:void(0)" class="nav-link active" onclick="showPage('home', this)"><i class="fas fa-seedling"></i>Bana ait</a>
+        <a href="javascript:void(0)" class="nav-link" onclick="showPage('leader', this)"><i class="fas fa-medal"></i>Liderlik</a>
+        <a href="javascript:void(0)" class="nav-link" onclick="showPage('update', this)"><i class="fas fa-rocket"></i>Güncelleme</a>
+        <a href="javascript:void(0)" class="nav-link" onclick="showPage('team', this)"><i class="fas fa-users"></i>Takım</a>
+        <a href="javascript:void(0)" class="nav-link" onclick="showPage('ben', this)"><i class="fas fa-user"></i>Ben</a>
+    </nav>
+
+    <div id="popup" class="popup">
+        <div class="popup-box">
+            <i class="fas fa-check-circle" style="font-size: 60px; color: var(--nv-green);"></i>
+            <h2 style="margin: 20px 0 10px;">BAŞARILI!</h2>
+            <p id="popup-text" style="color: var(--text-dim);"></p>
+            <button class="claim-btn" style="margin-top: 25px; width: 100%;" onclick="closePopup()">HARİKA</button>
+        </div>
     </div>
-</div>
 
-<script>
-    // --- STATE MANAGEMENT ---
-    let state = {
-        mainBalance: parseFloat(localStorage.getItem('nv_main')) || 0,
-        pendingBalance: 0,
-        lastUpdateTime: parseInt(localStorage.getItem('nv_last_update')) || Date.now(),
-        dailyRate: 0.98,
-        perSecRate: 0.98 / 86400
-    };
+    <script>
+        // --- MİNİNG MANTIĞI ---
+        let state = {
+            mainBalance: parseFloat(localStorage.getItem('nv_main')) || 0,
+            pendingBalance: 0,
+            lastUpdate: parseInt(localStorage.getItem('nv_time')) || Date.now(),
+            perSec: 0.98 / 86400 // Günlük 0.98 NVAI
+        };
 
-    // --- ENGINE ---
-    function updateMining() {
-        const now = Date.now();
-        const diffInSecs = (now - state.lastUpdateTime) / 1000;
-        
-        // Biriken kazancı hesapla
-        state.pendingBalance += diffInSecs * state.perSecRate;
-        state.lastUpdateTime = now;
-        
-        // UI Güncelle
-        document.getElementById('main-balance').innerText = state.mainBalance.toFixed(4);
-        document.getElementById('pending-balance').innerText = state.pendingBalance.toFixed(8);
-        document.getElementById('claim-btn').disabled = state.pendingBalance <= 0;
-        
-        // Zaman ve Progress (24 saatlik döngü)
-        const dayInMs = 86400000;
-        const cycleProgress = (now % dayInMs) / dayInMs;
-        document.getElementById('p-bar').style.width = (cycleProgress * 100) + "%";
-        
-        const remainingMs = dayInMs - (now % dayInMs);
-        const h = Math.floor(remainingMs / 3600000);
-        const m = Math.floor((remainingMs % 3600000) / 60000);
-        const s = Math.floor((remainingMs % 60000) / 1000);
-        document.getElementById('timer').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        function updateEngine() {
+            const now = Date.now();
+            const elapsed = (now - state.lastUpdate) / 1000;
+            
+            // Bakiye artışı
+            state.pendingBalance += elapsed * state.perSec;
+            state.lastUpdate = now;
 
-        // LocalStorage'a kaydet (Uygulama kapansa da buradan devam eder)
-        localStorage.setItem('nv_last_update', state.lastUpdateTime);
-    }
+            // UI Güncelleme (Sayaç yok, sadece miktar)
+            document.getElementById('main-balance').innerText = state.mainBalance.toFixed(4);
+            document.getElementById('pending-balance').innerText = state.pendingBalance.toFixed(6);
+            
+            // Buton aktiflik kontrolü
+            document.getElementById('claimBtn').disabled = state.pendingBalance < 0.0001;
 
-    // --- ACTIONS ---
-    function performClaim() {
-        if (state.pendingBalance <= 0) return;
-
-        const claimedAmount = state.pendingBalance;
-        state.mainBalance += claimedAmount;
-        state.pendingBalance = 0;
-        
-        // Verileri kalıcı yap
-        localStorage.setItem('nv_main', state.mainBalance);
-        
-        // Efektler
-        document.getElementById('fan').style.animationDuration = '0.5s';
-        setTimeout(() => document.getElementById('fan').style.animationDuration = '3s', 1500);
-        
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+            // State kaydı (Uygulama kapansa da devam eder)
+            localStorage.setItem('nv_time', state.lastUpdate);
         }
 
-        showModal(`${claimedAmount.toFixed(4)} NVAI bakiyene eklendi.`);
-    }
+        // --- AKSİYONLAR ---
+        function claimRewards() {
+            const amount = state.pendingBalance;
+            state.mainBalance += amount;
+            state.pendingBalance = 0;
+            
+            localStorage.setItem('nv_main', state.mainBalance);
+            
+            // Görsel geri bildirim
+            document.getElementById('mainFan').style.animationDuration = '0.5s';
+            setTimeout(() => document.getElementById('mainFan').style.animationDuration = '3s', 1500);
 
-    function showModal(msg) {
-        document.getElementById('modal-msg').innerText = msg;
-        document.getElementById('modal').style.display = 'flex';
-    }
+            showPopup(`${amount.toFixed(4)} NVAI ana bakiyene eklendi!`);
+        }
 
-    function closeModal() {
-        document.getElementById('modal').style.display = 'none';
-    }
+        function showPage(id, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+            
+            const target = document.getElementById('p-' + id);
+            if(target) target.classList.add('active');
+            el.classList.add('active');
+        }
 
-    // Başlat
-    setInterval(updateMining, 100);
-</script>
+        function showPopup(msg) {
+            document.getElementById('popup-text').innerText = msg;
+            document.getElementById('popup').style.display = 'flex';
+        }
 
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+
+        // Başlat
+        setInterval(updateEngine, 100);
+    </script>
 </body>
 </html>
