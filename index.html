@@ -3,302 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NVIDIA Mining Bot</title>
+    <title>NVAI - AI Mining Simulation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --tg-bg: #000000;
-            --tg-card: #1c1c1e;
-            --nv-green: #76b900;
-            --nv-blue: #0088ff;
-            --text-gray: #8e8e93;
+            --bg-deep: #050505;
+            --card-bg: #121214;
+            --nv-green: #39FF14; /* Neon Yeşil */
+            --nv-blue: #00D1FF;  /* Futuristik Mavi */
+            --text-main: #FFFFFF;
+            --text-dim: #A0A0A5;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body {
-            background-color: var(--tg-bg);
-            color: white;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, sans-serif;
             overflow-x: hidden;
-            padding-bottom: 90px;
+            padding-bottom: 100px;
         }
 
-        .top-nav {
-            padding: 15px;
+        /* Üst Bilgi Alanı */
+        .header {
+            padding: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .user-pill {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #1c1c1e;
-            padding: 5px 12px;
-            border-radius: 20px;
-            border: 1px solid #2c2c2e;
-        }
-
+        .user-profile { display: flex; align-items: center; gap: 12px; }
         .avatar { 
-            width: 30px; height: 30px; border-radius: 50%; 
-            background: url('https://via.placeholder.com/30') no-repeat center;
-            background-size: cover;
+            width: 44px; height: 44px; border-radius: 50%; 
+            border: 2px solid var(--nv-green);
+            background: #222;
         }
-
-        .lang-select {
-            background: #1c1c1e;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 13px;
+        .status-tag {
+            font-size: 11px;
+            background: rgba(57, 255, 20, 0.1);
+            color: var(--nv-green);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: flex; align-items: center; gap: 4px;
         }
+        .status-dot { width: 6px; height: 6px; background: var(--nv-green); border-radius: 50%; box-shadow: 0 0 8px var(--nv-green); }
 
-        .content { padding: 0 15px; }
-
-        .stat-card {
-            background: #151515;
-            border: 1px solid #2c2c2e;
-            border-radius: 12px;
-            padding: 12px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .tag {
-            background: var(--nv-green);
-            color: black;
+        .lang-switch {
+            background: var(--card-bg);
+            border: 1px solid #222;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 12px;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 6px;
         }
 
-        .val-big { font-size: 20px; font-weight: bold; color: var(--nv-green); }
+        /* Bilgi Kartları Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 0 20px;
+            margin-bottom: 30px;
+        }
 
-        .mining-display {
+        .info-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 16px;
+            border: 1px solid #1c1c1e;
+        }
+        .info-label { color: var(--text-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-value { font-size: 16px; font-weight: 700; margin-top: 4px; color: var(--nv-green); }
+
+        /* Ana Mining Alanı */
+        .mining-core {
             text-align: center;
-            margin: 25px 0;
             position: relative;
+            padding: 20px 0;
         }
 
-        .fan-box {
-            position: relative;
-            width: 180px;
-            height: 180px;
+        .fan-container {
+            width: 260px;
+            height: 260px;
             margin: 0 auto;
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .fan-icon {
-            font-size: 150px;
-            color: var(--nv-blue);
-            z-index: 1;
+        /* Futuristik Dönen Fan */
+        .fan-visual {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url('https://i.ibb.co/L8m8n9n/blue-fan.png') no-repeat center; /* Temsili mavi fan görseli */
+            background-size: contain;
+            animation: fan-spin 2.5s linear infinite;
+            filter: drop-shadow(0 0 20px rgba(0, 209, 255, 0.3));
         }
 
-        .spinning { animation: spin 2s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-        .mining-live-val {
-            font-size: 32px;
-            font-weight: 700;
-            margin: 15px 0 5px;
-            font-family: 'Courier New', Courier, monospace;
+        /* Fanın Ortasındaki AI Chip */
+        .ai-chip {
+            width: 70px;
+            height: 70px;
+            background: #000;
+            border: 2px solid var(--nv-blue);
+            border-radius: 15px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 15px var(--nv-blue);
         }
 
-        .progress-wrapper { margin: 10px 20px; }
-        .bar-bg {
-            width: 100%; height: 12px;
-            background: #1c1c1e;
-            border-radius: 10px;
-            border: 1px solid var(--nv-green);
+        @keyframes fan-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .total-points {
+            margin-top: 25px;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+        .unit { font-size: 16px; color: var(--nv-blue); margin-left: 5px; }
+
+        /* Progress Bar */
+        .progress-container {
+            padding: 20px 40px;
+        }
+        .bar-outer {
+            width: 100%;
+            height: 8px;
+            background: #1a1a1a;
+            border-radius: 4px;
             overflow: hidden;
         }
-        .bar-fill {
-            width: 0%; height: 100%;
-            background: var(--nv-green);
+        .bar-inner {
+            width: 45%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--nv-green), #adff2f);
             box-shadow: 0 0 15px var(--nv-green);
-            transition: width 0.5s;
         }
-        .timer { font-size: 14px; margin-top: 10px; font-weight: bold; }
+        .countdown {
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            color: var(--text-dim);
+        }
 
-        .task-section { margin-top: 20px; }
-        .task-title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 15px; color: #eee; }
+        /* Görev Merkezi */
+        .tasks-wrap {
+            padding: 20px;
+            background: #0a0a0a;
+            border-top: 1px solid #1a1a1a;
+            margin-top: 20px;
+        }
+        .tasks-header { font-size: 18px; font-weight: bold; margin-bottom: 15px; text-align: left; }
         
-        .task-list {
-            background: #1c1c1e;
-            border-radius: 15px;
-            border: 1px solid #2c2c2e;
-            padding: 5px 15px;
-        }
-
         .task-item {
-            padding: 15px 0;
-            border-bottom: 1px dashed #333;
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--nv-blue);
         }
-
-        .reward { color: #ffd700; font-size: 13px; font-weight: bold; margin-top: 3px; }
+        .task-info h4 { font-size: 14px; margin-bottom: 4px; }
+        .task-reward { color: #FFD700; font-size: 12px; font-weight: bold; }
         
-        .btn-status {
+        .task-btn {
             background: var(--nv-green);
-            color: #000;
+            color: black;
             border: none;
             padding: 8px 16px;
             border-radius: 8px;
-            font-size: 12px;
             font-weight: bold;
-            cursor: pointer;
+            font-size: 12px;
         }
 
+        /* Alt Menü */
         .bottom-nav {
             position: fixed;
-            bottom: 0; width: 100%; height: 75px;
-            background: #1c1c1e;
-            border-top: 1px solid #2c2c2e;
-            display: flex; justify-content: space-around; align-items: center;
-            padding-bottom: 10px;
+            bottom: 0; width: 100%;
+            height: 80px;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #1a1a1a;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
         }
-
-        .nav-link { text-align: center; color: var(--text-gray); text-decoration: none; font-size: 10px; }
-        .nav-link.active { color: var(--nv-green); }
-        .nav-link i { font-size: 22px; display: block; margin-bottom: 4px; }
-
-        .floating-support {
-            position: fixed; right: 20px; bottom: 90px;
-            width: 50px; height: 50px; background: white;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--text-dim); text-decoration: none; font-size: 10px;
+            gap: 5px;
         }
+        .nav-item.active { color: var(--nv-green); }
+        .nav-item i { font-size: 20px; }
+
     </style>
 </head>
 <body>
 
-    <div class="top-nav">
-        <div class="user-pill">
+    <header class="header">
+        <div class="user-profile">
             <div class="avatar"></div>
-            <span style="font-size: 14px;" id="userName">User_8392479231</span>
+            <div>
+                <div style="font-size: 14px; font-weight: bold;">User_8392479231</div>
+                <div class="status-tag"><div class="status-dot"></div> Aktif</div>
+            </div>
         </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <button class="lang-select">TR</button>
-            <i class="far fa-bell"></i>
+        <select class="lang-switch">
+            <option>TR</option>
+            <option>EN</option>
+        </select>
+    </header>
+
+    <div class="stats-grid">
+        <div class="info-card">
+            <div class="info-label">Günlük Kazanç</div>
+            <div class="info-value">0.98 NVAI</div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Saatlik Hız</div>
+            <div class="info-value">0.0408/H</div>
         </div>
     </div>
 
-    <div class="content">
-        <div class="stat-card">
-            <span class="tag">NVIDIA Miner</span>
-            <div class="val-big">0.0412 <span style="font-size: 10px;">NVIDIA/H</span></div>
-        </div>
-
-        <div class="stat-card">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fab fa-nvidia" style="color: var(--nv-green);"></i>
-                <span style="font-weight: bold;">Cüzdan Bakiyesi</span>
-            </div>
-            <div class="val-big" id="walletBalance">0.0000</div>
-        </div>
-
-        <div class="mining-display">
-            <div class="fan-box">
-                <i class="fas fa-fan fan-icon" id="fan"></i>
-            </div>
-            
-            <div class="mining-live-val" id="liveMined">0.0000</div>
-            
-            <div class="progress-wrapper">
-                <div class="bar-bg">
-                    <div class="bar-fill" id="progressBar"></div>
-                </div>
-                <div class="timer" id="timer">24:00:00</div>
-            </div>
-
-            <button class="btn-status" style="margin-top: 15px; width: 200px; padding: 12px;" onclick="startMining()" id="actionBtn">KAZIMI BAŞLAT</button>
-        </div>
-
-        <div class="task-section">
-            <div class="task-title">Görev Merkezi</div>
-            <div class="task-list">
-                <div class="task-item">
-                    <div>
-                        <div style="font-weight: 600;">Günlük Bonus</div>
-                        <div class="reward">+0.01 NVIDIA</div>
-                    </div>
-                    <button class="btn-status" style="background:#444; color:white;">Alındı</button>
-                </div>
-                <div class="task-item">
-                    <div>
-                        <div style="font-weight: 600;">Referans Kaydı (10 Kişi)</div>
-                        <div class="reward">+5.00 NVIDIA</div>
-                    </div>
-                    <span style="font-size: 12px; color:var(--nv-green)">0 / 10</span>
-                </div>
+    <main class="mining-core">
+        <div class="fan-container">
+            <div class="fan-visual"></div>
+            <div class="ai-chip">
+                <i class="fas fa-microchip" style="color: var(--nv-blue); font-size: 30px;"></i>
             </div>
         </div>
-    </div>
 
-    <div class="floating-support">
-        <i class="fas fa-headset" style="color: #007aff; font-size: 24px;"></i>
-    </div>
+        <div class="total-points" id="pointsDisplay">0.0000 <span class="unit">NVAI</span></div>
+
+        <div class="progress-container">
+            <div class="bar-outer">
+                <div class="bar-inner" id="progressBar"></div>
+            </div>
+            <div class="countdown" id="timer">23:59:59</div>
+        </div>
+    </main>
+
+    <section class="tasks-wrap">
+        <div class="tasks-header">Görev Merkezi</div>
+        
+        <div class="task-item">
+            <div class="task-info">
+                <h4>Günlük Check-in</h4>
+                <div class="task-reward">+0.05 NVAI</div>
+            </div>
+            <button class="task-btn">AL</button>
+        </div>
+
+        <div class="task-item">
+            <div class="task-info">
+                <h4>Kanala Katıl</h4>
+                <div class="task-reward">+0.50 NVAI</div>
+            </div>
+            <button class="task-btn" style="background: #222; color: #555;">BİTTİ</button>
+        </div>
+    </section>
 
     <nav class="bottom-nav">
-        <a href="#" class="nav-link active"><i class="fas fa-microchip"></i><span>Kazım</span></a>
-        <a href="#" class="nav-link"><i class="fas fa-trophy"></i><span>Sıralama</span></a>
-        <a href="#" class="nav-link"><i class="fas fa-bolt"></i><span>Hızlandır</span></a>
-        <a href="#" class="nav-link"><i class="fas fa-users"></i><span>Ekibim</span></a>
-        <a href="#" class="nav-link"><i class="fas fa-user"></i><span>Profil</span></a>
+        <a href="#" class="nav-item active"><i class="fas fa-home"></i><span>Bana Ait</span></a>
+        <a href="#" class="nav-item"><i class="fas fa-trophy"></i><span>Liderlik</span></a>
+        <a href="#" class="nav-item"><i class="fas fa-bolt"></i><span>Güncelle</span></a>
+        <a href="#" class="nav-item"><i class="fas fa-users"></i><span>Takım</span></a>
+        <a href="#" class="nav-item"><i class="fas fa-user-circle"></i><span>Profil</span></a>
     </nav>
 
     <script>
-        let balance = 0;
-        let isMining = false;
-        let secondsLeft = 86400; // 24 Saat
-        
-        // Günde 0.99 NVIDIA kazancı için saniyelik artış hesabı
-        // 0.99 / 86400 saniye
-        const rewardPerSecond = 0.99 / 86400;
+        // Madencilik Mantığı
+        let totalPoints = 0.0000;
+        const hourlyRate = 0.0408;
+        const perSecondRate = hourlyRate / 3600;
+        let timeLeft = 86400; // 24 Saat
 
-        function startMining() {
-            if(isMining) return;
+        function updateMining() {
+            // Puanı artır
+            totalPoints += perSecondRate;
+            document.getElementById('pointsDisplay').innerHTML = `${totalPoints.toFixed(4)} <span class="unit">NVAI</span>`;
             
-            isMining = true;
-            document.getElementById('fan').classList.add('spinning');
-            document.getElementById('actionBtn').innerText = "MADENCİLİK AKTİF";
-            document.getElementById('actionBtn').style.background = "#222";
-            document.getElementById('actionBtn').style.color = "#777";
-
-            setInterval(() => {
-                // Rakamları artır
-                balance += rewardPerSecond;
-                document.getElementById('liveMined').innerText = balance.toFixed(4);
-                document.getElementById('walletBalance').innerText = balance.toFixed(4);
-
-                // Süreyi azalt
-                secondsLeft--;
-                updateDisplay();
-            }, 1000);
+            // Süreyi azalt
+            if (timeLeft > 0) {
+                timeLeft--;
+                let h = Math.floor(timeLeft / 3600);
+                let m = Math.floor((timeLeft % 3600) / 60);
+                let s = timeLeft % 60;
+                document.getElementById('timer').innerText = 
+                    `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                
+                // Bar ilerlemesi
+                let progress = ((86400 - timeLeft) / 86400) * 100;
+                document.getElementById('progressBar').style.width = progress + "%";
+            }
         }
 
-        function updateDisplay() {
-            // Timer Format (HH:MM:SS)
-            let h = Math.floor(secondsLeft / 3600);
-            let m = Math.floor((secondsLeft % 3600) / 60);
-            let s = secondsLeft % 60;
-            document.getElementById('timer').innerText = 
-                `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-
-            // Progress Bar (24 saat üzerinden yüzde)
-            let percent = ((86400 - secondsLeft) / 86400) * 100;
-            document.getElementById('progressBar').style.width = percent + "%";
-        }
+        // Her saniye güncelle
+        setInterval(updateMining, 1000);
     </script>
 </body>
 </html>
