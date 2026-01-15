@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CGPT AI - Mining Ecosystem</title>
+    <title>CGPT AI - Stable Mining</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -11,444 +11,244 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        
-        :root {
-            --nv-green: #c1ff00;
-            --nv-blue: #0088ff;
-            --bg-dark: #050505;
-        }
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-dark);
-            color: #ffffff;
-            margin: 0;
-            overflow-x: hidden;
-            user-select: none;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: #fff; margin: 0; overflow-x: hidden; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-
-        /* Animasyonlar */
-        @keyframes pulse-glow {
-            0%, 100% { filter: drop-shadow(0 0 10px rgba(193, 255, 0, 0.2)); }
-            50% { filter: drop-shadow(0 0 25px rgba(193, 255, 0, 0.5)); }
+        .neon-text { color: #c1ff00; text-shadow: 0 0 10px rgba(193, 255, 0, 0.3); }
+        .glass { background: rgba(15, 15, 15, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        .nav-active { color: #c1ff00 !important; transform: translateY(-3px); transition: 0.3s; }
+        
+        /* Titremeyi önleyen sabit genişlikli font ve yumuşak geçiş */
+        .balance-flow { font-variant-numeric: tabular-nums; transition: transform 0.2s linear; }
+        
+        @keyframes fan-glow {
+            0% { filter: drop-shadow(0 0 15px rgba(0, 136, 255, 0.2)); }
+            50% { filter: drop-shadow(0 0 25px rgba(193, 255, 0, 0.4)); }
+            100% { filter: drop-shadow(0 0 15px rgba(0, 136, 255, 0.2)); }
         }
-
-        .fan-static-glow {
-            animation: pulse-glow 3s infinite ease-in-out;
-        }
-
-        .claim-btn-glow {
-            box-shadow: 0 0 20px rgba(193, 255, 0, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .claim-btn-glow:active {
-            transform: scale(0.95);
-            box-shadow: 0 0 40px rgba(193, 255, 0, 0.6);
-        }
-
-        .glass-card {
-            background: rgba(18, 18, 18, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .nav-active {
-            color: var(--nv-green) !important;
-            filter: drop-shadow(0 0 5px var(--nv-green));
-        }
-
-        /* Sayfa Geçişleri */
-        .page-enter {
-            animation: fadeIn 0.4s ease-out forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Özel Scroll */
-        .custom-scroll::-webkit-scrollbar {
-            display: none;
-        }
+        .fan-stable { animation: fan-glow 4s infinite ease-in-out; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useCallback } = React;
+        const { useState, useEffect, useMemo, useCallback } = React;
 
-        // --- GLOBAL CONFIG ---
         const ADMIN_ID = "8392479231";
         const DAILY_RATE = 0.98;
         const SEC_RATE = DAILY_RATE / 86400;
 
         const App = () => {
-            // --- STATE MANAGEMENT ---
-            const [activeTab, setActiveTab] = useState('home');
-            const [isLoaded, setIsLoaded] = useState(false);
-            const [showPopup, setShowPopup] = useState(false);
-            const [claimedAmount, setClaimedAmount] = useState(0);
+            const [tab, setTab] = useState('home');
+            const [popup, setPopup] = useState(false);
+            const [claimedVal, setClaimedVal] = useState(0);
 
-            // Bakiye ve Zaman Senkronizasyonu (NaN Korumalı)
-            const [mainBalance, setMainBalance] = useState(() => {
-                const val = localStorage.getItem('cgpt_v2_main');
-                return (val && !isNaN(val)) ? parseFloat(val) : 0.0000;
+            // Bakiye Başlatma (Hata Korumalı)
+            const [mainBal, setMainBal] = useState(() => {
+                const saved = localStorage.getItem('cgpt_v3_main');
+                return (saved && !isNaN(saved)) ? Number(saved) : 0.0000;
             });
 
-            const [pendingBalance, setPendingBalance] = useState(0);
-            
-            const [lastSync, setLastSync] = useState(() => {
-                const val = localStorage.getItem('cgpt_v2_ts');
-                return (val && !isNaN(val)) ? parseInt(val) : Date.now();
+            const [pending, setPending] = useState(0);
+
+            // Zaman Senkronizasyonu
+            const [lastTs, setLastTs] = useState(() => {
+                const saved = localStorage.getItem('cgpt_v3_ts');
+                return (saved && !isNaN(saved)) ? Number(saved) : Date.now();
             });
 
             const [tasks, setTasks] = useState(() => {
-                const val = localStorage.getItem('cgpt_v2_tasks');
-                return val ? JSON.parse(val) : [
-                    { id: 1, title: "Resmi Kanala Katıl", reward: 0.10, link: "https://t.me/EarnTether2026", done: false },
-                    { id: 2, title: "Binance Duyuru Takip", reward: 0.05, link: "https://t.me/BinanceBrazilNews", done: false },
-                    { id: 3, title: "Instagram News Takip", reward: 0.05, link: "https://t.me/instagramNewsBrazil", done: false }
+                const saved = localStorage.getItem('cgpt_v3_tasks');
+                return saved ? JSON.parse(saved) : [
+                    { id: 1, t: "Resmi Kanala Katıl", r: 0.10, l: "https://t.me/EarnTether2026", d: false },
+                    { id: 2, t: "Binance Duyuru", r: 0.05, l: "https://t.me/BinanceBrazilNews", d: false }
                 ];
             });
 
-            // --- MINING CORE ENGINE ---
+            // --- TİTREMEYİ ÖNLEYEN MİNING MOTORU ---
             useEffect(() => {
-                const engine = setInterval(() => {
+                let frameId;
+                const update = () => {
                     const now = Date.now();
-                    const delta = (now - lastSync) / 1000;
+                    const diff = (now - lastTs) / 1000;
                     
-                    if (delta > 0) {
-                        const earned = delta * SEC_RATE;
-                        setPendingBalance(prev => prev + earned);
-                        setLastSync(now);
-                        localStorage.setItem('cgpt_v2_ts', now.toString());
+                    if (diff > 0) {
+                        const earned = diff * SEC_RATE;
+                        // State güncellemesini sadece değişim varsa yap
+                        setPending(earned);
                     }
-                }, 1000);
-
-                return () => clearInterval(engine);
-            }, [lastSync]);
-
-            // Verileri Kalıcı Depolama
-            useEffect(() => {
-                localStorage.setItem('cgpt_v2_main', mainBalance.toString());
-                localStorage.setItem('cgpt_v2_tasks', JSON.stringify(tasks));
-            }, [mainBalance, tasks]);
-
-            // --- ACTIONS ---
-            const handleClaim = useCallback(() => {
-                if (pendingBalance < 0.0001) return;
+                    frameId = requestAnimationFrame(update);
+                };
                 
-                const amount = pendingBalance;
-                setMainBalance(prev => prev + amount);
-                setPendingBalance(0);
-                setClaimedAmount(amount);
-                setShowPopup(true);
+                frameId = requestAnimationFrame(update);
+                return () => cancelAnimationFrame(frameId);
+            }, [lastTs]);
 
-                if (window.Telegram?.WebApp?.HapticFeedback) {
-                    window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                }
-            }, [pendingBalance]);
+            // Verileri Kalıcı Yapma (Sadece Main Bal veya Task değişince)
+            useEffect(() => {
+                localStorage.setItem('cgpt_v3_main', mainBal.toString());
+                localStorage.setItem('cgpt_v3_tasks', JSON.stringify(tasks));
+            }, [mainBal, tasks]);
 
-            const handleTask = (id) => {
-                setTasks(prev => prev.map(t => {
-                    if (t.id === id && !t.done) {
-                        window.open(t.link, '_blank');
-                        setMainBalance(b => b + t.reward);
-                        return { ...t, done: true };
-                    }
-                    return t;
-                }));
+            const handleClaim = () => {
+                if (pending < 0.0001) return;
+                const amount = pending;
+                setMainBal(prev => Number(prev) + amount);
+                setLastTs(Date.now()); // Zamanı şimdiye çek
+                setPending(0);
+                setClaimedVal(amount);
+                setPopup(true);
+                localStorage.setItem('cgpt_v3_ts', Date.now().toString());
             };
 
-            // --- UI COMPONENTS ---
-            
-            // 1. Üst Bar
-            const TopHeader = () => (
-                <div className="flex justify-between items-center mb-6 pt-2">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                            <i className="fas fa-robot text-[#c1ff00] text-sm"></i>
-                        </div>
-                        <div>
-                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">AI Miner</p>
-                            <h2 className="text-sm font-extrabold tracking-tight">Admin User</h2>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="bg-zinc-900/80 px-3 py-1.5 rounded-2xl border border-zinc-800 flex items-center gap-2">
-                            <i className="fas fa-globe text-[10px] text-zinc-500"></i>
-                            <span className="text-[10px] font-bold text-zinc-300">TR</span>
-                        </div>
-                        <button className="relative">
-                            <i className="far fa-bell text-zinc-400 text-lg"></i>
-                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#c1ff00] rounded-full"></span>
-                        </button>
-                    </div>
-                </div>
-            );
-
-            // 2. Dashboard (Bana Ait)
-            const Dashboard = () => (
-                <div className="page-enter space-y-4">
-                    {/* Hız Kartı */}
-                    <div className="glass-card rounded-3xl p-5 flex justify-between items-center relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-[#c1ff00]"></div>
-                        <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Madencilik Hızı</span>
-                        <div className="text-right">
-                            <span className="text-[#c1ff00] font-black text-lg">0.082</span>
-                            <span className="text-[10px] text-zinc-500 ml-1 font-bold">CGPT/H</span>
-                        </div>
-                    </div>
-
-                    {/* Ana Bakiye Kartı */}
-                    <div className="glass-card rounded-3xl p-6 flex justify-between items-center border-l-4 border-blue-500">
+            return (
+                <div className="min-h-screen pb-24 px-4 pt-6 max-w-md mx-auto relative overflow-hidden">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-8">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-500/10 rounded-lg">
-                                <i className="fas fa-wallet text-blue-500"></i>
+                            <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                                <i className="fas fa-brain text-[#c1ff00]"></i>
                             </div>
-                            <span className="text-sm font-bold text-zinc-300">ChatGPT Bakiye</span>
-                        </div>
-                        <span className="text-2xl font-black mono text-white tracking-tighter">
-                            {mainBalance.toFixed(4)}
-                        </span>
-                    </div>
-
-                    {/* Fan Görseli ve Claim */}
-                    <div className="flex flex-col items-center py-10">
-                        <div className="relative w-72 h-72">
-                            <img 
-                                src="https://i.ibb.co/L8m8n9n/blue-fan.png" 
-                                className="w-full h-full object-contain fan-static-glow opacity-90"
-                                alt="ChatGPT AI Fan"
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-16 h-16 bg-black border-[3px] border-[#c1ff00] rounded-3xl flex items-center justify-center shadow-[0_0_30px_rgba(193,255,0,0.4)]">
-                                    <i className="fas fa-brain text-[#c1ff00] text-2xl"></i>
-                                </div>
+                            <div>
+                                <h2 className="text-sm font-black tracking-tight uppercase">Chatgpt AI</h2>
+                                <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">Miner ID: {ADMIN_ID}</p>
                             </div>
                         </div>
-
-                        <div className="mt-8 text-center">
-                            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Claim Edilebilir Tutar</p>
-                            <h1 className="text-4xl font-black mono tracking-tighter text-white">
-                                {pendingBalance.toFixed(6)}
-                            </h1>
+                        <div className="bg-zinc-900 px-3 py-1.5 rounded-xl border border-zinc-800 flex items-center gap-2">
+                            <i className="fas fa-circle text-[6px] text-[#c1ff00] animate-pulse"></i>
+                            <span className="text-[10px] font-black text-zinc-400">AKTİF</span>
                         </div>
-
-                        <button 
-                            onClick={handleClaim}
-                            disabled={pendingBalance < 0.0001}
-                            className={`mt-10 w-64 py-5 rounded-[2rem] font-black text-lg transition-all claim-btn-glow uppercase tracking-widest ${
-                                pendingBalance >= 0.0001 
-                                ? 'bg-[#c1ff00] text-black scale-100' 
-                                : 'bg-zinc-800 text-zinc-600 scale-95 opacity-50'
-                            }`}
-                        >
-                            {pendingBalance >= 0.0001 ? 'CLAIM NOW' : 'MINING...'}
-                        </button>
                     </div>
 
-                    {/* Görevler */}
-                    <div className="pb-10">
-                        <div className="flex justify-between items-center mb-5 px-2">
-                            <h3 className="text-white font-black text-lg uppercase tracking-tight">Günlük Görevler</h3>
-                            <span className="text-[10px] bg-zinc-900 text-zinc-500 px-3 py-1 rounded-full font-bold">YENİ</span>
-                        </div>
-                        <div className="space-y-3">
-                            {tasks.map(t => (
-                                <div key={t.id} className="glass-card p-5 rounded-[1.5rem] flex justify-between items-center group active:bg-zinc-800/50 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.done ? 'bg-zinc-800' : 'bg-[#c1ff00]/10'}`}>
-                                            <i className={`fas ${t.done ? 'fa-check text-zinc-600' : 'fa-bolt text-[#c1ff00]'}`}></i>
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-white">{t.title}</p>
-                                            <p className="text-[#c1ff00] text-[10px] font-black uppercase">+{t.reward} CGPT</p>
+                    {tab === 'home' && (
+                        <div className="space-y-4 animate-in fade-in">
+                            <div className="glass p-5 rounded-3xl flex justify-between items-center">
+                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Madencilik Gücü</span>
+                                <span className="text-[#c1ff00] font-black tracking-tighter">0.98 CGPT / GÜN</span>
+                            </div>
+
+                            <div className="glass p-6 rounded-3xl flex justify-between items-center border-l-4 border-[#c1ff00]">
+                                <span className="text-xs font-bold text-zinc-400">Ana Bakiyen</span>
+                                <span className="text-2xl font-black mono neon-text tracking-tighter">
+                                    {Number(mainBal).toFixed(4)}
+                                </span>
+                            </div>
+
+                            <div className="flex flex-col items-center py-12">
+                                <div className="relative w-64 h-64 fan-stable">
+                                    <img src="https://i.ibb.co/L8m8n9n/blue-fan.png" className="w-full h-full object-contain" />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="w-14 h-14 bg-black border-2 border-[#c1ff00] rounded-2xl flex items-center justify-center shadow-2xl">
+                                            <i className="fas fa-microchip text-[#c1ff00] text-xl"></i>
                                         </div>
                                     </div>
-                                    <button 
-                                        onClick={() => handleTask(t.id)}
-                                        className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${
-                                            t.done 
-                                            ? 'bg-zinc-800 text-zinc-500 cursor-default' 
-                                            : 'bg-white text-black active:scale-90'
-                                        }`}
-                                    >
-                                        {t.done ? 'BİTTİ' : 'GİT'}
-                                    </button>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            );
 
-            // 3. Takım
-            const TeamView = () => (
-                <div className="page-enter space-y-6">
-                    <div className="bg-gradient-to-b from-zinc-900 to-black border border-zinc-800 p-10 rounded-[2.5rem] text-center shadow-2xl">
-                        <div className="w-16 h-16 bg-[#c1ff00]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i className="fas fa-users text-[#c1ff00] text-2xl"></i>
-                        </div>
-                        <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-2">Toplam Davet Kazancı</p>
-                        <h1 className="text-white text-5xl font-black mono tracking-tighter">0.00</h1>
-                        <p className="text-zinc-600 text-[10px] mt-4 font-bold uppercase tracking-tight">Takım üyelerinden %10 bonus kazanırsın.</p>
-                    </div>
-
-                    <div className="glass-card p-6 rounded-[2rem] border-dashed border-zinc-700 border-2">
-                        <p className="text-zinc-400 text-[10px] font-black mb-4 uppercase tracking-tighter">Senin Referans Linkin</p>
-                        <div className="flex gap-3">
-                            <div className="bg-black/50 border border-zinc-800 rounded-2xl flex-1 px-4 py-3 text-[10px] text-zinc-500 font-mono truncate flex items-center">
-                                https://t.me/CGPT_Bot?start={ADMIN_ID}
-                            </div>
-                            <button 
-                                onClick={() => { navigator.clipboard.writeText(`https://t.me/CGPT_Bot?start=${ADMIN_ID}`); alert('Link Kopyalandı!'); }}
-                                className="bg-[#c1ff00] text-black px-6 rounded-2xl font-black text-xs active:scale-90 transition-transform"
-                            >
-                                KOPYALA
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="text-center py-12">
-                        <p className="text-zinc-700 font-black uppercase tracking-widest text-xs italic">Henüz bir takım üyen yok...</p>
-                    </div>
-                </div>
-            );
-
-            // 4. Güncelleme
-            const UpdateView = () => (
-                <div className="page-enter flex flex-col items-center justify-center py-24 text-center">
-                    <div className="relative mb-8">
-                        <div className="absolute inset-0 bg-[#c1ff00] blur-3xl opacity-10 rounded-full"></div>
-                        <i className="fas fa-rocket text-zinc-800 text-6xl relative z-10"></i>
-                    </div>
-                    <h3 className="text-white font-black text-xl uppercase tracking-tighter mb-2">Sistem Güncellemesi</h3>
-                    <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest opacity-60">Çok Yakında Burada Olacak</p>
-                    <div className="mt-8 w-12 h-1 bg-zinc-900 rounded-full"></div>
-                </div>
-            );
-
-            // 5. Liderlik
-            const LeaderView = () => (
-                <div className="page-enter space-y-4">
-                    <div className="flex bg-zinc-900/50 p-1.5 rounded-2xl border border-zinc-800">
-                        {['Günlük', 'Haftalık', 'Aylık'].map(m => (
-                            <button key={m} className="flex-1 py-2 text-[10px] font-black rounded-xl text-zinc-500 hover:bg-zinc-800 hover:text-white transition-all uppercase tracking-tighter">
-                                {m}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="glass-card rounded-[2rem] overflow-hidden">
-                        {[
-                            { n: 'Chalpus Admin', s: mainBalance.toFixed(2), r: 99, me: true },
-                            { n: 'AI_Master_2026', s: '2,450.50', r: 1 },
-                            { n: 'Crypto_Ninja', s: '1,890.20', r: 2 },
-                            { n: 'DeepMind_User', s: '1,200.00', r: 3 },
-                            { n: 'Elon_CGPT', s: '950.15', r: 4 }
-                        ].sort((a,b) => b.r - a.r).reverse().map((u, i) => (
-                            <div key={i} className={`p-5 flex justify-between items-center border-b border-zinc-800/50 ${u.me ? 'bg-[#c1ff00]/5' : ''}`}>
-                                <div className="flex items-center gap-4">
-                                    <span className={`text-xs font-black w-6 ${u.r <= 3 ? 'text-[#c1ff00]' : 'text-zinc-600'}`}>#{u.r}</span>
-                                    <span className={`text-sm font-bold ${u.me ? 'text-[#c1ff00]' : 'text-white'}`}>{u.n}</span>
+                                <div className="mt-8 text-center h-16"> {/* Yükseklik sabitlendi */}
+                                    <p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest mb-1">Claim Edilebilir</p>
+                                    <h1 className="text-4xl font-black mono balance-flow">
+                                        {pending.toFixed(6)}
+                                    </h1>
                                 </div>
-                                <span className="text-white font-black font-mono text-sm">{u.s}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            );
 
-            // 6. Profil
-            const ProfileView = () => (
-                <div className="page-enter flex flex-col items-center pt-10">
-                    <div className="relative mb-6">
-                        <div className="w-32 h-32 rounded-[2.5rem] bg-zinc-900 border-2 border-zinc-800 flex items-center justify-center p-1 overflow-hidden">
-                             <i className="fas fa-robot text-zinc-700 text-5xl"></i>
-                        </div>
-                        <div className="absolute -bottom-2 -right-2 bg-[#c1ff00] w-8 h-8 rounded-2xl border-4 border-black flex items-center justify-center">
-                            <i className="fas fa-check text-[10px] text-black"></i>
-                        </div>
-                    </div>
-                    <h2 className="text-2xl font-black uppercase tracking-tighter mb-1">Admin User</h2>
-                    <p className="text-zinc-600 text-xs font-mono tracking-widest">ID: {ADMIN_ID}</p>
-                    
-                    <div className="w-full mt-12 space-y-3 px-2">
-                        <div className="glass-card p-6 rounded-[1.5rem] flex justify-between items-center group cursor-pointer active:scale-95 transition-all">
-                            <span className="text-zinc-400 font-bold text-sm">Sunucu Bölgesi</span>
-                            <span className="text-white font-black text-xs uppercase tracking-widest">TÜRKİYE</span>
-                        </div>
-                        <div className="glass-card p-6 rounded-[1.5rem] flex justify-between items-center group cursor-pointer active:scale-95 transition-all">
-                            <span className="text-zinc-400 font-bold text-sm">Hesap Durumu</span>
-                            <span className="text-[#c1ff00] font-black text-xs uppercase tracking-widest">DOĞRULANDI</span>
-                        </div>
-                        <button className="w-full py-6 text-red-500 font-black uppercase text-xs tracking-[0.2em] bg-red-500/5 rounded-[1.5rem] border border-red-500/10 mt-8 active:bg-red-500/10 transition-all">
-                            Sistemden Çıkış
-                        </button>
-                    </div>
-                </div>
-            );
-
-            return (
-                <div className="min-h-screen custom-scroll pb-24 px-4 pt-4 relative">
-                    {/* Header Her Sayfada Var */}
-                    <TopHeader />
-
-                    {/* Content Logic */}
-                    <main className="min-h-[70vh]">
-                        {activeTab === 'home' && <Dashboard />}
-                        {activeTab === 'leader' && <LeaderView />}
-                        {activeTab === 'update' && <UpdateView />}
-                        {activeTab === 'team' && <TeamView />}
-                        {activeTab === 'profile' && <ProfileView />}
-                    </main>
-
-                    {/* Popups */}
-                    {showPopup && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 blur-overlay animate-in fade-in duration-300">
-                            <div className="bg-[#121212] border border-[#c1ff00]/30 p-10 rounded-[3rem] text-center w-full max-w-xs shadow-[0_0_100px_rgba(193,255,0,0.15)] relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#c1ff00] to-transparent opacity-50"></div>
-                                <div className="w-24 h-24 bg-[#c1ff00] rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(193,255,0,0.3)]">
-                                    <i className="fas fa-check text-black text-5xl"></i>
-                                </div>
-                                <h2 className="text-3xl font-black mb-3 tracking-tighter text-white">BAŞARILI!</h2>
-                                <p className="text-zinc-500 text-sm mb-10 leading-relaxed font-semibold uppercase tracking-tight">
-                                    <span className="text-[#c1ff00] text-xl font-black mono block mb-1">{claimedAmount.toFixed(4)}</span>
-                                    Cüzdana Aktarıldı
-                                </p>
                                 <button 
-                                    onClick={() => setShowPopup(false)} 
-                                    className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase text-xs tracking-[0.2em] active:scale-90 transition-transform shadow-xl"
+                                    onClick={handleClaim}
+                                    disabled={pending < 0.0001}
+                                    className={`mt-10 w-60 py-5 rounded-3xl font-black tracking-widest transition-all ${
+                                        pending >= 0.0001 ? 'bg-[#c1ff00] text-black scale-100 shadow-lg' : 'bg-zinc-900 text-zinc-700 opacity-50'
+                                    }`}
                                 >
-                                    TAMAMLA
+                                    {pending >= 0.0001 ? 'HESABA AKTAR' : 'KAZILIYOR...'}
                                 </button>
                             </div>
                         </div>
                     )}
 
-                    {/* Alt Navigasyon */}
-                    <nav className="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-zinc-900/80 backdrop-blur-xl flex justify-around items-center py-5 px-4 z-[90] max-w-md mx-auto rounded-t-[2.5rem]">
+                    {tab === 'team' && (
+                        <div className="animate-in slide-in-from-bottom space-y-6">
+                            <div className="glass p-10 rounded-[3rem] text-center">
+                                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-2">Davet Kazancın</p>
+                                <h1 className="text-5xl font-black mono tracking-tighter">0.00</h1>
+                            </div>
+                            <div className="glass p-6 rounded-3xl border-dashed border-zinc-800 border-2">
+                                <p className="text-[10px] font-black text-zinc-500 mb-3 uppercase tracking-widest">Davet Linkin</p>
+                                <div className="flex gap-2">
+                                    <div className="bg-black p-3 rounded-xl flex-1 text-[9px] font-mono text-zinc-600 truncate border border-zinc-900">
+                                        https://t.me/CGPT_Bot?start={ADMIN_ID}
+                                    </div>
+                                    <button onClick={() => alert('Kopyalandı!')} className="bg-white text-black px-4 rounded-xl font-black text-[10px]">KOPYALA</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {tab === 'update' && (
+                        <div className="flex flex-col items-center justify-center py-32 opacity-40">
+                            <i className="fas fa-rocket text-5xl mb-4"></i>
+                            <h3 className="font-black uppercase tracking-widest text-sm">Yakında</h3>
+                        </div>
+                    )}
+
+                    {tab === 'leader' && (
+                        <div className="glass rounded-[2rem] overflow-hidden animate-in fade-in">
+                            {[
+                                { n: 'Admin User', s: Number(mainBal).toFixed(2), r: 99, me: true },
+                                { n: 'Alpha_AI', s: '1240.00', r: 1 },
+                                { n: 'Miner_Pro', s: '980.50', r: 2 },
+                                { n: 'Crypto_King', s: '740.00', r: 3 }
+                            ].sort((a,b) => b.r - a.r).reverse().map((u, i) => (
+                                <div key={i} className={`p-5 flex justify-between items-center border-b border-zinc-900/50 ${u.me ? 'bg-[#c1ff00]/5' : ''}`}>
+                                    <span className="text-xs font-black text-zinc-600">#{u.r}</span>
+                                    <span className="text-sm font-bold flex-1 ml-4">{u.n}</span>
+                                    <span className="text-[#c1ff00] font-black mono text-sm">{u.s}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {tab === 'ben' && (
+                        <div className="space-y-4 animate-in zoom-in duration-300">
+                            <div className="glass p-8 rounded-[3rem] flex flex-col items-center">
+                                <div className="w-20 h-20 bg-zinc-900 rounded-[2rem] flex items-center justify-center border border-zinc-800 mb-4">
+                                    <i className="fas fa-robot text-3xl text-zinc-700"></i>
+                                </div>
+                                <h2 className="text-xl font-black uppercase">Admin User</h2>
+                                <p className="text-[10px] text-zinc-600 font-mono mt-1 tracking-widest uppercase">TR REGION</p>
+                            </div>
+                            <button className="w-full py-5 text-red-500 font-black uppercase text-[10px] bg-red-500/5 rounded-2xl border border-red-500/10">Oturumu Kapat</button>
+                        </div>
+                    )}
+
+                    {/* Popup */}
+                    {popup && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 blur-overlay animate-in fade-in">
+                            <div className="bg-[#111] border border-[#c1ff00]/20 p-10 rounded-[3rem] text-center w-full max-w-xs shadow-2xl">
+                                <div className="w-20 h-20 bg-[#c1ff00] rounded-[2rem] flex items-center justify-center mx-auto mb-6">
+                                    <i className="fas fa-check text-black text-4xl"></i>
+                                </div>
+                                <h2 className="text-2xl font-black mb-2 tracking-tighter">İŞLEM TAMAM!</h2>
+                                <p className="text-zinc-500 text-xs mb-8 uppercase tracking-widest font-bold">
+                                    <span className="text-[#c1ff00] block text-lg mb-1">{claimedVal.toFixed(4)} CGPT</span>
+                                    Hesabına Aktarıldı
+                                </p>
+                                <button onClick={() => setPopup(false)} className="w-full bg-white text-black py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em]">KAPAT</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Navigasyon */}
+                    <nav className="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-zinc-900/50 backdrop-blur-md flex justify-around items-center py-6 px-4 z-[90] max-w-md mx-auto rounded-t-[2.5rem]">
                         {[
                             {id:'home', i:'fa-rocket', n:'Bana ait'},
                             {id:'leader', i:'fa-medal', n:'Liderlik'},
                             {id:'update', i:'fa-sync', n:'Güncelleme'},
                             {id:'team', i:'fa-users', n:'Takım'},
-                            {id:'profile', i:'fa-robot', n:'Ben'}
+                            {id:'ben', i:'fa-robot', n:'Ben'}
                         ].map(x => (
-                            <button 
-                                key={x.id} 
-                                onClick={() => setActiveTab(x.id)} 
-                                className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${activeTab === x.id ? 'nav-active scale-110' : 'text-zinc-600'}`}
-                            >
-                                <i className={`fas ${x.i} text-xl`}></i>
-                                <span className="text-[9px] font-black uppercase tracking-tighter">{x.n}</span>
-                                {activeTab === x.id && <span className="w-1 h-1 bg-[#c1ff00] rounded-full mt-0.5"></span>}
+                            <button key={x.id} onClick={() => setTab(x.id)} className={`flex flex-col items-center gap-1.5 transition-all ${tab === x.id ? 'nav-active' : 'text-zinc-600'}`}>
+                                <i className={`fas ${x.i} text-lg`}></i>
+                                <span className="text-[8px] font-black uppercase tracking-tighter">{x.n}</span>
                             </button>
                         ))}
                     </nav>
