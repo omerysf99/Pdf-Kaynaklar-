@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NVIDIA Miner OS v5.0 - Pro Wallet</title>
+    <title>NVIDIA Miner OS v6.0 - Enterprise Edition</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -11,167 +11,267 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
 
         :root {
-            --nv-green: #c1ff00;
+            --nv-green: #c1ff00; /* image_790a8c.png referanslı yeşil */
             --nv-bg: #0b0e11;
             --nv-card: #161a1e;
             --nv-border: #2b2f36;
+            --nv-text-gray: #94a3b8;
         }
 
-        body { background-color: var(--nv-bg); color: white; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; overflow: hidden; user-select: none; }
+        body { background: var(--nv-bg); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; overflow: hidden; user-select: none; }
         .mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* Profil ve Cüzdan Kartları */
-        .wallet-card { background-color: var(--nv-card); border: 1px solid var(--nv-border); border-radius: 18px; }
-        .nv-badge { background-color: var(--nv-green); color: black; font-weight: 800; font-size: 11px; padding: 2px 10px; border-radius: 20px; }
+        /* Arka Plan Izgara Efekti */
+        .grid-overlay {
+            position: fixed; inset: 0;
+            background-image: radial-gradient(var(--nv-border) 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.2; pointer-events: none;
+        }
 
-        /* İkon Menüsü */
-        .icon-box { background-color: #1c2127; border-radius: 14px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: all 0.2s; }
-        .icon-box:active { transform: scale(0.9); background-color: #2b2f36; }
-        .icon-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-align: center; line-height: 1.2; }
+        /* Kart ve Buton Tasarımları */
+        .wallet-card { background: var(--nv-card); border: 1px solid var(--nv-border); border-radius: 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .wallet-card:hover { border-color: var(--nv-green); box-shadow: 0 0 20px rgba(193, 255, 0, 0.05); }
+        
+        .icon-box { 
+            background: #1c2127; border-radius: 16px; width: 60px; height: 60px; 
+            display: flex; align-items: center; justify-content: center; 
+            margin-bottom: 10px; border: 1px solid var(--nv-border);
+        }
 
-        /* Navigasyon */
-        .nav-bar { background-color: #161a1e; border-top: 1px solid var(--nv-border); height: 85px; }
-        .nav-item { flex: 1; display: flex; flex-col; align-items: center; gap: 4px; color: #64748b; }
-        .nav-item.active { color: var(--nv-green); }
+        /* Claim Butonu Animasyonu */
+        .btn-claim {
+            background: linear-gradient(135deg, var(--nv-green) 0%, #98cc00 100%);
+            color: #000; font-weight: 800; border-radius: 16px;
+            position: relative; overflow: hidden;
+        }
+        .btn-claim::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: rgba(255,255,255,0.2); transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+        @keyframes shine { 0% { left: -150%; } 100% { left: 150%; } }
 
-        .content-scroll { height: calc(100vh - 150px); overflow-y: auto; scrollbar-width: none; }
-        .content-scroll::-webkit-scrollbar { display: none; }
+        /* Navigasyon Çubuğu */
+        .nav-bar { background: rgba(22, 26, 30, 0.95); backdrop-filter: blur(15px); border-top: 1px solid var(--nv-border); height: 90px; }
+        .nav-item { flex: 1; transition: all 0.3s; }
+        .nav-item.active i { color: var(--nv-green); filter: drop-shadow(0 0 8px var(--nv-green)); }
+        
+        .content-container { height: calc(100vh - 160px); overflow-y: auto; scrollbar-width: none; padding-bottom: 20px; }
+        .content-container::-webkit-scrollbar { display: none; }
 
-        /* Claim Butonu */
-        .claim-zone { background: linear-gradient(180deg, #161a1e 0%, #0b0e11 100%); border-top: 1px solid var(--nv-border); }
+        .progress-bar { height: 8px; background: #1c2127; border-radius: 10px; overflow: hidden; border: 1px solid var(--nv-border); }
+        .progress-fill { height: 100%; background: var(--nv-green); box-shadow: 0 0 15px var(--nv-green); }
     </style>
 </head>
 <body>
+    <div class="grid-overlay"></div>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef, useMemo } = React;
 
         const App = () => {
-            const [tab, setTab] = useState('ben'); // Başlangıç sekmesi "Ben" yapıldı
-            const [mainBalance, setMainBalance] = useState(() => parseFloat(localStorage.getItem('nv_main_bal')) || 0.0500);
-            const [miningPool, setMiningPool] = useState(0.0000);
-            const adminId = "8392479231";
+            // --- GLOBAL STATE ---
+            const [tab, setTab] = useState('ben');
+            const [adminId] = useState("8392479231");
+            const [mainBalance, setMainBalance] = useState(() => Number(localStorage.getItem('nv_bal')) || 0.0500);
+            const [miningPool, setMiningPool] = useState(0.000000);
+            const [transactions, setTransactions] = useState(() => JSON.parse(localStorage.getItem('nv_tx')) || []);
+            const [isMining, setIsMining] = useState(true);
+            const [usdtBalance] = useState(0.00);
 
-            // Madencilik birikme hızı (Saniyede bir miktar ekler)
+            // --- MINING ENGINE ---
             useEffect(() => {
-                const timer = setInterval(() => {
-                    setMiningPool(prev => prev + 0.0000042);
-                }, 1000);
-                return () => clearInterval(timer);
-            }, []);
+                let interval;
+                if (isMining) {
+                    interval = setInterval(() => {
+                        setMiningPool(prev => prev + (0.082 / 3600));
+                    }, 1000);
+                }
+                return () => clearInterval(interval);
+            }, [isMining]);
 
-            const claimRewards = () => {
-                if (miningPool <= 0) return;
-                const total = mainBalance + miningPool;
-                setMainBalance(total);
+            // --- PERSISTENCE ---
+            useEffect(() => {
+                localStorage.setItem('nv_bal', mainBalance);
+                localStorage.setItem('nv_tx', JSON.stringify(transactions));
+            }, [mainBalance, transactions]);
+
+            // --- ACTIONS ---
+            const handleClaim = () => {
+                if (miningPool < 0.0001) {
+                    Swal.fire({ icon: 'error', title: 'Yetersiz Miktar', text: 'En az 0.0001 NVIDIA birikmelidir.', background: '#161a1e', color: '#fff' });
+                    return;
+                }
+                const amount = miningPool;
+                setMainBalance(prev => prev + amount);
                 setMiningPool(0);
-                localStorage.setItem('nv_main_bal', total);
                 
-                Swal.fire({
-                    title: 'Toplandı!',
-                    text: 'Madencilik geliri ana bakiyeye eklendi.',
-                    icon: 'success',
+                const newTx = {
+                    id: Date.now(),
+                    type: 'CLAIM',
+                    amount: amount.toFixed(6),
+                    date: new Date().toLocaleTimeString()
+                };
+                setTransactions([newTx, ...transactions.slice(0, 4)]);
+                
+                Swal.fire({ 
+                    title: 'Başarılı!', 
+                    text: `${amount.toFixed(4)} NVIDIA ana cüzdana aktarıldı.`, 
+                    icon: 'success', 
+                    timer: 2000, 
+                    showConfirmButton: false,
                     background: '#161a1e',
-                    color: '#fff',
-                    confirmButtonColor: '#c1ff00'
+                    color: '#fff'
                 });
             };
 
-            // --- SEKME: BEN (PROFİL & CÜZDAN) ---
-            const ProfileTab = () => (
-                <div className="px-5 pt-6 space-y-5 animate-in fade-in duration-500">
-                    {/* Üst Kullanıcı Bilgisi */}
-                    <div className="flex items-center gap-4">
-                        <div className="relative">
-                            <img src="avatar.jpg" className="w-14 h-14 rounded-full border-2 border-zinc-800" 
-                                 onError={e => e.target.src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Chalpus"} />
-                        </div>
-                        <div>
-                            <h2 className="text-base font-bold">Chalpus Yeniden</h2>
-                            <span className="nv-badge uppercase tracking-tighter">NVIDIA Miner</span>
-                        </div>
-                    </div>
+            // --- UI COMPONENTS ---
 
-                    {/* NVIDIA Bakiye Kartı (Görseldeki gibi) */}
-                    <div className="wallet-card p-4 flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg" className="w-5 h-5" />
-                            <span className="text-sm font-bold tracking-tight">NVIDIA</span>
-                        </div>
-                        <span className="text-[22px] font-black text-[#c1ff00] mono">{mainBalance.toFixed(2)}</span>
-                    </div>
-
-                    {/* USDT Cüzdan Kartı (Görseldeki gibi) */}
-                    <div className="wallet-card p-5 relative overflow-hidden">
-                        <div className="flex items-center gap-2 mb-6">
-                            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" className="w-6 h-6" />
-                            <span className="text-sm font-bold">USDT</span>
-                        </div>
-                        <div className="flex justify-between px-2">
-                            <div className="text-center">
-                                <p className="text-xl font-black text-[#c1ff00] mono">0.00</p>
-                                <p className="text-[10px] text-zinc-500 font-bold">Aracılık Cüzdanı</p>
+            const BenPage = () => (
+                <div className="px-5 pt-4 space-y-6 animate-in slide-in-from-bottom duration-500">
+                    {/* User Profile Header */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-full border-2 border-zinc-800 p-1">
+                                <img src="avatar.jpg" className="w-full h-full rounded-full object-cover" 
+                                     onError={e => e.target.src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Chalpus"} />
                             </div>
-                            <div className="text-center">
-                                <p className="text-xl font-black text-[#c1ff00] mono">0.00</p>
-                                <p className="text-[10px] text-zinc-500 font-bold">Cüzdanı Yeniden Yükle</p>
+                            <div>
+                                <h2 className="text-lg font-extrabold tracking-tight">Chalpus Yeniden</h2>
+                                <div className="bg-[#c1ff00] text-black text-[10px] font-black px-2 py-0.5 rounded-full inline-block">NVIDIA Miner</div>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Fonksiyonel İkon Menüsü */}
-                    <div className="grid grid-cols-4 gap-2 pt-2">
-                        <div className="flex flex-col items-center">
-                            <div className="icon-box"><i className="fas fa-wallet text-[#c1ff00] text-xl"></i></div>
-                            <span className="icon-label">Yeniden şarj et</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                            <div className="icon-box"><i className="fas fa-hand-holding-dollar text-[#c1ff00] text-xl"></i></div>
-                            <span className="icon-label">Geri çekilmek</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                            <div className="icon-box"><i className="fas fa-chart-line text-[#c1ff00] text-xl"></i></div>
-                            <span className="icon-label">Mali Kayıtlar</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                            <div className="icon-box"><i className="fas fa-exchange-alt text-[#c1ff00] text-xl"></i></div>
-                            <span className="icon-label">NVIDIA&USDT</span>
+                        <div className="text-right">
+                            <p className="text-[10px] text-zinc-500 font-bold uppercase">ID Numarası</p>
+                            <p className="text-xs font-black mono text-zinc-300">{adminId}</p>
                         </div>
                     </div>
 
-                    {/* Claim Alanı (Özel Geliştirme) */}
-                    <div className="wallet-card p-4 mt-4 border-dashed border-zinc-700 bg-zinc-900/20">
-                        <div className="flex justify-between items-center mb-3">
-                            <p className="text-[10px] font-black text-zinc-500 uppercase">Biriken Maden</p>
-                            <span className="text-xs font-mono text-zinc-400">{miningPool.toFixed(6)}</span>
+                    {/* NVIDIA Balance Card - image_790a8c.png sadakatiyle */}
+                    <div className="wallet-card p-5 flex justify-between items-center bg-gradient-to-r from-[#161a1e] to-[#0b0e11]">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-black/40 rounded-lg flex items-center justify-center border border-zinc-800">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg" className="w-5" />
+                            </div>
+                            <span className="text-sm font-bold text-zinc-400">NVIDIA</span>
                         </div>
-                        <button onClick={claimRewards} className="w-full py-3 bg-[#c1ff00] text-black font-black rounded-xl text-xs uppercase tracking-widest active:scale-95 transition-all">
+                        <span className="text-2xl font-black text-[#c1ff00] mono tracking-tighter">{mainBalance.toFixed(2)}</span>
+                    </div>
+
+                    {/* USDT Wallet Section - image_790a8c.png sadakatiyle */}
+                    <div className="wallet-card p-6 bg-gradient-to-b from-[#161a1e] to-[#0b0e11]">
+                        <div className="flex items-center gap-3 mb-8">
+                            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" className="w-7 h-7" />
+                            <span className="text-base font-black">USDT</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 border-t border-zinc-800/50 pt-6">
+                            <div className="text-center">
+                                <p className="text-2xl font-black text-[#c1ff00] mono tracking-tight">{usdtBalance.toFixed(2)}</p>
+                                <p className="text-[11px] text-zinc-500 font-bold mt-1 uppercase">Aracılık Cüzdanı</p>
+                            </div>
+                            <div className="text-center border-l border-zinc-800">
+                                <p className="text-2xl font-black text-[#c1ff00] mono tracking-tight">{usdtBalance.toFixed(2)}</p>
+                                <p className="text-[11px] text-zinc-500 font-bold mt-1 uppercase leading-none">Cüzdanı Yeniden Yükle</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Action Grid - image_6ea4ed.png ikon yerleşimi */}
+                    <div className="grid grid-cols-4 gap-3">
+                        {[
+                            { icon: 'fa-wallet', label: 'Yeniden şarj et' },
+                            { icon: 'fa-hand-holding-dollar', label: 'Geri çekilmek' },
+                            { icon: 'fa-chart-pie', label: 'Mali Kayıtlar' },
+                            { icon: 'fa-shuffle', label: 'NVIDIA&USDT' }
+                        ].map((item, idx) => (
+                            <div key={idx} className="flex flex-col items-center group cursor-pointer">
+                                <div className="icon-box group-active:scale-90 transition-transform shadow-lg">
+                                    <i className={`fas ${item.icon} text-[#c1ff00] text-xl`}></i>
+                                </div>
+                                <span className="text-[10px] font-bold text-zinc-500 text-center leading-tight">{item.label}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Live Mining & Claim Zone */}
+                    <div className="wallet-card p-6 border-dashed border-[#c1ff00]/30 bg-[#c1ff00]/5">
+                        <div className="flex justify-between items-end mb-4">
+                            <div>
+                                <p className="text-[10px] text-[#c1ff00] font-black uppercase tracking-widest mb-1">Maden Havuzu</p>
+                                <h3 className="text-3xl font-black mono tracking-tighter text-white">{miningPool.toFixed(6)}</h3>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[9px] text-zinc-500 font-bold uppercase">Sıradaki Claim</p>
+                                <p className="text-xs font-bold text-zinc-300 italic">Hazır</p>
+                            </div>
+                        </div>
+                        <button onClick={handleClaim} className="w-full py-4 btn-claim shadow-[0_10px_30px_rgba(193,255,0,0.2)] text-sm uppercase tracking-widest">
                             Bakiyeyi Topla (Claim)
                         </button>
+                    </div>
+
+                    {/* Transaction History (Detaylandırıldı) */}
+                    <div className="space-y-3">
+                        <h4 className="text-xs font-black text-zinc-600 uppercase tracking-[0.2em] px-1">Son İşlemler</h4>
+                        {transactions.length === 0 ? (
+                            <div className="text-center py-6 text-zinc-700 text-xs font-bold italic">Henüz işlem bulunmuyor...</div>
+                        ) : (
+                            transactions.map(tx => (
+                                <div key={tx.id} className="wallet-card p-4 flex justify-between items-center border-l-4 border-l-[#c1ff00]">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center">
+                                            <i className="fas fa-arrow-down text-[10px] text-[#c1ff00]"></i>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold">{tx.type}</p>
+                                            <p className="text-[9px] text-zinc-500 font-medium">{tx.date}</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs font-black text-[#c1ff00]">+{tx.amount} NV</span>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             );
 
             return (
-                <div className="max-w-md mx-auto h-screen relative flex flex-col bg-[#0b0e11] border-x border-zinc-900 shadow-2xl overflow-hidden">
-                    <main className="flex-1 content-scroll">
-                        {tab === 'ben' && <ProfileTab />}
+                <div className="max-w-md mx-auto h-screen relative flex flex-col bg-[#0b0e11] border-x border-zinc-900 shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden">
+                    {/* Sticky Header */}
+                    <header className="p-4 bg-black/40 backdrop-blur-xl border-b border-zinc-900 flex justify-between items-center z-50">
+                        <div className="flex items-center gap-3">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg" className="w-5" />
+                            <span className="text-[11px] font-black tracking-widest uppercase text-zinc-400">Nvidia Miner OS v6.0</span>
+                        </div>
+                        <div className="flex gap-4">
+                            <i className="far fa-bell text-zinc-500 text-sm"></i>
+                            <i className="fas fa-gear text-zinc-500 text-sm"></i>
+                        </div>
+                    </header>
+
+                    {/* Content Scroll Area */}
+                    <main className="flex-1 content-container scroll-smooth">
+                        {tab === 'ben' && <BenPage />}
                         {tab === 'bana-ait' && (
-                            <div className="flex flex-col items-center pt-10 opacity-50">
-                                <img src="nvdia.jpg" className="w-64 h-64 object-contain mb-10" />
-                                <h2 className="text-3xl font-black mono">{miningPool.toFixed(4)}</h2>
-                                <p className="text-xs font-bold text-zinc-500">KAZILAN MİKTAR</p>
+                            <div className="flex flex-col items-center justify-center h-full pt-10">
+                                <img src="nvdia.jpg" className="w-72 h-72 object-contain opacity-80 mb-10" />
+                                <div className="text-center">
+                                    <p className="text-[10px] text-zinc-600 font-black tracking-[0.4em] mb-2 uppercase">Aktif Kazım Hızı</p>
+                                    <h1 className="text-5xl font-black mono text-[#c1ff00] tracking-tighter">0.082 <small className="text-sm font-normal text-zinc-500">NV/H</small></h1>
+                                </div>
                             </div>
                         )}
-                        {/* Diğer sekmeler buraya eklenebilir */}
                     </main>
 
+                    {/* Bottom Navigation */}
                     <nav className="nav-bar flex justify-around items-center px-2">
                         <NavItem id="bana-ait" active={tab === 'bana-ait'} icon="fa-bolt" label="Bana ait" onClick={setTab} />
                         <NavItem id="lider" active={tab === 'lider'} icon="fa-user-tie" label="Liderlik" onClick={setTab} />
@@ -180,16 +280,18 @@
                         <NavItem id="ben" active={tab === 'ben'} icon="fa-cube" label="Ben" onClick={setTab} />
                     </nav>
 
-                    <div className="bg-[#161a1e] text-center pb-1">
-                        <p className="text-[8px] font-bold text-zinc-800 uppercase tracking-widest">AdminID: {adminId} | v5.0 Pro</p>
+                    {/* Operator Tag */}
+                    <div className="bg-[#161a1e] py-1 flex justify-center items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                        <p className="text-[8px] font-bold text-zinc-700 uppercase tracking-[0.3em]">Operator-ID {adminId} | Live Node Connection</p>
                     </div>
                 </div>
             );
         };
 
         const NavItem = ({ id, active, icon, label, onClick }) => (
-            <button onClick={() => onClick(id)} className={`flex flex-col items-center gap-1 flex-1 transition-all ${active ? 'text-[#c1ff00] scale-110' : 'text-zinc-500 opacity-60'}`}>
-                <i className={`fas ${icon} text-lg`}></i>
+            <button onClick={() => onClick(id)} className={`flex flex-col items-center gap-1.5 flex-1 transition-all ${active ? 'active scale-110' : 'text-zinc-600 opacity-60'}`}>
+                <i className={`fas ${icon} text-xl`}></i>
                 <span className="text-[9px] font-black uppercase tracking-tighter whitespace-nowrap">{label}</span>
             </button>
         );
