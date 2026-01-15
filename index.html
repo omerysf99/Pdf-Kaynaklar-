@@ -25,36 +25,30 @@
             background: var(--bg-dark); 
             color: #fff; 
             margin: 0; 
-            overflow: hidden; 
+            overflow: hidden;
             -webkit-user-select: none;
         }
 
-        /* Cam Kart Tasarımı */
         .glass-card {
             background: linear-gradient(145deg, #12151a 0%, #0a0c10 100%);
             border: 1px solid var(--border);
             border-radius: 1.5rem;
         }
 
-        /* Madenci Görseli Dönüş Efekti */
-        @keyframes subtle-float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-10px) rotate(5deg); }
+        /* Modal / Küçük Pencere Animasyonu */
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.2s ease-out;
         }
-        @keyframes fast-spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        .miner-display {
-            animation: fast-spin 20s linear infinite;
-            filter: drop-shadow(0 0 25px rgba(193, 255, 0, 0.15));
+        .modal-content {
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Navigasyon */
-        .nav-active { 
-            color: var(--nv-green) !important; 
-            filter: drop-shadow(0 0 8px rgba(193, 255, 0, 0.5));
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .nav-active { color: var(--nv-green) !important; }
 
         .safe-scroll {
             height: calc(100vh - 110px);
@@ -64,16 +58,11 @@
         }
         .safe-scroll::-webkit-scrollbar { display: none; }
 
-        .btn-glow {
-            background: var(--nv-green);
-            box-shadow: 0 10px 30px -10px rgba(193, 255, 0, 0.4);
-            transition: all 0.2s ease;
+        .btn-action {
+            transition: all 0.2s;
+            border: 1px solid var(--border);
         }
-        .btn-glow:active { transform: scale(0.95); opacity: 0.9; }
-
-        /* Sayfa Geçiş Animasyonu */
-        .page-fade { animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-action:active { transform: scale(0.9); background: var(--nv-green); color: black; }
     </style>
 </head>
 <body>
@@ -83,197 +72,117 @@
         const { useState, useEffect } = React;
 
         const ADMIN_ID = "8392479231";
-        const HOURLY_RATE = 0.0820;
-        const SEC_RATE = HOURLY_RATE / 3600;
 
         const App = () => {
-            const [tab, setTab] = useState('home');
-            const [balance, setBalance] = useState(() => Number(localStorage.getItem('nv_bal')) || 0.0500);
-            const [pending, setPending] = useState(0);
-            const [lastTs, setLastTs] = useState(() => Number(localStorage.getItem('nv_ts')) || Date.now());
+            const [tab, setTab] = useState('ben');
+            const [balance, setBalance] = useState(124.50);
+            const [activeModal, setActiveModal] = useState(null); // 'charge', 'withdraw', 'records', 'swap'
 
-            useEffect(() => {
-                const timer = setInterval(() => {
-                    const elapsed = (Date.now() - lastTs) / 1000;
-                    setPending(elapsed * SEC_RATE);
-                }, 100);
-                return () => clearInterval(timer);
-            }, [lastTs]);
+            // Modal Bileşeni
+            const Modal = ({ type, onClose }) => {
+                const content = {
+                    charge: { title: "Yeniden Şarj Et", icon: "fa-plus-circle", desc: "USDT TRC20 adresine gönderim yapın." },
+                    withdraw: { title: "Geri Çekilmek", icon: "fa-arrow-circle-down", desc: "Minimum çekim tutarı 10.00 USDT'dir." },
+                    records: { title: "Mali Kayıtlar", icon: "fa-history", desc: "Henüz bir işlem kaydınız bulunmuyor." },
+                    swap: { title: "NVIDIA & USDT", icon: "fa-exchange-alt", desc: "NVIDIA bakiyenizi USDT'ye dönüştürün." }
+                }[type];
 
-            const claim = () => {
-                const newBal = balance + pending;
-                setBalance(newBal);
-                setLastTs(Date.now());
-                setPending(0);
-                localStorage.setItem('nv_bal', newBal);
-                localStorage.setItem('nv_ts', Date.now());
-            };
-
-            return (
-                <div className="max-w-md mx-auto h-screen relative bg-[#05070a]">
-                    
-                    {/* Üst Bilgi Paneli */}
-                    <div className="flex items-center justify-between p-5 pb-2">
-                        <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 rounded-2xl border border-zinc-800 p-1 bg-zinc-900/50">
-                                <img src="nvdia.jpg" className="w-full h-full object-cover rounded-xl" />
+                return (
+                    <div className="fixed inset-0 z-[1000] flex items-end justify-center modal-overlay">
+                        <div className="modal-content w-full max-w-md bg-[#12151a] rounded-t-[2.5rem] border-t border-[#c1ff00]/30 p-8 pb-12 shadow-2xl">
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center text-[#c1ff00]">
+                                        <i className={`fas ${content.icon} text-2xl`}></i>
+                                    </div>
+                                    <h3 className="text-xl font-black uppercase tracking-tighter">{content.title}</h3>
+                                </div>
+                                <button onClick={onClose} className="text-zinc-500 text-2xl"><i className="fas fa-times-circle"></i></button>
                             </div>
-                            <div>
-                                <h1 className="text-xs font-black uppercase text-zinc-400">Hoş Geldin</h1>
-                                <p className="text-sm font-extrabold">Chalpus Yeniden</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-2">
-                            <div className="bg-zinc-900/80 px-3 py-1.5 rounded-xl border border-zinc-800 text-[10px] font-black text-[#c1ff00]">
-                                ID: {ADMIN_ID}
+                            
+                            <div className="space-y-4">
+                                <p className="text-sm text-zinc-400 font-bold">{content.desc}</p>
+                                
+                                {type === 'charge' && (
+                                    <div className="bg-black p-4 rounded-2xl border border-zinc-800">
+                                        <p className="text-[10px] text-zinc-500 uppercase font-black mb-2">Cüzdan Adresiniz</p>
+                                        <p className="text-xs font-mono text-[#c1ff00] break-all">TX8vY2p7L...n9Kz1qW4m</p>
+                                    </div>
+                                )}
+
+                                {type === 'withdraw' && (
+                                    <input type="number" placeholder="Miktar giriniz" className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-white outline-none focus:border-[#c1ff00]" />
+                                )}
+
+                                <button className="w-full py-4 rounded-xl bg-[#c1ff00] text-black font-black uppercase text-xs tracking-widest mt-4">
+                                    {type === 'records' ? 'Tamam' : 'İşlemi Onayla'}
+                                </button>
                             </div>
                         </div>
                     </div>
+                );
+            };
+
+            return (
+                <div className="max-w-md mx-auto h-screen relative bg-[#05070a] flex flex-col">
+                    
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-5">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl border border-zinc-800 p-0.5 overflow-hidden">
+                                <img src="nvdia.jpg" className="w-full h-full object-cover rounded-lg" />
+                            </div>
+                            <h1 className="text-sm font-black uppercase">Benim Hesabım</h1>
+                        </div>
+                        <span className="text-[10px] font-black text-zinc-500 border border-zinc-800 px-3 py-1 rounded-full uppercase tracking-tighter">ID: {ADMIN_ID}</span>
+                    </div>
 
                     <div className="safe-scroll px-5">
-                        
-                        {/* 1. EKRAN: ANA MADENCİ */}
-                        {tab === 'home' && (
-                            <div className="page-fade space-y-5 pt-2">
-                                <div className="glass-card p-5 flex justify-between items-center border-b-2 border-[#c1ff00]">
-                                    <div>
-                                        <p className="text-[10px] font-black text-zinc-500 uppercase">Toplam Cüzdan</p>
-                                        <h2 className="text-2xl font-black tabular mt-1">{balance.toFixed(4)} <small className="text-xs text-zinc-500">NV</small></h2>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-black text-zinc-500 uppercase">Saatlik Hız</p>
-                                        <p className="text-[#c1ff00] font-black text-lg">+{HOURLY_RATE}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col items-center py-10 relative">
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#c1ff00]/10 rounded-full blur-[80px]"></div>
-                                    <div className="w-60 h-60 relative">
-                                        <img src="nvdia.jpg" className="w-full h-full object-cover rounded-full miner-display border-8 border-zinc-900 shadow-2xl" />
-                                    </div>
-                                    
-                                    <div className="mt-12 text-center">
-                                        <span className="text-[11px] font-black text-[#c1ff00] uppercase tracking-[4px] mb-2 block">Madencilik Aktif</span>
-                                        <h2 className="text-5xl font-black tabular font-mono">{pending.toFixed(4)}</h2>
-                                    </div>
-
-                                    <button onClick={claim} className="btn-glow w-full py-5 rounded-2xl mt-10 text-black font-black uppercase tracking-widest text-sm">
-                                        Bakiye Topla
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 2. EKRAN: LİDERLİK */}
-                        {tab === 'leader' && (
-                            <div className="page-fade space-y-4 pt-2">
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="glass-card p-4 border-t-2 border-zinc-700">
-                                        <p className="text-[10px] text-zinc-500 font-black uppercase">Sıralamam</p>
-                                        <p className="text-xl font-black mt-1">#1,204</p>
-                                    </div>
-                                    <div className="glass-card p-4 border-t-2 border-[#c1ff00]">
-                                        <p className="text-[10px] text-zinc-500 font-black uppercase">Miktarim</p>
-                                        <p className="text-xl font-black text-[#c1ff00] mt-1 tabular">{balance.toFixed(2)}</p>
-                                    </div>
-                                </div>
-
-                                <div className="glass-card overflow-hidden">
-                                    <div className="p-4 bg-zinc-900/30 border-b border-zinc-800 text-[10px] font-black text-zinc-500 flex justify-between uppercase">
-                                        <span>Madenci Adı</span>
-                                        <span>Toplam Kazanç</span>
-                                    </div>
-                                    {[
-                                        {r: 1, n: "100******", v: "360,399.84", g: "🥇"},
-                                        {r: 2, n: "kh1******", v: "56,043.68", g: "🥈"},
-                                        {r: 3, n: "oma******", v: "44,499.52", g: "🥉"},
-                                        {r: 4, n: "user_88", v: "12,900.00", g: ""},
-                                        {r: 5, n: "crypto_x", v: "9,120.40", g: ""},
-                                        {r: 6, n: "mine_king", v: "7,400.00", g: ""},
-                                        {r: 7, n: "nv_fan", v: "5,200.00", g: ""},
-                                        {r: 8, n: "pro_miner", v: "3,110.00", g: ""},
-                                        {r: 9, n: "tether_tr", v: "2,900.00", g: ""},
-                                        {r: 10, n: "chalpus_v", v: "1,200.00", g: ""}
-                                    ].map(u => (
-                                        <div key={u.r} className="flex justify-between items-center p-4 border-b border-zinc-800/40 last:border-0">
-                                            <div className="flex items-center gap-3">
-                                                <span className={`text-xs font-black ${u.r <= 3 ? 'text-[#c1ff00]' : 'text-zinc-600'}`}>#{u.r}</span>
-                                                <span className="text-xs font-bold text-zinc-300">{u.n} {u.g}</span>
-                                            </div>
-                                            <span className="text-xs font-black tabular text-zinc-100">{u.v}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 3. EKRAN: TAKIM */}
-                        {tab === 'takim' && (
-                            <div className="page-fade space-y-4 pt-2">
-                                <div className="glass-card p-6 text-center space-y-4">
-                                    <h3 className="text-sm font-black uppercase text-[#c1ff00]">Davet Linkin</h3>
-                                    <div className="bg-black p-4 rounded-xl border border-zinc-800 break-all text-[10px] font-mono text-zinc-400">
-                                        https://t.me/NvidiaMiner_Bot?start=ref_{ADMIN_ID}
-                                    </div>
-                                    <button className="w-full py-4 rounded-xl bg-white text-black font-black text-xs uppercase shadow-xl">Linki Kopyala</button>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="glass-card p-5">
-                                        <p className="text-[10px] text-zinc-500 font-black uppercase">Üye Sayısı</p>
-                                        <p className="text-2xl font-black">0</p>
-                                    </div>
-                                    <div className="glass-card p-5">
-                                        <p className="text-[10px] text-zinc-500 font-black uppercase">Komisyon</p>
-                                        <p className="text-2xl font-black text-[#c1ff00] tabular">$0</p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 4. EKRAN: BEN (PROFİL) */}
                         {tab === 'ben' && (
-                            <div className="page-fade space-y-6 pt-2">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-20 h-20 rounded-3xl border-2 border-[#c1ff00]/20 p-1">
-                                        <img src="nvdia.jpg" className="w-full h-full object-cover rounded-2xl" />
+                            <div className="space-y-6">
+                                {/* Profil Kartı */}
+                                <div className="flex items-center gap-4 py-4">
+                                    <div className="w-20 h-20 rounded-full border-2 border-[#c1ff00] p-1 shadow-lg shadow-[#c1ff00]/10">
+                                        <img src="nvdia.jpg" className="w-full h-full object-cover rounded-full" />
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-black uppercase tracking-tighter">Chalpus Yeniden</h2>
-                                        <span className="text-[#c1ff00] text-[10px] font-black border border-[#c1ff00]/30 px-2 py-0.5 rounded-md uppercase">Vip 1 Miner</span>
+                                        <h2 className="text-xl font-black uppercase">Chalpus Yeniden</h2>
+                                        <span className="text-[#c1ff00] text-[10px] font-black border border-[#c1ff00]/30 px-3 py-1 rounded-full uppercase mt-2 inline-block">Pro Miner</span>
                                     </div>
                                 </div>
 
-                                <div className="glass-card p-6 space-y-6">
-                                    <div className="flex justify-between items-center">
+                                {/* Bakiye Kartı */}
+                                <div className="glass-card p-6 space-y-6 relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#c1ff00]/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                                    <div className="flex justify-between items-center relative z-10">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-[#26a17b] rounded-xl flex items-center justify-center shadow-lg shadow-[#26a17b]/30">
-                                                <i className="fas fa-wallet text-white"></i>
-                                            </div>
+                                            <div className="w-10 h-10 bg-[#26a17b] rounded-xl flex items-center justify-center"><i className="fas fa-dollar-sign text-white"></i></div>
                                             <div>
-                                                <p className="text-[10px] font-black text-zinc-500 uppercase leading-none mb-1">USDT Cüzdanı</p>
-                                                <p className="text-xs text-zinc-400">Blockchain Ağı</p>
+                                                <p className="text-[10px] font-black text-zinc-500 uppercase leading-none mb-1">USDT Bakiyesi</p>
+                                                <p className="text-xs text-zinc-400">Varlıklarım</p>
                                             </div>
                                         </div>
-                                        <span className="text-2xl font-black tabular">0.00</span>
+                                        <span className="text-3xl font-black tabular tracking-tighter">0.00</span>
                                     </div>
-                                    <div className="pt-6 border-t border-zinc-800 flex justify-between items-center">
-                                        <span className="text-[10px] font-black text-zinc-500 uppercase">Kazanılan NVIDIA</span>
+                                    <div className="pt-6 border-t border-zinc-800 flex justify-between items-center relative z-10">
+                                        <span className="text-[10px] font-black text-zinc-500 uppercase">Toplam NVIDIA</span>
                                         <span className="text-[#c1ff00] font-black text-2xl tabular">{balance.toFixed(2)}</span>
                                     </div>
                                 </div>
 
+                                {/* İŞLEVSEL BUTONLAR */}
                                 <div className="grid grid-cols-4 gap-3">
                                     {[
-                                        {i: "fa-plus-circle", n: "Yükle"},
-                                        {i: "fa-arrow-circle-down", n: "Çek"},
-                                        {i: "fa-history", n: "Kayıt"},
-                                        {i: "fa-exchange-alt", n: "Takas"}
-                                    ].map((b, idx) => (
-                                        <div key={idx} className="flex flex-col items-center gap-2">
-                                            <div className="w-14 h-14 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-center text-[#c1ff00] shadow-xl">
+                                        {id: 'charge', i: "fa-plus-circle", n: "Yükle"},
+                                        {id: 'withdraw', i: "fa-arrow-circle-down", n: "Çek"},
+                                        {id: 'records', i: "fa-history", n: "Kayıt"},
+                                        {id: 'swap', i: "fa-exchange-alt", n: "Takas"}
+                                    ].map((b) => (
+                                        <div key={b.id} onClick={() => setActiveModal(b.id)} className="flex flex-col items-center gap-2 cursor-pointer">
+                                            <div className="w-14 h-14 bg-zinc-900 rounded-2xl flex items-center justify-center text-[#c1ff00] btn-action">
                                                 <i className={`fas ${b.i} text-xl`}></i>
                                             </div>
-                                            <span className="text-[9px] font-bold text-zinc-500 uppercase">{b.n}</span>
+                                            <span className="text-[8px] font-black text-zinc-500 uppercase tracking-tighter">{b.n}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -281,24 +190,18 @@
                         )}
                     </div>
 
-                    {/* Alt Menü Barı */}
-                    <nav className="fixed bottom-0 left-0 right-0 bg-[#05070a]/90 backdrop-blur-xl border-t border-zinc-800 flex justify-around items-center py-5 z-[999] max-w-md mx-auto">
-                        {[
-                            {id:'home', i:'fa-cube', n:'Bana ait'},
-                            {id:'leader', i:'fa-trophy', n:'Liderlik'},
-                            {id:'takim', i:'fa-users', n:'Takım'},
-                            {id:'ben', i:'fa-user-astronaut', n:'Ben'}
-                        ].map(m => (
-                            <button 
-                                key={m.id} 
-                                onClick={() => setTab(m.id)}
-                                className={`flex flex-col items-center gap-1 transition-all ${tab === m.id ? 'nav-active' : 'text-zinc-600'}`}
-                            >
-                                <i className={`fas ${m.i} text-xl`}></i>
-                                <span className="text-[9px] font-black uppercase tracking-tighter">{m.n}</span>
+                    {/* Navigasyon */}
+                    <nav className="fixed bottom-0 left-0 right-0 bg-[#05070a] border-t border-zinc-800 flex justify-around items-center py-5 z-[50] max-w-md mx-auto">
+                        {['home', 'leader', 'takim', 'ben'].map(id => (
+                            <button key={id} onClick={() => setTab(id)} className={`flex flex-col items-center gap-1 ${tab === id ? 'nav-active' : 'text-zinc-600'}`}>
+                                <i className={`fas fa-${id === 'home' ? 'cube' : id === 'leader' ? 'trophy' : id === 'takim' ? 'users' : 'user'} text-xl`}></i>
+                                <span className="text-[9px] font-black uppercase tracking-tighter">{id}</span>
                             </button>
                         ))}
                     </nav>
+
+                    {/* Modal Render */}
+                    {activeModal && <Modal type={activeModal} onClose={() => setActiveModal(null)} />}
                 </div>
             );
         };
