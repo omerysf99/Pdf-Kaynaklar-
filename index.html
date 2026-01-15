@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NVIDIA Enterprise v7.0 - Dual Ledger System</title>
+    <title>NVIDIA v8.0 - Enterprise Ecosystem</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -17,9 +17,9 @@
 
         :root {
             --nv-primary: #c1ff00;
-            --nv-bg: #050608;
-            --nv-glass: rgba(20, 22, 28, 0.7);
-            --nv-border: rgba(255, 255, 255, 0.06);
+            --nv-bg: #040508;
+            --nv-glass: rgba(15, 17, 23, 0.85);
+            --nv-border: rgba(193, 255, 0, 0.1);
         }
 
         body {
@@ -29,240 +29,301 @@
             margin: 0;
             overflow: hidden;
             height: 100vh;
-            background-image: radial-gradient(circle at 50% -20%, rgba(193, 255, 0, 0.05) 0%, transparent 50%);
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(193, 255, 0, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(0, 240, 255, 0.03) 0%, transparent 40%);
         }
 
-        .custom-scroll { height: calc(100vh - 100px); overflow-y: auto; padding-bottom: 140px; scrollbar-width: none; }
+        .custom-scroll { height: calc(100vh - 110px); overflow-y: auto; padding-bottom: 160px; scrollbar-width: none; }
         .custom-scroll::-webkit-scrollbar { display: none; }
 
         .glass-card {
             background: var(--nv-glass);
-            backdrop-filter: blur(25px);
+            backdrop-filter: blur(30px);
             border: 1px solid var(--nv-border);
             border-radius: 2.5rem;
+            transition: all 0.3s ease;
         }
 
-        /* Bakiyeler Arası Akış Efekti */
-        @keyframes flow-up {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-50px); opacity: 0; }
-        }
-        .transfer-particle {
-            position: absolute;
-            color: var(--nv-primary);
-            font-family: 'JetBrains Mono';
-            font-size: 12px;
-            pointer-events: none;
-            animation: flow-up 1s ease-out forwards;
-        }
-
-        /* JPG Yüzen Animasyon */
-        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-15px) rotate(1deg); } }
-        .floating-gpu { animation: float 5s ease-in-out infinite; }
-
+        .btn-press:active { transform: scale(0.96); }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .btn-active:active { transform: scale(0.95); }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        .floating { animation: float 4s ease-in-out infinite; }
+
+        /* Modal Animasyonu */
+        .modal-overlay {
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useCallback } = React;
+        const { useState, useEffect, useMemo } = React;
 
         const App = () => {
             const [tab, setTab] = useState('home');
             
-            // 1. MAIN BALANCE: Kullanıcının topladığı kalıcı para
-            const [mainBalance, setMainBalance] = useState(() => 
-                parseFloat(localStorage.getItem('nv_main_bal')) || 12.450200
-            );
+            // Bakiyeler
+            const [mainBalance, setMainBalance] = useState(() => parseFloat(localStorage.getItem('nv_main_v8')) || 450.00);
+            const [claimBalance, setClaimBalance] = useState(0.00);
+            const [usdtBalance, setUsdtBalance] = useState(() => parseFloat(localStorage.getItem('nv_usdt_v8')) || 0.00);
             
-            // 2. CLAIM BALANCE: Kazılan ama henüz toplanmayan para
-            const [claimBalance, setClaimBalance] = useState(0.000000);
-            
-            const [isClaiming, setIsClaiming] = useState(false);
-            const miningRate = 0.08204545; // Saatlik kazanç
+            // Exchange Modalı State
+            const [showExchange, setShowExchange] = useState(false);
+            const [exchangeAmount, setExchangeAmount] = useState('');
+            const NV_TO_USDT_RATE = 0.0001;
 
-            // Madencilik Ticker: Claim Balance sürekli artar
+            // Madencilik Ticker
             useEffect(() => {
                 const timer = setInterval(() => {
-                    setClaimBalance(prev => prev + (miningRate / 36000)); // 100ms başına artış
+                    setClaimBalance(prev => prev + (0.0820 / 36000));
                 }, 100);
                 return () => clearInterval(timer);
             }, []);
 
-            // Toplama Fonksiyonu
-            const handleClaimTransfer = () => {
-                if (claimBalance < 0.000001) return;
-                
-                setIsClaiming(true);
-                const amountToTransfer = claimBalance;
+            const handleClaim = () => {
+                const toAdd = claimBalance;
+                setMainBalance(prev => {
+                    const n = prev + toAdd;
+                    localStorage.setItem('nv_main_v8', n);
+                    return n;
+                });
+                setClaimBalance(0);
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.8 }, colors: ['#c1ff00'] });
+            };
 
-                setTimeout(() => {
-                    setMainBalance(prev => {
-                        const newTotal = prev + amountToTransfer;
-                        localStorage.setItem('nv_main_bal', newTotal.toFixed(6));
-                        return newTotal;
-                    });
-                    setClaimBalance(0);
-                    setIsClaiming(false);
-                    
-                    confetti({
-                        particleCount: 100,
-                        spread: 70,
-                        origin: { y: 0.8 },
-                        colors: ['#c1ff00', '#ffffff']
-                    });
-                }, 600);
+            const executeExchange = () => {
+                const amount = parseFloat(exchangeAmount);
+                if (amount > 0 && amount <= mainBalance) {
+                    const usdtGained = amount * NV_TO_USDT_RATE;
+                    setMainBalance(prev => prev - amount);
+                    setUsdtBalance(prev => prev + usdtGained);
+                    setExchangeAmount('');
+                    setShowExchange(false);
+                    alert(`Başarılı! ${amount} NV karşılığında ${usdtGained.toFixed(4)} USDT aldınız.`);
+                } else {
+                    alert("Yetersiz bakiye veya geçersiz miktar!");
+                }
             };
 
             return (
-                <div className="max-w-md mx-auto h-screen relative flex flex-col">
+                <div className="max-w-md mx-auto h-screen relative flex flex-col overflow-hidden">
                     
-                    {/* ÜST HEADER */}
-                    <header className="p-8 flex justify-between items-center z-50">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 glass-card p-1 border-[#c1ff00]/20">
-                                <img src="nvdia.jpg" className="w-full h-full object-cover rounded-xl" />
+                    {/* ÜST PANEL */}
+                    <header className="px-8 pt-12 pb-4 flex justify-between items-center z-50">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 glass-card p-1 border-[#c1ff00]/30 shadow-[0_0_15px_rgba(193,255,0,0.1)]">
+                                <img src="nvdia.jpg" className="w-full h-full object-cover rounded-2xl" />
                             </div>
                             <div>
-                                <h1 className="text-xs font-black uppercase tracking-widest italic">Nvidia v7.0</h1>
-                                <p className="text-[9px] text-zinc-600 font-bold mono uppercase">ID: 8392479231</p>
+                                <h1 className="text-sm font-black uppercase tracking-tighter italic">Enterprise v8</h1>
+                                <p className="text-[10px] text-zinc-600 font-bold mono">ID: 8392479231</p>
                             </div>
                         </div>
-                        <div className="flex gap-2">
-                            <div className="h-8 px-3 glass-card flex items-center gap-2 border-[#c1ff00]/10">
-                                <div className="w-1.5 h-1.5 bg-[#c1ff00] rounded-full animate-pulse"></div>
-                                <span className="text-[9px] font-black uppercase text-zinc-400">Live</span>
-                            </div>
+                        <div className="flex items-center gap-2 bg-[#c1ff00]/10 px-3 py-1.5 rounded-full border border-[#c1ff00]/20">
+                            <div className="w-2 h-2 bg-[#c1ff00] rounded-full animate-pulse"></div>
+                            <span className="text-[10px] font-black text-[#c1ff00] uppercase">Mining</span>
                         </div>
                     </header>
 
                     <div className="custom-scroll px-8">
+                        
+                        {/* PANEL (HOME) */}
                         {tab === 'home' && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
-                                
-                                {/* ANA BAKİYE (MAIN BALANCE) */}
-                                <div className="glass-card p-8 bg-gradient-to-br from-[#c1ff00]/5 to-transparent relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                                        <i className="fas fa-wallet text-6xl"></i>
-                                    </div>
-                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-3">Main Balance</p>
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
+                                {/* MAIN BALANCE */}
+                                <div className="glass-card p-8 bg-gradient-to-br from-[#c1ff00]/10 to-transparent">
+                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-4">Total NV Balance</p>
                                     <div className="flex items-baseline gap-2">
-                                        <h2 className="text-5xl font-black mono tracking-tighter tabular-nums text-white">
-                                            {mainBalance.toFixed(6)}
-                                        </h2>
-                                        <span className="text-xs font-bold text-[#c1ff00] uppercase tracking-widest">NV</span>
+                                        <h2 className="text-5xl font-black mono tracking-tighter tabular-nums">{mainBalance.toFixed(4)}</h2>
+                                        <span className="text-sm font-bold text-[#c1ff00]">NV</span>
                                     </div>
-                                    <div className="mt-6 flex items-center gap-2">
-                                        <span className="text-[10px] font-bold text-zinc-600 uppercase">Available for withdrawal</span>
-                                        <i className="fas fa-circle-check text-green-500 text-[10px]"></i>
+                                    <div className="mt-6 flex justify-between text-[10px] font-bold text-zinc-600 uppercase">
+                                        <span>Value: ${(mainBalance * NV_TO_USDT_RATE).toFixed(4)}</span>
+                                        <span className="text-green-500">Active Node</span>
                                     </div>
                                 </div>
 
-                                {/* JPG HARDWARE (MERKEZİ ODAK) */}
-                                <div className="flex flex-col items-center gap-6">
+                                {/* JPG HARDWARE */}
+                                <div className="flex flex-col items-center">
                                     <div className="relative group">
-                                        <div className="absolute inset-0 bg-[#c1ff00]/10 blur-[80px] rounded-full"></div>
-                                        <div className="w-60 h-60 glass-card p-2 floating-gpu border-white/10 shadow-2xl relative z-10">
-                                            <div className="w-full h-full rounded-[2rem] overflow-hidden">
-                                                <img src="nvdia.jpg" className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-[2s]" />
-                                            </div>
+                                        <div className="absolute inset-0 bg-[#c1ff00]/10 blur-[100px] rounded-full"></div>
+                                        <div className="w-64 h-64 glass-card p-2 floating relative z-10 border-white/5">
+                                            <img src="nvdia.jpg" className="w-full h-full object-cover rounded-[2rem]" />
                                         </div>
                                     </div>
-
-                                    {/* BİRİKEN BAKİYE VE CLAIM BUTONU (JPG ALTINDA) */}
-                                    <div className="w-full space-y-4">
-                                        <div className="glass-card p-6 border-dashed border-zinc-800 flex flex-col items-center">
-                                            <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2">Claimable Earnings</p>
-                                            <div className="text-2xl font-black mono text-[#c1ff00] tabular-nums">
-                                                +{claimBalance.toFixed(8)}
-                                            </div>
+                                    
+                                    <div className="w-full mt-8 space-y-4 text-center">
+                                        <div className="glass-card p-4 border-dashed bg-black/20">
+                                            <p className="text-[9px] font-black text-zinc-500 uppercase mb-1 tracking-widest">Mining Progress</p>
+                                            <div className="text-2xl font-black mono text-[#c1ff00]">+{claimBalance.toFixed(6)}</div>
                                         </div>
-
-                                        <button 
-                                            onClick={handleClaimTransfer}
-                                            disabled={isClaiming || claimBalance < 0.000001}
-                                            className={`w-full py-6 rounded-3xl font-black uppercase tracking-[0.4em] text-[11px] btn-active transition-all shadow-2xl border-none
-                                                ${(isClaiming || claimBalance < 0.000001) 
-                                                    ? 'bg-zinc-900 text-zinc-700 cursor-not-allowed' 
-                                                    : 'bg-[#c1ff00] text-black shadow-[#c1ff00]/20 hover:shadow-[#c1ff00]/40'}
-                                            `}
-                                        >
-                                            {isClaiming ? 'Transferring Tokens...' : 'Collect Earnings (Claim)'}
+                                        <button onClick={handleClaim} className="w-full py-6 bg-[#c1ff00] text-black rounded-[2.5rem] font-black uppercase tracking-[0.4em] text-xs btn-press shadow-2xl shadow-[#c1ff00]/20">
+                                            Collect Earnings
                                         </button>
                                     </div>
                                 </div>
 
-                                {/* GÖREVLER (KAZANÇLARIN ALTINDA) */}
+                                {/* GÖREVLER */}
                                 <div className="space-y-4">
-                                    <div className="flex items-center justify-between px-2">
-                                        <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500">Node Challenges</h3>
-                                        <span className="text-[9px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded font-black uppercase">Active</span>
-                                    </div>
-                                    <div className="glass-card p-5 flex items-center justify-between hover:bg-white/[0.03] transition-all btn-active cursor-pointer">
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500 px-2">Network Missions</h3>
+                                    <div className="glass-card p-5 flex items-center justify-between">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center text-xl text-zinc-500">
-                                                <i className="fab fa-telegram"></i>
-                                            </div>
+                                            <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center text-blue-400"><i className="fab fa-telegram"></i></div>
                                             <div>
-                                                <p className="text-[11px] font-black uppercase tracking-tight">Enterprise Channel</p>
-                                                <p className="text-[9px] font-black text-[#c1ff00] mono mt-1">+0.50 NV BONUS</p>
+                                                <p className="text-[11px] font-black uppercase">Telegram Boost</p>
+                                                <p className="text-[9px] text-[#c1ff00] mono">+50.00 NV</p>
                                             </div>
                                         </div>
-                                        <i className="fas fa-chevron-right text-xs text-zinc-800"></i>
+                                        <button className="text-[10px] font-black uppercase bg-white/5 px-4 py-2 rounded-xl">Join</button>
                                     </div>
                                 </div>
                             </div>
                         )}
 
+                        {/* NODES (REFERANS) */}
+                        {tab === 'team' && (
+                            <div className="space-y-6 animate-in slide-in-from-right duration-500">
+                                <div className="glass-card p-8 text-center bg-gradient-to-b from-blue-500/10 to-transparent border-blue-500/20">
+                                    <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
+                                        <i className="fas fa-users-rays text-blue-400 text-2xl"></i>
+                                    </div>
+                                    <h2 className="text-xl font-black uppercase italic tracking-tighter">Referral Network</h2>
+                                    <p className="text-xs text-zinc-500 mt-2">Get 15% bonus from your engineers' mining power.</p>
+                                    
+                                    <div className="mt-8 p-4 bg-black/40 rounded-3xl border border-white/10 text-left">
+                                        <p className="text-[9px] font-black text-zinc-600 uppercase mb-2 tracking-widest">Your Invite Link</p>
+                                        <div className="bg-zinc-900 p-3 rounded-xl mono text-[9px] text-blue-400 break-all border border-white/5">
+                                            https://nv-enterprise.bot/start?ref=8392479231
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="glass-card p-6 text-center">
+                                        <p className="text-[10px] font-bold text-zinc-500 uppercase">Total Referrals</p>
+                                        <p className="text-2xl font-black mt-1">14</p>
+                                    </div>
+                                    <div className="glass-card p-6 text-center">
+                                        <p className="text-[10px] font-bold text-zinc-500 uppercase">Earned Bonus</p>
+                                        <p className="text-2xl font-black text-[#c1ff00] mt-1">+124.5</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* STATS (SIRALAMA) */}
+                        {tab === 'leader' && (
+                            <div className="space-y-6 animate-in slide-in-from-right duration-500">
+                                <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500 px-2 flex justify-between">
+                                    <span>Top Performers</span>
+                                    <span className="text-[#c1ff00]">Live Updates</span>
+                                </h3>
+                                <div className="space-y-3">
+                                    {[
+                                        { rank: 1, name: "CryptoTitan", amount: "1.2M NV", color: "text-yellow-400" },
+                                        { rank: 2, name: "Miner_King", amount: "840K NV", color: "text-zinc-300" },
+                                        { rank: 3, name: "Nvidia_Fan_1", amount: "520K NV", color: "text-orange-400" },
+                                        { rank: 4, name: "Chalpus_Admin", amount: "450 NV", color: "text-zinc-500" }
+                                    ].map(u => (
+                                        <div key={u.rank} className="glass-card p-5 flex justify-between items-center border-l-4 border-transparent hover:border-[#c1ff00]">
+                                            <div className="flex items-center gap-4">
+                                                <span className={`w-6 font-black ${u.color}`}>#{u.rank}</span>
+                                                <span className="text-xs font-bold uppercase">{u.name}</span>
+                                            </div>
+                                            <span className="text-xs font-black mono">{u.amount}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* SYSTEM (PROFİL & EXCHANGE) */}
                         {tab === 'ben' && (
-                            <div className="space-y-6 animate-in slide-in-from-bottom-5 duration-700">
+                            <div className="space-y-6 animate-in slide-in-from-bottom-5 duration-500">
                                 <div className="glass-card p-8 flex items-center gap-6">
                                     <div className="w-20 h-20 rounded-[2.5rem] border-2 border-[#c1ff00]/20 p-1">
                                         <img src="nvdia.jpg" className="w-full h-full object-cover rounded-3xl" />
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-black uppercase italic tracking-tighter">Chalpus Admin</h2>
-                                        <p className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded inline-block mt-2 font-black uppercase tracking-widest">Enterprise Tier</p>
+                                        <h2 className="text-xl font-black uppercase italic leading-none">Admin Chalpus</h2>
+                                        <p className="text-[10px] bg-[#c1ff00]/10 text-[#c1ff00] px-2 py-0.5 rounded inline-block mt-3 font-black uppercase">Elite Node</p>
                                     </div>
                                 </div>
 
-                                <div className="glass-card p-8">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <span className="text-xs font-black uppercase text-zinc-500 tracking-widest">Withdrawal Hub</span>
-                                        <i className="fas fa-vault text-[#c1ff00]"></i>
+                                <div className="glass-card p-8 space-y-6 bg-gradient-to-br from-zinc-900 to-transparent">
+                                    <div className="flex justify-between items-center text-zinc-500 uppercase font-black text-[10px] tracking-widest">
+                                        <span>USDT Assets</span>
+                                        <i className="fas fa-wallet"></i>
                                     </div>
-                                    <div className="flex items-baseline gap-2 mb-8">
-                                        <h3 className="text-4xl font-black mono tracking-tighter">0.00</h3>
-                                        <span className="text-xs font-bold text-zinc-600">USDT</span>
+                                    <div className="flex items-baseline gap-2">
+                                        <h3 className="text-4xl font-black mono tracking-tighter">{usdtBalance.toFixed(4)}</h3>
+                                        <span className="text-xs font-bold text-zinc-500">USDT</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <button className="py-5 glass-card bg-zinc-900/50 text-[10px] font-black uppercase tracking-widest border-none btn-active">Withdraw</button>
-                                        <button className="py-5 glass-card bg-[#c1ff00] text-black text-[10px] font-black uppercase tracking-widest border-none btn-active">Exchange</button>
+                                        <button className="py-5 glass-card bg-zinc-900 border-none text-[10px] font-black uppercase tracking-widest btn-press">Withdraw</button>
+                                        <button onClick={() => setShowExchange(true)} className="py-5 bg-[#c1ff00] text-black rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest btn-press shadow-lg shadow-[#c1ff00]/10">Exchange</button>
                                     </div>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {/* DİNAMİK ALT NAVİGASYON */}
+                    {/* EXCHANGE MODAL */}
+                    {showExchange && (
+                        <div className="modal-overlay fixed inset-0 z-[9999] flex items-end">
+                            <div className="w-full bg-[#0a0c10] rounded-t-[3.5rem] p-10 border-t border-[#c1ff00]/20 animate-in slide-in-from-bottom duration-300">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h2 className="text-xl font-black uppercase italic tracking-tighter">Asset Exchange</h2>
+                                    <button onClick={() => setShowExchange(false)} className="w-10 h-10 glass-card flex items-center justify-center border-none"><i className="fas fa-times"></i></button>
+                                </div>
+                                
+                                <div className="space-y-6">
+                                    <div>
+                                        <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-3 block">Amount to Swap (NV)</label>
+                                        <div className="relative">
+                                            <input 
+                                                type="number" 
+                                                value={exchangeAmount}
+                                                onChange={(e) => setExchangeAmount(e.target.value)}
+                                                className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-5 px-6 mono text-lg focus:border-[#c1ff00]/50 transition-colors"
+                                                placeholder="0.00"
+                                            />
+                                            <button onClick={() => setExchangeAmount(mainBalance.toString())} className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#c1ff00] bg-[#c1ff00]/10 px-3 py-1.5 rounded-lg">MAX</button>
+                                        </div>
+                                    </div>
+
+                                    <div className="glass-card p-6 bg-black/40 border-dashed border-zinc-800">
+                                        <div className="flex justify-between text-xs font-bold mb-2">
+                                            <span className="text-zinc-500 uppercase">You Receive:</span>
+                                            <span className="text-[#c1ff00] mono">{(parseFloat(exchangeAmount || 0) * NV_TO_USDT_RATE).toFixed(4)} USDT</span>
+                                        </div>
+                                        <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">Rate: 1 NV = 0.0001 USDT</p>
+                                    </div>
+
+                                    <button onClick={executeExchange} className="w-full py-6 bg-[#c1ff00] text-black rounded-3xl font-black uppercase tracking-[0.4em] text-xs btn-press">
+                                        Confirm Swap
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ALT NAVİGASYON */}
                     <nav className="fixed bottom-0 left-0 right-0 h-32 bg-black/60 backdrop-blur-3xl border-t border-white/5 px-10 pb-10 flex justify-between items-center z-[2000] max-w-md mx-auto">
                         {[
-                            { id: 'home', icon: 'fa-cube', label: 'Miner' },
-                            { id: 'team', icon: 'fa-users', label: 'Nodes' },
+                            { id: 'home', icon: 'fa-microchip', label: 'Miner' },
+                            { id: 'team', icon: 'fa-users-gear', label: 'Nodes' },
                             { id: 'leader', icon: 'fa-trophy', label: 'Stats' },
-                            { id: 'ben', icon: 'fa-user-gear', label: 'System' }
+                            { id: 'ben', icon: 'fa-vault', label: 'Wallet' }
                         ].map(m => (
-                            <button 
-                                key={m.id} 
-                                onClick={() => setTab(m.id)} 
-                                className={`flex flex-col items-center gap-2 transition-all duration-300 ${tab === m.id ? 'text-[#c1ff00] scale-110' : 'text-zinc-700'}`}
-                            >
-                                <div className={`w-12 h-10 rounded-2xl flex items-center justify-center transition-all ${tab === m.id ? 'bg-[#c1ff00]/10' : ''}`}>
-                                    <i className={`fas ${m.icon} text-lg`}></i>
-                                </div>
+                            <button key={m.id} onClick={() => setTab(m.id)} className={`flex flex-col items-center gap-2 transition-all ${tab === m.id ? 'text-[#c1ff00] scale-110' : 'text-zinc-700'}`}>
+                                <div className={`w-12 h-10 rounded-2xl flex items-center justify-center transition-all ${tab === m.id ? 'bg-[#c1ff00]/10' : ''}`}><i className={`fas ${m.icon} text-lg`}></i></div>
                                 <span className="text-[9px] font-black uppercase tracking-tighter">{m.label}</span>
                             </button>
                         ))}
