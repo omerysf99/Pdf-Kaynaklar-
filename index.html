@@ -2,426 +2,282 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NVIDIA Miner - Pro Edition v2.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NVIDIA Elite Miner - OS v2.5</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@700&display=swap');
-        
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap');
+
         :root {
             --nv-green: #76b900;
-            --nv-dark: #0a0a0a;
-            --nv-card: #151515;
-            --nv-border: #262626;
+            --nv-blue: #0082ff;
+            --nv-bg: #030303;
+            --nv-card: #0d0d0d;
+            --nv-border: #1a1a1a;
         }
 
         body {
-            background-color: var(--nv-dark);
-            color: white;
-            font-family: 'Inter', sans-serif;
-            user-select: none;
+            background-color: var(--nv-bg);
+            color: #ffffff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .nv-gradient {
-            background: linear-gradient(135deg, #76b900 0%, #3d6000 100%);
-        }
-
-        .fan-rotate {
-            animation: rotate 2s linear infinite;
-        }
-
-        @keyframes rotate {
+        /* Fan Dönüş Animasyonu - Hız Değişkeniyle */
+        @keyframes fan-spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
 
-        .glass-panel {
-            background: rgba(21, 21, 21, 0.8);
-            backdrop-filter: blur(10px);
+        .mining-active .fan-main {
+            animation: fan-spin 1.5s linear infinite;
+        }
+
+        .glass-header {
+            background: rgba(3, 3, 3, 0.85);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--nv-border);
+        }
+
+        .nv-card {
+            background: linear-gradient(145deg, #0d0d0d 0%, #050505 100%);
             border: 1px solid var(--nv-border);
+            border-radius: 1.5rem;
         }
 
-        .tab-active {
-            color: var(--nv-green) !important;
+        .nav-active {
+            color: var(--nv-green);
+            position: relative;
         }
 
-        .mining-progress {
-            height: 6px;
-            background: #1a1a1a;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .mining-progress-bar {
+        .nav-active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            width: 5px;
+            height: 5px;
             background: var(--nv-green);
+            border-radius: 50%;
             box-shadow: 0 0 10px var(--nv-green);
-            transition: width 1s linear;
         }
 
-        .referral-box {
+        /* Neon Progress Bar */
+        .progress-container {
+            height: 14px;
             background: #111;
-            border: 1px dashed #333;
+            border-radius: 100px;
+            border: 1px solid #1a1a1a;
+            overflow: hidden;
+            position: relative;
         }
 
-        /* Mobil Alt Bar Sabitleme */
-        .bottom-nav {
-            padding-bottom: env(safe-area-inset-bottom);
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #76b900, #adff2f);
+            box-shadow: 0 0 15px rgba(118, 185, 0, 0.5);
+            transition: width 0.5s ease;
         }
 
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .custom-scroll { height: calc(100vh - 180px); overflow-y: auto; scrollbar-width: none; }
-        .custom-scroll::-webkit-scrollbar { display: none; }
+        .mono-tech { font-family: 'JetBrains Mono', monospace; }
+
+        /* Kaydırma Alanı Ayarı */
+        .content-scroll {
+            height: calc(100vh - 180px);
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        .content-scroll::-webkit-scrollbar { display: none; }
+
+        /* Tıklama Efekti */
+        .click-bounce:active { transform: scale(0.96); }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useRef } = React;
 
-        // --- COMPONENTS ---
+        // --- ALT BİLEŞENLER ---
 
-        const Header = ({ username, avatarSrc }) => (
-            <div className="flex items-center justify-between p-4 bg-transparent">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden border border-zinc-700">
-                        <img src={avatarSrc} alt="avatar" className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                        <h1 className="text-sm font-bold">{username}</h1>
-                        <span className="text-[10px] bg-[#76b900] text-black px-2 py-0.5 rounded-full font-black uppercase">NVIDIA Miner</span>
-                    </div>
+        const StatBox = ({ label, value, unit, color }) => (
+            <div className="nv-card p-4 flex-1">
+                <div className="flex justify-between items-start mb-1">
+                    <span className="text-[10px] font-extrabold text-zinc-500 uppercase tracking-tighter">{label}</span>
+                    <i className={`fas fa-microchip text-[10px] ${color}`}></i>
                 </div>
-                <div className="flex gap-4 items-center">
-                    <div className="flex items-center gap-1 bg-zinc-900 px-3 py-1 rounded-full border border-zinc-800">
-                        <i className="fas fa-globe text-xs"></i>
-                        <span className="text-xs">Türkçe</span>
-                    </div>
-                    <i className="far fa-bell text-lg"></i>
+                <div className="flex items-baseline gap-1">
+                    <span className={`text-lg font-black ${color}`}>{value}</span>
+                    <span className="text-[9px] text-zinc-600 font-bold">{unit}</span>
                 </div>
             </div>
         );
 
-        const MinePage = ({ nvidiaBal, setNvidiaBal, hourlyRate }) => {
-            const [timeLeft, setTimeLeft] = useState(78812); // saniye cinsinden
+        // --- ANA UYGULAMA ---
 
+        const App = () => {
+            const [tab, setTab] = useState('mine');
+            const [nvidiaBal, setNvidiaBal] = useState(0.2135);
+            const [isMining, setIsMining] = useState(true);
+            const [timeLeft, setTimeLeft] = useState(77025);
+            const adminId = "8392479231";
+
+            // Madencilik Botu Döngüsü
             useEffect(() => {
-                const interval = setInterval(() => {
-                    setNvidiaBal(prev => prev + (hourlyRate / 3600));
-                    setTimeLeft(prev => (prev > 0 ? prev - 1 : 86400));
-                }, 1000);
+                let interval;
+                if (isMining) {
+                    interval = setInterval(() => {
+                        setNvidiaBal(prev => prev + 0.0000227); // Saatlik 0.082'ye tekabül eder
+                        setTimeLeft(prev => (prev > 0 ? prev - 1 : 86400));
+                    }, 1000);
+                }
                 return () => clearInterval(interval);
-            }, []);
+            }, [isMining]);
 
-            const formatTime = (seconds) => {
-                const h = Math.floor(seconds / 3600);
-                const m = Math.floor((seconds % 3600) / 60);
-                const s = seconds % 60;
-                return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            const formatTime = (s) => {
+                const h = Math.floor(s / 3600);
+                const m = Math.floor((s % 3600) / 60);
+                const sec = s % 60;
+                return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
             };
 
             return (
-                <div className="flex flex-col items-center px-4 animate-in fade-in duration-500">
-                    <div className="grid grid-cols-2 gap-2 w-full mb-4">
-                        <div className="glass-panel p-3 rounded-xl flex justify-between items-center">
-                            <span className="text-[10px] text-zinc-400 font-bold uppercase">Miner</span>
-                            <span className="text-xs text-[#76b900] font-black">{hourlyRate} NVIDIA/H</span>
-                        </div>
-                        <div className="glass-panel p-3 rounded-xl flex justify-between items-center">
-                            <span className="text-[10px] text-zinc-400 font-bold uppercase">NVIDIA</span>
-                            <span className="text-xs text-[#76b900] font-black">0.0500</span>
-                        </div>
-                    </div>
-
-                    <div className="relative mt-10">
-                        <div className="w-64 h-64 rounded-full border-[12px] border-zinc-900 flex items-center justify-center relative shadow-[0_0_60px_rgba(118,185,0,0.1)]">
-                            {/* Ana fan görseli */}
-                            <img 
-                                src="fan_image.jpg" // Fan görseli buraya gelecek
-                                className="w-full h-full object-cover rounded-full z-0"
-                            />
-                            <img 
-                                src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Nvidia_logo.svg/1200px-Nvidia_logo.svg.png" 
-                                className="w-16 h-16 z-10 absolute opacity-80"
-                            />
-                            <div className="absolute inset-0 fan-rotate opacity-40 mix-blend-screen">
-                                <svg viewBox="0 0 100 100" className="w-full h-full fill-blue-500">
-                                    <path d="M50 0 L60 40 L50 50 L40 40 Z" />
-                                    <path d="M100 50 L60 60 L50 50 L60 40 Z" />
-                                    <path d="M50 100 L40 60 L50 50 L60 60 Z" />
-                                    <path d="M0 50 L40 40 L50 50 L40 60 Z" />
-                                </svg>
+                <div className="max-w-md mx-auto h-screen relative flex flex-col shadow-2xl border-x border-zinc-900 bg-black">
+                    
+                    {/* Üst Bar */}
+                    <header className="glass-header p-4 flex justify-between items-center z-50">
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <img src="Image 1 (1).jpg" className="w-10 h-10 rounded-full border border-zinc-800 object-cover" />
+                                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
+                            </div>
+                            <div>
+                                <h2 className="text-xs font-black">Chalpus Yeniden</h2>
+                                <div className="flex items-center gap-1">
+                                    <span className="text-[9px] px-2 py-0.5 bg-zinc-900 text-zinc-400 rounded-md border border-zinc-800">LVL 42</span>
+                                    <span className="text-[9px] font-bold text-[#76b900]">PRO MINER</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div className="mt-12 text-center">
-                        <h2 className="text-3xl font-black mono tracking-tighter">
-                            {nvidiaBal.toFixed(4)} <span className="text-sm font-normal text-zinc-500">NVIDIA</span>
-                        </h2>
-                    </div>
-
-                    <div className="w-full mt-8">
-                        <div className="mining-progress w-full">
-                            <div className="mining-progress-bar h-full" style={{width: '25%'}}></div>
+                        <div className="flex gap-2">
+                            <div className="p-2 px-3 bg-zinc-900/50 rounded-xl border border-zinc-800 flex items-center gap-2">
+                                <i className="fas fa-globe text-zinc-500 text-xs"></i>
+                                <span className="text-xs font-bold">Türkçe</span>
+                            </div>
                         </div>
-                        <p className="text-center text-zinc-500 text-xs mt-2 font-bold mono">{formatTime(timeLeft)}</p>
-                    </div>
+                    </header>
 
-                    <button className="w-full mt-10 glass-panel py-4 rounded-xl font-bold border-b-4 border-zinc-800 active:border-b-0 active:translate-y-1 transition-all">
-                        Görev Merkezi
-                    </button>
-                </div>
-            );
-        };
+                    {/* Ana İçerik */}
+                    <main className="flex-1 content-scroll px-5 pt-6 pb-24">
+                        
+                        {tab === 'mine' && (
+                            <div className={`flex flex-col items-center animate-in fade-in duration-700 ${isMining ? 'mining-active' : ''}`}>
+                                {/* Stat Panel */}
+                                <div className="flex gap-3 w-full mb-8">
+                                    <StatBox label="NVIDIA MINER" value="0.082" unit="NVIDIA/H" color="text-[#76b900]" />
+                                    <StatBox label="POWER SUPPLY" value="0.0500" unit="kW/H" color="text-blue-500" />
+                                </div>
 
-        const Leaderboard = () => {
-            const players = [
-                { id: 1, name: "100******", amount: "360,399.8420", rank: 1, img: "Image 2 (1).jpg" }, // Görsel 2'deki avatarları kullan
-                { id: 2, name: "kh1******", amount: "56,043.6880", rank: 2, img: "Image 2 (2).jpg" },
-                { id: 3, name: "oma******", amount: "44,499.5242", rank: 3, img: "Image 2 (3).jpg" },
-                { id: 4, name: "1*********", amount: "38,096.8030", rank: 4, img: "https://api.dicebear.com/7.x/avataaars/svg?seed=4" }, // 4. kişi için placeholder
-            ];
+                                {/* Görseldeki Mavi Fan Ünitesi */}
+                                <div className="relative my-6 group">
+                                    {/* Arka Parlama Efekti */}
+                                    <div className="absolute inset-0 bg-blue-600/10 blur-[80px] rounded-full scale-125"></div>
+                                    
+                                    {/* Fan Container */}
+                                    <div className="w-72 h-72 rounded-full border-[10px] border-zinc-900 shadow-[0_0_40px_rgba(0,130,255,0.1)] relative overflow-hidden bg-black flex items-center justify-center">
+                                        {/* nvdia.jpg buraya eklendi */}
+                                        <img 
+                                            src="nvdia.jpg" 
+                                            className="fan-main w-full h-full object-cover opacity-90 transition-transform duration-1000"
+                                        />
+                                        
+                                        {/* Merkez Logo */}
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className="w-16 h-16 bg-black/80 backdrop-blur-md rounded-full border border-white/10 flex items-center justify-center shadow-2xl">
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg" className="w-8 opacity-90" />
+                                            </div>
+                                        </div>
 
-            return (
-                <div className="px-4 pb-20 animate-in slide-in-from-right duration-300 custom-scroll">
-                    <div className="flex gap-1 bg-zinc-900/50 p-1 rounded-xl mb-6">
-                        <button className="flex-1 py-2 text-xs font-bold bg-[#76b900] text-black rounded-lg">Sıralama Tutma</button>
-                        <button className="flex-1 py-2 text-xs font-bold text-zinc-500">Takım Sıralamaları</button>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 mb-6">
-                        <div className="glass-panel p-4 rounded-2xl text-center">
-                            <p className="text-[10px] text-zinc-500 font-bold uppercase mb-1">Benim Sıralamam</p>
-                            <span className="text-xl font-black text-[#76b900]">--</span>
-                        </div>
-                        <div className="glass-panel p-4 rounded-2xl text-center">
-                            <p className="text-[10px] text-zinc-500 font-bold uppercase mb-1">Benim Miktarım</p>
-                            <span className="text-xl font-black text-[#76b900]">0 NVIDIA</span>
-                        </div>
-                    </div>
-
-                    <h3 className="text-lg font-black mb-4 px-2">Sıralama Tutma</h3>
-                    <div className="glass-panel rounded-3xl overflow-hidden">
-                        {players.map(p => (
-                            <div key={p.id} className="flex items-center justify-between p-4 border-b border-zinc-800 last:border-0">
-                                <div className="flex items-center gap-3">
-                                    <img src={p.img} className="w-10 h-10 rounded-full object-cover bg-zinc-800" />
-                                    <div>
-                                        <p className="text-sm font-bold">{p.name}</p>
-                                        <p className="text-[10px] text-[#76b900] font-bold">
-                                            <i className="fas fa-leaf mr-1"></i> {p.amount}
-                                        </p>
+                                        {/* Tarama Çizgisi Animasyonu */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-blue-500/5 to-transparent w-full h-20 -translate-y-full animate-[scan_3s_linear_infinite]"></div>
                                     </div>
                                 </div>
-                                <div className="text-lg font-black italic">
-                                    {p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : p.rank === 3 ? '🥉' : `#${p.rank}`}
+
+                                {/* Bakiye Ekranı */}
+                                <div className="text-center mt-6">
+                                    <p className="text-[10px] font-black text-zinc-500 tracking-[0.3em] mb-2">CURRENT MINED ASSETS</p>
+                                    <h1 className="text-4xl font-black mono-tech tracking-tighter">
+                                        {nvidiaBal.toFixed(4)} <span className="text-sm font-normal text-zinc-500 italic">NVIDIA</span>
+                                    </h1>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            );
-        };
 
-        const TeamPage = () => (
-            <div className="px-4 animate-in slide-in-from-bottom duration-300 custom-scroll">
-                <div className="glass-panel rounded-3xl p-6 relative overflow-hidden mb-6">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <i className="fas fa-users text-6xl"></i>
-                    </div>
-                    <p className="text-zinc-400 text-sm mb-2">Komisyon Ayrıntıları »</p>
-                    <h2 className="text-lg font-bold leading-tight mb-4">Bağlantınızı paylaşın ve para kazanmaya başlayın</h2>
-                    
-                    <div className="referral-box p-3 rounded-xl flex items-center justify-between mb-4">
-                        <span className="text-[10px] text-zinc-400 truncate mr-2">https://t.me/TheCityUKUAI_Bot?start=ref_8392479231</span>
-                        <button className="bg-[#a3e635] text-black text-[10px] font-black px-4 py-2 rounded-lg">Kopyala</button>
-                    </div>
-
-                    <p className="text-xs text-zinc-500 font-bold mb-3">Paylaş</p>
-                    <div className="flex gap-3 mb-6">
-                        {[ 'x-twitter', 'facebook', 'telegram', 'linkedin', 'whatsapp', 'instagram' ].map(icon => (
-                            <div key={icon} className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 text-sm">
-                                <i className={`fab fa-${icon}`}></i>
-                            </div>
-                        ))}
-                    </div>
-
-                    <button className="flex items-center gap-2 text-zinc-400 text-xs mb-6">
-                        <i className="far fa-calendar-alt"></i> Sorgu tarihini seçin
-                    </button>
-
-                    <div className="space-y-4 border-t border-zinc-800 pt-6">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-zinc-500 font-medium">Toplam takım sayısı</span>
-                            <span className="font-bold">0</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-zinc-500 font-medium">Toplam tanıtım komisyonu</span>
-                            <span className="font-bold font-mono text-zinc-300">$0</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-zinc-500 font-medium">Toplam takım şarjı</span>
-                            <span className="font-bold font-mono text-zinc-300">$0</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-zinc-500 font-medium">Takım toplam çekilmeleri</span>
-                            <span className="font-bold font-mono text-zinc-300">$0</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <button className="w-full bg-[#a3e635] text-black font-black py-4 rounded-full shadow-[0_10px_20px_rgba(163,230,53,0.2)]">
-                    Arkadaşlarınızla paylaşın
-                </button>
-            </div>
-        );
-
-        const WalletPage = ({ nvidiaBal }) => (
-            <div className="px-4 animate-in fade-in duration-300 custom-scroll">
-                <div className="flex flex-col gap-4">
-                    <div className="glass-panel p-5 rounded-2xl flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center">
-                                <i className="fas fa-leaf text-[#76b900]"></i>
-                            </div>
-                            <span className="font-bold">NVIDIA</span>
-                        </div>
-                        <span className="text-2xl font-black text-[#76b900]">{nvidiaBal.toFixed(2)}</span>
-                    </div>
-
-                    <div className="glass-panel p-5 rounded-2xl">
-                        <div className="flex justify-between items-center mb-6">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center">
-                                    <i className="fas fa-dollar-sign text-blue-500"></i>
+                                {/* Progress ve Sayaç */}
+                                <div className="w-full mt-10 space-y-3">
+                                    <div className="progress-container">
+                                        <div className="progress-fill" style={{ width: '28%' }}></div>
+                                    </div>
+                                    <div className="flex justify-between items-center px-1">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                            <span className="text-[10px] font-black text-zinc-400 uppercase">System Online</span>
+                                        </div>
+                                        <span className="mono-tech text-sm font-bold text-zinc-300">{formatTime(timeLeft)}</span>
+                                    </div>
                                 </div>
-                                <span className="font-bold">USDT</span>
-                            </div>
-                        </div>
-                        <div className="flex justify-around text-center">
-                            <div>
-                                <p className="text-xl font-black">0.00</p>
-                                <p className="text-[10px] text-zinc-500 font-bold uppercase">Aracılık Cüzdanı</p>
-                            </div>
-                            <div className="w-px h-10 bg-zinc-800"></div>
-                            <div>
-                                <p className="text-xl font-black">0.00</p>
-                                <p className="text-[10px] text-zinc-500 font-bold uppercase">Cüzdanı Yeniden Yükle</p>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="grid grid-cols-4 gap-2 mt-4">
-                        {[
-                            { icon: 'wallet', label: 'Yeniden şarj et', color: 'bg-green-600' },
-                            { icon: 'hand-holding-dollar', label: 'Geri çekilmek', color: 'bg-yellow-600' },
-                            { icon: 'chart-line', label: 'Mali Kayıtlar', color: 'bg-blue-600' },
-                            { icon: 'right-left', label: 'NVIDIA&USDT', color: 'bg-zinc-700' }
-                        ].map(item => (
-                            <div key={item.label} className="flex flex-col items-center gap-2">
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white glass-panel border-0 shadow-lg`}>
-                                    <i className={`fas fa-${item.icon} text-[#76b900]`}></i>
-                                </div>
-                                <span className="text-[9px] text-center font-bold text-zinc-400 leading-tight">{item.label}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-
-        // --- MAIN APP ---
-
-        const App = () => {
-            const [activeTab, setActiveTab] = useState('bana-ait');
-            const [nvidiaBal, setNvidiaBal] = useState(0.2135);
-            const adminId = "8392479231"; // Kayıtlı Admin ID'niz
-
-            return (
-                <div className="flex flex-col h-screen max-w-md mx-auto relative border-x border-zinc-900 shadow-2xl overflow-hidden bg-[#050505]">
-                    
-                    {/* Üst Kısım Sabit */}
-                    <div className="z-20 bg-[#050505]/80 backdrop-blur-md">
-                         <Header username="Chalpus Yeniden" avatarSrc="Image 1 (1).jpg" /> {/* Görsel 1'den avatar */}
-                    </div>
-
-                    {/* Değişen İçerik Alanı */}
-                    <div className="flex-1 overflow-y-auto custom-scroll pt-4 pb-24">
-                        {activeTab === 'bana-ait' && <MinePage nvidiaBal={nvidiaBal} setNvidiaBal={setNvidiaBal} hourlyRate={0.082} />}
-                        {activeTab === 'liderlik' && <Leaderboard />}
-                        {activeTab === 'takim' && <TeamPage />}
-                        {activeTab === 'ben' && <WalletPage nvidiaBal={nvidiaBal} />}
-                        {activeTab === 'guncelleme' && (
-                            <div className="px-4 text-center py-20 text-zinc-500">
-                                <i className="fas fa-screwdriver-wrench text-4xl mb-4"></i>
-                                <p>Güncellemeler geliyor...</p>
+                                {/* Alt Aksiyon Butonu */}
+                                <button className="w-full mt-10 py-5 nv-card border-b-4 border-zinc-800 flex items-center justify-center gap-3 click-bounce group">
+                                    <i className="fas fa-bolt text-[#76b900] group-hover:animate-bounce"></i>
+                                    <span className="font-black text-sm uppercase tracking-widest">Hızı İkiye Katla</span>
+                                </button>
                             </div>
                         )}
-                    </div>
 
-                    {/* Alt Navigasyon - Görseldeki gibi */}
-                    <nav className="bottom-nav fixed bottom-0 left-0 right-0 max-w-md mx-auto glass-panel border-t border-zinc-800 flex justify-between px-2 pt-3 pb-6 z-30">
-                        <NavItem 
-                            active={activeTab === 'bana-ait'} 
-                            onClick={() => setActiveTab('bana-ait')} 
-                            icon="fa-solid fa-burst" 
-                            label="Bana ait" 
-                        />
-                        <NavItem 
-                            active={activeTab === 'liderlik'} 
-                            onClick={() => setActiveTab('liderlik')} 
-                            icon="fa-solid fa-user-tie" 
-                            label="Liderlik tablosu" 
-                        />
-                        <NavItem 
-                            active={activeTab === 'guncelleme'} 
-                            onClick={() => setActiveTab('guncelleme')} 
-                            icon="fa-solid fa-rocket" 
-                            label="Güncelleme" 
-                        />
-                        <NavItem 
-                            active={activeTab === 'takim'} 
-                            onClick={() => setActiveTab('takim')} 
-                            icon="fa-solid fa-users" 
-                            label="Takım" 
-                        />
-                        <NavItem 
-                            active={activeTab === 'ben'} 
-                            onClick={() => setActiveTab('ben')} 
-                            icon="fa-solid fa-cube" 
-                            label="Ben" 
-                        />
+                        {/* Diğer sekmeler buraya gelecek... */}
+                        {tab !== 'mine' && (
+                            <div className="flex flex-col items-center justify-center h-64 text-zinc-600">
+                                <i className="fas fa-layer-group text-4xl mb-4"></i>
+                                <p className="text-sm font-bold uppercase tracking-widest">{tab} Bölümü Hazırlanıyor</p>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Alt Navigasyon (Görseldeki Gibi) */}
+                    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto h-24 bg-black/90 backdrop-blur-xl border-t border-zinc-900 px-6 flex justify-between items-center z-50">
+                        <NavItem active={tab === 'mine'} onClick={() => setTab('mine')} icon="fa-burst" label="Bana ait" />
+                        <NavItem active={tab === 'leader'} onClick={() => setTab('leader')} icon="fa-user-tie" label="Liderlik" />
+                        <NavItem active={tab === 'update'} onClick={() => setTab('update')} icon="fa-rocket" label="Güncelleme" />
+                        <NavItem active={tab === 'team'} onClick={() => setTab('team')} icon="fa-users" label="Takım" />
+                        <NavItem active={tab === 'wallet'} onClick={() => setTab('wallet')} icon="fa-cube" label="Ben" />
                     </nav>
 
-                    {/* Footer Filigranı */}
-                    <div className="fixed bottom-0 left-0 right-0 text-center py-1 bg-zinc-950 text-[9px] text-zinc-700 z-40 pointer-events-none">
-                        @TheCityUKUAI_Bot | Operator ID-{adminId}
+                    {/* Filigran Bilgi */}
+                    <div className="fixed bottom-1 left-0 right-0 text-center pointer-events-none">
+                        <p className="text-[8px] text-zinc-700 font-bold uppercase">
+                            @TheCityUKUAI_Bot | Operator ID-{adminId} | v2.5 Stable
+                        </p>
                     </div>
 
-                    {/* Müşteri Hizmetleri İkonu */}
-                    <div className="fixed right-4 bottom-32 z-50">
-                        <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center border-4 border-white/10 shadow-xl">
-                            <i className="fas fa-headset text-white"></i>
-                        </div>
-                    </div>
+                    {/* Destek Botu İkonu */}
+                    <button className="fixed right-6 bottom-28 w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(0,130,255,0.3)] border-4 border-black z-40 click-bounce">
+                         <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" className="w-8 h-8 brightness-200" />
+                    </button>
+
                 </div>
             );
         };
 
         const NavItem = ({ active, onClick, icon, label }) => (
-            <button 
-                onClick={onClick}
-                className={`flex flex-col items-center gap-1 w-full transition-all duration-300 ${active ? 'tab-active' : 'text-zinc-500'}`}
-            >
-                <i className={`${icon} text-xl`}></i>
-                <span className="text-[9px] font-bold whitespace-nowrap">{label}</span>
-                {active && <div className="w-1 h-1 rounded-full bg-[#76b900] mt-0.5 animate-ping"></div>}
+            <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all ${active ? 'nav-active scale-110' : 'text-zinc-500 opacity-60'}`}>
+                <i className={`fas ${icon} text-lg`}></i>
+                <span className="text-[9px] font-extrabold uppercase tracking-tighter">{label}</span>
             </button>
         );
 
