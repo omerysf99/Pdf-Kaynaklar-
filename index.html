@@ -16,7 +16,6 @@
         :root {
             --nv-green: #c1ff00;
             --bg-dark: #05070a;
-            --card-bg: #12151a;
             --border: #1f242d;
         }
 
@@ -34,11 +33,23 @@
             border-radius: 1.5rem;
         }
 
-        @keyframes miner-pulse {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(193, 255, 0, 0.2)); }
-            50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(193, 255, 0, 0.4)); }
+        /* Mavi Fan Dönme Animasyonu */
+        @keyframes fan-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
-        .miner-hero { animation: miner-pulse 4s ease-in-out infinite; }
+        .blue-fan {
+            animation: fan-spin 4s linear infinite;
+            filter: drop-shadow(0 0 20px rgba(0, 150, 255, 0.3));
+        }
+
+        /* İlerleme Çubuğu Animasyonu */
+        .progress-fill {
+            height: 100%;
+            background: var(--nv-green);
+            box-shadow: 0 0 10px var(--nv-green);
+            transition: width 0.5s ease-in-out;
+        }
 
         .nav-active { color: var(--nv-green) !important; }
 
@@ -50,11 +61,10 @@
         }
         .safe-scroll::-webkit-scrollbar { display: none; }
 
-        .btn-claim { background: var(--nv-green); box-shadow: 0 0 20px rgba(193, 255, 0, 0.2); transition: all 0.2s; }
-        .btn-claim:active { transform: scale(0.95); }
-
-        .task-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
-        .task-card:active { background: rgba(193, 255, 0, 0.1); border-color: var(--nv-green); }
+        .task-item {
+            background: rgba(255,255,255,0.03);
+            border-left: 3px solid var(--nv-green);
+        }
     </style>
 </head>
 <body>
@@ -80,164 +90,186 @@
                 return () => clearInterval(timer);
             }, [lastTs]);
 
-            const handleClaim = () => {
+            const claim = () => {
                 const total = balance + pending;
                 setBalance(total);
                 setLastTs(Date.now());
                 setPending(0);
-                localStorage.setItem('nv_bal', total.toString());
-                localStorage.setItem('nv_ts', Date.now().toString());
+                localStorage.setItem('nv_bal', total);
+                localStorage.setItem('nv_ts', Date.now());
             };
 
             return (
                 <div className="max-w-md mx-auto h-screen relative bg-[#05070a] flex flex-col">
                     
-                    {/* Üst Header */}
+                    {/* Header: Chalpus Yeniden & Dil Seçeneği */}
                     <div className="flex items-center justify-between p-5 pb-2">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl border border-zinc-800 p-0.5 bg-zinc-900/50">
-                                <img src="nvdia.jpg" className="w-full h-full object-cover rounded-lg" />
+                            <img src="nvdia.jpg" className="w-10 h-10 rounded-full border border-zinc-800" />
+                            <div>
+                                <h1 className="text-xs font-black uppercase tracking-tight">Chalpus Yeniden</h1>
+                                <span className="bg-[#c1ff00] text-black text-[8px] font-black px-2 py-0.5 rounded uppercase">NVIDIA Miner</span>
                             </div>
-                            <h1 className="text-sm font-black tracking-tight">NVIDIA Miner</h1>
                         </div>
-                        <div className="px-3 py-1 bg-zinc-900/80 border border-zinc-800 rounded-lg">
-                            <span className="text-[10px] font-black text-[#c1ff00]">ID: {ADMIN_ID}</span>
+                        <div className="flex items-center gap-2">
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1 flex items-center gap-1">
+                                <i className="fas fa-globe text-[10px] text-zinc-500"></i>
+                                <span className="text-[10px] font-bold">Türkçe</span>
+                            </div>
+                            <i className="fas fa-bell text-zinc-500"></i>
                         </div>
                     </div>
 
                     <div className="safe-scroll px-5">
                         
-                        {/* 1. ANA SAYFA: MADENCİ + 3 GÖREV */}
+                        {/* 1. ANA SAYFA: MAVİ FAN & GÖREV MERKEZİ */}
                         {tab === 'home' && (
-                            <div className="space-y-6 pt-2 animate-in fade-in">
-                                <div className="flex flex-col items-center py-4 relative">
-                                    <div className="w-52 h-52 relative z-10">
-                                        <img src="nvdia.jpg" className="w-full h-full object-cover rounded-full miner-hero border-4 border-zinc-900 shadow-2xl" />
-                                    </div>
-                                    <div className="mt-8 text-center z-10">
-                                        <h2 className="text-4xl font-black tabular font-mono text-white">
-                                            {pending.toFixed(5)}
-                                        </h2>
-                                        <p className="text-[10px] font-black text-[#c1ff00] uppercase tracking-widest mt-1">Saniyeler İçinde Kazanç</p>
-                                    </div>
-                                    <button onClick={handleClaim} className="btn-claim w-full py-4 rounded-2xl mt-6 text-black font-black uppercase tracking-widest text-xs z-10">
-                                        Topla (Claim)
-                                    </button>
+                            <div className="space-y-6 pt-4">
+                                <div className="glass-card p-4 flex justify-between items-center border-l-4 border-[#c1ff00]">
+                                    <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Hız/Saat</span>
+                                    <span className="text-[#c1ff00] font-black text-lg font-mono">0.082 <small className="text-[8px]">NV/H</small></span>
                                 </div>
 
-                                {/* 3 Görev Bölümü */}
+                                {/* Fan ve Sayaç */}
+                                <div className="flex flex-col items-center py-6">
+                                    <div className="relative w-56 h-56 flex items-center justify-center">
+                                        {/* Arka plan ışığı */}
+                                        <div className="absolute inset-0 bg-blue-500/10 rounded-full blur-[60px]"></div>
+                                        {/* Mavi Fan Görseli */}
+                                        <img src="image_6d3524.png" className="w-full h-full object-contain blue-fan" alt="Fan" />
+                                        {/* Merkez Logo */}
+                                        <div className="absolute w-12 h-12 bg-black rounded-full border-2 border-[#c1ff00] flex items-center justify-center shadow-lg">
+                                            <img src="nvdia.jpg" className="w-8 h-8 rounded-full" />
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="mt-8 text-center">
+                                        <h2 className="text-4xl font-black font-mono tracking-tighter text-white">
+                                            {pending.toFixed(4)} <span className="text-sm text-zinc-500">NVIDIA</span>
+                                        </h2>
+                                        {/* İlerleme Çubuğu */}
+                                        <div className="w-64 h-2.5 bg-zinc-900 rounded-full mt-4 overflow-hidden border border-zinc-800">
+                                            <div className="progress-fill" style={{width: '35%'}}></div>
+                                        </div>
+                                        <p className="text-[10px] font-mono text-zinc-500 mt-2">21:53:32</p>
+                                    </div>
+                                </div>
+
+                                {/* Görev Merkezi */}
                                 <div className="space-y-3">
-                                    <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Günlük Görevler</h3>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="h-4 w-1 bg-[#c1ff00]"></div>
+                                        <h3 className="text-sm font-black uppercase tracking-tighter">Görev Merkezi</h3>
+                                    </div>
+                                    
                                     {[
-                                        { t: "Telegram Kanalına Katıl", r: "0.10 NV", i: "fa-paper-plane" },
-                                        { t: "Arkadaşını Davet Et", r: "1.50 NV", i: "fa-user-plus" },
-                                        { t: "X (Twitter) Takip Et", r: "0.05 NV", i: "fa-brands fa-x-twitter" }
-                                    ].map((task, idx) => (
-                                        <div key={idx} className="task-card p-4 rounded-2xl flex items-center justify-between">
+                                        {t: "Telegram Kanalına Katıl", r: "+0.50 NV", i: "fa-paper-plane"},
+                                        {t: "Arkadaşlarını Davet Et", r: "+1.20 NV", i: "fa-users"},
+                                        {t: "Günlük Giriş Bonusu", r: "+0.05 NV", i: "fa-calendar-check"}
+                                    ].map((g, idx) => (
+                                        <div key={idx} className="task-item p-4 rounded-xl flex items-center justify-between">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center text-[#c1ff00]">
-                                                    <i className={`fas ${task.i}`}></i>
-                                                </div>
+                                                <i className={`fas ${g.i} text-zinc-400`}></i>
                                                 <div>
-                                                    <p className="text-xs font-bold leading-tight">{task.t}</p>
-                                                    <p className="text-[#c1ff00] text-[10px] font-black mt-1">+{task.r}</p>
+                                                    <p className="text-[11px] font-bold text-white">{g.t}</p>
+                                                    <p className="text-[9px] text-[#c1ff00] font-black">{g.r}</p>
                                                 </div>
                                             </div>
-                                            <button className="px-4 py-1.5 rounded-lg bg-white text-black text-[10px] font-black uppercase">Git</button>
+                                            <button className="bg-white text-black px-4 py-1 rounded text-[9px] font-black uppercase">Yap</button>
                                         </div>
                                     ))}
+                                    
+                                    <button onClick={claim} className="w-full py-5 bg-[#c1ff00] text-black font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-[#c1ff00]/10 mt-4 active:scale-95 transition-all">
+                                        Kazancı Topla
+                                    </button>
                                 </div>
                             </div>
                         )}
 
-                        {/* 2. SIRALAMA: REFERANS SAYACI EKLENDİ */}
+                        {/* 2. SIRALAMA SAYFASI */}
                         {tab === 'leader' && (
-                            <div className="space-y-4 pt-2">
-                                <div className="glass-card p-4 text-center border-b-2 border-[#c1ff00]">
-                                    <p className="text-[10px] text-zinc-500 font-black uppercase mb-1">Benim Sıralamam</p>
-                                    <p className="text-xl font-black text-white">#1,204</p>
+                            <div className="space-y-4 pt-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="glass-card p-4 text-center">
+                                        <p className="text-[9px] font-black text-zinc-500 uppercase">Sıralamam</p>
+                                        <p className="text-lg font-black text-[#c1ff00]">#1,204</p>
+                                    </div>
+                                    <div className="glass-card p-4 text-center">
+                                        <p className="text-[9px] font-black text-zinc-500 uppercase">Referanslarım</p>
+                                        <p className="text-lg font-black text-white">12 Kişi</p>
+                                    </div>
                                 </div>
 
                                 <div className="glass-card overflow-hidden">
-                                    <div className="p-4 bg-zinc-900/30 border-b border-zinc-800 text-[10px] font-black text-zinc-500 flex justify-between uppercase">
-                                        <span>Kullanıcı / Referans</span>
-                                        <span>NV Miktarı</span>
+                                    <div className="p-4 bg-zinc-900/50 border-b border-zinc-800 text-[9px] font-black text-zinc-500 flex justify-between">
+                                        <span>MADENCİ / REFERANS</span>
+                                        <span>NV MİKTARI</span>
                                     </div>
                                     {[
                                         {r: 1, n: "100******", ref: 1240, v: "360,399.84", m: "🥇"},
                                         {r: 2, n: "kh1******", ref: 890, v: "56,043.68", m: "🥈"},
-                                        {r: 3, n: "oma******", ref: 420, v: "44,499.52", m: "🥉"},
-                                        {r: 4, n: "user_88", ref: 112, v: "12,900.00", m: ""},
-                                        {r: 5, n: "crypto_x", ref: 95, v: "9,120.40", m: ""}
+                                        {r: 3, n: "oma******", ref: 420, v: "44,499.52", m: "🥉"}
                                     ].map(u => (
-                                        <div key={u.r} className="flex justify-between items-center p-4 border-b border-zinc-800/40 last:border-0">
+                                        <div key={u.r} className="flex justify-between items-center p-4 border-b border-zinc-800/30">
                                             <div className="flex items-center gap-3">
-                                                <span className="text-[10px] font-black text-zinc-600">#{u.r}</span>
+                                                <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-[10px] font-black">{u.r}</div>
                                                 <div>
-                                                    <p className="text-xs font-bold text-zinc-200">{u.n} {u.m}</p>
-                                                    <p className="text-[9px] text-[#c1ff00] font-bold">Ref: {u.ref}</p>
+                                                    <p className="text-xs font-bold">{u.n} {u.m}</p>
+                                                    <p className="text-[9px] text-[#c1ff00] font-black">Ref: {u.ref}</p>
                                                 </div>
                                             </div>
-                                            <span className="text-xs font-black tabular text-zinc-100">{u.v}</span>
+                                            <span className="text-xs font-black font-mono">{u.v}</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         )}
 
-                        {/* 3. REFERANS (TAKIM) EKRANI */}
-                        {tab === 'takim' && (
-                            <div className="space-y-4 pt-2">
-                                <div className="glass-card p-6 text-center space-y-4">
-                                    <h3 className="text-xs font-black uppercase text-[#c1ff00]">Davet Bağlantın</h3>
-                                    <div className="bg-black/50 p-4 rounded-xl border border-zinc-800 text-[10px] font-mono text-zinc-400 break-all">
-                                        https://t.me/NvidiaMiner_Bot?start=ref_{ADMIN_ID}
-                                    </div>
-                                    <button onClick={() => alert("Kopyalandı!")} className="w-full py-4 rounded-xl bg-white text-black font-black text-xs uppercase">Bağlantıyı Kopyala</button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 4. PROFİL EKRANI */}
+                        {/* 4. BEN (PROFİL) SAYFASI */}
                         {tab === 'ben' && (
-                            <div className="space-y-6 pt-2">
-                                <div className="flex items-center gap-4">
-                                    <img src="nvdia.jpg" className="w-16 h-16 rounded-2xl border border-zinc-800" />
-                                    <div>
-                                        <h2 className="text-lg font-black uppercase tracking-tighter">Chalpus Yeniden</h2>
-                                        <p className="text-[#c1ff00] text-[9px] font-black uppercase">Standard Miner</p>
+                            <div className="space-y-6 pt-4">
+                                <div className="glass-card p-6 flex flex-col items-center">
+                                    <img src="nvdia.jpg" className="w-20 h-20 rounded-full border-2 border-[#c1ff00] p-1 shadow-lg shadow-[#c1ff00]/10 mb-4" />
+                                    <h2 className="text-xl font-black uppercase">Chalpus Yeniden</h2>
+                                    <p className="text-[10px] text-zinc-500 font-mono">ID: {ADMIN_ID}</p>
+                                </div>
+
+                                <div className="glass-card p-6">
+                                    <div className="flex justify-between border-b border-zinc-800 pb-4 mb-4">
+                                        <span className="text-xs font-black text-zinc-500 uppercase tracking-tighter">Toplam Kazanç</span>
+                                        <span className="text-xl font-black text-[#c1ff00] font-mono">{balance.toFixed(2)} NV</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-xs font-black text-zinc-500 uppercase tracking-tighter">USDT Bakiye</span>
+                                        <span className="text-xl font-black font-mono">0.00</span>
                                     </div>
                                 </div>
-                                <div className="glass-card p-6">
-                                    <p className="text-[11px] font-black text-zinc-500 uppercase">Toplam Bakiye</p>
-                                    <p className="text-3xl font-black text-[#c1ff00] mt-1 tabular">{balance.toFixed(2)} <small className="text-xs text-zinc-400">NV</small></p>
-                                </div>
+
                                 <div className="grid grid-cols-2 gap-4">
-                                    <button className="glass-card p-4 flex flex-col items-center gap-2">
+                                    <button className="py-4 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-2 active:scale-95 transition-all">
                                         <i className="fas fa-arrow-down text-[#c1ff00]"></i>
                                         <span className="text-[10px] font-black uppercase">Geri Çek</span>
                                     </button>
-                                    <button className="glass-card p-4 flex flex-col items-center gap-2">
+                                    <button className="py-4 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-2 active:scale-95 transition-all">
                                         <i className="fas fa-exchange-alt text-[#c1ff00]"></i>
                                         <span className="text-[10px] font-black uppercase">Takas Et</span>
                                     </button>
                                 </div>
                             </div>
                         )}
-
                     </div>
 
-                    {/* Navigasyon */}
+                    {/* Navigasyon: Paylaştığın görseldeki ikonlar ve isimler */}
                     <nav className="fixed bottom-0 left-0 right-0 bg-[#05070a] border-t border-zinc-800 flex justify-around items-center py-5 z-50 max-w-md mx-auto">
                         {[
-                            {id:'home', i:'fa-rocket', n:'Madenci'},
-                            {id:'leader', i:'fa-trophy', n:'Sıralama'},
-                            {id:'takim', i:'fa-users', n:'Ekip'},
-                            {id:'ben', i:'fa-user-shield', n:'Profil'}
+                            {id:'home', i:'fa-fan', n:'Bana ait'},
+                            {id:'leader', i:'fa-trophy', n:'Liderlik'},
+                            {id:'takim', i:'fa-users', n:'Takım'},
+                            {id:'ben', i:'fa-cube', n:'Ben'}
                         ].map(m => (
-                            <button key={m.id} onClick={() => setTab(m.id)} className={`flex flex-col items-center gap-1 ${tab === m.id ? 'nav-active' : 'text-zinc-600'}`}>
+                            <button key={m.id} onClick={() => setTab(m.id)} className={`flex flex-col items-center gap-1.5 transition-all ${tab === m.id ? 'nav-active' : 'text-zinc-600'}`}>
                                 <i className={`fas ${m.i} text-xl`}></i>
-                                <span className="text-[9px] font-black uppercase">{m.n}</span>
+                                <span className="text-[9px] font-black uppercase tracking-tighter">{m.n}</span>
                             </button>
                         ))}
                     </nav>
