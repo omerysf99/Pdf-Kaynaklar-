@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NVIDIA Miner OS v8.0 - Singularity</title>
+    <title>NVIDIA Miner OS - Manual Claim</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -11,343 +11,196 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/framer-motion/10.16.4/framer-motion.umd.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap');
 
         :root {
-            --nv-green: #c1ff00;
-            --nv-bg: #030405;
-            --nv-card: #0d1116;
-            --nv-border: #1f2937;
-            --nv-glow: rgba(193, 255, 0, 0.15);
+            --nv-green: #c1ff00; /* image_7918db referanslı neon yeşil */
+            --nv-bg: #050709;
+            --nv-card: #0e1114;
+            --nv-border: #1c2127;
         }
 
-        body {
-            background-color: var(--nv-bg);
-            color: #fff;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            margin: 0;
-            overflow: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
+        body { background-color: var(--nv-bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; user-select: none; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* --- Global Animations --- */
-        .pulse-soft { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-
-        .flicker { animation: flicker 3s linear infinite; }
-        @keyframes flicker { 0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; } 20%, 22%, 24%, 55% { opacity: 0.5; } }
-
-        /* --- Layout & Grid --- */
-        .grid-canvas {
+        /* Arka Plan Izgara Efekti (image_78a94b sadakati) */
+        .grid-overlay {
             position: fixed; inset: 0;
-            background-image: linear-gradient(rgba(31, 41, 55, 0.2) 1px, transparent 1px), 
-                              linear-gradient(90deg, rgba(31, 41, 55, 0.2) 1px, transparent 1px);
-            background-size: 40px 40px;
-            perspective: 1000px;
-            z-index: -1;
+            background-image: linear-gradient(var(--nv-border) 1px, transparent 1px), linear-gradient(90deg, var(--nv-border) 1px, transparent 1px);
+            background-size: 45px 45px;
+            background-position: center center;
+            opacity: 0.4; z-index: -1;
         }
 
-        /* --- Components --- */
-        .glass-card {
-            background: rgba(13, 17, 22, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--nv-border);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
-        }
-
-        .nv-stat-box {
-            background: linear-gradient(145deg, #111827, #030405);
-            border-radius: 12px;
-            border: 1px solid var(--nv-border);
-            padding: 12px 16px;
-        }
-
-        .main-disk {
-            width: 280px; height: 280px;
+        /* Stat Kartları */
+        .stat-card { background: rgba(14, 17, 20, 0.9); border: 1px solid var(--nv-border); border-radius: 12px; }
+        
+        /* Mavi Fan Diski (image_7918db sadakati) */
+        .fan-disk {
+            width: 260px; height: 260px;
             border-radius: 50%;
-            border: 2px solid var(--nv-border);
+            border: 4px solid #0e1114;
+            background: radial-gradient(circle, #001a33 0%, #050709 100%);
+            box-shadow: 0 0 40px rgba(0, 110, 255, 0.15);
             position: relative;
-            background: radial-gradient(circle, #0f172a 0%, #030405 100%);
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
+        .fan-img { width: 92%; height: 92%; border-radius: 50%; object-fit: cover; }
 
-        .disk-core {
-            width: 240px; height: 240px;
-            border-radius: 50%;
-            background: url('nvdia.jpg') center/cover no-repeat;
-            opacity: 0.9;
-        }
+        /* Progress Bar (image_78a94b) */
+        .progress-track { height: 14px; background: #161a1e; border-radius: 20px; border: 1px solid #2b2f36; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--nv-green); box-shadow: 0 0 15px var(--nv-green); width: 18%; }
 
-        /* --- Buttons --- */
-        .btn-primary {
-            background: var(--nv-green);
-            color: #000;
-            font-weight: 800;
+        /* Claim Butonu Özel Tasarım */
+        .btn-claim {
+            background: linear-gradient(180deg, var(--nv-green) 0%, #a3d900 100%);
+            color: #000; font-weight: 900;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(193, 255, 0, 0.3);
+            transition: all 0.2s;
             text-transform: uppercase;
             letter-spacing: 1px;
-            border-radius: 14px;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .btn-primary:active { transform: scale(0.92); filter: brightness(1.2); }
+        .btn-claim:active { transform: scale(0.95); opacity: 0.9; }
 
-        .nav-item i { transition: all 0.3s; }
-        .nav-item.active { color: var(--nv-green); }
-        .nav-item.active i { transform: translateY(-5px); filter: drop-shadow(0 0 10px var(--nv-green)); }
-
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .content-scroll { height: calc(100vh - 170px); overflow-y: auto; scrollbar-width: none; }
-        .content-scroll::-webkit-scrollbar { display: none; }
+        .support-btn { position: absolute; right: -15px; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--nv-bg); }
     </style>
 </head>
 <body>
-    <div class="grid-canvas"></div>
+    <div class="grid-overlay"></div>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useCallback, useMemo } = React;
+        const { useState, useEffect } = React;
 
         const App = () => {
-            // --- CORE ENGINE ---
             const adminId = "8392479231";
-            const [tab, setTab] = useState('bana-ait');
-            const [balance, setBalance] = useState(() => Number(localStorage.getItem('nv_main')) || 0.0500);
-            const [sessionMined, setSessionMined] = useState(0.000000);
-            const [hashrate, setHashrate] = useState(0.082);
-            const [logs, setLogs] = useState([]);
+            const [miningVal, setMiningVal] = useState(0.2586); // image_7918db başlangıç değeri
+            const [walletBalance, setWalletBalance] = useState(0.0500);
+            const [pending, setPending] = useState(0.0000);
 
-            // Simulate Network Hashrate Fluctuations
+            // Gerçek zamanlı kazım simülasyonu
             useEffect(() => {
-                const hInterval = setInterval(() => {
-                    setHashrate(prev => +(prev + (Math.random() * 0.002 - 0.001)).toFixed(3));
-                }, 3000);
-                return () => clearInterval(hInterval);
+                const interval = setInterval(() => {
+                    setPending(prev => prev + 0.0000012);
+                }, 1000);
+                return () => clearInterval(interval);
             }, []);
 
-            // Mining Accumulator
-            useEffect(() => {
-                const mInterval = setInterval(() => {
-                    setSessionMined(prev => prev + (hashrate / 3600));
-                }, 1000);
-                return () => clearInterval(mInterval);
-            }, [hashrate]);
-
-            // Claim Action
-            const handleClaim = useCallback(() => {
-                if (sessionMined < 0.0001) {
-                    Swal.fire({ 
-                        toast: true, position: 'top', icon: 'info', 
-                        title: 'Min. 0.0001 NV gerekli', background: '#0d1116', color: '#fff', showConfirmButton: false, timer: 2000 
-                    });
+            const manualClaim = () => {
+                const totalClaim = pending;
+                if (totalClaim <= 0) {
+                    Swal.fire({ toast: true, position: 'top', title: 'Biriken NVIDIA yok', icon: 'info', showConfirmButton: false, timer: 1500, background: '#0e1114', color: '#fff' });
                     return;
                 }
-                const mined = sessionMined;
-                setBalance(prev => {
-                    const newBal = prev + mined;
-                    localStorage.setItem('nv_main', newBal);
-                    return newBal;
-                });
-                setSessionMined(0);
-                setLogs(prev => [{ id: Date.now(), msg: `Claimed +${mined.toFixed(5)} NV`, time: new Date().toLocaleTimeString() }, ...prev].slice(0, 5));
-                
+                setMiningVal(prev => prev + totalClaim);
+                setPending(0);
                 Swal.fire({
+                    title: 'BAŞARILI',
+                    text: 'Kazanç ana merkeze aktarıldı.',
                     icon: 'success',
-                    title: 'Transfer Başarılı',
-                    text: 'Bakiyeniz ana cüzdana aktarıldı.',
-                    background: '#0d1116',
+                    background: '#0e1114',
                     color: '#fff',
                     confirmButtonColor: '#c1ff00'
                 });
-            }, [sessionMined]);
-
-            // --- UI SUB-COMPONENTS ---
-            
-            const Header = () => (
-                <header className="px-6 py-4 flex justify-between items-center border-b border-zinc-900 bg-black/30 backdrop-blur-lg">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full border border-zinc-800 p-0.5 relative">
-                            <img src="avatar.jpg" className="w-full h-full rounded-full object-cover" 
-                                 onError={e => e.target.src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Chalpus"} />
-                            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-black"></div>
-                        </div>
-                        <div>
-                            <h2 className="text-xs font-black uppercase tracking-widest text-zinc-400">Node Operator</h2>
-                            <p className="text-sm font-bold">Chalpus Yeniden</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4 text-zinc-500">
-                        <div className="flex flex-col items-end">
-                            <span className="text-[10px] font-bold">NET_ID</span>
-                            <span className="text-xs font-black mono text-zinc-300">{adminId}</span>
-                        </div>
-                        <i className="far fa-bell text-lg hover:text-white transition-colors"></i>
-                    </div>
-                </header>
-            );
-
-            const HomeTab = () => (
-                <div className="px-6 pt-6 flex flex-col items-center animate-in fade-in duration-1000">
-                    <div className="w-full grid grid-cols-2 gap-4 mb-8">
-                        <div className="nv-stat-box">
-                            <p className="text-[10px] text-zinc-500 font-bold uppercase mb-1">Hashrate</p>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-lg font-black text-[#c1ff00] mono">{hashrate}</span>
-                                <span className="text-[8px] font-bold text-zinc-600">NV/H</span>
-                            </div>
-                        </div>
-                        <div className="nv-stat-box">
-                            <p className="text-[10px] text-zinc-500 font-bold uppercase mb-1">Node Status</p>
-                            <span className="text-xs font-black text-blue-500 flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 pulse-soft"></span> ACTIVE
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="relative group cursor-pointer" onClick={handleClaim}>
-                        <div className="main-disk transition-all group-hover:border-[#c1ff00]/40">
-                            <div className="disk-core"></div>
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent rounded-full flex flex-col items-center justify-center">
-                                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-1">Biriken</p>
-                                <h3 className="text-2xl font-black mono text-[#c1ff00] tracking-tighter">
-                                    {sessionMined.toFixed(6)}
-                                </h3>
-                            </div>
-                        </div>
-                        <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-14 h-14 bg-[#8da7ff] rounded-full border-4 border-black flex items-center justify-center shadow-2xl">
-                            <i className="fas fa-headset text-white"></i>
-                        </div>
-                    </div>
-
-                    <div className="mt-12 text-center w-full">
-                        <p className="text-[11px] font-black text-zinc-600 uppercase tracking-[0.5em] mb-3">Global Balance</p>
-                        <div className="glass-card py-4 px-8 inline-block border-[#c1ff00]/20">
-                            <h1 className="text-4xl font-black mono tracking-tighter text-white">
-                                {balance.toFixed(4)} <span className="text-sm font-medium text-zinc-500">NV</span>
-                            </h1>
-                        </div>
-                    </div>
-
-                    <div className="w-full mt-10 space-y-4">
-                        <div className="flex justify-between text-[10px] font-black text-zinc-500 uppercase px-1">
-                            <span>Processing Pulse</span>
-                            <span className="text-[#c1ff00]">88% Optimized</span>
-                        </div>
-                        <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden p-[2px] border border-zinc-800">
-                            <div className="h-full bg-[#c1ff00] rounded-full shadow-[0_0_10px_#c1ff00]" style={{width: '88%'}}></div>
-                        </div>
-                    </div>
-                </div>
-            );
-
-            const WalletTab = () => (
-                <div className="px-6 pt-6 space-y-6 animate-in slide-in-from-right duration-500">
-                    <div className="glass-card p-6 bg-gradient-to-br from-[#161a1e] to-black border-[#c1ff00]/10">
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <p className="text-[10px] text-zinc-500 font-black uppercase mb-1">Total Assets</p>
-                                <h2 className="text-4xl font-black mono tracking-tighter">0.00 <span className="text-sm font-normal text-zinc-600 italic">USDT</span></h2>
-                            </div>
-                            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" className="w-8 h-8 flicker" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 border-t border-zinc-800/50 pt-6">
-                            <div>
-                                <p className="text-xs font-bold text-zinc-500">Agency Wallet</p>
-                                <p className="text-lg font-black mono text-[#c1ff00]">0.00</p>
-                            </div>
-                            <div className="border-l border-zinc-800/50 pl-4">
-                                <p className="text-xs font-bold text-zinc-500">Recharge Val</p>
-                                <p className="text-lg font-black mono text-[#c1ff00]">0.00</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-4">
-                        {[
-                            { i: 'fa-bolt', l: 'Deposit' }, { i: 'fa-arrow-up-right-from-square', l: 'Withdraw' },
-                            { i: 'fa-list-ul', l: 'Logs' }, { i: 'fa-repeat', l: 'Swap' }
-                        ].map((btn, idx) => (
-                            <div key={idx} className="flex flex-col items-center gap-2">
-                                <div className="w-14 h-14 glass-card flex items-center justify-center hover:border-[#c1ff00]/50 transition-colors cursor-pointer">
-                                    <i className={`fas ${btn.i} text-[#c1ff00] text-xl`}></i>
-                                </div>
-                                <span className="text-[9px] font-black uppercase text-zinc-500 text-center leading-none">{btn.l}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="space-y-3 pt-4">
-                        <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-widest px-1">Network Activity</h3>
-                        {logs.length === 0 ? (
-                            <div className="glass-card p-8 text-center text-zinc-700 text-xs italic font-bold">No active transactions...</div>
-                        ) : (
-                            logs.map(log => (
-                                <div key={log.id} className="glass-card p-4 flex justify-between items-center border-l-2 border-l-[#c1ff00]">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-zinc-900/50 flex items-center justify-center border border-zinc-800">
-                                            <i className="fas fa-check text-[10px] text-[#c1ff00]"></i>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-zinc-200">{log.msg}</p>
-                                            <p className="text-[9px] text-zinc-600 font-medium tracking-wider">{log.time}</p>
-                                        </div>
-                                    </div>
-                                    <i className="fas fa-chevron-right text-zinc-800 text-[10px]"></i>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-            );
+            };
 
             return (
-                <div className="max-w-md mx-auto h-screen relative flex flex-col bg-black overflow-hidden border-x border-zinc-900 shadow-[0_0_100px_rgba(0,0,0,1)]">
-                    <Header />
-                    
-                    <main className="flex-1 content-scroll">
-                        {tab === 'bana-ait' && <HomeTab />}
-                        {tab === 'ben' && <WalletTab />}
-                        {tab === 'takim' && (
-                            <div className="p-10 text-center animate-pulse">
-                                <i className="fas fa-users-viewfinder text-5xl text-zinc-800 mb-6"></i>
-                                <h2 className="text-xl font-black text-zinc-700 uppercase tracking-widest">Team Syncing...</h2>
-                                <p className="text-xs text-zinc-800 mt-2 font-bold leading-relaxed px-10 italic">
-                                    "Referans ağı şifrelenmiş protokol üzerinden yapılandırılıyor."
-                                </p>
-                            </div>
-                        )}
-                    </main>
-
-                    {/* Bottom Nav */}
-                    <nav className="nav-bar flex justify-around items-center px-4">
-                        <NavItem id="bana-ait" active={tab === 'bana-ait'} icon="fa-house-signal" label="Terminal" onClick={setTab} />
-                        <NavItem id="lider" active={tab === 'lider'} icon="fa-ranking-star" label="Global" onClick={setTab} />
-                        <NavItem id="guncel" active={tab === 'guncel'} icon="fa-microchip" label="Upgrades" onClick={setTab} />
-                        <NavItem id="takim" active={tab === 'takim'} icon="fa-network-wired" label="Team" onClick={setTab} />
-                        <NavItem id="ben" active={tab === 'ben'} icon="fa-user-astronaut" label="Account" onClick={setTab} />
-                    </nav>
-
-                    {/* Footer System Status */}
-                    <div className="bg-[#0d1116] py-1 border-t border-zinc-900 flex justify-center items-center gap-3">
-                        <div className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#c1ff00] flicker shadow-[0_0_5px_#c1ff00]"></span>
-                            <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest tracking-tighter">System Nominal</span>
+                <div className="max-w-md mx-auto h-screen flex flex-col bg-[#050709] relative overflow-hidden">
+                    {/* Header */}
+                    <header className="p-4 flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                            <img src="avatar.jpg" className="w-9 h-9 rounded-full border border-zinc-700" 
+                                 onError={e => e.target.src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Chalpus"} />
+                            <span className="text-sm font-extrabold">Chalpus Yeniden</span>
                         </div>
-                        <div className="w-px h-2 bg-zinc-800"></div>
-                        <span className="text-[8px] font-black text-zinc-700 uppercase">Latency: 24ms</span>
+                        <div className="flex items-center gap-3">
+                            <div className="bg-[#161a1e] px-3 py-1 rounded-full border border-zinc-800 flex items-center gap-1">
+                                <i className="fas fa-globe text-[10px] text-zinc-500"></i>
+                                <span className="text-[10px] font-bold uppercase">Türkçe</span>
+                            </div>
+                            <i className="far fa-bell text-lg text-zinc-400"></i>
+                        </div>
+                    </header>
+
+                    {/* Stat Row 1: NVIDIA Miner (image_7918db) */}
+                    <div className="px-4 space-y-2 mt-2">
+                        <div className="stat-card p-3 flex justify-between items-center">
+                            <div className="bg-[#c1ff00] text-black text-[10px] font-black px-3 py-1 rounded-md uppercase">NVIDIA Miner</div>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-[#c1ff00] text-lg font-black italic">0.082</span>
+                                <span className="text-[9px] font-bold text-zinc-500">NVIDIA/H</span>
+                            </div>
+                        </div>
+
+                        {/* Stat Row 2: NVIDIA Balance (image_7918db) */}
+                        <div className="stat-card p-3 flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg" className="w-4 h-4" />
+                                <span className="text-xs font-bold text-zinc-400 uppercase">NVIDIA</span>
+                            </div>
+                            <span className="text-[#c1ff00] text-lg font-black tracking-tight">{walletBalance.toFixed(4)}</span>
+                        </div>
                     </div>
+
+                    {/* Main Mining Area (image_7918db) */}
+                    <div className="flex-1 flex flex-col items-center justify-center -mt-10">
+                        <div className="relative">
+                            <div className="fan-disk">
+                                <img src="nvdia.jpg" className="fan-img" 
+                                     onError={e => e.target.src="https://images.unsplash.com/photo-1624705002806-5d72df19c3ad?w=400"} />
+                            </div>
+                            <img src="https://api.dicebear.com/7.x/bottts-neutral/svg?seed=support" className="support-btn bg-[#8da7ff] p-1" />
+                        </div>
+                        
+                        <div className="mt-8 text-center">
+                            <h2 className="text-3xl font-black mono tracking-tighter">
+                                {(miningVal + pending).toFixed(4)} NVIDIA
+                            </h2>
+                        </div>
+
+                        {/* Progress Section */}
+                        <div className="w-full px-8 mt-6">
+                            <div className="progress-track">
+                                <div className="progress-fill"></div>
+                            </div>
+                            <p className="text-center text-[11px] font-bold mt-2 text-zinc-500 tracking-[0.2em]">20:50:46</p>
+                        </div>
+
+                        {/* MANUEL CLAIM TUŞU */}
+                        <div className="w-full px-8 mt-10">
+                            <button onClick={manualClaim} className="w-full py-4 btn-claim text-sm">
+                                Bakiyeyi Topla (Claim)
+                            </button>
+                            <p className="text-[9px] text-center text-zinc-600 mt-2 font-black uppercase tracking-widest">
+                                AdminID: {adminId} | Manual Core v9.0
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Görev Merkezi & Footer */}
+                    <div className="pb-24">
+                        <h3 className="text-center text-sm font-black text-zinc-300 uppercase tracking-[0.3em]">Görev Merkezi</h3>
+                    </div>
+
+                    <nav className="absolute bottom-0 w-full bg-[#0e1114] border-t border-zinc-900 flex justify-around items-center h-20 px-2">
+                        <NavItem active icon="fa-bolt" label="Bana ait" />
+                        <NavItem icon="fa-user-tie" label="Liderlik" />
+                        <NavItem icon="fa-rocket" label="Güncelleme" />
+                        <NavItem icon="fa-users" label="Takım" />
+                        <NavItem icon="fa-cube" label="Ben" />
+                    </nav>
                 </div>
             );
         };
 
-        const NavItem = ({ id, active, icon, label, onClick }) => (
-            <button onClick={() => onClick(id)} className={`flex flex-col items-center gap-1.5 flex-1 transition-all ${active ? 'active' : 'text-zinc-600 opacity-50'}`}>
+        const NavItem = ({ active, icon, label }) => (
+            <div className={`flex flex-col items-center gap-1.5 ${active ? 'text-[#c1ff00]' : 'text-zinc-600'}`}>
                 <i className={`fas ${icon} text-lg`}></i>
-                <span className="text-[9px] font-black uppercase tracking-tighter whitespace-nowrap">{label}</span>
-            </button>
+                <span className="text-[9px] font-black uppercase tracking-tighter">{label}</span>
+            </div>
         );
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
