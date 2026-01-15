@@ -3,215 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NVAI - AI Mining Simulation</title>
+    <title>NVAI - Full Simulation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --bg: #000000;
-            --card-bg: #151517;
+            --card: #151517;
             --nv-green: #76b900;
             --nv-blue: #00a3ff;
             --text-gray: #8e8e93;
-            --glass: rgba(255, 255, 255, 0.05);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        body {
-            background-color: var(--bg);
-            color: white;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            overflow-x: hidden;
-            padding-bottom: 90px;
-        }
+        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; overflow-x: hidden; padding-bottom: 90px; }
 
-        /* Sayfa Yapısı */
-        .page { display: none; padding: 15px; animation: fadeIn 0.3s ease; }
+        /* Navigation & Pages */
+        .page { display: none; padding: 20px; animation: fadeIn 0.3s ease; min-height: 100vh; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Üst Bar */
-        .top-bar {
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--bg);
-            position: sticky; top: 0; z-index: 100;
-        }
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .avatar { width: 38px; height: 38px; border-radius: 50%; border: 1px solid #333; }
-        .mining-status { color: var(--nv-green); font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .user-pill { display: flex; align-items: center; gap: 10px; background: var(--card); padding: 5px 15px; border-radius: 20px; border: 1px solid #222; }
+        .status-badge { color: var(--nv-green); font-size: 10px; font-weight: bold; }
 
-        /* Bilgi Kartları */
-        .stats-container { display: flex; gap: 10px; margin-bottom: 20px; }
-        .stat-card {
-            flex: 1; background: var(--card-bg); padding: 12px; border-radius: 12px;
-            border: 1px solid #222; text-align: center;
-        }
-        .stat-label { color: var(--text-gray); font-size: 10px; margin-bottom: 5px; }
-        .stat-value { color: var(--nv-green); font-weight: bold; font-size: 14px; }
+        /* Stats Card */
+        .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .s-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; text-align: center; }
+        .s-label { color: var(--text-gray); font-size: 10px; text-transform: uppercase; }
+        .s-value { color: var(--nv-green); font-weight: bold; font-size: 16px; margin-top: 5px; }
 
-        /* Ana Mining Alanı */
-        .mining-display { text-align: center; margin: 40px 0; }
-        .fan-container {
-            width: 220px; height: 220px; margin: 0 auto; position: relative;
-            background: radial-gradient(circle, rgba(0, 163, 255, 0.15) 0%, transparent 70%);
-        }
-        .fan-img { 
-            width: 100%; animation: spin 2.5s linear infinite; 
-            filter: drop-shadow(0 0 15px rgba(0, 163, 255, 0.3));
-        }
+        /* Fan & Progress */
+        .mining-zone { text-align: center; margin: 30px 0; }
+        .fan-box { width: 200px; height: 200px; margin: 0 auto; position: relative; }
+        .fan-icon { font-size: 160px; color: var(--nv-blue); animation: spin 2.5s linear infinite; filter: drop-shadow(0 0 15px rgba(0,163,255,0.3)); }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         
-        .total-points { font-size: 32px; font-weight: 700; margin: 20px 0; letter-spacing: 1px; }
-        
-        /* Progress Bar */
-        .progress-box { width: 100%; height: 10px; background: #111; border-radius: 10px; border: 1px solid var(--nv-green); overflow: hidden; margin-bottom: 10px; }
-        .progress-fill { width: 0%; height: 100%; background: var(--nv-green); box-shadow: 0 0 10px var(--nv-green); transition: width 1s linear; }
+        .points-main { font-size: 36px; font-weight: bold; margin: 20px 0; }
+        .p-bar-bg { width: 100%; height: 12px; background: #111; border-radius: 10px; border: 1px solid var(--nv-green); overflow: hidden; }
+        .p-bar-fill { width: 0%; height: 100%; background: var(--nv-green); box-shadow: 0 0 10px var(--nv-green); transition: width 1s linear; }
 
-        /* Görev Kartları */
-        .task-card { background: var(--card-bg); border-radius: 15px; padding: 15px; margin-bottom: 12px; border: 1px solid #222; }
-        .task-header { display: flex; justify-content: space-between; align-items: center; }
-        .task-reward { color: #ffd700; font-weight: bold; font-size: 14px; margin-top: 5px; }
-        .btn-action { background: var(--nv-green); color: black; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-action.done { background: #333; color: #777; cursor: not-allowed; }
+        /* Tasks */
+        .task-card { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 12px; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        .t-btn { background: var(--nv-green); color: black; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .t-btn:disabled { background: #333; color: #777; }
 
-        /* Alt Menü */
-        .bottom-nav {
-            position: fixed; bottom: 0; width: 100%; height: 75px;
-            background: #111; border-top: 1px solid #222;
-            display: flex; justify-content: space-around; align-items: center;
-        }
+        /* Bottom Nav */
+        .nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #111; border-top: 1px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
         .nav-link { text-align: center; color: var(--text-gray); text-decoration: none; font-size: 10px; }
         .nav-link.active { color: var(--nv-green); }
         .nav-link i { font-size: 22px; display: block; margin-bottom: 4px; }
 
-        /* Popup */
-        .modal { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
-            display: none; align-items: center; justify-content: center; z-index: 1000;
-        }
-        .modal-content { background: var(--card-bg); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid var(--nv-green); }
+        /* Modal */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-box { background: var(--card); padding: 30px; border-radius: 20px; text-align: center; width: 80%; border: 1px solid var(--nv-green); }
+
+        /* Leaderboard List */
+        .list-item { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #222; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="top-bar">
-        <div class="user-info">
-            <img src="https://via.placeholder.com/38" class="avatar">
-            <div>
-                <div style="font-size: 14px; font-weight: bold;">User_8392479231</div>
-                <div class="mining-status">● Mining Aktif (Simülasyon)</div>
-            </div>
+    <div id="popup" class="modal">
+        <div class="modal-box">
+            <i id="pop-icon" class="fas fa-check-circle" style="font-size: 50px; color: var(--nv-green);"></i>
+            <h3 id="pop-title" style="margin-top: 15px;">BAŞARILI!</h3>
+            <p id="pop-text" style="color: var(--text-gray); margin-top: 10px; font-size: 14px;"></p>
+            <button class="t-btn" style="margin-top: 20px; width: 100%;" onclick="closePopup()">KAPAT</button>
         </div>
-        <select style="background:none; color:white; border:1px solid #333; border-radius:5px; padding:2px 5px;">
-            <option>TR</option>
-            <option>EN</option>
-        </select>
     </div>
 
-    <div id="home" class="page active">
-        <div class="stats-container">
-            <div class="stat-card"><div class="stat-label">Günlük Kazanç</div><div class="stat-value">0.98 NVAI</div></div>
-            <div class="stat-card"><div class="stat-label">Saatlik Hız</div><div class="stat-value">0.0408/H</div></div>
-        </div>
-
-        <div class="mining-display">
-            <div class="fan-container">
-                <i class="fas fa-fan fan-img" style="font-size: 180px; color: var(--nv-blue);"></i>
+    <div id="page-home" class="page active">
+        <div class="header">
+            <div class="user-pill">
+                <img src="https://via.placeholder.com/30" style="border-radius: 50%;">
+                <span style="font-size: 12px; font-weight: bold;">Admin_8392479231</span>
             </div>
-            <div class="total-points" id="points">0.0000 NVAI</div>
-            <div class="progress-box"><div class="progress-fill" id="p-bar"></div></div>
-            <div id="countdown" style="font-family: monospace; font-size: 18px;">24:00:00</div>
+            <div class="status-badge">● MINING AKTIF</div>
         </div>
 
-        <h3 style="margin-bottom: 15px;">Görev Merkezi</h3>
-        <div id="tasks">
+        <div class="grid-stats">
+            <div class="s-card"><div class="s-label">Günlük</div><div class="s-value">0.98 NVAI</div></div>
+            <div class="s-card"><div class="s-label">Saatlik</div><div class="s-value">0.0408/H</div></div>
+        </div>
+
+        <div class="mining-zone">
+            <div class="fan-box"><i class="fas fa-fan fan-icon"></i></div>
+            <div class="points-main" id="balance">0.0000 NVAI</div>
+            <div class="p-bar-bg"><div id="p-fill" class="p-bar-fill"></div></div>
+            <div id="timer" style="margin-top: 10px; font-family: monospace; font-size: 18px;">24:00:00</div>
+            <p style="font-size: 10px; color: var(--text-gray); margin-top: 15px;">*Tüm kazanımlar simülasyon puanıdır.</p>
+        </div>
+
+        <h3 style="margin: 20px 0 15px;">Görev Merkezi</h3>
+        <div id="task-list">
             <div class="task-card">
-                <div class="task-header">
-                    <div>
-                        <div style="font-weight: bold;">Resmi Kanala Katıl</div>
-                        <div class="task-reward">+0.10 NVAI</div>
-                    </div>
-                    <button class="btn-action" onclick="window.open('https://t.me/EarnTether2026')">Git</button>
-                </div>
+                <div><h4>Resmi Kanal</h4><div class="s-value" style="font-size:12px">+0.10 NVAI</div></div>
+                <button class="t-btn" onclick="doTask(1, 'https://t.me/EarnTether2026')">Git</button>
+            </div>
+            <div class="task-card">
+                <div><h4>Binance News</h4><div class="s-value" style="font-size:12px">+0.10 NVAI</div></div>
+                <button class="t-btn" onclick="doTask(2, 'https://t.me/BinanceBrazilNews')">Git</button>
+            </div>
+            <div class="task-card">
+                <div><h4>Instagram News</h4><div class="s-value" style="font-size:12px">+0.10 NVAI</div></div>
+                <button class="t-btn" onclick="doTask(3, 'https://t.me/instagramNewsBrazil')">Git</button>
             </div>
         </div>
     </div>
 
-    <div id="leaderboard" class="page">
-        <h2 style="text-align: center; margin-bottom: 20px;">Liderlik Tablosu</h2>
-        <div style="background: var(--card-bg); border-radius: 15px; padding: 10px;">
-            <div style="display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #222;">
-                <span>1. CryptoKing</span><span>1,450 NVAI</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #222;">
-                <span>2. AI_Master</span><span>1,220 NVAI</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 15px; color: var(--nv-green); font-weight: bold;">
-                <span>99. Siz (8392...)</span><span>0.0000 NVAI</span>
-            </div>
+    <div id="page-leader" class="page">
+        <h2 style="text-align:center; margin-bottom:20px;">Liderlik Tablosu</h2>
+        <div class="grid-stats">
+            <div class="s-card" style="background:var(--nv-green); color:black">Günlük</div>
+            <div class="s-card">Haftalık</div>
+        </div>
+        <div style="background:var(--card); border-radius:15px;">
+            <div class="list-item"><span>1. CryptoKing</span><b>1,450 NVAI</b></div>
+            <div class="list-item"><span>2. AI_Master</span><b>1,220 NVAI</b></div>
+            <div class="list-item"><span>3. Miner_X</span><b>980 NVAI</b></div>
+            <div class="list-item" style="color:var(--nv-green)"><span>99. Siz (8392...)</span><b>0.0000 NVAI</b></div>
         </div>
     </div>
 
-    <div id="modal" class="modal" onclick="this.style.display='none'">
-        <div class="modal-content">
-            <i class="fas fa-check-circle" style="font-size: 50px; color: var(--nv-green); margin-bottom: 15px;"></i>
-            <h3>BAŞARILI!</h3>
-            <p style="color: var(--text-gray); margin-top: 10px;">Mining simülasyonu başarıyla başlatıldı.</p>
+    <div id="page-update" class="page">
+        <h2>Sürüm Notları</h2>
+        <div class="task-card" style="display:block; margin-top:20px;">
+            <h4 style="color:var(--nv-green)">v1.0.4 - Yapay Zeka Çekirdeği</h4>
+            <p style="font-size:12px; color:var(--text-gray); margin-top:5px;">- Fan animasyonu optimize edildi.<br>- Saniye bazlı kazanç motoru eklendi.</p>
+        </div>
+        <div class="task-card" style="opacity:0.5">
+            <h4>v1.0.5 - Yakında</h4>
+            <p style="font-size:12px;">Pazar yeri ve NFT entegrasyonu.</p>
         </div>
     </div>
 
-    <nav class="bottom-nav">
-        <a href="javascript:showPage('home')" class="nav-link active" id="nav-home"><i class="fas fa-home"></i>Bana Ait</a>
-        <a href="javascript:showPage('leaderboard')" class="nav-link" id="nav-leaderboard"><i class="fas fa-trophy"></i>Liderlik</a>
-        <a href="#" class="nav-link"><i class="fas fa-rocket"></i>Güncelleme</a>
-        <a href="#" class="nav-link"><i class="fas fa-users"></i>Takım</a>
-        <a href="#" class="nav-link"><i class="fas fa-user"></i>Profil</a>
+    <div id="page-team" class="page" style="text-align:center;">
+        <i class="fas fa-users" style="font-size:60px; color:var(--nv-blue); margin-bottom:20px;"></i>
+        <h2>Takımım</h2>
+        <div class="s-card" style="margin:20px 0;">
+            <div class="s-label">Davet Edilen</div>
+            <div class="s-value" style="font-size:24px;">0 Kişi</div>
+        </div>
+        <button class="t-btn" style="width:100%; padding:15px;" onclick="copyRef()">DAVET LINKINI KOPYALA</button>
+    </div>
+
+    <div id="page-profile" class="page">
+        <div style="text-align:center; margin-bottom:30px;">
+            <img src="https://via.placeholder.com/80" style="border-radius:50%; border:2px solid var(--nv-green);">
+            <h2 style="margin-top:10px;">Admin_8392479231</h2>
+            <p style="color:var(--text-gray); font-size:12px;">Kayıt: 15.01.2026</p>
+        </div>
+        <div class="task-card"><span>Dil Seçimi</span><b>Türkçe</b></div>
+        <div class="task-card"><span>Tema</span><b>Neon Dark</b></div>
+        <button class="t-btn" style="width:100%; background:#ff4444; color:white; margin-top:20px;">ÇIKIŞ YAP</button>
+    </div>
+
+    <nav class="nav">
+        <a href="javascript:void(0)" onclick="showPage('home')" class="nav-link active" id="n-home"><i class="fas fa-home"></i>Bana Ait</a>
+        <a href="javascript:void(0)" onclick="showPage('leader')" class="nav-link" id="n-leader"><i class="fas fa-trophy"></i>Liderlik</a>
+        <a href="javascript:void(0)" onclick="showPage('update')" class="nav-link" id="n-update"><i class="fas fa-rocket"></i>Güncelle</a>
+        <a href="javascript:void(0)" onclick="showPage('team')" class="nav-link" id="n-team"><i class="fas fa-users"></i>Takım</a>
+        <a href="javascript:void(0)" onclick="showPage('profile')" class="nav-link" id="n-profile"><i class="fas fa-user"></i>Profil</a>
     </nav>
 
     <script>
-        // Madencilik Değişkenleri
         let balance = 0.0000;
-        const dailyTarget = 0.98;
-        const secondRate = dailyTarget / 86400;
-        let timerSeconds = 86400;
+        let timer = 86400;
+        const rate = 0.98 / 86400;
 
-        function updateMining() {
-            // Puan Artışı
-            balance += secondRate;
-            document.getElementById('points').innerText = balance.toFixed(4) + " NVAI";
-
-            // Sayaç Azalışı
-            if(timerSeconds > 0) {
-                timerSeconds--;
-                let h = Math.floor(timerSeconds / 3600);
-                let m = Math.floor((timerSeconds % 3600) / 60);
-                let s = timerSeconds % 60;
-                document.getElementById('countdown').innerText = 
-                    `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-                
-                // Progress Bar Güncelleme
-                let progress = ((86400 - timerSeconds) / 86400) * 100;
-                document.getElementById('p-bar').style.width = progress + "%";
-            } else {
-                timerSeconds = 86400; // Reset
-            }
-        }
-
-        function showPage(pageId) {
+        // Sayfa Değiştirme Fonksiyonu
+        function showPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            document.getElementById('nav-' + pageId).classList.add('active');
+            document.getElementById('page-' + id).classList.add('active');
+            document.getElementById('n-' + id).classList.add('active');
         }
 
-        setInterval(updateMining, 1000);
-        
-        // Başlangıçta Popup Göster (Simülasyon)
-        setTimeout(() => { document.getElementById('modal').style.display = 'flex'; }, 1000);
+        // Mining Motoru
+        setInterval(() => {
+            balance += rate;
+            document.getElementById('balance').innerText = balance.toFixed(4) + " NVAI";
+            
+            if(timer > 0) {
+                timer--;
+                let h = Math.floor(timer/3600), m = Math.floor((timer%3600)/60), s = timer%60;
+                document.getElementById('timer').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                document.getElementById('p-fill').style.width = ((86400-timer)/86400*100) + "%";
+            }
+        }, 1000);
+
+        // Görev Sistemi
+        function doTask(id, url) {
+            window.open(url, '_blank');
+            setTimeout(() => {
+                openPopup("GÖREV TAMAMLANDI!", "0.10 NVAI bakiyenize eklendi.");
+                balance += 0.10;
+            }, 2000);
+        }
+
+        // Popup Fonksiyonları
+        function openPopup(title, text) {
+            document.getElementById('pop-title').innerText = title;
+            document.getElementById('pop-text').innerText = text;
+            document.getElementById('popup').style.display = 'flex';
+        }
+        function closePopup() { document.getElementById('popup').style.display = 'none'; }
+
+        function copyRef() {
+            openPopup("KOPYALANDI!", "Davet linkin başarıyla kopyalandı.");
+        }
+
+        // Açılış Mesajı
+        window.onload = () => {
+            setTimeout(() => openPopup("HOŞ GELDİN!", "Mining simülasyonu başarıyla başlatıldı."), 500);
+        };
     </script>
 </body>
 </html>
