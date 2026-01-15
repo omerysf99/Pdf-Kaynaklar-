@@ -1,12 +1,9 @@
 <!DOCTYPE html>
-<html lang="tr" dir="ltr">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#030406">
-    <title>NVIDIA Enterprise v6.0 Evolution Platinum</title>
+    <title>NVIDIA Enterprise v7.0 - Dual Ledger System</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -14,464 +11,268 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* ---------------------------------------------------------
-           1. CORE DESIGN SYSTEM & VARIABLES (DETAILED)
-        --------------------------------------------------------- */
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Outfit:wght@100;300;500;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@500;700&display=swap');
 
         :root {
             --nv-primary: #c1ff00;
-            --nv-primary-rgb: 193, 255, 0;
-            --nv-secondary: #00f0ff;
-            --nv-accent: #7000ff;
-            --nv-bg-deep: #030406;
-            --nv-bg-soft: #0a0c12;
-            --nv-card-bg: rgba(18, 20, 26, 0.7);
-            --nv-border: rgba(255, 255, 255, 0.05);
-            --nv-glass: rgba(255, 255, 255, 0.02);
-            --safe-area-bottom: env(safe-area-inset-bottom);
+            --nv-bg: #050608;
+            --nv-glass: rgba(20, 22, 28, 0.7);
+            --nv-border: rgba(255, 255, 255, 0.06);
         }
 
-        /* ---------------------------------------------------------
-           2. ADVANCED ANIMATION LIBRARY
-        --------------------------------------------------------- */
-        @keyframes master-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes pulse-glow { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.05); } }
-        @keyframes data-flow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        @keyframes scan-line-v6 { 0% { transform: translateY(-100%); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(300%); opacity: 0; } }
-        @keyframes float-y { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-        @keyframes slide-in-up { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes cyber-shimmer { 0% { left: -100%; } 100% { left: 100%; } }
-
-        /* ---------------------------------------------------------
-           3. BASE & COMPONENT STYLES
-        --------------------------------------------------------- */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none !important; }
-        html, body { 
-            background: var(--nv-bg-deep); 
-            color: #ffffff; 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            overflow: hidden; 
-            height: 100%; width: 100%; 
-            position: fixed;
+        body {
+            background: var(--nv-bg);
+            color: #fff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            background-image: radial-gradient(circle at 50% -20%, rgba(193, 255, 0, 0.05) 0%, transparent 50%);
         }
 
-        .custom-scroll { height: calc(100vh - 120px); overflow-y: auto; scrollbar-width: none; padding-bottom: 160px; }
+        .custom-scroll { height: calc(100vh - 100px); overflow-y: auto; padding-bottom: 140px; scrollbar-width: none; }
         .custom-scroll::-webkit-scrollbar { display: none; }
 
-        .glass-panel {
-            background: var(--nv-card-bg);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
+        .glass-card {
+            background: var(--nv-glass);
+            backdrop-filter: blur(25px);
             border: 1px solid var(--nv-border);
             border-radius: 2.5rem;
-            position: relative;
-            overflow: hidden;
         }
 
-        .shimmer-effect::after {
-            content: ""; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(193, 255, 0, 0.05), transparent);
-            animation: cyber-shimmer 3s infinite;
+        /* Bakiyeler Arası Akış Efekti */
+        @keyframes flow-up {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+        .transfer-particle {
+            position: absolute;
+            color: var(--nv-primary);
+            font-family: 'JetBrains Mono';
+            font-size: 12px;
+            pointer-events: none;
+            animation: flow-up 1s ease-out forwards;
         }
 
-        .nav-item-active { color: var(--nv-primary); filter: drop-shadow(0 0 8px rgba(193, 255, 0, 0.4)); }
-        
-        .btn-action-master {
-            background: linear-gradient(135deg, var(--nv-primary) 0%, #a3d800 100%);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .btn-action-master:active { transform: scale(0.94) translateY(2px); }
+        /* JPG Yüzen Animasyon */
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-15px) rotate(1deg); } }
+        .floating-gpu { animation: float 5s ease-in-out infinite; }
 
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-primary); box-shadow: 0 0 10px var(--nv-primary); }
-
-        .mono-tech { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
-        
-        /* ---------------------------------------------------------
-           4. DYNAMIC MODAL ENGINE STYLES
-        --------------------------------------------------------- */
-        .modal-blur-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 9000; }
-        .bottom-sheet { 
-            background: #0a0c10; border-top: 1px solid rgba(193, 255, 0, 0.15);
-            border-radius: 3.5rem 3.5rem 0 0; animation: slide-in-up 0.4s ease-out;
-        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .btn-active:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
-    <div id="app-root"></div>
+    <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo, useCallback, useRef } = React;
+        const { useState, useEffect, useCallback } = React;
 
-        /* ---------------------------------------------------------
-           5. ENTERPRISE SYSTEM DATA STRUCTURES
-        --------------------------------------------------------- */
-        const SYSTEM_DEFAULTS = {
-            VERSION: "6.0.4-PLATINUM",
-            ADMIN_ID: "8392479231",
-            MINING_COEFFICIENT: 0.08204545,
-            NETWORKS: [
-                { id: "A1", loc: "Stockholm", load: "42%", ping: "12ms" },
-                { id: "B4", loc: "Frankfurt", load: "88%", ping: "24ms" }
-            ],
-            TASKS: [
-                { id: 101, type: "social", title: "Join Telegram Hub", reward: 0.50, icon: "fa-paper-plane", color: "blue", status: "open" },
-                { id: 102, type: "boost", title: "Invite 2 Engineers", reward: 2.00, icon: "fa-user-group", color: "green", status: "open" },
-                { id: 103, type: "watch", title: "NVIDIA Keynote 2026", reward: 1.20, icon: "fa-play", color: "purple", status: "new" },
-                { id: 104, type: "verify", title: "KYC Verification", reward: 5.00, icon: "fa-shield-check", color: "orange", status: "locked" }
-            ],
-            RANKINGS: [
-                { rank: 1, name: "AlphaMiner_99", total: "1,402,092", growth: "+12%" },
-                { rank: 2, name: "Crypto_Nvidia_X", total: "984,200", growth: "+8%" },
-                { rank: 3, name: "Chalpus_Leader", total: "742,100", growth: "+15%" },
-                { rank: 4, name: "NodeMaster_SE", total: "512,040", growth: "+5%" },
-                { rank: 5, name: "Enterprise_User", total: "204,900", growth: "+2%" }
-            ]
-        };
-
-        /* ---------------------------------------------------------
-           6. ATOMIC COMPONENTS
-        --------------------------------------------------------- */
-        const StatBadge = ({ label, value, color = "primary" }) => (
-            <div className="glass-panel p-4 flex flex-col gap-1 flex-1">
-                <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">{label}</span>
-                <span className={`text-sm font-black mono-tech ${color === "primary" ? 'text-[#c1ff00]' : 'text-blue-400'}`}>{value}</span>
-            </div>
-        );
-
-        const SectionHeader = ({ title, badge }) => (
-            <div className="flex items-center justify-between px-2 mb-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-1 h-4 bg-[#c1ff00] rounded-full"></div>
-                    <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400">{title}</h3>
-                </div>
-                {badge && <span className="bg-blue-500/10 text-blue-400 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">{badge}</span>}
-            </div>
-        );
-
-        /* ---------------------------------------------------------
-           7. MAIN APPLICATION CONTROLLER
-        --------------------------------------------------------- */
-        const NvidiaEnterpriseOS = () => {
-            // STATE MANAGEMENT
+        const App = () => {
             const [tab, setTab] = useState('home');
-            const [balance, setBalance] = useState(() => parseFloat(localStorage.getItem('v6_bal')) || 0.0542);
-            const [pending, setPending] = useState(0);
-            const [lastTs, setLastTs] = useState(() => parseInt(localStorage.getItem('v6_ts')) || Date.now());
-            const [miningActive, setMiningActive] = useState(true);
+            
+            // 1. MAIN BALANCE: Kullanıcının topladığı kalıcı para
+            const [mainBalance, setMainBalance] = useState(() => 
+                parseFloat(localStorage.getItem('nv_main_bal')) || 12.450200
+            );
+            
+            // 2. CLAIM BALANCE: Kazılan ama henüz toplanmayan para
+            const [claimBalance, setClaimBalance] = useState(0.000000);
+            
             const [isClaiming, setIsClaiming] = useState(false);
-            const [modal, setModal] = useState({ show: false, content: null });
+            const miningRate = 0.08204545; // Saatlik kazanç
 
-            // MINING ENGINE (REAL-TIME TICKER)
+            // Madencilik Ticker: Claim Balance sürekli artar
             useEffect(() => {
-                const miningTicker = setInterval(() => {
-                    const now = Date.now();
-                    const seconds = (now - lastTs) / 1000;
-                    setPending(seconds * (SYSTEM_DEFAULTS.MINING_COEFFICIENT / 3600));
-                }, 48);
-                return () => clearInterval(miningTicker);
-            }, [lastTs]);
+                const timer = setInterval(() => {
+                    setClaimBalance(prev => prev + (miningRate / 36000)); // 100ms başına artış
+                }, 100);
+                return () => clearInterval(timer);
+            }, []);
 
-            // CORE ACTIONS
-            const executeClaim = useCallback(() => {
-                if (pending < 0.00001) return;
-                setIsClaiming(true);
+            // Toplama Fonksiyonu
+            const handleClaimTransfer = () => {
+                if (claimBalance < 0.000001) return;
                 
-                // Visual FX
-                confetti({
-                    particleCount: 150, spread: 80, origin: { y: 0.75 },
-                    colors: ['#c1ff00', '#ffffff', '#00f0ff'],
-                    ticks: 250
-                });
+                setIsClaiming(true);
+                const amountToTransfer = claimBalance;
 
                 setTimeout(() => {
-                    const newBal = balance + pending;
-                    setBalance(newBal);
-                    setPending(0);
-                    setLastTs(Date.now());
+                    setMainBalance(prev => {
+                        const newTotal = prev + amountToTransfer;
+                        localStorage.setItem('nv_main_bal', newTotal.toFixed(6));
+                        return newTotal;
+                    });
+                    setClaimBalance(0);
                     setIsClaiming(false);
-                    localStorage.setItem('v6_bal', newBal.toString());
-                    localStorage.setItem('v6_ts', Date.now().toString());
-                }, 800);
-            }, [balance, pending]);
-
-            // VIEW RENDERER
-            return (
-                <div className="flex flex-col h-full w-full max-w-md mx-auto relative shadow-2xl overflow-hidden bg-[#030406]">
                     
-                    {/* GLOBAL STATUS BAR */}
-                    <div className="pt-12 px-8 flex justify-between items-center z-[100]">
-                        <div className="flex items-center gap-4 group">
-                            <div className="relative">
-                                <div className="absolute -inset-2 bg-[#c1ff00]/10 rounded-full blur-xl group-hover:bg-[#c1ff00]/20 transition-all"></div>
-                                <div className="w-12 h-12 glass-panel p-1 border-[#c1ff00]/20">
-                                    <img src="nvdia.jpg" className="w-full h-full object-cover rounded-2xl" />
-                                </div>
+                    confetti({
+                        particleCount: 100,
+                        spread: 70,
+                        origin: { y: 0.8 },
+                        colors: ['#c1ff00', '#ffffff']
+                    });
+                }, 600);
+            };
+
+            return (
+                <div className="max-w-md mx-auto h-screen relative flex flex-col">
+                    
+                    {/* ÜST HEADER */}
+                    <header className="p-8 flex justify-between items-center z-50">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 glass-card p-1 border-[#c1ff00]/20">
+                                <img src="nvdia.jpg" className="w-full h-full object-cover rounded-xl" />
                             </div>
-                            <div className="flex flex-col">
-                                <h1 className="text-sm font-black uppercase tracking-tighter leading-none italic">Chalpus Evolution</h1>
-                                <div className="flex items-center gap-2 mt-1.5">
-                                    <div className="status-dot"></div>
-                                    <span className="text-[9px] font-bold text-zinc-500 uppercase mono-tech tracking-widest">UID: {SYSTEM_DEFAULTS.ADMIN_ID}</span>
-                                </div>
+                            <div>
+                                <h1 className="text-xs font-black uppercase tracking-widest italic">Nvidia v7.0</h1>
+                                <p className="text-[9px] text-zinc-600 font-bold mono uppercase">ID: 8392479231</p>
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <button className="w-10 h-10 glass-panel flex items-center justify-center text-zinc-500 hover:text-white transition-colors">
-                                <i className="fas fa-signal-stream text-xs"></i>
-                            </button>
-                            <button className="w-10 h-10 glass-panel flex items-center justify-center text-zinc-500 hover:text-white transition-colors">
-                                <i className="fas fa-bell text-xs"></i>
-                            </button>
+                            <div className="h-8 px-3 glass-card flex items-center gap-2 border-[#c1ff00]/10">
+                                <div className="w-1.5 h-1.5 bg-[#c1ff00] rounded-full animate-pulse"></div>
+                                <span className="text-[9px] font-black uppercase text-zinc-400">Live</span>
+                            </div>
                         </div>
-                    </div>
+                    </header>
 
-                    {/* DYNAMIC VIEWPORT SCROLLER */}
-                    <main className="custom-scroll px-8 mt-6">
-                        
-                        {/* 1. VIEW: HOME DASHBOARD */}
+                    <div className="custom-scroll px-8">
                         {tab === 'home' && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
                                 
-                                {/* PRIMARY BALANCE WIDGET */}
-                                <div className="glass-panel p-8 bg-gradient-to-br from-zinc-900/50 to-transparent shimmer-effect">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#c1ff00]/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
-                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-4">Network Liquidity</p>
-                                    <div className="flex items-baseline gap-3">
-                                        <h2 className="text-5xl font-black mono-tech tracking-tighter tabular-nums drop-shadow-2xl">
-                                            {(balance + pending).toFixed(6)}
-                                        </h2>
-                                        <span className="text-xs font-black text-[#c1ff00] uppercase tracking-widest">NV</span>
+                                {/* ANA BAKİYE (MAIN BALANCE) */}
+                                <div className="glass-card p-8 bg-gradient-to-br from-[#c1ff00]/5 to-transparent relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                                        <i className="fas fa-wallet text-6xl"></i>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-white/5">
-                                        <div>
-                                            <p className="text-[9px] text-zinc-600 font-bold uppercase mb-1">Hash Authority</p>
-                                            <p className="text-sm font-black text-zinc-200 mono-tech">42.52 MH/S</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[9px] text-zinc-600 font-bold uppercase mb-1">Power Efficiency</p>
-                                            <p className="text-sm font-black text-blue-400 mono-tech">98.4%</p>
-                                        </div>
+                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-3">Main Balance</p>
+                                    <div className="flex items-baseline gap-2">
+                                        <h2 className="text-5xl font-black mono tracking-tighter tabular-nums text-white">
+                                            {mainBalance.toFixed(6)}
+                                        </h2>
+                                        <span className="text-xs font-bold text-[#c1ff00] uppercase tracking-widest">NV</span>
+                                    </div>
+                                    <div className="mt-6 flex items-center gap-2">
+                                        <span className="text-[10px] font-bold text-zinc-600 uppercase">Available for withdrawal</span>
+                                        <i className="fas fa-circle-check text-green-500 text-[10px]"></i>
                                     </div>
                                 </div>
 
-                                {/* JPG HARDWARE VISUALIZATION (İSTEDİĞİN GİBİ MERKEZDE) */}
-                                <div className="flex flex-col items-center gap-6 py-4">
+                                {/* JPG HARDWARE (MERKEZİ ODAK) */}
+                                <div className="flex flex-col items-center gap-6">
                                     <div className="relative group">
-                                        <div className="absolute -inset-8 bg-blue-500/10 rounded-full blur-[100px] animate-pulse"></div>
-                                        <div className="absolute -inset-1 bg-gradient-to-r from-transparent via-[#c1ff00]/20 to-transparent rounded-[4rem] animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                        
-                                        <div className="w-64 h-64 glass-panel border-white/10 overflow-hidden float-y p-2 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
-                                            <div className="w-full h-full rounded-[2rem] overflow-hidden relative">
-                                                <img src="nvdia.jpg" className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-1000" />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                                                <div className="absolute bottom-4 left-0 right-0 text-center">
-                                                    <span className="text-[9px] font-black text-[#c1ff00] uppercase tracking-[0.4em] bg-black/60 px-3 py-1 rounded-full backdrop-blur-md border border-[#c1ff00]/20">RTX Pro Active</span>
-                                                </div>
+                                        <div className="absolute inset-0 bg-[#c1ff00]/10 blur-[80px] rounded-full"></div>
+                                        <div className="w-60 h-60 glass-card p-2 floating-gpu border-white/10 shadow-2xl relative z-10">
+                                            <div className="w-full h-full rounded-[2rem] overflow-hidden">
+                                                <img src="nvdia.jpg" className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-[2s]" />
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* KAZANCI TOPLA BUTONU (JPG'NİN HEMEN ALTINDA) */}
-                                    <div className="w-full px-2">
+                                    {/* BİRİKEN BAKİYE VE CLAIM BUTONU (JPG ALTINDA) */}
+                                    <div className="w-full space-y-4">
+                                        <div className="glass-card p-6 border-dashed border-zinc-800 flex flex-col items-center">
+                                            <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2">Claimable Earnings</p>
+                                            <div className="text-2xl font-black mono text-[#c1ff00] tabular-nums">
+                                                +{claimBalance.toFixed(8)}
+                                            </div>
+                                        </div>
+
                                         <button 
-                                            disabled={isClaiming || pending < 0.00001}
-                                            onClick={executeClaim}
-                                            className={`w-full py-6 rounded-[2.5rem] font-black uppercase tracking-[0.3em] text-xs shadow-2xl transition-all btn-action-master border-none text-black
-                                                ${(isClaiming || pending < 0.00001) ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:shadow-[#c1ff00]/20 hover:-translate-y-1'}
+                                            onClick={handleClaimTransfer}
+                                            disabled={isClaiming || claimBalance < 0.000001}
+                                            className={`w-full py-6 rounded-3xl font-black uppercase tracking-[0.4em] text-[11px] btn-active transition-all shadow-2xl border-none
+                                                ${(isClaiming || claimBalance < 0.000001) 
+                                                    ? 'bg-zinc-900 text-zinc-700 cursor-not-allowed' 
+                                                    : 'bg-[#c1ff00] text-black shadow-[#c1ff00]/20 hover:shadow-[#c1ff00]/40'}
                                             `}
                                         >
-                                            {isClaiming ? 'İşleniyor (Signal Encryption)...' : 'Hasılatı Sisteme Aktar (Claim)'}
+                                            {isClaiming ? 'Transferring Tokens...' : 'Collect Earnings (Claim)'}
                                         </button>
-                                        <p className="text-center text-[8px] text-zinc-700 font-bold uppercase mt-4 tracking-widest">Secured by NVIDIA Enterprise Gateway v6.0</p>
                                     </div>
                                 </div>
 
-                                {/* GÖREVLER MERKEZİ (KAZANCIN ALTINDA) */}
+                                {/* GÖREVLER (KAZANÇLARIN ALTINDA) */}
                                 <div className="space-y-4">
-                                    <SectionHeader title="Görev Merkezi" badge="4 NEW" />
-                                    
-                                    <div className="grid gap-3">
-                                        {SYSTEM_DEFAULTS.TASKS.map(task => (
-                                            <div key={task.id} className="glass-panel p-5 flex items-center justify-between group hover:bg-white/[0.04] transition-all cursor-pointer">
-                                                <div className="flex items-center gap-5">
-                                                    <div className={`w-14 h-14 rounded-2xl bg-zinc-900 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                                        <i className={`fas ${task.icon} text-lg ${task.status === 'locked' ? 'text-zinc-700' : 'text-zinc-400'}`}></i>
-                                                    </div>
-                                                    <div>
-                                                        <p className={`text-[11px] font-black uppercase tracking-tight ${task.status === 'locked' ? 'text-zinc-600' : 'text-zinc-200'}`}>{task.title}</p>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <span className="text-[9px] font-black text-[#c1ff00] mono-tech">+{task.reward.toFixed(2)} NV</span>
-                                                            <div className="w-1 h-1 bg-zinc-700 rounded-full"></div>
-                                                            <span className="text-[8px] font-bold text-zinc-600 uppercase">Verification Required</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="w-8 h-8 rounded-full border border-white/5 flex items-center justify-center">
-                                                    <i className={`fas ${task.status === 'locked' ? 'fa-lock' : 'fa-chevron-right'} text-[10px] text-zinc-800`}></i>
-                                                </div>
+                                    <div className="flex items-center justify-between px-2">
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500">Node Challenges</h3>
+                                        <span className="text-[9px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded font-black uppercase">Active</span>
+                                    </div>
+                                    <div className="glass-card p-5 flex items-center justify-between hover:bg-white/[0.03] transition-all btn-active cursor-pointer">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center text-xl text-zinc-500">
+                                                <i className="fab fa-telegram"></i>
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 2. VIEW: NETWORK STATS (TAKIM) */}
-                        {tab === 'team' && (
-                            <div className="space-y-6 animate-in slide-in-from-right duration-500">
-                                <div className="glass-panel p-10 text-center relative overflow-hidden">
-                                    <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"></div>
-                                    <div className="w-20 h-20 bg-zinc-900 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 shadow-2xl border border-white/5">
-                                        <i className="fas fa-users-medical text-[#c1ff00] text-3xl"></i>
-                                    </div>
-                                    <h2 className="text-xl font-black uppercase italic tracking-tighter">Cluster Alliance</h2>
-                                    <p className="text-xs text-zinc-500 font-medium leading-relaxed px-4 mt-4">Expand your mining cluster. Receive 15% of all hardware output from your invited engineers.</p>
-                                    
-                                    <div className="mt-10 p-6 bg-black/40 rounded-[2.5rem] border border-white/10">
-                                        <p className="text-[9px] font-black text-zinc-600 uppercase mb-3 tracking-widest">Your Private Node Link</p>
-                                        <div className="bg-zinc-900 p-4 rounded-2xl border border-[#c1ff00]/10 mono-tech text-[10px] text-blue-400 break-all mb-6">
-                                            https://t.me/NvidiaMiner_Bot?start=ref_{SYSTEM_DEFAULTS.ADMIN_ID}
-                                        </div>
-                                        <button className="w-full py-5 bg-white text-black rounded-2xl text-[11px] font-black uppercase tracking-widest btn-action-master border-none shadow-xl">
-                                            Kodu Kopyala
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <StatBadge label="Total Peers" value="42" />
-                                    <StatBadge label="Cluster Output" value="+842.1 NV" color="blue" />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 3. VIEW: LEADERSHIP (LİDERLİK) */}
-                        {tab === 'leader' && (
-                            <div className="space-y-6 animate-in slide-in-from-right duration-500">
-                                <SectionHeader title="Global Top Performers" />
-                                <div className="space-y-3">
-                                    {SYSTEM_DEFAULTS.RANKINGS.map(user => (
-                                        <div key={user.rank} className="glass-panel p-5 flex items-center justify-between border-l-4 border-transparent hover:border-[#c1ff00] transition-all">
-                                            <div className="flex items-center gap-5">
-                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm
-                                                    ${user.rank === 1 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-zinc-900 text-zinc-500'}
-                                                `}>
-                                                    {user.rank === 1 ? <i className="fas fa-crown"></i> : `#${user.rank}`}
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-black uppercase tracking-tight">{user.name}</p>
-                                                    <p className="text-[9px] font-bold text-zinc-600 uppercase mt-0.5">Yield Growth: <span className="text-green-500">{user.growth}</span></p>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-xs font-black mono-tech">{user.total}</p>
-                                                <p className="text-[8px] font-black text-zinc-700 uppercase">NV COINS</p>
+                                            <div>
+                                                <p className="text-[11px] font-black uppercase tracking-tight">Enterprise Channel</p>
+                                                <p className="text-[9px] font-black text-[#c1ff00] mono mt-1">+0.50 NV BONUS</p>
                                             </div>
                                         </div>
-                                    ))}
+                                        <i className="fas fa-chevron-right text-xs text-zinc-800"></i>
+                                    </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* 4. VIEW: PROFILE (BEN) */}
                         {tab === 'ben' && (
-                            <div className="space-y-6 animate-in slide-in-from-bottom-5 duration-500">
-                                <div className="glass-panel p-8 flex items-center gap-6 bg-gradient-to-br from-[#c1ff00]/5 to-transparent border-b-2 border-[#c1ff00]/10">
-                                    <div className="w-24 h-24 rounded-[3rem] border-2 border-[#c1ff00]/30 p-1.5 overflow-hidden">
-                                        <img src="nvdia.jpg" className="w-full h-full object-cover rounded-[2.5rem]" />
+                            <div className="space-y-6 animate-in slide-in-from-bottom-5 duration-700">
+                                <div className="glass-card p-8 flex items-center gap-6">
+                                    <div className="w-20 h-20 rounded-[2.5rem] border-2 border-[#c1ff00]/20 p-1">
+                                        <img src="nvdia.jpg" className="w-full h-full object-cover rounded-3xl" />
                                     </div>
-                                    <div className="flex-1">
-                                        <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-none">Admin Chalpus</h2>
-                                        <div className="flex gap-2 mt-3">
-                                            <span className="text-[9px] bg-blue-500/10 text-blue-400 font-black px-2 py-0.5 rounded uppercase">Elite Node</span>
-                                            <span className="text-[9px] bg-zinc-800 text-zinc-400 font-black px-2 py-0.5 rounded uppercase mono-tech">v6.0</span>
-                                        </div>
+                                    <div>
+                                        <h2 className="text-xl font-black uppercase italic tracking-tighter">Chalpus Admin</h2>
+                                        <p className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded inline-block mt-2 font-black uppercase tracking-widest">Enterprise Tier</p>
                                     </div>
                                 </div>
 
-                                {/* WALLET MASTER INTERFACE */}
-                                <div className="glass-panel p-8 space-y-8">
-                                    <div className="flex justify-between items-center">
-                                        <div className="flex flex-col gap-1">
-                                            <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Liquidation Hub</p>
-                                            <h4 className="text-xs font-black uppercase text-zinc-200 tracking-tight">Enterprise USDT Wallet</h4>
-                                        </div>
-                                        <div className="w-12 h-12 bg-[#26a17b]/10 rounded-2xl flex items-center justify-center text-[#26a17b]">
-                                            <i className="fas fa-vault text-xl"></i>
-                                        </div>
+                                <div className="glass-card p-8">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <span className="text-xs font-black uppercase text-zinc-500 tracking-widest">Withdrawal Hub</span>
+                                        <i className="fas fa-vault text-[#c1ff00]"></i>
                                     </div>
-
-                                    <div className="flex items-baseline gap-3">
-                                        <h3 className="text-4xl font-black mono-tech leading-none tracking-tighter">0.00</h3>
-                                        <span className="text-xs font-black text-zinc-500">USDT</span>
+                                    <div className="flex items-baseline gap-2 mb-8">
+                                        <h3 className="text-4xl font-black mono tracking-tighter">0.00</h3>
+                                        <span className="text-xs font-bold text-zinc-600">USDT</span>
                                     </div>
-
                                     <div className="grid grid-cols-2 gap-4">
-                                        <button className="py-5 glass-panel bg-red-500/5 text-red-500 font-black uppercase text-[10px] tracking-[0.2em] border-red-500/20 hover:bg-red-500/10 transition-all btn-action-master border-none">Geri Çek</button>
-                                        <button className="py-5 glass-panel bg-blue-500/5 text-blue-500 font-black uppercase text-[10px] tracking-[0.2em] border-blue-500/20 hover:bg-blue-500/10 transition-all btn-action-master border-none">Takas Et</button>
+                                        <button className="py-5 glass-card bg-zinc-900/50 text-[10px] font-black uppercase tracking-widest border-none btn-active">Withdraw</button>
+                                        <button className="py-5 glass-card bg-[#c1ff00] text-black text-[10px] font-black uppercase tracking-widest border-none btn-active">Exchange</button>
                                     </div>
-                                </div>
-
-                                {/* APP SETTINGS LIST */}
-                                <div className="glass-panel overflow-hidden">
-                                    {[
-                                        { label: "Security & Encryption", icon: "fa-shield-halved", color: "zinc" },
-                                        { label: "Hardware Logs", icon: "fa-terminal", color: "zinc" },
-                                        { label: "Global Node Settings", icon: "fa-sliders", color: "zinc" },
-                                        { label: "Help & Enterprise Support", icon: "fa-headset", color: "zinc" }
-                                    ].map((item, idx) => (
-                                        <div key={idx} className="p-6 flex items-center justify-between border-b border-white/5 last:border-none hover:bg-white/[0.03] transition-colors cursor-pointer group">
-                                            <div className="flex items-center gap-5">
-                                                <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-zinc-500 group-hover:text-white transition-all">
-                                                    <i className={`fas ${item.icon}`}></i>
-                                                </div>
-                                                <span className="text-xs font-black uppercase tracking-tight text-zinc-300 group-hover:text-white">{item.label}</span>
-                                            </div>
-                                            <i className="fas fa-chevron-right text-[10px] text-zinc-800"></i>
-                                        </div>
-                                    ))}
                                 </div>
                             </div>
                         )}
-                    </main>
+                    </div>
 
-                    {/* PLATINUM BOTTOM NAVIGATION (FLOATING ARCHITECTURE) */}
-                    <nav className="fixed bottom-0 left-0 right-0 h-32 bg-[#030406]/80 backdrop-blur-3xl border-t border-white/5 px-8 pb-10 flex justify-between items-center z-[2000] max-w-md mx-auto">
+                    {/* DİNAMİK ALT NAVİGASYON */}
+                    <nav className="fixed bottom-0 left-0 right-0 h-32 bg-black/60 backdrop-blur-3xl border-t border-white/5 px-10 pb-10 flex justify-between items-center z-[2000] max-w-md mx-auto">
                         {[
-                            { id: 'home', icon: 'fa-microchip-ai', label: 'Panel' },
-                            { id: 'team', icon: 'fa-users-gear', label: 'Takım' },
-                            { id: 'leader', icon: 'fa-trophy-star', label: 'Liderlik' },
-                            { id: 'ben', icon: 'fa-user-vneck', label: 'Ben' }
-                        ].map(menu => (
+                            { id: 'home', icon: 'fa-cube', label: 'Miner' },
+                            { id: 'team', icon: 'fa-users', label: 'Nodes' },
+                            { id: 'leader', icon: 'fa-trophy', label: 'Stats' },
+                            { id: 'ben', icon: 'fa-user-gear', label: 'System' }
+                        ].map(m => (
                             <button 
-                                key={menu.id} 
-                                onClick={() => setTab(menu.id)} 
-                                className={`flex flex-col items-center gap-2 transition-all duration-500 ${tab === menu.id ? 'nav-item-active scale-110 -translate-y-2' : 'text-zinc-700 hover:text-zinc-500'}`}
+                                key={m.id} 
+                                onClick={() => setTab(m.id)} 
+                                className={`flex flex-col items-center gap-2 transition-all duration-300 ${tab === m.id ? 'text-[#c1ff00] scale-110' : 'text-zinc-700'}`}
                             >
-                                <div className={`w-14 h-10 rounded-2xl flex items-center justify-center transition-all ${tab === menu.id ? 'bg-[#c1ff00]/10' : ''}`}>
-                                    <i className={`fas ${menu.icon} text-xl`}></i>
+                                <div className={`w-12 h-10 rounded-2xl flex items-center justify-center transition-all ${tab === m.id ? 'bg-[#c1ff00]/10' : ''}`}>
+                                    <i className={`fas ${m.icon} text-lg`}></i>
                                 </div>
-                                <span className="text-[10px] font-black uppercase tracking-tighter">{menu.label}</span>
+                                <span className="text-[9px] font-black uppercase tracking-tighter">{m.label}</span>
                             </button>
                         ))}
                     </nav>
-
-                    {/* GLOBAL LOADER LAYER (ONLY ON MOUNT) */}
-                    <div id="boot-loader" className="hidden fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center gap-6">
-                        <div className="w-24 h-24 border-2 border-[#c1ff00]/20 rounded-full border-t-[#c1ff00] animate-spin"></div>
-                        <p className="text-[10px] font-black text-[#c1ff00] uppercase tracking-[0.5em] animate-pulse">Initializing Evolution OS...</p>
-                    </div>
-
                 </div>
             );
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('app-root'));
-        root.render(<NvidiaEnterpriseOS />);
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
