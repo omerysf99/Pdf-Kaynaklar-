@@ -2,56 +2,63 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NVIDIA Miner UI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NVIDIA AI Mining Bot</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
+            --tg-bg: #000000;
+            --tg-card: #1c1c1e;
             --nv-green: #76b900;
-            --nv-bg: #0b0b0b;
-            --nv-card: #151515;
-            --nv-text-gray: #a0a0a0;
-            --nv-border: #222;
+            --nv-blue: #0088ff;
+            --text-gray: #8e8e93;
         }
 
+        /* Telegram Scroll Engelleme ve Full Screen */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body {
-            background-color: var(--nv-bg);
+            background-color: var(--tg-bg);
             color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 90px; /* Menü boşluğu */
         }
 
-        /* Üst Header */
-        .header {
-            width: 100%;
-            padding: 15px 20px;
+        /* Üst Bar (Admin ID ve Dil) */
+        .top-nav {
+            padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #444; }
-        
-        .lang-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid #333;
-            color: white;
-            padding: 5px 15px;
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #1c1c1e;
+            padding: 5px 12px;
             border-radius: 20px;
-            display: flex; align-items: center; gap: 5px;
         }
 
-        /* Madenci Kartları */
-        .container { width: 92%; max-width: 500px; margin-top: 10px; }
+        .avatar { width: 30px; height: 30px; border-radius: 50%; background: #333; }
 
-        .stat-row {
-            background: var(--nv-card);
-            border: 1px solid var(--nv-border);
+        .lang-select {
+            background: #1c1c1e;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 13px;
+        }
+
+        /* Ana Grid ve Kartlar */
+        .content { padding: 0 15px; }
+
+        .stat-card {
+            background: #151515;
+            border: 1px solid #2c2c2e;
             border-radius: 12px;
             padding: 12px 15px;
             display: flex;
@@ -60,194 +67,244 @@
             margin-bottom: 10px;
         }
 
-        .miner-label {
+        .tag {
             background: var(--nv-green);
             color: black;
-            font-weight: bold;
-            padding: 4px 12px;
-            border-radius: 8px;
-            font-size: 14px;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 6px;
         }
 
-        .value-green { color: var(--nv-green); font-weight: bold; font-size: 18px; }
-        .unit { font-size: 10px; margin-left: 3px; }
+        .val-big { font-size: 20px; font-weight: bold; color: var(--nv-green); }
 
-        /* Fan ve Sayaç Alanı */
-        .mining-section {
+        /* Pervane Alanı */
+        .mining-display {
             text-align: center;
-            padding: 20px 0;
+            margin: 30px 0;
             position: relative;
         }
 
-        .fan-container {
-            width: 220px;
-            height: 220px;
+        .fan-box {
+            position: relative;
+            width: 200px;
+            height: 200px;
             margin: 0 auto;
-            position: relative;
-            background: radial-gradient(circle, #003366 0%, transparent 70%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .fan-img {
-            width: 100%;
+        .fan-glow {
+            position: absolute;
+            width: 150px; height: 150px;
+            background: var(--nv-blue);
+            filter: blur(60px);
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        .fan-icon {
+            font-size: 160px;
+            color: var(--nv-blue);
+            z-index: 1;
             animation: spin 3s linear infinite;
         }
 
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        .mining-amount { font-size: 28px; font-weight: 500; margin: 15px 0; }
+        .mining-live-val {
+            font-size: 28px;
+            font-weight: 600;
+            margin: 15px 0 5px;
+        }
 
         /* Progress Bar */
-        .progress-container {
-            width: 100%;
-            height: 12px;
-            background: #1a1a1a;
+        .progress-wrapper { margin: 10px 20px; }
+        .bar-bg {
+            width: 100%; height: 10px;
+            background: #1c1c1e;
             border-radius: 10px;
             border: 1px solid var(--nv-green);
-            overflow: hidden;
-            margin-bottom: 5px;
+            position: relative;
         }
-
-        .progress-fill {
-            width: 20%;
-            height: 100%;
+        .bar-fill {
+            width: 35%; height: 100%;
             background: var(--nv-green);
             box-shadow: 0 0 10px var(--nv-green);
+            border-radius: 10px;
         }
-
-        .timer-text { color: white; font-size: 14px; margin-bottom: 25px; }
+        .timer { font-size: 14px; margin-top: 8px; color: #fff; }
 
         /* Görev Merkezi */
-        .section-title { font-size: 20px; font-weight: bold; margin: 20px 0; }
-
-        .task-card {
-            background: #1e2026;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 80px; /* Menü payı */
+        .task-section { margin-top: 30px; }
+        .task-title { font-size: 20px; font-weight: bold; text-align: center; margin-bottom: 15px; }
+        
+        .task-list {
+            background: #1c1c1e;
+            border-radius: 15px;
+            border: 1px solid #2c2c2e;
+            padding: 5px 15px;
         }
 
         .task-item {
-            border-bottom: 1px dashed #333;
             padding: 15px 0;
+            border-bottom: 1px dashed #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .task-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .task-reward { color: #f1c40f; font-weight: bold; margin-top: 5px; display: flex; align-items: center; gap: 5px; }
+        .task-item:last-child { border-bottom: none; }
+
+        .reward { color: #ffd700; font-size: 14px; font-weight: bold; margin-top: 4px; }
         
-        .btn-done {
-            background: #e1e1e1; color: #333; border: none;
-            padding: 6px 15px; border-radius: 8px; font-weight: bold; font-size: 13px;
+        .btn-status {
+            background: #d1d1d6;
+            color: #000;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
         }
 
-        /* Alt Navigasyon */
-        .nav-bar {
+        /* Alt Navigasyon (Telegram Tarzı) */
+        .bottom-nav {
             position: fixed;
             bottom: 0;
             width: 100%;
-            background: #1e2026;
+            height: 75px;
+            background: #1c1c1e;
+            border-top: 1px solid #2c2c2e;
             display: flex;
             justify-content: space-around;
-            padding: 10px 0;
-            border-top: 1px solid #333;
+            align-items: center;
+            padding-bottom: 10px;
+            z-index: 100;
         }
 
-        .nav-item { text-align: center; color: var(--nv-text-gray); font-size: 11px; text-decoration: none; }
-        .nav-item i { font-size: 20px; margin-bottom: 5px; display: block; }
-        .nav-item.active { color: var(--nv-green); }
+        .nav-link {
+            text-align: center;
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 10px;
+        }
 
+        .nav-link.active { color: var(--nv-green); }
+        .nav-link i { font-size: 22px; display: block; margin-bottom: 4px; }
+
+        .floating-support {
+            position: fixed;
+            right: 20px;
+            bottom: 90px;
+            width: 50px; height: 50px;
+            background: white;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
 
-    <header class="header">
-        <div class="user-info">
-            <img src="https://via.placeholder.com/40" class="avatar" alt="User">
-            <span style="font-weight: 500;">Chalpus Yeniden</span>
+    <div class="top-nav">
+        <div class="user-pill">
+            <div class="avatar"></div>
+            <span style="font-size: 14px;">Chalpus Yeniden</span>
         </div>
-        <button class="lang-btn">
-            <i class="fas fa-globe"></i> Türkçe
-        </button>
-    </header>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="lang-select"><i class="fas fa-globe"></i> Türkçe</button>
+            <i class="far fa-bell" style="font-size: 18px;"></i>
+        </div>
+    </div>
 
-    <div class="container">
-        <div class="stat-row">
-            <div class="miner-label">NVIDIA Miner</div>
-            <div class="value-green">0.082 <span class="unit">NVIDIA/H</span></div>
+    <div class="content">
+        <div class="stat-card">
+            <span class="tag">NVIDIA Miner</span>
+            <div class="val-big">0.082 <span style="font-size: 10px;">NVIDIA/H</span></div>
         </div>
 
-        <div class="stat-row">
+        <div class="stat-card">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <img src="https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg" width="18">
-                <span style="font-size: 14px; font-weight: bold;">NVIDIA</span>
+                <i class="fab fa-nvidia" style="color: var(--nv-green); font-size: 20px;"></i>
+                <span style="font-weight: bold;">NVIDIA</span>
             </div>
-            <div class="value-green" style="color: #c9ff00;">0.0500</div>
+            <div class="val-big" style="color: #e2ff00;">0.0500</div>
         </div>
 
-        <div class="mining-section">
-            <div class="fan-container">
-                <i class="fas fa-fan fa-spin" style="font-size: 180px; color: #0080ff; opacity: 0.8;"></i>
+        <div class="mining-display">
+            <div class="fan-box">
+                <div class="fan-glow"></div>
+                <i class="fas fa-fan fan-icon"></i>
             </div>
-            <div class="mining-amount">0.0491 NVIDIA</div>
             
-            <div class="progress-container">
-                <div class="progress-fill" style="width: 15%;"></div>
-            </div>
-            <div class="timer-text">23:24:03</div>
-
-            <div class="section-title">Görev Merkezi</div>
-
-            <div class="task-card">
-                <div class="task-item">
-                    <div class="task-header">
-                        <div>
-                            <div style="font-weight: bold;">Günlük giriş</div>
-                            <div class="task-reward">+0.05 <img src="https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg" width="14"></div>
-                        </div>
-                        <button class="btn-done">Tamamlanmış</button>
-                    </div>
+            <div class="mining-live-val">0.0491 NVIDIA</div>
+            
+            <div class="progress-wrapper">
+                <div class="bar-bg">
+                    <div class="bar-fill"></div>
                 </div>
+                <div class="timer">23:24:03</div>
+            </div>
+        </div>
 
+        <div class="task-section">
+            <div class="task-title">Görev Merkezi</div>
+            <div class="task-list">
                 <div class="task-item">
-                    <div class="task-header">
-                        <div style="text-align: left;">
-                            <div style="font-weight: bold;">10 geçerli kullanıcıyı davet edin</div>
-                            <div class="task-reward">+36.00 <img src="https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg" width="14"></div>
-                            <div style="font-size: 10px; color: #777; margin-top: 5px;">Davet edilecek kişi sayısı/Davet edilecek kişi sayısı</div>
-                        </div>
-                        <div style="position: relative;">
-                            <svg width="40" height="40">
-                                <circle cx="20" cy="20" r="18" fill="none" stroke="#333" stroke-width="3"/>
-                                <text x="50%" y="50%" text-anchor="middle" fill="white" font-size="10" dy=".3em">0 / 1</text>
-                            </svg>
-                        </div>
+                    <div>
+                        <div style="font-weight: 600;">Günlük giriş</div>
+                        <div class="reward">+0.05 NVIDIA</div>
+                    </div>
+                    <button class="btn-status">Tamamlanmış</button>
+                </div>
+                
+                <div class="task-item">
+                    <div>
+                        <div style="font-weight: 600;">10 kullanıcıyı davet et</div>
+                        <div class="reward">+36.00 NVIDIA</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <i class="far fa-circle" style="display: block; font-size: 18px;"></i>
+                        <span style="font-size: 10px;">0 / 1</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <nav class="nav-bar">
-        <a href="#" class="nav-item active">
-            <i class="fas fa-seedling"></i>
-            Bana ait
+    <div class="floating-support">
+        <i class="fas fa-headset" style="color: #007aff; font-size: 24px;"></i>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="#" class="nav-link active">
+            <i class="fas fa- cannabis"></i>
+            <span>Bana ait</span>
         </a>
-        <a href="#" class="nav-item">
-            <i class="fas fa-medal"></i>
-            Liderlik tablosu
+        <a href="#" class="nav-link">
+            <i class="fas fa-chart-bar"></i>
+            <span>Liderlik</span>
         </a>
-        <a href="#" class="nav-item">
+        <a href="#" class="nav-link">
             <i class="fas fa-rocket"></i>
-            Güncelleme
+            <span>Güncelle</span>
         </a>
-        <a href="#" class="nav-item">
+        <a href="#" class="nav-link">
             <i class="fas fa-users"></i>
-            Takım
+            <span>Takım</span>
         </a>
-        <a href="#" class="nav-item">
-            <i class="fas fa-box"></i>
-            Ben
+        <a href="#" class="nav-link">
+            <i class="fas fa-user-circle"></i>
+            <span>Ben</span>
         </a>
     </nav>
 
+    <script>
+        // Telegram Web App API için küçük bir dokunuş
+        // let tg = window.Telegram.WebApp;
+        // tg.expand(); // Uygulamayı tam ekran açar
+    </script>
 </body>
 </html>
