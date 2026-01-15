@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NVAI - Miner App</title>
+    <title>NVAI - AI Mining Ecosystem</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -11,353 +11,240 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #000;
-            color: #fff;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .neon-glow {
-            box-shadow: 0 0 15px rgba(193, 255, 0, 0.4);
-        }
-
-        .blur-bg {
-            backdrop-filter: blur(10px);
-            background: rgba(0, 0, 0, 0.7);
-        }
-
-        /* Navigasyon Aktif Durumu */
-        .nav-active {
-            color: #c1ff00 !important;
-        }
-
-        /* Statik Fan Glow Efekti */
-        .fan-container:hover .fan-static {
-            filter: drop-shadow(0 0 20px rgba(0, 136, 255, 0.6));
-            transition: all 0.5s ease;
-        }
-
-        /* Sayı Geçişleri */
-        .number-transition {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Scrollbar Gizleme */
-        ::-webkit-scrollbar { display: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #000; color: #fff; overflow-x: hidden; }
+        .neon-border { border: 1px solid #c1ff00; box-shadow: 0 0 10px rgba(193, 255, 0, 0.2); }
+        .nav-active { color: #c1ff00 !important; }
+        .blur-overlay { backdrop-filter: blur(12px); background: rgba(0, 0, 0, 0.85); }
+        .fan-glow:hover { filter: drop-shadow(0 0 20px rgba(0, 136, 255, 0.5)); transition: 0.5s; }
+        input:focus { outline: none; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef, useMemo } = React;
+        const { useState, useEffect, useRef } = React;
 
-        // --- Sabitler ---
-        const DAILY_RATE = 0.98;
-        const SEC_RATE = DAILY_RATE / 86400;
         const ADMIN_ID = "8392479231";
+        const SEC_RATE = 0.98 / 86400; // Günlük 0.98 NVAI hızı
 
-        const INITIAL_TASKS = [
-            { id: 1, title: "Resmi kanala katıl", link: "https://t.me/EarnTether2026", completed: false, reward: 0.05 },
-            { id: 2, title: "Binance news katıl", link: "https://t.me/BinanceBrazilNews", completed: false, reward: 0.05 },
-            { id: 3, title: "Instagram news katıl", link: "https://t.me/instagramNewsBrazil", completed: false, reward: 0.05 }
-        ];
-
-        // --- Ana Uygulama ---
         const App = () => {
-            const [activeTab, setActiveTab] = useState('bana-ait');
-            const [mainBalance, setMainBalance] = useState(() => parseFloat(localStorage.getItem('nv_main')) || 0.0500);
-            const [pendingBalance, setPendingBalance] = useState(0);
-            const [tasks, setTasks] = useState(() => JSON.parse(localStorage.getItem('nv_tasks')) || INITIAL_TASKS);
-            const [lastSync, setLastSync] = useState(() => parseInt(localStorage.getItem('nv_sync')) || Date.now());
-            const [popup, setPopup] = useState({ show: false, amount: 0 });
+            const [tab, setTab] = useState('bana-ait');
+            const [mainBal, setMainBal] = useState(() => parseFloat(localStorage.getItem('nv_main')) || 0.0500);
+            const [pending, setPending] = useState(0);
+            const [lastTs, setLastTs] = useState(() => parseInt(localStorage.getItem('nv_ts')) || Date.now());
+            const [popup, setPopup] = useState(false);
+            const [claimedVal, setClaimedVal] = useState(0);
 
-            // --- Mining Motoru ---
+            const [tasks, setTasks] = useState(() => JSON.parse(localStorage.getItem('nv_tasks')) || [
+                { id: 1, t: "Resmi kanala katıl", l: "https://t.me/EarnTether2026", done: false, r: 0.05 },
+                { id: 2, t: "Binance news katıl", l: "https://t.me/BinanceBrazilNews", done: false, r: 0.05 },
+                { id: 3, t: "Instagram news katıl", l: "https://t.me/instagramNewsBrazil", done: false, r: 0.05 }
+            ]);
+
+            // --- Mining Engine ---
             useEffect(() => {
-                const interval = setInterval(() => {
+                const timer = setInterval(() => {
                     const now = Date.now();
-                    const elapsed = (now - lastSync) / 1000;
-                    if (elapsed > 0) {
-                        setPendingBalance(prev => prev + (elapsed * SEC_RATE));
-                        setLastSync(now);
-                        localStorage.setItem('nv_sync', now.toString());
+                    const diff = (now - lastTs) / 1000;
+                    if(diff > 0) {
+                        setPending(p => p + (diff * SEC_RATE));
+                        setLastTs(now);
+                        localStorage.setItem('nv_ts', now.toString());
                     }
                 }, 1000);
-                return () => clearInterval(interval);
-            }, [lastSync]);
+                return () => clearInterval(timer);
+            }, [lastTs]);
 
             useEffect(() => {
-                localStorage.setItem('nv_main', mainBalance.toString());
+                localStorage.setItem('nv_main', mainBal.toString());
                 localStorage.setItem('nv_tasks', JSON.stringify(tasks));
-            }, [mainBalance, tasks]);
+            }, [mainBal, tasks]);
 
-            // --- İşlemler ---
-            const handleClaim = () => {
-                if (pendingBalance <= 0) return;
-                const claimAmount = pendingBalance;
-                setMainBalance(prev => prev + claimAmount);
-                setPendingBalance(0);
-                setPopup({ show: true, amount: claimAmount });
-                
-                if (window.Telegram?.WebApp?.HapticFeedback) {
-                    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-                }
+            const claim = () => {
+                if(pending <= 0) return;
+                setClaimedVal(pending);
+                setMainBal(b => b + pending);
+                setPending(0);
+                setPopup(true);
+                if(window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
             };
 
-            const completeTask = (id) => {
-                setTasks(prev => prev.map(t => {
-                    if (t.id === id && !t.completed) {
-                        setMainBalance(curr => curr + t.reward);
-                        return { ...t, completed: true };
-                    }
-                    return t;
-                }));
-            };
-
-            // --- Ekranlar ---
-            
-            // Dashboard (Bana Ait)
-            const Dashboard = () => (
-                <div className="flex flex-col space-y-4 pb-20">
-                    <div className="flex justify-between items-center px-2">
-                        <div className="flex items-center gap-3">
-                            <img src="https://via.placeholder.com/40" className="w-10 h-10 rounded-full border border-gray-800" />
-                            <span className="font-bold text-sm">Chalpus Yeniden</span>
-                        </div>
-                        <div className="flex gap-4 items-center">
-                            <div className="bg-zinc-900 px-3 py-1 rounded-full border border-zinc-800 flex items-center gap-2">
-                                <i className="fas fa-globe text-xs text-zinc-500"></i>
-                                <span className="text-[10px] font-bold">Türkçe</span>
-                            </div>
-                            <i className="far fa-bell text-zinc-400"></i>
-                        </div>
-                    </div>
-
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 flex justify-between items-center">
-                        <span className="bg-[#c1ff00] text-black font-extrabold px-3 py-1 rounded-full text-[10px] uppercase">NVIDIA Miner</span>
-                        <span className="text-[#c1ff00] font-bold text-lg">0.082 <small className="text-[10px] opacity-70">NVIDIA/H</small></span>
-                    </div>
-
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <i className="fab fa-nvidia text-[#c1ff00]"></i>
-                            <span className="font-bold text-sm tracking-widest uppercase opacity-70">NVIDIA</span>
-                        </div>
-                        <span className="text-[#c1ff00] font-bold text-xl number-transition">{mainBalance.toFixed(4)}</span>
-                    </div>
-
-                    <div className="flex flex-col items-center justify-center py-6 fan-container">
-                        <div className="relative w-64 h-64">
-                            <img src="https://i.ibb.co/L8m8n9n/blue-fan.png" className="w-full h-full object-contain fan-static" alt="NVIDIA Fan" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-12 h-12 bg-black border-2 border-[#c1ff00] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(193,255,0,0.4)]">
-                                    <i className="fas fa-microchip text-[#c1ff00] text-xl"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="mt-6 text-center">
-                            <p className="text-zinc-500 text-sm mb-1">Claim Edilebilir</p>
-                            <h2 className="text-white text-3xl font-extrabold font-mono tracking-tighter">
-                                {pendingBalance.toFixed(4)} <small className="text-sm opacity-50">NVAI</small>
-                            </h2>
-                        </div>
-                        <button 
-                            onClick={handleClaim}
-                            disabled={pendingBalance <= 0}
-                            className={`mt-6 w-56 py-4 rounded-3xl font-black text-lg transition-all active:scale-95 neon-glow ${
-                                pendingBalance > 0 ? 'bg-[#c1ff00] text-black' : 'bg-zinc-800 text-zinc-600'
-                            }`}
-                        >
-                            CLAIM
-                        </button>
-                    </div>
-
-                    <div className="px-2">
-                        <h3 className="text-white font-bold text-lg mb-4">Görev Merkezi</h3>
-                        <div className="space-y-3">
-                            {tasks.map(task => (
-                                <div key={task.id} className="bg-zinc-900/80 p-4 rounded-2xl flex justify-between items-center border border-zinc-800">
-                                    <div>
-                                        <p className="text-white text-sm font-semibold">{task.title}</p>
-                                        <p className="text-[#c1ff00] text-xs font-bold">+{task.reward} NVIDIA</p>
-                                    </div>
-                                    <button 
-                                        onClick={() => { window.open(task.link); completeTask(task.id); }}
-                                        className={`px-4 py-2 rounded-xl text-xs font-bold ${
-                                            task.completed ? 'bg-zinc-800 text-zinc-500' : 'bg-white text-black'
-                                        }`}
-                                    >
-                                        {task.completed ? 'Tamamlandı' : 'Git'}
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            );
-
-            // Liderlik
-            const Leaderboard = () => (
-                <div className="space-y-4">
-                    <div className="flex gap-2">
-                        {['Günlük', 'Haftalık', 'Aylık'].map(t => (
-                            <button key={t} className="flex-1 py-2 bg-zinc-900 rounded-xl text-xs font-bold text-zinc-400 border border-zinc-800">{t}</button>
-                        ))}
-                    </div>
-                    <div className="bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800">
-                        {[
-                            { name: 'Chalpus Yeniden', score: mainBalance.toFixed(2), rank: 99, me: true },
-                            { name: 'CryptoMaster', score: '1,450.20', rank: 1 },
-                            { name: 'Nvidia_Pro', score: '1,200.10', rank: 2 },
-                            { name: 'AI_Miner_1', score: '980.50', rank: 3 },
-                            { name: 'User_8392', score: '850.00', rank: 4 }
-                        ].sort((a,b) => b.rank - a.rank).reverse().map((u, i) => (
-                            <div key={i} className={`p-4 flex justify-between items-center border-b border-zinc-800 ${u.me ? 'bg-[#c1ff00]/10' : ''}`}>
-                                <div className="flex items-center gap-4">
-                                    <span className={`font-black w-6 ${u.rank <= 3 ? 'text-[#c1ff00]' : 'text-zinc-600'}`}>#{u.rank}</span>
-                                    <span className="text-white font-semibold text-sm">{u.name}</span>
-                                </div>
-                                <span className="text-[#c1ff00] font-mono font-bold">{u.score}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            );
-
-            // Güncelleme
-            const Updates = () => (
-                <div className="space-y-3">
+            // --- UI Elements ---
+            const Nav = () => (
+                <nav className="fixed bottom-0 left-0 right-0 bg-black/90 border-t border-zinc-900 flex justify-around py-4 z-50">
                     {[
-                        { v: 'v1.2.0', t: 'Mining Optimizasyonu', d: 'Arka plan mining hızı ve veritabanı senkronizasyonu geliştirildi.' },
-                        { v: 'v1.1.5', t: 'Arayüz Yenileme', d: 'Karanlık tema için neon yeşil ve mavi vurgular eklendi.' },
-                        { v: 'v1.0.1', t: 'Hoşgeldiniz', d: 'NVAI Madencilik ekosistemi resmi olarak başlatıldı.' }
-                    ].map((upd, i) => (
-                        <div key={i} className="bg-zinc-900 rounded-2xl border border-zinc-800 p-4">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-[#c1ff00] text-[10px] font-black">{upd.v}</span>
-                                <i className="fas fa-plus text-zinc-700 text-xs"></i>
-                            </div>
-                            <h4 className="text-white font-bold text-sm mb-1">{upd.t}</h4>
-                            <p className="text-zinc-500 text-xs leading-relaxed">{upd.d}</p>
-                        </div>
-                    ))}
-                </div>
-            );
-
-            // Takım
-            const Team = () => (
-                <div className="space-y-6">
-                    <div className="bg-gradient-to-br from-zinc-900 to-black border border-zinc-800 p-6 rounded-3xl text-center">
-                        <p className="text-zinc-500 text-xs mb-1">Toplam Takım Puanı</p>
-                        <h1 className="text-[#c1ff00] text-4xl font-black">245.50</h1>
-                    </div>
-                    <div className="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
-                        <p className="text-white text-xs font-bold mb-3 uppercase tracking-tighter opacity-40">Davet Linkin</p>
-                        <div className="flex gap-2">
-                            <input readOnly value={`https://t.me/NVAI_Bot?start=${ADMIN_ID}`} className="bg-black border border-zinc-800 rounded-xl flex-1 px-4 text-[10px] text-zinc-500 font-mono py-3" />
-                            <button onClick={() => alert('Kopyalandı!')} className="bg-[#c1ff00] text-black px-4 rounded-xl font-bold text-xs active:scale-95 transition-transform">KOPYALA</button>
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <p className="text-white font-bold text-sm">Aktif Takım Üyeleri (2)</p>
-                        <div className="bg-zinc-900 p-4 rounded-xl flex justify-between border border-zinc-800 items-center">
-                            <span className="text-zinc-300 text-sm">User_9921</span>
-                            <span className="text-[#c1ff00] font-bold font-mono">+12.40</span>
-                        </div>
-                        <div className="bg-zinc-900 p-4 rounded-xl flex justify-between border border-zinc-800 items-center">
-                            <span className="text-zinc-300 text-sm">Miner_X</span>
-                            <span className="text-[#c1ff00] font-bold font-mono">+4.10</span>
-                        </div>
-                    </div>
-                </div>
-            );
-
-            // Ben (Profil)
-            const Profile = () => (
-                <div className="flex flex-col items-center pt-6">
-                    <div className="relative">
-                        <img src="https://via.placeholder.com/120" className="rounded-full border-4 border-[#c1ff00]/20 p-1 mb-4" />
-                        <div className="absolute bottom-6 right-2 bg-[#c1ff00] w-6 h-6 rounded-full border-4 border-black"></div>
-                    </div>
-                    <h2 className="text-white text-2xl font-black">Chalpus Yeniden</h2>
-                    <p className="text-zinc-500 text-sm font-mono mt-1">Sistem ID: {ADMIN_ID}</p>
-                    
-                    <div className="w-full mt-10 space-y-3 px-2">
-                        <div className="bg-zinc-900 p-5 rounded-2xl flex justify-between items-center border border-zinc-800 cursor-pointer">
-                            <span className="text-zinc-300 font-semibold">Dil Seçimi</span>
-                            <span className="text-[#c1ff00] font-bold text-xs">TÜRKÇE</span>
-                        </div>
-                        <div className="bg-zinc-900 p-5 rounded-2xl flex justify-between items-center border border-zinc-800 cursor-pointer">
-                            <span className="text-zinc-300 font-semibold">Koyu Tema</span>
-                            <div className="w-10 h-5 bg-[#c1ff00] rounded-full relative">
-                                <div className="absolute right-1 top-1 w-3 h-3 bg-black rounded-full"></div>
-                            </div>
-                        </div>
-                        <button className="w-full py-5 text-red-500 font-black uppercase text-xs bg-red-500/5 rounded-2xl border border-red-500/10 mt-6 active:scale-95 transition-transform">
-                            Oturumu Kapat
+                        {id:'bana-ait', i:'fa-seedling', n:'Bana ait'},
+                        {id:'lider', i:'fa-medal', n:'Liderlik'},
+                        {id:'update', i:'fa-rocket', n:'Güncelleme'},
+                        {id:'takim', i:'fa-users', n:'Takım'},
+                        {id:'ben', i:'fa-box', n:'Ben'}
+                    ].map(x => (
+                        <button key={x.id} onClick={() => setTab(x.id)} className={`flex flex-col items-center gap-1 ${tab === x.id ? 'nav-active' : 'text-zinc-600'}`}>
+                            <i className={`fas ${x.i} text-xl`}></i>
+                            <span className="text-[9px] font-bold uppercase">{x.n}</span>
                         </button>
+                    ))}
+                </nav>
+            );
+
+            const Header = () => (
+                <div className="flex justify-between items-center mb-6 px-1">
+                    <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700"></div>
+                        <span className="text-sm font-bold tracking-tight">Chalpus Yeniden</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full flex items-center gap-2">
+                            <i className="fas fa-globe text-[10px] text-zinc-500"></i>
+                            <span className="text-[10px] font-bold">Türkçe</span>
+                        </div>
+                        <i className="far fa-bell text-zinc-500"></i>
                     </div>
                 </div>
             );
 
             return (
-                <div className="max-w-md mx-auto min-h-screen relative p-4 overflow-hidden">
-                    
-                    {/* Render Aktif Tab */}
-                    {activeTab === 'bana-ait' && <Dashboard />}
-                    {activeTab === 'liderlik' && <Leaderboard />}
-                    {activeTab === 'guncelleme' && <Updates />}
-                    {activeTab === 'takim' && <Team />}
-                    {activeTab === 'ben' && <Profile />}
+                <div className="p-4 max-w-md mx-auto min-h-screen pb-24">
+                    <Header />
 
-                    {/* Popup Bildirim */}
-                    {popup.show && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 blur-bg animate-in fade-in duration-300">
-                            <div className="bg-zinc-900 border border-[#c1ff00] p-8 rounded-[40px] text-center w-full max-w-xs scale-in animate-bounce-short">
-                                <div className="w-20 h-20 bg-[#c1ff00] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                                    <i className="fas fa-check text-black text-3xl"></i>
+                    {tab === 'bana-ait' && (
+                        <div className="space-y-4 animate-in fade-in duration-500">
+                            <div className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-2xl flex justify-between items-center">
+                                <span className="bg-[#c1ff00] text-black text-[10px] font-black px-3 py-1 rounded-full">NVIDIA MINER</span>
+                                <span className="text-[#c1ff00] font-bold">0.082 <small className="opacity-60">NVIDIA/H</small></span>
+                            </div>
+                            <div className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-2xl flex justify-between items-center">
+                                <div className="flex items-center gap-2 opacity-70">
+                                    <i className="fab fa-nvidia text-[#c1ff00]"></i>
+                                    <span className="text-sm font-bold tracking-widest uppercase">NVIDIA</span>
                                 </div>
-                                <h2 className="text-white text-2xl font-black mb-2">Başarılı!</h2>
-                                <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
-                                    <span className="text-[#c1ff00] font-bold">{popup.amount.toFixed(4)} NVAI</span><br/>ana bakiyene aktarıldı.
-                                </p>
-                                <button 
-                                    onClick={() => setPopup({ show: false, amount: 0 })}
-                                    className="w-full bg-[#c1ff00] text-black py-4 rounded-2xl font-black uppercase text-xs"
-                                >
-                                    Kapat
-                                </button>
+                                <span className="text-[#c1ff00] font-bold text-xl">{mainBal.toFixed(4)}</span>
+                            </div>
+
+                            <div className="flex flex-col items-center py-8">
+                                <div className="relative w-60 h-60 fan-glow">
+                                    <img src="https://i.ibb.co/L8m8n9n/blue-fan.png" className="w-full h-full object-contain opacity-90" />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="w-11 h-11 bg-black border-2 border-[#c1ff00] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(193,255,0,0.3)]">
+                                            <i className="fas fa-microchip text-[#c1ff00] text-lg"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="mt-6 text-center">
+                                    <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest font-bold">Claim Edilebilir</p>
+                                    <h2 className="text-3xl font-black font-mono tracking-tighter">{pending.toFixed(4)} <small className="text-xs opacity-40 uppercase">nvai</small></h2>
+                                </div>
+                                <button onClick={claim} disabled={pending < 0.0001} className={`mt-8 w-52 py-4 rounded-3xl font-black transition-all ${pending >= 0.0001 ? 'bg-[#c1ff00] text-black shadow-[0_0_20px_rgba(193,255,0,0.3)] active:scale-95' : 'bg-zinc-800 text-zinc-600'}`}>CLAIM</button>
+                            </div>
+
+                            <div className="pt-4">
+                                <h3 className="text-white font-black text-lg mb-4 border-l-4 border-[#c1ff00] pl-3">Görev Merkezi</h3>
+                                <div className="space-y-3">
+                                    {tasks.map(t => (
+                                        <div key={t.id} className="bg-zinc-900/80 border border-zinc-800 p-4 rounded-2xl flex justify-between items-center">
+                                            <div>
+                                                <p className="text-sm font-bold">{t.t}</p>
+                                                <p className="text-[#c1ff00] text-xs font-bold">+{t.r} NVIDIA</p>
+                                            </div>
+                                            <button onClick={() => { window.open(t.l); if(!t.done){ setMainBal(c => c+t.r); setTasks(ps => ps.map(x => x.id===t.id ? {...x, done:true} : x)); }}} className={`px-5 py-2 rounded-xl text-xs font-black ${t.done ? 'bg-zinc-800 text-zinc-500' : 'bg-white text-black uppercase'}`}>{t.done ? 'BİTTİ' : 'GİT'}</button>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Bottom Nav */}
-                    <nav className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-900 px-2 py-4 flex justify-around items-center z-40 max-w-md mx-auto">
-                        <button onClick={() => setActiveTab('bana-ait')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'bana-ait' ? 'nav-active' : 'text-zinc-600'}`}>
-                            <i className="fas fa-seedling text-lg"></i>
-                            <span className="text-[9px] font-bold uppercase">Bana ait</span>
-                        </button>
-                        <button onClick={() => setActiveTab('liderlik')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'liderlik' ? 'nav-active' : 'text-zinc-600'}`}>
-                            <i className="fas fa-medal text-lg"></i>
-                            <span className="text-[9px] font-bold uppercase">Liderlik</span>
-                        </button>
-                        <button onClick={() => setActiveTab('guncelleme')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'guncelleme' ? 'nav-active' : 'text-zinc-600'}`}>
-                            <i className="fas fa-rocket text-lg"></i>
-                            <span className="text-[9px] font-bold uppercase">Güncelleme</span>
-                        </button>
-                        <button onClick={() => setActiveTab('takim')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'takim' ? 'nav-active' : 'text-zinc-600'}`}>
-                            <i className="fas fa-users text-lg"></i>
-                            <span className="text-[9px] font-bold uppercase">Takım</span>
-                        </button>
-                        <button onClick={() => setActiveTab('ben')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'ben' ? 'nav-active' : 'text-zinc-600'}`}>
-                            <i className="fas fa-box text-lg"></i>
-                            <span className="text-[9px] font-bold uppercase">Ben</span>
-                        </button>
-                    </nav>
+                    {tab === 'update' && (
+                        <div className="flex flex-col items-center justify-center pt-20 animate-in fade-in">
+                            <div className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center mb-4">
+                                <i className="fas fa-rocket text-zinc-700 text-2xl"></i>
+                            </div>
+                            <h3 className="text-zinc-500 font-bold uppercase tracking-widest">Çok Yakında</h3>
+                            <p className="text-zinc-700 text-[10px] mt-2">Güncellemeler burada listelenecek.</p>
+                        </div>
+                    )}
+
+                    {tab === 'takim' && (
+                        <div className="space-y-6 animate-in slide-in-from-bottom duration-500">
+                            <div className="bg-gradient-to-br from-zinc-900 to-black border border-zinc-800 p-8 rounded-3xl text-center">
+                                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-1">Referans Kazancı</p>
+                                <h1 className="text-[#c1ff00] text-5xl font-black">0.00</h1>
+                            </div>
+                            <div className="bg-zinc-900/50 p-5 rounded-2xl border border-zinc-800">
+                                <p className="text-zinc-500 text-[10px] font-black mb-3 uppercase tracking-tighter">Davet Bağlantısı</p>
+                                <div className="flex gap-2">
+                                    <input readOnly value={`https://t.me/NVAI_Bot?start=${ADMIN_ID}`} className="bg-black border border-zinc-800 rounded-xl flex-1 px-4 text-[9px] text-zinc-600 font-mono" />
+                                    <button onClick={() => alert('Kopyalandı!')} className="bg-[#c1ff00] text-black px-4 py-3 rounded-xl font-black text-[10px]">KOPYALA</button>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <p className="text-zinc-500 font-black text-[10px] uppercase tracking-widest px-1">Takım Üyeleri (0)</p>
+                                <div className="text-center py-10 border-2 border-dashed border-zinc-900 rounded-3xl">
+                                    <p className="text-zinc-800 text-xs font-bold uppercase">Henüz üye yok</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {tab === 'lider' && (
+                        <div className="space-y-4 animate-in fade-in">
+                            <div className="flex gap-2 mb-2">
+                                {['GÜNLÜK', 'HAFTALIK', 'AYLIK'].map(m => ( <button key={m} className="flex-1 py-2 bg-zinc-900 text-zinc-600 text-[9px] font-black rounded-lg border border-zinc-800 hover:text-[#c1ff00] transition-colors">{m}</button> ))}
+                            </div>
+                            <div className="bg-zinc-900/30 rounded-3xl border border-zinc-800 overflow-hidden">
+                                {[
+                                    { n: 'Chalpus Yeniden', s: mainBal.toFixed(2), r: 99, me: true },
+                                    { n: 'AlphaMiner', s: '1,240.00', r: 1 },
+                                    { n: 'Nvidia_King', s: '980.50', r: 2 },
+                                    { n: 'Crypto_Boss', s: '750.10', r: 3 }
+                                ].sort((a,b) => b.r - a.r).reverse().map((u, i) => (
+                                    <div key={i} className={`p-5 flex justify-between items-center border-b border-zinc-800/50 ${u.me ? 'bg-[#c1ff00]/5' : ''}`}>
+                                        <div className="flex items-center gap-4">
+                                            <span className={`text-xs font-black ${u.r <= 3 ? 'text-[#c1ff00]' : 'text-zinc-700'}`}>#{u.r}</span>
+                                            <span className="text-sm font-bold">{u.n}</span>
+                                        </div>
+                                        <span className="text-[#c1ff00] font-black font-mono text-sm">{u.s}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {tab === 'ben' && (
+                        <div className="flex flex-col items-center pt-8 animate-in zoom-in duration-300">
+                            <div className="w-24 h-24 rounded-full border-4 border-[#c1ff00]/20 p-1 mb-4">
+                                <div className="w-full h-full rounded-full bg-zinc-900 border border-[#c1ff00]/40 flex items-center justify-center">
+                                    <i className="fas fa-user text-3xl text-zinc-700"></i>
+                                </div>
+                            </div>
+                            <h2 className="text-2xl font-black">Chalpus Yeniden</h2>
+                            <p className="text-zinc-600 text-xs font-mono mt-1 tracking-widest uppercase">ID: {ADMIN_ID}</p>
+                            <div className="w-full mt-12 space-y-3">
+                                <div className="bg-zinc-900/50 p-5 rounded-2xl flex justify-between border border-zinc-800"><span className="text-zinc-400 font-bold text-sm">Dil Seçimi</span><span className="text-[#c1ff00] font-black text-xs uppercase">TÜRKÇE</span></div>
+                                <div className="bg-zinc-900/50 p-5 rounded-2xl flex justify-between border border-zinc-800"><span className="text-zinc-400 font-bold text-sm">Koyu Tema</span><div className="w-10 h-5 bg-[#c1ff00] rounded-full relative"><div className="absolute right-1 top-1 w-3 h-3 bg-black rounded-full"></div></div></div>
+                                <button className="w-full py-5 text-red-500 font-black uppercase text-xs bg-red-500/5 rounded-2xl border border-red-500/10 mt-6 active:scale-95 transition-all">OTURUMU KAPAT</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {popup && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 blur-overlay animate-in fade-in">
+                            <div className="bg-zinc-900 border border-[#c1ff00] p-10 rounded-[40px] text-center w-full max-w-xs neon-border">
+                                <div className="w-20 h-20 bg-[#c1ff00] rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                                    <i className="fas fa-check text-black text-4xl"></i>
+                                </div>
+                                <h2 className="text-2xl font-black mb-2">HARİKA!</h2>
+                                <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
+                                    <span className="text-[#c1ff00] font-bold text-lg">{claimedVal.toFixed(4)} NVAI</span><br/>Başarıyla ana bakiyene aktarıldı.
+                                </p>
+                                <button onClick={() => setPopup(false)} className="w-full bg-[#c1ff00] text-black py-4 rounded-2xl font-black uppercase text-sm tracking-widest active:scale-95 transition-transform">KAPAT</button>
+                            </div>
+                        </div>
+                    )}
+
+                    <Nav />
                 </div>
             );
         };
