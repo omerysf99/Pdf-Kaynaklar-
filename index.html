@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TONIX - Gelişmiş Görevler</title>
+    <title>TONIX - NVIDIA Mining App</title>
     <style>
         :root {
             --bg-color: #0b1e2d;
@@ -13,6 +13,7 @@
             --success-green: #89e219;
             --text-main: #ffffff;
             --text-dim: #8ba2b5;
+            --modal-bg: rgba(8, 18, 26, 0.98);
         }
 
         body {
@@ -35,179 +36,162 @@
         .page.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Görev Sekmeleri (Promo, Ref, Contest) */
-        .mission-tabs {
-            display: flex; background: rgba(0,0,0,0.2);
-            border-radius: 12px; padding: 5px; margin-bottom: 20px;
+        /* Bakiye ve Cüzdan Simgesi */
+        .balance-row {
+            display: flex; gap: 10px; margin-bottom: 20px;
         }
-        .tab-btn {
-            flex: 1; padding: 10px; border: none; background: transparent;
-            color: var(--text-dim); border-radius: 10px; cursor: pointer; font-weight: bold;
+        .bal-card {
+            flex: 1; background: var(--card-bg); border-radius: 12px;
+            padding: 10px 15px; display: flex; align-items: center; justify-content: space-between;
         }
-        .tab-btn.active { background: #1c354d; color: white; }
+        .wallet-trigger {
+            background: #229ed9; border-radius: 8px; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
 
-        /* Görev Kartları */
-        .mission-card {
-            background: var(--card-bg); border-radius: 15px;
-            padding: 15px; margin-bottom: 12px;
-            display: flex; align-items: center; justify-content: space-between;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .mission-left { display: flex; align-items: center; gap: 15px; }
-        .mission-icon { width: 40px; height: 40px; font-size: 24px; display: flex; align-items: center; justify-content: center; }
-        .mission-info h4 { margin: 0; font-size: 14px; }
-        .mission-info p { margin: 3px 0 0; font-size: 12px; color: var(--accent-blue); font-weight: bold; }
-
-        .claim-btn {
-            background: var(--success-green); color: #000;
-            border: none; padding: 8px 15px; border-radius: 15px;
-            font-weight: bold; cursor: pointer; font-size: 12px;
-        }
-        .claimed { background: rgba(255,255,255,0.1); color: var(--success-green); cursor: default; }
-
-        /* Home - Miner Kısmı */
-        .fan-container {
-            width: 200px; height: 200px; margin: 40px auto;
+        /* Madenci (Fan) */
+        .miner-display { text-align: center; flex: 1; margin-top: 20px; }
+        .fan-box {
+            width: 200px; height: 200px; margin: 0 auto;
             border-radius: 50%; overflow: hidden; border: 4px solid var(--ton-blue);
         }
         .fan-img { width: 100%; height: 100%; object-fit: cover; animation: spin 2s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* Alt Navigasyon */
-        .nav-bar {
-            display: flex; justify-content: space-between;
-            background: #112230; padding: 12px 15px; border-radius: 20px;
-            margin-top: auto;
+        /* Ödeme Modal (image_81776a.png'den uyarlandı) */
+        #withdraw-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--modal-bg); z-index: 100; border-radius: 30px;
+            display: none; flex-direction: column; padding: 25px; box-sizing: border-box;
         }
+        .modal-header { text-align: center; margin-bottom: 20px; }
+        .input-group { background: #0d1b26; border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid #1c354d; }
+        .input-group input { 
+            background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 14px;
+        }
+        .send-btn { 
+            background: var(--ton-blue); color: white; padding: 15px; border-radius: 15px; 
+            font-weight: bold; border: none; margin-top: 10px; cursor: pointer;
+        }
+        .not-yet { background: #162b3d; color: white; border: none; padding: 15px; border-radius: 15px; margin-top: 10px; cursor: pointer; }
+
+        /* Navigasyon */
+        .nav-bar { display: flex; justify-content: space-between; background: #112230; padding: 12px; border-radius: 20px; }
         .nav-item { flex: 1; text-align: center; font-size: 10px; color: var(--text-dim); cursor: pointer; }
         .nav-item.active { color: var(--accent-blue); }
-
-        h3 { text-align: center; margin-bottom: 20px; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
 
+    <div id="withdraw-modal">
+        <div class="balance-row">
+            <div class="bal-card">💎 <span id="m-ton-disp">0.0000</span> TON</div>
+            <div class="bal-card">🌀 500 TONIX</div>
+        </div>
+        
+        <div class="modal-header">
+            <h3>Enter your personal TON address</h3>
+            <p style="font-size: 12px; color: var(--text-dim);">Minimum send amount is 1,5 TON</p>
+        </div>
+
+        <div class="input-group">
+            <span style="font-size: 12px; color: var(--accent-blue);">💎 TON ▼</span>
+        </div>
+
+        <div class="input-group">
+            <input type="text" placeholder="Your TON address">
+        </div>
+
+        <div class="input-group" style="display: flex; justify-content: space-between;">
+            <input type="number" placeholder="Amount">
+            <span style="color: var(--accent-blue); font-weight: bold; cursor: pointer;">MAX</span>
+        </div>
+
+        <p style="font-size: 11px; color: var(--text-dim); text-align: center;">Network fee: 0,3 TON</p>
+        <p style="font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 20px;">Receive amount: 0 TON</p>
+
+        <button class="send-btn" onclick="processSend()">Send</button>
+        <button class="not-yet" onclick="closeModal()">Not yet</button>
+    </div>
+
     <div id="home" class="page active">
-        <h3 style="margin-top:0">TONIX App</h3>
-        <div style="background:var(--card-bg); padding:15px; border-radius:15px; display:flex; justify-content:space-between">
-            <span>💎 Balance</span>
-            <b id="main-balance">0.0000 TON</b>
+        <div class="balance-row">
+            <div class="bal-card">
+                <div style="display:flex; align-items:center; gap:8px;">💎 <b id="main-balance">0.0000</b></div>
+                <div class="wallet-trigger" onclick="openModal()">👛</div>
+            </div>
+            <div class="bal-card">
+                <span>🌀 500</span>
+                <div class="wallet-trigger">👛</div>
+            </div>
         </div>
 
-        <div class="fan-container">
-            <img src="nvdia.jpg" class="fan-img" alt="Miner">
+        <div class="miner-display">
+            <div class="fan-box">
+                <img src="nvdia.jpg" class="fan-img" alt="Miner">
+            </div>
+            <h1 id="mining-counter" style="margin-top:20px;">0.0000000000</h1>
+            <p style="color:var(--text-dim); font-size:14px;">⚡ NVIDIA Active | 6 GH/s</p>
         </div>
 
-        <div style="text-align:center">
-            <h1 id="mining-counter" style="margin:0">0.0000000000</h1>
-            <p style="color:var(--text-dim)">⚡ NVIDIA Active | 6 GH/s</p>
-        </div>
-
-        <button onclick="claimMining()" style="width:100%; padding:15px; border-radius:15px; border:none; background:var(--ton-blue); color:white; font-weight:bold; margin-top:20px; cursor:pointer">CLAIM</button>
+        <button onclick="claimMining()" style="width:100%; padding:15px; border-radius:15px; border:none; background:var(--ton-blue); color:white; font-weight:bold; margin-bottom:20px; cursor:pointer">CLAIM</button>
     </div>
 
     <div id="missions" class="page">
-        <h3>New Missions</h3>
-        <div class="mission-tabs">
-            <button class="tab-btn active">Promo</button>
-            <button class="tab-btn">Ref</button>
-            <button class="tab-btn">Contest</button>
-        </div>
-
-        <div style="overflow-y: auto; flex: 1;">
-            <div class="mission-card">
-                <div class="mission-left">
-                    <div class="mission-icon">⚡</div>
-                    <div class="mission-info">
-                        <h4>Boost Mining Power</h4>
-                        <p>🔵 25.000 TONIX ⚡ 150 GH/s</p>
-                    </div>
+        <h3 style="text-align: center;">New Missions</h3>
+        <div style="background:var(--card-bg); padding:15px; border-radius:15px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <b>NVIDIA Driver Sync</b><br>
+                    <small style="color:var(--accent-blue)">+1.500 TONIX</small>
                 </div>
-                <button class="claim-btn">Claim</button>
-            </div>
-
-            <div class="mission-card">
-                <div class="mission-left">
-                    <div class="mission-icon">🟢</div>
-                    <div class="mission-info">
-                        <h4>NVIDIA Driver Sync</h4>
-                        <p>🔵 1.500 TONIX</p>
-                    </div>
-                </div>
-                <button class="claim-btn" onclick="completeMission(this, 1500)">Do</button>
-            </div>
-
-            <div class="mission-card">
-                <div class="mission-left">
-                    <div class="mission-icon">📅</div>
-                    <div class="mission-info">
-                        <h4>Daily Kernel Update</h4>
-                        <p>🔵 500 TONIX</p>
-                    </div>
-                </div>
-                <button class="claim-btn" onclick="completeMission(this, 500)">Do</button>
-            </div>
-
-             <div class="mission-card">
-                <div class="mission-left">
-                    <div class="mission-icon">📢</div>
-                    <div class="mission-info">
-                        <h4>Join NVIDIA Miners Hub</h4>
-                        <p>🔵 2.000 TONIX</p>
-                    </div>
-                </div>
-                <button class="claim-btn" onclick="completeMission(this, 2000)">Do</button>
+                <button class="send-btn" style="padding:5px 15px; margin:0;">Do</button>
             </div>
         </div>
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item" onclick="showPage('home')">🏠<br>Home</div>
-        <div class="nav-item" onclick="showPage('home')">💼<br>Wallet</div>
-        <div class="nav-item" onclick="showPage('home')">👥<br>Friends</div>
-        <div class="nav-item active" onclick="showPage('missions')">🎯<br>Missions</div>
-        <div class="nav-item" onclick="showPage('home')">⚙️<br>More</div>
+        <div class="nav-item active" onclick="showPage('home')">🏠<br>Home</div>
+        <div class="nav-item" onclick="openModal()">💼<br>Wallet</div>
+        <div class="nav-item">👥<br>Friends</div>
+        <div class="nav-item" onclick="showPage('missions')">🎯<br>Missions</div>
+        <div class="nav-item">⚙️<br>More</div>
     </div>
 
-    <div style="text-align:center; font-size:9px; color:var(--text-dim); margin-top:10px;">Admin ID: 8392479231</div>
+    <p style="text-align:center; font-size:9px; color:var(--text-dim); margin-top:10px;">Admin ID: 8392479231</p>
 </div>
 
 <script>
     let mainBalance = 0.0000;
     let currentMining = 0.0000000000;
     
-    // Madencilik Sayacı
+    // Madencilik Simülasyonu
     setInterval(() => {
-        currentMining += 0.0000000045;
+        currentMining += 0.0000000055;
         document.getElementById('mining-counter').innerText = currentMining.toFixed(10);
     }, 100);
 
+    function openModal() { document.getElementById('withdraw-modal').style.display = 'flex'; document.getElementById('m-ton-disp').innerText = mainBalance.toFixed(4); }
+    function closeModal() { document.getElementById('withdraw-modal').style.display = 'none'; }
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        event.currentTarget.classList.add('active');
     }
 
     function claimMining() {
         if(currentMining > 0) {
             mainBalance += currentMining;
-            document.getElementById('main-balance').innerText = mainBalance.toFixed(4) + " TON";
+            document.getElementById('main-balance').innerText = mainBalance.toFixed(4);
             currentMining = 0;
-            console.log("Admin 8392479231: Claim Successful.");
+            console.log("Admin 8392479231: Claimed to main balance.");
         }
     }
 
-    function completeMission(btn, reward) {
-        btn.innerText = "⌛...";
-        setTimeout(() => {
-            btn.innerText = "✓";
-            btn.classList.add('claimed');
-            btn.onclick = null;
-            alert(reward + " TONIX Hesabınıza Tanımlandı!");
-        }, 1500);
+    function processSend() {
+        alert("Transfer initiated to the address. [Admin: 8392479231]");
+        closeModal();
     }
 </script>
 
