@@ -1,446 +1,424 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONIX Mining Pro - NVIDIA Master Edition</title>
-    <style>
-        /* --- RENK PALETİ VE DEĞİŞKENLER --- */
-        :root {
-            --bg-master: #060d13;
-            --bg-glow: #0b1e2d;
-            --card-deep: #122533;
-            --ton-blue: #0088cc;
-            --vibrant-cyan: #229ed9;
-            --text-pure: #ffffff;
-            --text-dim: #8ba2b5;
-            --success-glow: #89e219;
-            --error-neon: #ff3e3e;
-            --warning-amber: #ff9500;
-            --nav-glass: rgba(13, 27, 38, 0.95);
-            --transition-smooth: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TONIX Mining Pro - NVIDIA Master Edition</title>
+    <style>
+        /* --- RENK PALETİ VE DEĞİŞKENLER --- */
+        :root {
+            --bg-master: #04090d;
+            --bg-glow: #0a1926;
+            --card-deep: rgba(18, 37, 51, 0.7);
+            --ton-blue: #0088cc;
+            --vibrant-cyan: #00d2ff;
+            --text-pure: #ffffff;
+            --text-dim: #94a3b8;
+            --success-glow: #a3ff12;
+            --error-neon: #ff4757;
+            --warning-amber: #ffa502;
+            --nav-glass: rgba(15, 23, 42, 0.85);
+            --nvidia-green: #76b900;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-        /* --- TEMEL AYARLAR --- */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-        body {
-            background-color: #000; color: var(--text-pure);
-            margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
-            height: 100vh; overflow: hidden;
-        }
+        /* --- TEMEL AYARLAR --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', -apple-system, sans-serif; }
+        
+        body {
+            background-color: var(--bg-master); color: var(--text-pure);
+            margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
+        }
 
-        /* --- ANA KONTEYNER --- */
-        .app-shell {
-            width: 100%; max-width: 430px; height: 100%;
-            background: radial-gradient(circle at 50% 0%, var(--bg-glow) 0%, var(--bg-master) 100%);
-            position: relative; display: flex; flex-direction: column;
-            border: 1px solid rgba(255,255,255,0.05); overflow: hidden;
-        }
+        /* --- ANA KONTEYNER --- */
+        .app-shell {
+            width: 100%; max-width: 430px; height: 100%;
+            background: radial-gradient(circle at 50% -20%, var(--bg-glow) 0%, var(--bg-master) 80%);
+            position: relative; display: flex; flex-direction: column;
+            overflow: hidden;
+        }
 
-        /* --- DİNAMİK BİLDİRİM PANELİ --- */
-        #master-toast {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            width: 200px; height: 200px; border-radius: 40px; z-index: 10000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: var(--transition-smooth); backdrop-filter: blur(20px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.1);
-        }
-        #master-toast.active { transform: translate(-50%, -50%) scale(1); }
-        .toast-success { background: rgba(137, 226, 25, 0.92); color: #000; }
-        .toast-fail { background: rgba(255, 62, 62, 0.92); color: #fff; }
-        .toast-icon { font-size: 70px; margin-bottom: 15px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2)); }
+        /* --- DİNAMİK BİLDİRİM PANELİ --- */
+        #master-toast {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            width: 220px; padding: 30px 10px; border-radius: 35px; z-index: 10000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: var(--transition-smooth); backdrop-filter: blur(25px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);
+            opacity: 0; visibility: hidden;
+        }
+        #master-toast.active { transform: translate(-50%, -50%) scale(1); opacity: 1; visibility: visible; }
+        .toast-success { background: rgba(163, 255, 18, 0.15); border-color: var(--success-glow) !important; color: var(--success-glow); }
+        .toast-fail { background: rgba(255, 71, 87, 0.15); border-color: var(--error-neon) !important; color: var(--error-neon); }
+        .toast-icon { font-size: 50px; margin-bottom: 10px; }
 
-        /* --- ÜST BİLGİ ALANI --- */
-        header { padding: 25px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .brand-logo { font-size: 22px; font-weight: 900; letter-spacing: -1px; background: linear-gradient(90deg, #fff, var(--vibrant-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .system-status { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--text-dim); }
-        .live-dot { width: 8px; height: 8px; background: var(--success-glow); border-radius: 50%; box-shadow: 0 0 10px var(--success-glow); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        /* --- ÜST BİLGİ ALANI --- */
+        header { padding: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .brand-logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .brand-logo span { color: var(--nvidia-green); }
+        .system-status { display: flex; gap: 8px; align-items: center; font-size: 11px; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        .live-dot { width: 6px; height: 6px; background: var(--success-glow); border-radius: 50%; box-shadow: 0 0 10px var(--success-glow); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
 
-        /* --- İÇERİK MOTORU --- */
-        .viewport { flex: 1; overflow-y: auto; padding: 0 20px 130px 20px; scrollbar-width: none; perspective: 1000px; }
-        .viewport::-webkit-scrollbar { display: none; }
-        .view-layer { display: none; animation: layerEntrance 0.5s ease-out; }
-        .view-layer.active { display: block; }
-        @keyframes layerEntrance { from { opacity: 0; transform: rotateX(10deg) translateY(30px); } to { opacity: 1; transform: rotateX(0deg) translateY(0); } }
+        /* --- İÇERİK MOTORU --- */
+        .viewport { flex: 1; overflow-y: auto; padding: 10px 20px 140px 20px; scrollbar-width: none; }
+        .viewport::-webkit-scrollbar { display: none; }
+        .view-layer { display: none; animation: slideUp 0.4s ease-out; }
+        .view-layer.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- KART TASARIMLARI (PROFESYONEL) --- */
-        .glass-card {
-            background: linear-gradient(145deg, var(--card-deep), #0d1b26);
-            border-radius: 24px; padding: 20px; margin-bottom: 15px;
-            border: 1px solid rgba(255,255,255,0.04);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4); transition: 0.3s;
-        }
-        .glass-card:active { transform: scale(0.98); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .asset-info { display: flex; align-items: center; gap: 15px; }
-        .token-circle { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-        .val-big { font-size: 22px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+        /* --- KART TASARIMLARI --- */
+        .glass-card {
+            background: var(--card-deep); backdrop-filter: blur(10px);
+            border-radius: 24px; padding: 20px; margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .token-circle { width: 42px; height: 42px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; background: rgba(0,0,0,0.3); }
+        .val-big { font-size: 24px; font-weight: 800; font-family: 'JetBrains Mono', monospace; letter-spacing: -1px; }
 
-        /* --- MADENCİLİK ÜNİTESİ (NVIDIA CORE) --- */
-        .mining-rig { text-align: center; padding: 30px 0; }
-        .fan-module {
-            width: 260px; height: 260px; margin: 0 auto; border-radius: 50%;
-            position: relative; background: #000; border: 8px solid #0f222f;
-            overflow: hidden; box-shadow: 0 0 60px rgba(34, 158, 217, 0.2);
-            mask-image: radial-gradient(circle, white 100%, black 100%); /* Siyahlıkları kesin temizler */
-        }
-        .fan-blade { width: 100%; height: 100%; object-fit: cover; animation: nvdiaSpin 2s linear infinite; filter: contrast(1.1) brightness(1.2); }
-        @keyframes nvdiaSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        
-        .temp-bar { width: 100px; height: 4px; background: #1a3a54; margin: 20px auto; border-radius: 2px; overflow: hidden; }
-        .temp-fill { width: 65%; height: 100%; background: linear-gradient(90deg, var(--vibrant-cyan), var(--warning-amber)); }
+        /* --- MADENCİLİK ÜNİTESİ --- */
+        .mining-container { position: relative; padding: 20px 0; text-align: center; }
+        .fan-visual {
+            width: 240px; height: 240px; margin: 0 auto; position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .fan-blade-img { 
+            width: 180px; height: 180px; border-radius: 50%; 
+            animation: nvdiaSpin 3s linear infinite; 
+            filter: drop-shadow(0 0 15px rgba(0, 210, 255, 0.3));
+        }
+        @keyframes nvdiaSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        .status-badge {
+            display: inline-block; padding: 4px 12px; border-radius: 12px;
+            background: rgba(163, 255, 18, 0.1); color: var(--success-glow);
+            font-size: 11px; font-weight: 700; margin-top: 15px;
+            border: 1px solid rgba(163, 255, 18, 0.2);
+        }
 
-        .live-counter { font-size: 42px; font-weight: 900; margin: 10px 0; color: #fff; text-shadow: 0 0 20px rgba(34,158,217,0.5); font-variant-numeric: tabular-nums; }
+        /* --- BUTONLAR --- */
+        .m-btn {
+            border: none; border-radius: 18px; font-weight: 700; font-size: 15px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            cursor: pointer; transition: var(--transition-smooth); color: #fff;
+            active: transform: scale(0.96);
+        }
+        .btn-primary { background: linear-gradient(135deg, #0088cc, #00d2ff); box-shadow: 0 8px 20px rgba(0, 136, 204, 0.3); height: 60px; }
+        .btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); height: 60px; }
+        .m-btn:active { transform: scale(0.95); opacity: 0.9; }
 
-        /* --- AKSİYON BUTONLARI --- */
-        .master-btn-row { display: flex; gap: 15px; margin-top: 25px; }
-        .m-btn {
-            flex: 1; height: 65px; border-radius: 20px; border: none; font-size: 18px; font-weight: bold;
-            display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;
-            transition: var(--transition-smooth); color: #fff;
-        }
-        .btn-tonix-main { background: linear-gradient(135deg, var(--ton-blue), #004466); box-shadow: 0 10px 20px rgba(0, 136, 204, 0.3); }
-        .btn-tonix-alt { background: #1a3a54; border: 1px solid var(--vibrant-cyan); color: var(--vibrant-cyan); }
-        .m-btn:hover { filter: brightness(1.2); }
+        /* --- ALT NAVİGASYON --- */
+        nav {
+            position: absolute; bottom: 25px; left: 20px; right: 20px;
+            background: var(--nav-glass); backdrop-filter: blur(20px);
+            border-radius: 24px; padding: 8px; display: flex;
+            border: 1px solid rgba(255,255,255,0.08); z-index: 1000;
+        }
+        .nav-node { color: var(--text-dim); text-align: center; cursor: pointer; padding: 10px 5px; transition: 0.3s; flex: 1; border-radius: 16px; }
+        .nav-node.active { color: var(--vibrant-cyan); background: rgba(0, 210, 255, 0.05); }
+        .nav-node i { font-size: 22px; display: block; margin-bottom: 2px; font-style: normal; }
+        .nav-node small { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* --- GÖREV LİSTESİ --- */
-        .task-row {
-            background: rgba(255,255,255,0.02); border-radius: 18px; padding: 18px;
-            margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
-            border: 1px solid rgba(255,255,255,0.03);
-        }
-        .task-meta b { display: block; font-size: 16px; margin-bottom: 4px; }
-        .task-meta span { color: var(--vibrant-cyan); font-weight: bold; font-size: 13px; }
-        .claim-tag { background: var(--success-glow); color: #000; padding: 8px 18px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; }
-
-        /* --- ALT NAVİGASYON (ULTRA MODERN) --- */
-        nav {
-            position: absolute; bottom: 30px; left: 20px; right: 20px;
-            background: var(--nav-glass); backdrop-filter: blur(15px);
-            border-radius: 28px; padding: 10px; display: flex; justify-content: space-around;
-            border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 15px 40px rgba(0,0,0,0.6);
-        }
-        .nav-node { color: var(--text-dim); text-align: center; cursor: pointer; padding: 10px; transition: 0.3s; position: relative; flex: 1; }
-        .nav-node.active { color: var(--vibrant-cyan); }
-        .nav-node i { font-size: 26px; display: block; margin-bottom: 4px; }
-        .nav-node.active::after { content: ''; position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); width: 20px; height: 4px; background: var(--vibrant-cyan); border-radius: 2px; box-shadow: 0 0 10px var(--vibrant-cyan); }
-
-        /* --- ÇEKİM PANELİ (MODAL) --- */
-        .modal-vault {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-master); z-index: 9000; display: none; flex-direction: column;
-            padding: 40px 25px; animation: vaultSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        @keyframes vaultSlide { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .vault-input { background: #08121a; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
-        .vault-input input { background: transparent; border: none; color: #fff; width: 100%; font-size: 16px; outline: none; }
-        .vault-label { color: var(--text-dim); font-size: 13px; margin-bottom: 8px; display: block; padding-left: 10px; }
-    </style>
+        /* --- MODAL --- */
+        .modal-vault {
+            position: absolute; inset: 0; background: var(--bg-master);
+            z-index: 9000; display: none; flex-direction: column;
+            padding: 30px 25px; animation: vaultSlide 0.4s cubic-bezier(0, 0, 0.2, 1);
+        }
+        @keyframes vaultSlide { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .input-group { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 15px; margin-bottom: 15px; }
+        .input-group input { background: transparent; border: none; color: #fff; width: 100%; font-size: 16px; outline: none; }
+        
+        /* Görev Listesi Modernizasyon */
+        .task-card {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 16px;
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.03);
+        }
+        .task-btn { background: #fff; color: #000; padding: 8px 16px; border-radius: 12px; font-weight: 800; font-size: 12px; }
+    </style>
 </head>
 <body>
 
 <div class="app-shell">
-    <div id="master-toast">
-        <div class="toast-icon" id="mt-icon">✓</div>
-        <div id="mt-msg" style="font-weight: 900; letter-spacing: 1px;">SİSTEM ONAYI</div>
-    </div>
+    <div id="master-toast">
+        <div class="toast-icon" id="mt-icon">✓</div>
+        <div id="mt-msg" style="font-weight: 800; font-size: 14px; text-transform: uppercase;">İŞLEM ONAYLANDI</div>
+    </div>
 
-    <header>
-        <div class="brand-logo">TONIX MASTER</div>
-        <div class="system-status">
-            <div class="live-dot"></div>
-            <span>8392479231 (Online)</span>
-        </div>
-    </header>
+    <header>
+        <div class="brand-logo">TONIX<span>PRO</span></div>
+        <div class="system-status">
+            <div class="live-dot"></div>
+            <span>ID: 8392479231</span>
+        </div>
+    </header>
 
-    <div class="viewport">
-        
-        <div id="view-wallet" class="view-layer">
-            <h2 style="margin-bottom: 25px;">Varlık Yönetimi</h2>
-            <div class="glass-card">
-                <div class="card-header">
-                    <div class="asset-info">
-                        <div class="token-circle" style="background: var(--ton-blue);">💎</div>
-                        <div><small style="color:var(--text-dim)">Toplam TON</small><br><b class="val-big" id="w-ton-val">0.0000</b></div>
-                    </div>
-                    <button class="m-btn btn-tonix-main" style="width: 50px; height: 50px; border-radius: 15px;" onclick="openVault()">📤</button>
-                </div>
-                <div style="font-size: 12px; color: var(--success-glow); background: rgba(137,226,25,0.05); padding: 8px; border-radius: 10px; text-align: center;">
-                    Güvenli Cüzdan: NVIDIA Shield Aktif
-                </div>
-            </div>
+    <div class="viewport">
+        
+        <div id="view-home" class="view-layer active">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom: 20px;">
+                <div class="glass-card" style="margin-bottom:0; padding: 15px;">
+                    <small style="color:var(--text-dim); font-weight: 600;">💎 TON</small><br>
+                    <b id="h-ton-val" class="val-big" style="font-size: 20px;">0.0000</b>
+                </div>
+                <div class="glass-card" style="margin-bottom:0; padding: 15px;">
+                    <small style="color:var(--text-dim); font-weight: 600;">🌀 TONIX</small><br>
+                    <b id="h-tonix-val" class="val-big" style="font-size: 20px;">0</b>
+                </div>
+            </div>
 
-            <div class="glass-card">
-                <div class="asset-info">
-                    <div class="token-circle" style="background: linear-gradient(var(--vibrant-cyan), #0d1b26);">🌀</div>
-                    <div><small style="color:var(--text-dim)">TONIX Token</small><br><b class="val-big" id="w-tonix-val">0</b></div>
-                </div>
-            </div>
+            <div class="mining-container">
+                <div class="fan-visual">
+                    <img src="nvdia.jpg" class="fan-blade-img" alt="NVIDIA CORE" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3665/3665923.png'">
+                </div>
+                <div class="status-badge">NVIDIA CUDA ENGINE: ACTIVE</div>
+                <div class="live-counter" id="master-counter" style="font-size: 36px; font-weight: 900; margin: 15px 0; font-family: monospace;">0.0000000000</div>
+                <div style="font-size: 12px; color: var(--text-dim); font-weight: 600;">HASH RATE: <span style="color: var(--vibrant-cyan);">6.42 GH/s</span></div>
+            </div>
 
-            <h3 style="margin-top: 30px;">İşlem Kayıtları</h3>
-            <div id="master-ledger" class="glass-card" style="padding: 10px;">
-                <p style="text-align:center; color:var(--text-dim); padding: 40px 0; font-size: 14px;">Henüz bir veri girişi saptanmadı.</p>
-            </div>
-        </div>
+            <div style="display:flex; gap:12px; margin-top: 30px;">
+                <button class="m-btn btn-primary" style="flex:2" onclick="executeClaim()">BAKİYE TOPLA</button>
+                <button class="m-btn btn-secondary" style="flex:1" onclick="navigate('view-tasks')">BOOST</button>
+            </div>
+        </div>
 
-        <div id="view-friends" class="view-layer">
-            <h2 style="text-align:center; margin-bottom: 10px;">Referans Ağı</h2>
-            <p style="text-align:center; color:var(--text-dim); font-size: 14px; margin-bottom: 30px;">Bağlantılarını kur, çarpanı artır.</p>
-            
-            <div class="glass-card" style="text-align:center; padding: 40px 20px;">
-                <div style="font-size: 60px; margin-bottom: 20px;">🕸️</div>
-                <div class="vault-label">DAVET BAĞLANTIN</div>
-                <div style="background: #060d13; padding: 15px; border-radius: 15px; font-family: monospace; font-size: 12px; color: var(--vibrant-cyan); border: 1px dashed var(--vibrant-cyan); margin-bottom: 20px;">
-                    t.me/MiningTonix_Bot?start=8392479231
-                </div>
-                <button class="m-btn btn-tonix-main" style="width: 100%;" onclick="triggerToast('LINK KOPYALANDI', 'success')">KOPYALA VE PAYLAŞ</button>
-            </div>
+        <div id="view-wallet" class="view-layer">
+            <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 20px;">Cüzdanım</h2>
+            <div class="glass-card" style="background: linear-gradient(135deg, #0088cc22, #00000000);">
+                <div class="card-header">
+                    <div>
+                        <small style="color:var(--text-dim)">Toplam Bakiye</small>
+                        <div class="val-big" id="w-ton-val" style="font-size: 32px; margin-top: 5px;">0.0000</div>
+                        <span style="font-size: 12px; color: var(--success-glow);">≈ $0.00 USD</span>
+                    </div>
+                    <div class="token-circle" style="background: var(--ton-blue);">💎</div>
+                </div>
+                <button class="m-btn btn-primary" style="width: 100%; height: 50px; font-size: 14px;" onclick="openVault()">TRANSFER ET</button>
+            </div>
 
-            <div class="glass-card">
-                <div class="flex-ara" style="display:flex; justify-content:space-between;">
-                    <span>Aktif Bağlantılar</span>
-                    <b style="color:var(--vibrant-cyan)">0</b>
-                </div>
-            </div>
-        </div>
+            <div class="glass-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>TONIX Token</span>
+                    <b id="w-tonix-val" style="color: var(--vibrant-cyan); font-size: 18px;">0</b>
+                </div>
+            </div>
 
-        <div id="view-home" class="view-layer active">
-            <div style="display:flex; gap:12px; margin-bottom: 20px;">
-                <div class="glass-card" style="flex:1; margin-bottom:0; padding: 15px;">
-                    <small style="color:var(--text-dim)">💎 TON</small><br><b id="h-ton-val" style="font-size:18px;">0.0000</b>
-                </div>
-                <div class="glass-card" style="flex:1; margin-bottom:0; padding: 15px;">
-                    <small style="color:var(--text-dim)">🌀 TONIX</small><br><b id="h-tonix-val" style="font-size:18px;">0</b>
-                </div>
-            </div>
+            <h3 style="font-size: 16px; margin: 25px 0 15px 5px;">Son İşlemler</h3>
+            <div id="master-ledger" class="glass-card" style="padding: 10px; min-height: 100px;">
+                <p style="text-align:center; color:var(--text-dim); padding: 30px 0; font-size: 13px;">İşlem geçmişi temiz.</p>
+            </div>
+        </div>
 
-            <div class="mining-rig">
-                <div class="fan-module">
-                    <img src="nvdia.jpg" class="fan-blade" alt="CUDA CORE">
-                </div>
-                <div class="temp-bar"><div class="temp-fill" id="rig-temp"></div></div>
-                <div class="live-counter" id="master-counter">0.0000000000</div>
-                <div style="font-size: 14px; font-weight: bold;">
-                    <span style="color:var(--text-dim)">VERİMLİLİK:</span> 
-                    <span style="color:var(--success-glow)">6 GH/s (MAX)</span>
-                </div>
-            </div>
+        <div id="view-friends" class="view-layer">
+            <h2 style="text-align:center;">Referans Sistemi</h2>
+            <div class="glass-card" style="text-align:center; padding: 30px 15px;">
+                <div style="font-size: 50px; margin-bottom: 15px;">🚀</div>
+                <p style="font-size: 14px; color: var(--text-dim);">Arkadaşlarını davet et, kazancını %10 artır.</p>
+                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; font-family: monospace; font-size: 11px; color: var(--vibrant-cyan); border: 1px dashed rgba(0, 210, 255, 0.4); margin: 20px 0;">
+                    t.me/MiningTonix_Bot?start=8392479231
+                </div>
+                <button class="m-btn btn-primary" style="width: 100%;" onclick="copyRef()">BAĞLANTIYI KOPYALA</button>
+            </div>
+        </div>
 
-            <div class="master-btn-row">
-                <button class="m-btn btn-tonix-main" onclick="executeClaim()">🥞 BAKİYE TOPLA</button>
-                <button class="m-btn btn-tonix-alt" onclick="navigate('view-tasks')">⚡ BOOST</button>
-            </div>
-        </div>
+        <div id="view-tasks" class="view-layer">
+            <h2 style="margin-bottom: 20px;">Görevler</h2>
+            <div class="task-card">
+                <div>
+                    <div style="font-weight: 700; font-size: 14px;">CUDA Driver Update</div>
+                    <div style="color: var(--vibrant-cyan); font-size: 12px; font-weight: 600;">+25,000 TONIX</div>
+                </div>
+                <div class="task-btn" onclick="completeTask(this, 25000)">YAP</div>
+            </div>
+            <div class="task-card">
+                <div>
+                    <div style="font-weight: 700; font-size: 14px;">Telegram Kanalları</div>
+                    <div style="color: var(--vibrant-cyan); font-size: 12px; font-weight: 600;">+5,000 TONIX</div>
+                </div>
+                <div class="task-btn" onclick="completeTask(this, 5000)">KATIL</div>
+            </div>
+        </div>
 
-        <div id="view-tasks" class="view-layer">
-            <h2 style="margin-bottom: 10px;">Ödül Havuzu</h2>
-            <p style="color:var(--text-dim); margin-bottom:25px; font-size: 14px;">Algoritmayı güçlendir, TONIX kazan.</p>
-            
-            <div class="task-row">
-                <div class="task-meta">
-                    <b>CUDA Driver Güncelle</b>
-                    <span>+25,000 TONIX | +150 GH/s</span>
-                </div>
-                <div class="claim-tag" onclick="completeTask(this, 25000)">YAP</div>
-            </div>
+        <div id="view-more" class="view-layer">
+            <h2 style="margin-bottom: 20px;">Sistem Ayarları</h2>
+            <div class="glass-card">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <div style="width:60px; height:60px; background:var(--bg-glow); border-radius:15px; display:flex; align-items:center; justify-content:center; font-size:30px;">👨‍💻</div>
+                    <div>
+                        <b style="font-size:18px;">Master Admin</b><br>
+                        <small style="color:var(--text-dim)">Versiyon 2.8.5-Gold</small>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card" style="padding: 5px 15px;">
+                <p style="display:flex; justify-content:space-between; font-size: 14px;"><span>Ağ Durumu</span> <span style="color:var(--success-glow)">Bağlı</span></p>
+                <p style="display:flex; justify-content:space-between; font-size: 14px;"><span>Güvenlik Katmanı</span> <span>SSL + NVIDIA Shield</span></p>
+            </div>
+        </div>
 
-            <div class="task-row">
-                <div class="task-meta">
-                    <b>Telegram Topluluğu</b>
-                    <span>+5,000 TONIX</span>
-                </div>
-                <div class="claim-tag" onclick="completeTask(this, 5000)">KATIL</div>
-            </div>
+    </div>
 
-            <div class="task-row">
-                <div class="task-meta">
-                    <b>Daily Check-in</b>
-                    <span>+1,000 TONIX</span>
-                </div>
-                <div class="claim-tag" onclick="completeTask(this, 1000)">AL</div>
-            </div>
+    <div id="withdraw-vault" class="modal-vault">
+        <h2 style="text-align:center;">Varlık Transferi</h2>
+        <p style="text-align:center; font-size:12px; color:var(--text-dim); margin-top:-10px; margin-bottom:30px;">TON (The Open Network) Mainnet</p>
+        
+        <div class="input-group">
+            <small style="color:var(--text-dim); display:block; margin-bottom:5px;">ALICI ADRESİ</small>
+            <input type="text" placeholder="UQA... veya Cüzdan adresi">
+        </div>
 
-            <div class="glass-card" style="margin-top: 30px; background: rgba(34, 158, 217, 0.05); border: 1px dashed var(--vibrant-cyan);">
-                <p style="text-align:center; font-size: 12px; margin:0;">Yeni görevler 24 saatte bir senkronize edilir.</p>
-            </div>
-        </div>
+        <div class="input-group">
+            <small style="color:var(--text-dim); display:block; margin-bottom:5px;">MİKTAR (Min 1.5)</small>
+            <div style="display:flex; justify-content:space-between;">
+                <input type="number" placeholder="0.00" id="v-amount" oninput="calcTotal()">
+                <b style="color: var(--vibrant-cyan); cursor: pointer;" onclick="setMax()">MAX</b>
+            </div>
+        </div>
 
-        <div id="view-more" class="view-layer">
-            <h2 style="margin-bottom: 25px;">Sistem Ayarları</h2>
-            <div class="glass-card" style="display:flex; align-items:center; gap:20px;">
-                <div style="width:70px; height:70px; background:#162c39; border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:35px; border: 1px solid var(--vibrant-cyan);">🤖</div>
-                <div>
-                    <b style="font-size:20px;">Master User</b><br>
-                    <small style="color:var(--text-dim)">ID: 8392479231</small>
-                </div>
-            </div>
+        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px; margin-bottom: 30px;">
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px; color:var(--text-dim);">
+                <span>Ağ Komisyonu</span> <span>0.3 TON</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-weight:800; border-top: 1px solid rgba(255,255,255,0.05); pt-10; margin-top:10px; padding-top:10px;">
+                <span>Toplam</span> <span id="v-total">0.00 TON</span>
+            </div>
+        </div>
 
-            <div class="glass-card" style="padding: 10px;">
-                <div class="task-row" style="border:none; margin:0;"><span>Sistem Dili</span> <b>Türkçe</b></div>
-                <div class="task-row" style="border:none; margin:0;"><span>Bağlantı</span> <b style="color:var(--success-glow)">SSL Güvenli</b></div>
-                <div class="task-row" style="border:none; margin:0;"><span>CUDA Versiyon</span> <b>2.8.5-Gold</b></div>
-                <div class="task-row" style="border:none; margin:0; color:var(--error-neon)" onclick="triggerToast('ERİŞİM REDDEDİLDİ', 'fail')"><span>Oturumu Kapat</span></div>
-            </div>
-        </div>
+        <button class="m-btn btn-primary" style="width: 100%;" onclick="executeWithdraw()">TRANSFERİ BAŞLAT</button>
+        <button class="m-btn" style="width: 100%; background: transparent; margin-top: 10px;" onclick="closeVault()">İPTAL</button>
+    </div>
 
-    </div>
-
-    <div id="withdraw-vault" class="modal-vault">
-        <h2 style="text-align:center;">Varlık Transferi</h2>
-        <p style="text-align:center; font-size:13px; color:var(--text-dim); margin-bottom:35px;">TON Ağı Transfer Protokolü</p>
-        
-        <label class="vault-label">ALICI ADRESİ</label>
-        <div class="vault-input">
-            <input type="text" placeholder="UQA... Cüzdan adresini girin">
-        </div>
-
-        <label class="vault-label">TRANSFER MİKTARI (Min: 1.5 TON)</label>
-        <div class="vault-input">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <input type="number" placeholder="0.00" id="v-amount">
-                <b style="color: var(--vibrant-cyan); cursor: pointer;" onclick="setMax()">MAX</b>
-            </div>
-        </div>
-
-        <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 20px; margin-bottom: 30px;">
-            <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;">
-                <span>Ağ Ücreti</span> <span>0.3 TON</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; font-weight:bold;">
-                <span>Toplam Çıkış</span> <span id="v-total">0.00 TON</span>
-            </div>
-        </div>
-
-        <button class="m-btn btn-tonix-main" style="width: 100%; height: 70px;" onclick="executeWithdraw()">TRANSFERİ BAŞLAT</button>
-        <button class="m-btn" style="width: 100%; background: transparent; margin-top: 15px;" onclick="closeVault()">GERİ DÖN</button>
-    </div>
-
-    <nav>
-        <div class="nav-node" onclick="navigate('view-wallet')"><i>💼</i><small>Cüzdan</small></div>
-        <div class="nav-node" onclick="navigate('view-friends')"><i>👥</i><small>Davet</small></div>
-        <div class="nav-node active" onclick="navigate('view-home')"><i>🌀</i><small>Master</small></div>
-        <div class="nav-node" onclick="navigate('view-tasks')"><i>🎯</i><small>Görev</small></div>
-        <div class="nav-node" onclick="navigate('view-more')"><i>⚙️</i><small>Sistem</small></div>
-    </nav>
+    <nav>
+        <div class="nav-node" onclick="navigate('view-wallet')"><i>💼</i><small>Cüzdan</small></div>
+        <div class="nav-node" onclick="navigate('view-friends')"><i>👥</i><small>Davet</small></div>
+        <div class="nav-node active" onclick="navigate('view-home')"><i>🌀</i><small>Master</small></div>
+        <div class="nav-node" onclick="navigate('view-tasks')"><i>🎯</i><small>Görev</small></div>
+        <div class="nav-node" onclick="navigate('view-more')"><i>⚙️</i><small>Sistem</small></div>
+    </nav>
 </div>
 
 <script>
-    // --- ÇEKİRDEK VERİLER (BAŞLANGIÇ: 0) ---
-    let tonBalance = 0.0000;
-    let tonixBalance = 0;
-    let miningPool = 0.0000000000;
-    const miningHertz = 0.0000000105; // GH/s çarpanı
+    // --- STATE MANAGEMENT ---
+    let state = {
+        ton: 0.0000,
+        tonix: 0,
+        mining: 0.0000000000,
+        rate: 0.0000000105
+    };
 
-    // --- NVIDIA CUDA SIMULATOR ---
-    setInterval(() => {
-        miningPool += miningHertz;
-        document.getElementById('master-counter').innerText = miningPool.toFixed(10);
-        
-        // Dinamik Isı Efekti
-        const temp = 50 + (Math.random() * 15);
-        document.getElementById('rig-temp').style.width = temp + '%';
-    }, 100);
+    // --- MINING ENGINE ---
+    setInterval(() => {
+        state.mining += state.rate;
+        document.getElementById('master-counter').innerText = state.mining.toFixed(10);
+    }, 100);
 
-    // --- NAVİGASYON MOTORU ---
-    function navigate(viewId) {
-        document.querySelectorAll('.view-layer').forEach(l => l.classList.remove('active'));
-        document.querySelectorAll('.nav-node').forEach(n => n.classList.remove('active'));
-        
-        document.getElementById(viewId).classList.add('active');
-        
-        // Navigasyon ikonu eşleşmesi
-        const nodes = document.querySelectorAll('.nav-node');
-        const map = {'view-wallet':0, 'view-friends':1, 'view-home':2, 'view-tasks':3, 'view-more':4};
-        nodes[map[viewId]].classList.add('active');
-    }
+    // --- NAVIGATION ---
+    function navigate(viewId) {
+        document.querySelectorAll('.view-layer').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-node').forEach(n => n.classList.remove('active'));
+        
+        document.getElementById(viewId).classList.add('active');
+        
+        // Find correct nav index
+        const views = ['view-wallet', 'view-friends', 'view-home', 'view-tasks', 'view-more'];
+        const index = views.indexOf(viewId);
+        document.querySelectorAll('.nav-node')[index].classList.add('active');
+    }
 
-    // --- BİLDİRİM SİSTEMİ ---
-    function triggerToast(msg, type) {
-        const t = document.getElementById('master-toast');
-        const icon = document.getElementById('mt-icon');
-        const m = document.getElementById('mt-msg');
-        
-        t.className = (type === 'success' ? 'toast-success active' : 'toast-fail active');
-        m.innerText = msg;
-        icon.innerText = (type === 'success' ? '✓' : '✕');
-        
-        setTimeout(() => t.classList.remove('active'), 2000);
-    }
+    // --- UTILS ---
+    function triggerToast(msg, type) {
+        const t = document.getElementById('master-toast');
+        const icon = document.getElementById('mt-icon');
+        const m = document.getElementById('mt-msg');
+        
+        t.className = (type === 'success' ? 'toast-success active' : 'toast-fail active');
+        m.innerText = msg;
+        icon.innerText = (type === 'success' ? '✓' : '✕');
+        
+        setTimeout(() => t.classList.remove('active'), 2500);
+    }
 
-    // --- CLAIM ALGORİTMASI ---
-    function executeClaim() {
-        if(miningPool > 0.0000001) {
-            tonBalance += miningPool;
-            const captured = miningPool;
-            miningPool = 0;
-            updateMasterUI();
-            addToLedger("MADENCİLİK HASADI", captured.toFixed(8));
-            triggerToast('HASAT BAŞARILI', 'success');
-        } else {
-            triggerToast('YETERSİZ VERİ', 'fail');
-        }
-    }
+    function updateUI() {
+        const val = state.ton.toFixed(4);
+        document.querySelectorAll('#w-ton-val, #h-ton-val').forEach(el => el.innerText = val);
+        document.querySelectorAll('#w-tonix-val, #h-tonix-val').forEach(el => el.innerText = state.tonix.toLocaleString());
+    }
 
-    // --- GÖREVLENDİRME ---
-    function completeTask(el, reward) {
-        el.innerText = "...";
-        el.style.pointerEvents = "none";
-        
-        setTimeout(() => {
-            tonixBalance += reward;
-            el.innerHTML = "TAMAM";
-            el.style.background = "#122533";
-            el.style.color = "var(--success-glow)";
-            updateMasterUI();
-            triggerToast('+' + reward.toLocaleString() + ' TONIX', 'success');
-        }, 1500);
-    }
+    // --- ACTIONS ---
+    function executeClaim() {
+        if(state.mining > 0.0000001) {
+            const earned = state.mining;
+            state.ton += earned;
+            state.mining = 0;
+            updateUI();
+            addLedger("HASAT", earned.toFixed(8));
+            triggerToast('BAKİYE EKLENDİ', 'success');
+        } else {
+            triggerToast('HAVUZ HENÜZ BOŞ', 'fail');
+        }
+    }
 
-    // --- UI SENKRONİZASYONU ---
-    function updateMasterUI() {
-        const tonStr = tonBalance.toFixed(4);
-        document.getElementById('w-ton-val').innerText = tonStr;
-        document.getElementById('h-ton-val').innerText = tonStr;
-        document.getElementById('w-tonix-val').innerText = tonixBalance.toLocaleString();
-        document.getElementById('h-tonix-val').innerText = tonixBalance.toLocaleString();
-    }
+    function completeTask(btn, reward) {
+        btn.innerText = "....";
+        btn.style.opacity = "0.5";
+        btn.style.pointerEvents = "none";
+        
+        setTimeout(() => {
+            state.tonix += reward;
+            updateUI();
+            btn.innerText = "TAMAM";
+            btn.style.background = "rgba(163, 255, 18, 0.2)";
+            btn.style.color = "var(--success-glow)";
+            triggerToast('+' + reward.toLocaleString() + ' TONIX', 'success');
+        }, 1200);
+    }
 
-    // --- KAYIT DEFTERİ ---
-    function addToLedger(type, amt) {
-        const ledger = document.getElementById('master-ledger');
-        if(ledger.innerText.includes('Henüz')) ledger.innerHTML = '';
-        const entry = document.createElement('div');
-        entry.className = 'task-row';
-        entry.style.border = "none";
-        entry.style.background = "transparent";
-        entry.style.padding = "10px 0";
-        entry.innerHTML = `<span>${type} <br><small style="opacity:0.5">${new Date().toLocaleTimeString()}</small></span>
-                           <b style="color:var(--success-glow)">+${amt} TON</b>`;
-        ledger.prepend(entry);
-    }
+    function addLedger(type, amt) {
+        const l = document.getElementById('master-ledger');
+        if(l.innerText.includes('temiz')) l.innerHTML = '';
+        const row = document.createElement('div');
+        row.style.cssText = "display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:12px;";
+        row.innerHTML = `<span>${type} <br><small style="color:gray">${new Date().toLocaleTimeString()}</small></span>
+                         <b style="color:var(--success-glow)">+${amt} TON</b>`;
+        l.prepend(row);
+    }
 
-    // --- VAULT KONTROLLERİ ---
-    function openVault() { document.getElementById('withdraw-vault').style.display = 'flex'; }
-    function closeVault() { document.getElementById('withdraw-vault').style.display = 'none'; }
-    function setMax() { 
-        document.getElementById('v-amount').value = tonBalance.toFixed(4); 
-        document.getElementById('v-total').innerText = tonBalance.toFixed(4) + " TON";
-    }
-    
-    function executeWithdraw() {
-        const val = parseFloat(document.getElementById('v-amount').value);
-        if(val >= 1.5 && val <= tonBalance) {
-            triggerToast('TRANSFER İŞLEMEDE', 'success');
-            setTimeout(() => {
-                tonBalance -= val;
-                updateMasterUI();
-                closeVault();
-            }, 2000);
-        } else {
-            triggerToast('HATA: LİMİT 1.5', 'fail');
-        }
-    }
+    // --- VAULT ---
+    function openVault() { document.getElementById('withdraw-vault').style.display = 'flex'; }
+    function closeVault() { document.getElementById('withdraw-vault').style.display = 'none'; }
+    
+    function setMax() {
+        document.getElementById('v-amount').value = state.ton.toFixed(4);
+        calcTotal();
+    }
+
+    function calcTotal() {
+        const val = parseFloat(document.getElementById('v-amount').value) || 0;
+        document.getElementById('v-total').innerText = (val > 0 ? (val + 0.3).toFixed(2) : "0.00") + " TON";
+    }
+
+    function executeWithdraw() {
+        const val = parseFloat(document.getElementById('v-amount').value);
+        if(val >= 1.5 && val <= state.ton) {
+            triggerToast('TRANSFER BAŞLADI', 'success');
+            setTimeout(() => {
+                state.ton -= val;
+                updateUI();
+                closeVault();
+            }, 2000);
+        } else {
+            triggerToast('YETERSİZ BAKİYE', 'fail');
+        }
+    }
+
+    function copyRef() {
+        navigator.clipboard.writeText('t.me/MiningTonix_Bot?start=8392479231');
+        triggerToast('LİNK KOPYALANDI', 'success');
+    }
 </script>
 
 </body>
