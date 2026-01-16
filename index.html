@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONIX - Gelişmiş Madencilik</title>
+    <title>TONIX Pro Mining</title>
     <style>
         :root {
-            --bg-ana: #0b1e2d;
-            --bg-koyu: #08121a;
-            --kart-bg: #122533;
+            --bg-koyu: #0c212e;
+            --kart-bg: #162c39;
             --ton-mavi: #0088cc;
-            --vurgu-mavi: #229ed9;
+            --vurgu-mavi: #23a0d9;
             --metin-beyaz: #ffffff;
             --metin-gri: #8ba2b5;
             --basari-yesil: #89e219;
@@ -19,269 +18,333 @@
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        
         body {
             background-color: #000; color: var(--metin-beyaz);
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
             height: 100vh; overflow: hidden;
         }
 
         .uygulama-cerceve {
             width: 100%; max-width: 414px; height: 100%;
-            background: radial-gradient(circle at top, #162b3d 0%, var(--bg-ana) 100%);
+            background: var(--bg-koyu);
             position: relative; display: flex; flex-direction: column;
-            border-left: 1px solid rgba(255,255,255,0.05);
-            border-right: 1px solid rgba(255,255,255,0.05);
         }
 
-        /* --- BİLDİRİM EFEKTİ --- */
-        #bildirim {
+        /* --- BİLDİRİM (ONAY/RED) --- */
+        #pop-bildirim {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            width: 160px; height: 160px; border-radius: 30px; z-index: 9999;
+            width: 140px; height: 140px; border-radius: 25px; z-index: 10000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none;
-            backdrop-filter: blur(10px);
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); backdrop-filter: blur(8px);
         }
-        #bildirim.aktif { transform: translate(-50%, -50%) scale(1); }
+        #pop-bildirim.goster { transform: translate(-50%, -50%) scale(1); }
         .b-onay { background: rgba(137, 226, 25, 0.9); color: #000; }
         .b-red { background: rgba(255, 77, 77, 0.9); color: #fff; }
-        .ikon-anim { font-size: 60px; margin-bottom: 10px; }
 
-        /* --- ÜST BAR --- */
-        header { padding: 20px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 18px; }
+        /* --- ÜST HEADER --- */
+        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 18px; }
+        .header-icons { display: flex; gap: 15px; color: var(--metin-gri); cursor: pointer; }
 
-        /* --- SAYFA YAPISI --- */
-        .icerik-alani { flex: 1; overflow-y: auto; padding: 0 20px 120px 20px; scrollbar-width: none; }
-        .icerik-alani::-webkit-scrollbar { display: none; }
-        .sayfa { display: none; animation: sayfaGecis 0.3s ease-out; }
-        .sayfa.aktif { display: block; }
-        @keyframes sayfaGecis { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* --- İÇERİK ALANI --- */
+        .icerik { flex: 1; overflow-y: auto; padding: 10px 20px 100px 20px; scrollbar-width: none; }
+        .icerik::-webkit-scrollbar { display: none; }
+        .sekme-sayfasi { display: none; animation: fadeIn 0.3s ease; }
+        .sekme-sayfasi.aktif { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- TASARIM ÖGELERİ --- */
-        .kart { background: var(--kart-bg); border-radius: 18px; padding: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
-        .flex-ara { display: flex; align-items: center; justify-content: space-between; }
-        .btn-aksiyon { 
-            background: var(--ton-mavi); color: white; border: none; padding: 12px; 
-            border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s;
+        /* --- KART TASARIMLARI (GÖRSELDEKİ GİBİ) --- */
+        .denge-kart {
+            background: var(--kart-bg); border-radius: 15px; padding: 12px 15px;
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
         }
-        .btn-aksiyon:active { transform: scale(0.96); }
+        .denge-sol { display: flex; align-items: center; gap: 12px; }
+        .denge-ikon { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .cuzdan-butonu { background: var(--vurgu-mavi); border: none; border-radius: 8px; padding: 8px; cursor: pointer; }
 
-        /* --- ÖZEL SAYFA STİLLERİ --- */
-        /* Ana Sayfa Pervane */
-        .pervane-kutu { 
-            width: 240px; height: 240px; margin: 30px auto; border-radius: 50%; 
-            overflow: hidden; border: 5px solid rgba(34,158,217,0.2); background: #000;
+        /* --- PERVANE (MINING) --- */
+        .mining-alan { text-align: center; margin: 20px 0; }
+        .pervane-kapsayici {
+            width: 220px; height: 220px; margin: 0 auto; border-radius: 50%;
+            border: 4px solid rgba(35, 160, 217, 0.2); overflow: hidden; background: #000;
         }
-        .pervane-img { width: 100%; height: 100%; object-fit: cover; animation: don 2s linear infinite; }
-        @keyframes don { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .pervane-img { width: 100%; height: 100%; object-fit: cover; animation: spin 3s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* Cüzdan Sayfası Geçmişi */
-        .islem-satir { border-bottom: 1px solid rgba(255,255,255,0.03); padding: 12px 0; display: flex; justify-content: space-between; }
+        .sayac-metin { font-size: 32px; font-weight: bold; margin: 15px 0 5px 0; font-family: 'Courier New', Courier, monospace; }
+        .hiz-metin { color: var(--metin-gri); font-size: 14px; display: flex; justify-content: center; align-items: center; gap: 5px; }
 
-        /* Alt Navigasyon */
-        .nav-bar {
-            position: absolute; bottom: 25px; left: 15px; right: 15px;
-            background: var(--nav-bg); border-radius: 20px; padding: 10px;
-            display: flex; justify-content: space-between; border: 1px solid rgba(255,255,255,0.06);
+        /* --- BUTONLAR --- */
+        .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-ana {
+            flex: 1; padding: 15px; border-radius: 12px; border: none; color: white;
+            font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .nav-item { flex: 1; text-align: center; font-size: 11px; color: var(--metin-gri); cursor: pointer; }
-        .nav-item.aktif { color: var(--vurgu-mavi); }
-        .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
+        .btn-claim { background: var(--ton-mavi); }
+        .btn-boost { background: var(--vurgu-mavi); }
+
+        /* --- GÖREVLER & LİSTELER --- */
+        .liste-ogesi {
+            background: var(--kart-bg); border-radius: 15px; padding: 15px; margin-bottom: 10px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .gorev-btn { background: #89e219; color: black; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        .tamam-ikon { color: var(--basari-yesil); font-size: 20px; }
+
+        /* --- ALT NAVİGASYON --- */
+        nav {
+            position: absolute; bottom: 20px; left: 15px; right: 15px;
+            background: #09171f; border-radius: 20px; padding: 8px;
+            display: flex; justify-content: space-between; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .nav-link { flex: 1; text-align: center; color: var(--metin-gri); font-size: 11px; cursor: pointer; }
+        .nav-link.aktif { color: var(--vurgu-mavi); }
+        .nav-link span { font-size: 20px; display: block; margin-bottom: 2px; }
+
+        /* --- MODAL --- */
+        .modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-koyu); z-index: 9000; display: none; flex-direction: column; padding: 40px 25px;
+        }
+        .input-box { background: #0d1b26; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        .input-box input { background: transparent; border: none; color: white; width: 100%; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div class="uygulama-cerceve">
-    <div id="bildirim">
-        <div class="ikon-anim" id="b-ikon">✓</div>
-        <div id="b-metin" style="font-weight: bold;">BAŞARILI</div>
+    <div id="pop-bildirim">
+        <div id="b-ikon" style="font-size: 50px;">✓</div>
+        <div id="b-metin" style="font-weight: bold; margin-top: 10px;">BAŞARILI</div>
     </div>
 
     <header>
-        <span>TONIX PRO</span>
-        <div style="color:var(--metin-gri)">⋮ ✕</div>
+        <span>TONIX App</span>
+        <div class="header-icons"><span>⋮</span><span>✕</span></div>
     </header>
 
-    <div class="icerik-alani">
-        <div id="sekme-cuzdan" class="sayfa">
-            <h3>Cüzdanım</h3>
-            <div class="kart">
-                <small style="color:var(--metin-gri)">Kullanılabilir Bakiye</small>
-                <h2 id="cuzdan-bakiye">0.0000 TON</h2>
-                <button class="btn-aksiyon" onclick="modalAc()">Para Çek</button>
-            </div>
-            <h4>İşlem Geçmişi</h4>
-            <div id="gecmis-liste">
-                <p style="color:var(--metin-gri); text-align:center;">Henüz bir işlem yok.</p>
-            </div>
-        </div>
-
-        <div id="sekme-davet" class="sayfa">
-            <h3>Arkadaşlarını Davet Et</h3>
-            <div class="kart" style="text-align:center;">
-                <div style="font-size:40px; margin-bottom:10px;">👥</div>
-                <p>Her arkadaşın için %10 kazanç sağla!</p>
-                <div style="background:#000; padding:10px; border-radius:10px; font-size:12px; margin-bottom:10px;">
-                    t.me/TonixBot?start=8392479231
+    <div class="icerik">
+        
+        <div id="sayfa-cuzdan" class="sekme-sayfasi">
+            <h2 style="margin-bottom: 20px;">Cüzdan</h2>
+            <div class="denge-kart">
+                <div class="denge-sol">
+                    <div class="denge-ikon" style="background: #0088cc;">💎</div>
+                    <div><small style="color:var(--metin-gri)">Bakiye</small><br><b id="c-ton">0.0000 TON</b></div>
                 </div>
-                <button class="btn-aksiyon" onclick="efektGoster('Bağlantı Kopyalandı', 'onay')">Linki Kopyala</button>
+                <button class="cuzdan-butonu" onclick="modalAc()">👛</button>
             </div>
-            <h4>Arkadaş Listesi (0)</h4>
-            <div class="kart">Henüz kimseyi davet etmedin.</div>
-        </div>
-
-        <div id="sekme-ana" class="sayfa aktif">
-            <div class="flex-ara" style="margin-bottom:15px;">
-                <div class="kart" style="flex:1; margin-right:10px; margin-bottom:0;">
-                    <small>💎 TON</small><br><b id="ana-ton">0.0000</b>
+            <div class="denge-kart">
+                <div class="denge-sol">
+                    <div class="denge-ikon" style="background: linear-gradient(to bottom, #23a0d9, #0c212e);">🌀</div>
+                    <div><small style="color:var(--metin-gri)">Bakiye</small><br><b id="c-tonix">0 TONIX</b></div>
                 </div>
-                <div class="kart" style="flex:1; margin-bottom:0;">
-                    <small>🌀 TONIX</small><br><b id="ana-tonix">0</b>
+                <button class="cuzdan-butonu">👛</button>
+            </div>
+            <h3 style="margin-top: 30px;">İşlem Geçmişi</h3>
+            <div id="islem-listesi" style="color:var(--metin-gri); text-align: center; margin-top: 20px;">
+                Henüz bir işlem bulunmuyor.
+            </div>
+        </div>
+
+        <div id="sayfa-arkadaslar" class="sekme-sayfasi">
+            <h2 style="text-align: center;">Arkadaşlarını Davet Et!</h2>
+            <p style="text-align: center; color: var(--metin-gri); font-size: 14px;">Siz ve arkadaşınız bonus kazanırsınız.</p>
+            <div class="liste-ogesi" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                <b>Davet Bağlantınız</b>
+                <div style="background: #08121a; width: 100%; padding: 12px; border-radius: 10px; font-size: 12px; color: var(--vurgu-mavi); overflow: hidden; text-overflow: ellipsis;">
+                    https://t.me/MiningTonix_Bot?start=8392479231
                 </div>
+                <button class="btn-ana btn-boost" style="width: 100%;" onclick="bildirim('Bağlantı Kopyalandı', 'onay')">Bağlantıyı Kopyala</button>
             </div>
-
-            <div class="pervane-kutu">
-                <img src="nvdia.jpg" class="pervane-img" alt="Pervane">
-            </div>
-
-            <div style="text-align:center;">
-                <h1 id="maden-sayac" style="font-family:monospace; font-size:34px; margin:10px 0;">0.0000000000</h1>
-                <p style="color:var(--basari-yesil); font-weight:bold;">⚡ NVIDIA CUDA Çekirdekleri Aktif</p>
-            </div>
-
-            <button class="btn-aksiyon" style="height:60px; font-size:18px; margin-top:20px;" onclick="topla()">💰 BAKİYEYİ TOPLA</button>
+            <h3>Arkadaş Listesi (0)</h3>
+            <div class="liste-ogesi" style="justify-content: center; color: var(--metin-gri);">Listeniz henüz boş.</div>
         </div>
 
-        <div id="sekme-gorevler" class="sayfa">
-            <h3>Görev Merkezi</h3>
-            <div class="kart flex-ara">
-                <div><b>Telegram'a Katıl</b><br><small style="color:var(--vurgu-mavi)">+500 TONIX</small></div>
-                <button class="btn-aksiyon" style="width:80px;" onclick="gorevTamamla(this, 500)">Yap</button>
+        <div id="sayfa-home" class="sekme-sayfasi aktif">
+            <div class="denge-kart">
+                <div class="denge-sol">
+                    <div class="denge-ikon" style="background: #0088cc;">💎</div>
+                    <div><small style="color:var(--metin-gri)">Bakiye</small><br><b id="h-ton">0.0000 TON</b></div>
+                </div>
+                <button class="cuzdan-butonu" onclick="sekmeGit('sayfa-cuzdan')">👛</button>
             </div>
-            <div class="kart flex-ara">
-                <div><b>X (Twitter) Takip Et</b><br><small style="color:var(--vurgu-mavi)">+1.000 TONIX</small></div>
-                <button class="btn-aksiyon" style="width:80px;" onclick="gorevTamamla(this, 1000)">Yap</button>
+            <div class="denge-kart">
+                <div class="denge-sol">
+                    <div class="denge-ikon" style="background: linear-gradient(to bottom, #23a0d9, #0c212e);">🌀</div>
+                    <div><small style="color:var(--metin-gri)">Bakiye</small><br><b id="h-tonix">0 TONIX</b></div>
+                </div>
+                <button class="cuzdan-butonu">👛</button>
             </div>
-            <div class="kart flex-ara">
-                <div><b>Günlük Giriş Ödülü</b><br><small style="color:var(--vurgu-mavi)">+100 TONIX</small></div>
-                <button class="btn-aksiyon" style="width:80px;" onclick="gorevTamamla(this, 100)">Yap</button>
+
+            <div class="mining-alan">
+                <div class="pervane-kapsayici">
+                    <img src="nvdia.jpg" class="pervane-img" alt="GPU Fan">
+                </div>
+                <div class="sayac-metin" id="maden-sayac">0.0000000000</div>
+                <div class="hiz-metin">ⓘ 6 GH/s <span style="color: #ff9500;">⚡</span></div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-ana btn-claim" onclick="claim()">🥞 Topla (Claim)</button>
+                <button class="btn-ana btn-boost" onclick="sekmeGit('sayfa-gorevler')">🚀 Hızlandır</button>
             </div>
         </div>
 
-        <div id="sekme-ayarlar" class="sayfa">
-            <h3>Hesap Ayarları</h3>
-            <div class="kart">
-                <div class="islem-satir"><span>Kullanıcı ID</span> <b>8392479231</b></div>
-                <div class="islem-satir"><span>Sürüm</span> <b>v2.6.5 Gold</b></div>
-                <div class="islem-satir"><span>Sunucu</span> <b style="color:var(--basari-yesil)">Türkiye / İstanbul</b></div>
+        <div id="sayfa-gorevler" class="sekme-sayfasi">
+            <h2 style="text-align: center;">Yeni Görevler</h2>
+            <p style="text-align: center; color:var(--metin-gri)">Görevleri tamamla ve daha fazla kazan.</p>
+            
+            <div class="liste-ogesi">
+                <div><b>Madencilik Gücünü Artır</b><br><small style="color:var(--basari-yesil)">+25.000 TONIX | ⚡ 150 GH/s</small></div>
+                <button class="gorev-btn" onclick="gorevYap(this, 25000)">Yap</button>
             </div>
-            <button class="btn-aksiyon" style="background:var(--hata-kirmizi);" onclick="efektGoster('Çıkış Yapılamaz', 'red')">Oturumu Kapat</button>
+            <div class="liste-ogesi">
+                <div><b>Telegram Kanalına Katıl</b><br><small style="color:var(--vurgu-mavi)">+1.000 TONIX</small></div>
+                <button class="gorev-btn" onclick="gorevYap(this, 1000)">Yap</button>
+            </div>
+            <div class="liste-ogesi">
+                <div><b>Günlük Giriş Bonusu</b><br><small style="color:var(--vurgu-mavi)">+500 TONIX</small></div>
+                <button class="gorev-btn" onclick="gorevYap(this, 500)">Yap</button>
+            </div>
         </div>
+
+        <div id="sayfa-more" class="sekme-sayfasi">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+                <div style="width: 60px; height: 60px; background: #162c39; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px;">👤</div>
+                <div><small style="color:var(--metin-gri)">Merhaba,</small><br><b style="font-size: 18px;">Chalpus Yeniden</b></div>
+            </div>
+
+            <div class="liste-ogesi"><span># Kimliğim (ID)</span> <b>8392479231</b></div>
+            <div class="liste-ogesi"><span>🌐 Dil</span> <b>Türkçe</b></div>
+            <div class="liste-ogesi" onclick="sekmeGit('sayfa-arkadaslar')"><span>👥 Arkadaşlarını Davet Et</span> <span>〉</span></div>
+            <div class="liste-ogesi"><span>❓ Destek Talebi</span> <span>〉</span></div>
+            <div class="liste-ogesi"><span>⚖️ Yasal Bilgiler</span> <span>〉</span></div>
+            
+            <div style="background: rgba(255,149,0,0.1); padding: 15px; border-radius: 12px; border: 1px dashed #ff9500; color: #ff9500; text-align: center; font-size: 14px;">
+                🏆 Sıralamalar ve Ligler (Yakında)
+            </div>
+        </div>
+
     </div>
 
-    <div id="modal-odeme" style="position:absolute; top:0; left:0; width:100%; height:100%; background:var(--bg-koyu); z-index:5000; display:none; flex-direction:column; padding:30px;">
-        <h3 style="text-align:center;">Para Çekme</h3>
-        <p style="text-align:center; font-size:12px; color:var(--metin-gri);">Minimum Çekim: 1.5 TON</p>
-        <div class="kart" style="background:#0d1b26;">
-            <input type="text" placeholder="TON Adresini Gir" style="background:transparent; border:none; color:white; width:100%;">
+    <div id="modal-cek" class="modal">
+        <h3 style="text-align: center;">TON Çekimi</h3>
+        <p style="text-align: center; font-size: 12px; color: var(--metin-gri); margin-bottom: 20px;">Minimum gönderim tutarı 1.5 TON'dur.</p>
+        
+        <div class="input-box"><input type="text" placeholder="TON Cüzdan Adresiniz"></div>
+        <div class="input-box" style="display: flex; justify-content: space-between;">
+            <input type="number" placeholder="Miktar">
+            <b style="color: var(--vurgu-mavi); cursor: pointer;">MAX</b>
         </div>
-        <div class="kart" style="background:#0d1b26;">
-            <input type="number" placeholder="Miktar" style="background:transparent; border:none; color:white; width:100%;">
+        <div style="font-size: 12px; color: var(--metin-gri); margin-bottom: 25px; text-align: center;">
+            Ağ Ücreti: 0.3 TON | <span style="color: white;">Alınacak: 0 TON</span>
         </div>
-        <button class="btn-aksiyon" onclick="paraCek()">Gönderimi Onayla</button>
-        <button class="btn-aksiyon" style="background:transparent; margin-top:10px;" onclick="modalKapat()">İptal Et</button>
+
+        <button class="btn-ana btn-claim" style="width: 100%;" onclick="islemGonder()">Gönder</button>
+        <button class="btn-ana" style="width: 100%; background: transparent; margin-top: 10px;" onclick="modalKapat()">Vazgeç</button>
     </div>
 
-    <nav class="nav-bar">
-        <div class="nav-item" onclick="sekmeAc('sekme-cuzdan')">💼<br>Cüzdan</div>
-        <div class="nav-item" onclick="sekmeAc('sekme-davet')">👥<br>Davet</div>
-        <div class="nav-item aktif" onclick="sekmeAc('sekme-ana')">🏠<br>Ana Sayfa</div>
-        <div class="nav-item" onclick="sekmeAc('sekme-gorevler')">🎯<br>Görevler</div>
-        <div class="nav-item" onclick="sekmeAc('sekme-ayarlar')">⚙️<br>Ayarlar</div>
+    <nav>
+        <div class="nav-link" onclick="sekmeAc(event, 'sayfa-cuzdan')"><span>💼</span>Cüzdan</div>
+        <div class="nav-link" onclick="sekmeAc(event, 'sayfa-arkadaslar')"><span>👥</span>Davet</div>
+        <div class="nav-link aktif" onclick="sekmeAc(event, 'sayfa-home')"><span>🌀</span>Ana Sayfa</div>
+        <div class="nav-link" onclick="sekmeAc(event, 'sayfa-gorevler')"><span>🎯</span>Görevler</div>
+        <div class="nav-link" onclick="sekmeAc(event, 'sayfa-more')"><span>⚙️</span>Ayarlar</div>
     </nav>
 </div>
 
 <script>
     let bakiyeTON = 0.0000;
     let bakiyeTONIX = 0;
-    let madenMiktar = 0.0000000000;
-    const madenHizi = 0.0000000085;
+    let madenHavi = 0.0000000000;
+    const saniyedeMaden = 0.0000000095; // Mining hızı
 
-    // --- MADENCİLİK SAYACI ---
+    // --- MADEN SİSTEMİ ---
     setInterval(() => {
-        madenMiktar += madenHizi;
-        document.getElementById('maden-sayac').innerText = madenMiktar.toFixed(10);
+        madenHavi += saniyedeMaden;
+        document.getElementById('maden-sayac').innerText = madenHavi.toFixed(10);
     }, 100);
 
-    // --- SEKME YÖNETİMİ (HER BİRİ AYRI KODLANDI) ---
-    function sekmeAc(sayfaId) {
-        document.querySelectorAll('.sayfa').forEach(s => s.classList.remove('aktif'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('aktif'));
+    // --- SEKME KONTROLÜ ---
+    function sekmeAc(e, id) {
+        document.querySelectorAll('.sekme-sayfasi').forEach(s => s.classList.remove('aktif'));
+        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('aktif'));
         
-        document.getElementById(sayfaId).classList.add('aktif');
-        event.currentTarget.classList.add('aktif');
+        document.getElementById(id).classList.add('aktif');
+        if(e) e.currentTarget.classList.add('aktif');
     }
 
-    // --- EFEKTLİ BİLDİRİM SİSTEMİ ---
-    function efektGoster(metin, tip) {
-        const b = document.getElementById('bildirim');
+    function sekmeGit(id) {
+        // Navigasyon ikonunu da güncellemek için
+        const navs = document.querySelectorAll('.nav-link');
+        const indexMap = {'sayfa-cuzdan':0, 'sayfa-arkadaslar':1, 'sayfa-home':2, 'sayfa-gorevler':3, 'sayfa-more':4};
+        sekmeAc(null, id);
+        navs[indexMap[id]].classList.add('aktif');
+    }
+
+    // --- BİLDİRİM SİSTEMİ ---
+    function bildirim(metin, tip) {
+        const b = document.getElementById('pop-bildirim');
         const ikon = document.getElementById('b-ikon');
-        const m = document.getElementById('b-metin');
-        
-        b.className = 'aktif ' + (tip === 'onay' ? 'b-onay' : 'b-red');
-        m.innerText = metin;
+        const msg = document.getElementById('b-metin');
+
+        b.className = (tip === 'onay' ? 'b-onay goster' : 'b-red goster');
+        msg.innerText = metin;
         ikon.innerText = (tip === 'onay' ? '✓' : '✕');
 
-        setTimeout(() => b.classList.remove('aktif'), 1500);
+        setTimeout(() => b.classList.remove('goster'), 1800);
     }
 
-    // --- ANA İŞLEMLER ---
-    function topla() {
-        if(madenMiktar > 0) {
-            bakiyeTON += madenMiktar;
+    // --- AKSİYONLAR ---
+    function claim() {
+        if(madenHavi > 0) {
+            bakiyeTON += madenHavi;
+            madenHavi = 0;
             guncelleEkran();
-            gecmisEkle(madenMiktar);
-            madenMiktar = 0;
-            efektGoster('BAKİYE TOPLANDI', 'onay');
+            islemEkle("Claim", bakiyeTON.toFixed(4));
+            bildirim('BAKİYE TOPLANDI', 'onay');
         } else {
-            efektGoster('BAKİYE YOK', 'red');
+            bildirim('TOPLANACAK YOK', 'red');
         }
     }
 
-    function gorevTamamla(btn, odul) {
+    function gorevYap(btn, odul) {
         btn.innerText = "...";
         setTimeout(() => {
             bakiyeTONIX += odul;
             guncelleEkran();
-            btn.parentElement.style.opacity = "0.5";
-            btn.parentElement.innerHTML = btn.parentElement.children[0].outerHTML + '<b style="color:var(--basari-yesil)">✓</b>';
-            efektGoster('+' + odul + ' TONIX', 'onay');
-        }, 1200);
+            btn.parentElement.innerHTML = btn.parentElement.children[0].outerHTML + '<span class="tamam-ikon">✓</span>';
+            bildirim('+' + odul + ' TONIX', 'onay');
+        }, 1500);
     }
 
     function guncelleEkran() {
-        document.getElementById('ana-ton').innerText = bakiyeTON.toFixed(4);
-        document.getElementById('cuzdan-bakiye').innerText = bakiyeTON.toFixed(4) + " TON";
-        document.getElementById('ana-tonix').innerText = bakiyeTONIX;
+        document.getElementById('h-ton').innerText = bakiyeTON.toFixed(4) + " TON";
+        document.getElementById('c-ton').innerText = bakiyeTON.toFixed(4) + " TON";
+        document.getElementById('h-tonix').innerText = bakiyeTONIX + " TONIX";
+        document.getElementById('c-tonix').innerText = bakiyeTONIX + " TONIX";
     }
 
-    function gecmisEkle(miktar) {
-        const liste = document.getElementById('gecmis-liste');
+    function islemEkle(tip, miktar) {
+        const liste = document.getElementById('islem-listesi');
         if(liste.innerText.includes('Henüz')) liste.innerHTML = '';
         const div = document.createElement('div');
-        div.className = 'islem-satir';
-        div.innerHTML = `<span>Madencilik Getirisi</span><b style="color:var(--basari-yesil)">+${miktar.toFixed(6)}</b>`;
+        div.className = 'denge-kart';
+        div.style.fontSize = '12px';
+        div.innerHTML = `<span>${new Date().toLocaleTimeString()} - ${tip}</span> <b style="color:var(--basari-yesil)">+${miktar} TON</b>`;
         liste.prepend(div);
     }
 
-    // --- MODAL FONKSİYONLARI ---
-    function modalAc() { document.getElementById('modal-odeme').style.display = 'flex'; }
-    function modalKapat() { document.getElementById('modal-odeme').style.display = 'none'; }
-    function paraCek() {
+    // --- MODAL İŞLEMLERİ ---
+    function modalAc() { document.getElementById('modal-cek').style.display = 'flex'; }
+    function modalKapat() { document.getElementById('modal-cek').style.display = 'none'; }
+    function islemGonder() {
         if(bakiyeTON < 1.5) {
-            efektGoster('YETERSİZ BAKİYE', 'red');
+            bildirim('YETERSİZ BAKİYE', 'red');
         } else {
-            efektGoster('TALEP ALINDI', 'onay');
+            bildirim('TALEP ALINDI', 'onay');
             modalKapat();
         }
     }
