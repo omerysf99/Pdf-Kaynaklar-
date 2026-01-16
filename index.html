@@ -3,379 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONIX Miner Bot</title>
+    <title>TONIX Miner Pro</title>
     <style>
-        /* TELEGRAM BOT TEMA AYARLARI */
         :root {
-            --bg-dark: #0f2433;
+            --bg-color: #0b1a26;
             --card-bg: #162d3e;
-            --accent-blue: #0088cc;
-            --text-white: #ffffff;
-            --text-hint: #a1b0b9;
-            --nvidia-green: #76b900;
+            --btn-blue: #0088cc;
+            --text-gray: #a1b0b9;
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
 
-        body {
-            background-color: #000;
-            color: var(--text-white);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* 9:16 FORMATINDA BOT EKRANI */
         .bot-container {
-            width: 100%;
-            max-width: 450px; /* Standart mobil genişliği */
-            height: 100%;
+            width: 100%; max-width: 450px; height: 100%;
             background: linear-gradient(180deg, #132a3d 0%, #0a1722 100%);
-            display: flex;
-            flex-direction: column;
-            padding: 15px;
-            position: relative;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; padding: 15px; position: relative;
         }
 
-        /* HEADER */
-        .bot-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 0 15px 0;
-            font-size: 1.1rem;
-            font-weight: 700;
+        /* Sekme İçerikleri */
+        .page { display: none; flex-direction: column; height: 100%; width: 100%; animation: fadeIn 0.3s ease; }
+        .page.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Kart Stilleri */
+        .stat-card {
+            background: var(--card-bg); border-radius: 16px; padding: 12px;
+            display: flex; align-items: center; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05);
         }
+        .icon-box { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 20px; }
 
-        .header-icons span {
-            margin-left: 15px;
-            cursor: pointer;
-            color: var(--text-hint);
+        /* Miner Bölümü */
+        .miner-area { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .fan-box {
+            position: relative; width: 260px; height: 260px; margin-bottom: 20px;
+            border-radius: 50%; padding: 10px; border: 3px solid var(--btn-blue);
+            box-shadow: 0 0 30px rgba(0, 136, 204, 0.4);
         }
+        .fan-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; animation: spin 4s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* BAKİYE KARTLARI */
-        .balance-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 12px 15px;
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: transform 0.2s;
+        /* Butonlar */
+        .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 100px; }
+        .btn {
+            background: var(--btn-blue); border: none; border-radius: 12px; padding: 15px;
+            color: #fff; font-weight: bold; cursor: pointer; transition: 0.2s;
         }
+        .btn:active { transform: scale(0.95); background: #006699; }
 
-        .icon-wrapper {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 12px;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        /* Navigasyon */
+        .nav-bar {
+            position: absolute; bottom: 20px; left: 15px; right: 15px;
+            background: #081721; border-radius: 20px; display: flex; justify-content: space-around;
+            padding: 12px 0; border: 1px solid rgba(255,255,255,0.1);
         }
-
-        .card-info { flex-grow: 1; }
-        .label { font-size: 11px; color: var(--text-hint); text-transform: uppercase; letter-spacing: 0.5px; }
-        .amount { font-size: 1.1rem; font-weight: 800; display: block; margin-top: 2px; }
-
-        .wallet-icon {
-            background: #23455c;
-            width: 34px;
-            height: 34px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
+        .nav-btn {
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--text-gray); font-size: 10px; cursor: pointer; border: none; background: none;
         }
-
-        /* MERKEZİ NVIDIA MİNER */
-        .miner-main {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        .fan-orbit {
-            position: relative;
-            width: 270px;
-            height: 270px;
-            margin-bottom: 25px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .nvidia-fan {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid var(--accent-blue);
-            box-shadow: 0 0 40px rgba(0, 136, 204, 0.4);
-            animation: fanRotation 3s linear infinite;
-            z-index: 2;
-        }
-
-        .center-logo {
-            position: absolute;
-            z-index: 5;
-            background: var(--bg-dark);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 2px solid var(--accent-blue);
-            font-size: 20px;
-        }
-
-        @keyframes fanRotation {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        /* CANLI SAYAÇ */
-        .mining-counter {
-            text-align: center;
-        }
-
-        .ton-value {
-            font-size: 2.2rem;
-            font-weight: 900;
-            color: #fff;
-            font-family: 'Monaco', 'Consolas', monospace;
-        }
-
-        .mining-status {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            color: var(--text-hint);
-            font-size: 14px;
-            margin-top: 8px;
-        }
-
-        /* AKSİYON BUTONLARI */
-        .btn-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin: 20px 0 90px 0;
-        }
-
-        .bot-btn {
-            padding: 16px;
-            border-radius: 14px;
-            border: none;
-            color: white;
-            font-weight: 800;
-            font-size: 1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .btn-claim { background: #006699; }
-        .btn-boost { background: #0088cc; }
-
-        /* NAVİGASYON */
-        .bottom-nav {
-            position: absolute;
-            bottom: 20px;
-            left: 15px;
-            right: 15px;
-            background: #081721;
-            border-radius: 20px;
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--text-hint);
-            font-size: 10px;
-            text-decoration: none;
-        }
-
-        .nav-item.active { color: var(--accent-blue); }
-
-        .nav-square {
-            width: 24px;
-            height: 24px;
-            background: #1a2f3d;
-            border-radius: 7px;
-            margin-bottom: 5px;
-        }
-
-        /* CANLI EMOJİ PARÇACIKLARI */
-        .emoji-burst {
-            position: absolute;
-            pointer-events: none;
-            z-index: 100;
-            font-size: 26px;
-            animation: burstEffect 2s ease-out forwards;
-        }
-
-        @keyframes burstEffect {
-            0% { transform: translate(0, 0) scale(0); opacity: 0; }
-            20% { opacity: 1; }
-            100% { transform: translate(var(--tx), var(--ty)) rotate(360deg) scale(1.5); opacity: 0; }
-        }
-
-        .admin-footer {
-            position: absolute;
-            bottom: 5px;
-            width: 100%;
-            text-align: center;
-            font-size: 8px;
-            color: #2b4355;
-            letter-spacing: 1px;
-        }
+        .nav-btn.active { color: var(--btn-blue); }
+        .nav-icon { width: 22px; height: 22px; background: #1a2f3d; border-radius: 6px; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 
-    <div class="bot-container">
-        <div class="bot-header">
-            <span>TONIX App</span>
-            <div class="header-icons">
-                <span>⋮</span>
-                <span>✕</span>
+<div class="bot-container">
+    <div id="home" class="page active">
+        <div class="stat-card">
+            <div class="icon-box" style="background: var(--btn-blue);">💎</div>
+            <div style="flex:1">
+                <span style="font-size:10px; color:var(--text-gray)">TOPLAM TON</span>
+                <div id="wallet-ton" style="font-weight:bold">0.0000 TON</div>
             </div>
+            <button class="btn" style="padding: 5px 10px; font-size: 10px;" onclick="switchPage('wallet')">CÜZDAN</button>
         </div>
 
-        <div class="balance-card">
-            <div class="icon-wrapper" style="background: var(--accent-blue);">💎</div>
-            <div class="card-info">
-                <span class="label">Balance</span>
-                <span class="amount" id="topTon">0.0000 TON</span>
+        <div class="miner-area">
+            <div class="fan-box">
+                <img src="nvidia.jpg" alt="Miner" class="fan-img">
+                <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#0f2433; border-radius:50%; width:40px; height:40px; border:2px solid var(--btn-blue); display:flex; align-items:center; justify-content:center;">💎</div>
             </div>
-            <div class="wallet-icon">👛</div>
+            <div id="counter" style="font-size: 2.5rem; font-weight: 900; font-family: monospace;">0.00000000</div>
+            <div style="color:var(--btn-blue); font-weight:bold; letter-spacing:2px">TON MINED</div>
+            <div style="margin-top:10px; color:var(--text-gray); font-size:14px">⚡ 6 GH/s Active</div>
         </div>
 
-        <div class="balance-card">
-            <div class="icon-wrapper" style="background: radial-gradient(#333, #000);">🌀</div>
-            <div class="card-info">
-                <span class="label">Balance</span>
-                <span class="amount" id="topTonix">0 TONIX</span>
-            </div>
-            <div class="wallet-icon">👛</div>
+        <div class="action-row">
+            <button class="btn" onclick="claimRewards()">💰 CLAIM</button>
+            <button class="btn" onclick="boostSpeed()">🚀 BOOST</button>
         </div>
-
-        <div class="miner-main" id="minerArea">
-            <div class="fan-orbit">
-                <img src="nvidia.jpg" alt="Miner" class="nvidia-fan">
-                <div class="center-logo">💎</div>
-            </div>
-
-            <div class="mining-counter">
-                <div class="ton-value" id="mainCount">0.00000000</div>
-                <div style="font-weight: 900; letter-spacing: 3px; color: var(--accent-blue);">TON</div>
-                
-                <div class="mining-status">
-                    <span>ⓘ</span> <strong>6 GH/s</strong> <span style="color:#ffcc00">⚡</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="btn-container">
-            <button class="bot-btn btn-claim">🪙 Claim</button>
-            <button class="bot-btn btn-boost">🚀 Boost</button>
-        </div>
-
-        <nav class="bottom-nav">
-            <div class="nav-item"><div class="nav-square"></div>Wallet</div>
-            <div class="nav-item"><div class="nav-square"></div>Friends</div>
-            <div class="nav-item active"><div class="nav-square" style="background: var(--accent-blue);"></div>Home</div>
-            <div class="nav-item"><div class="nav-square"></div>Missions</div>
-            <div class="nav-item"><div class="nav-square"></div>More</div>
-        </nav>
-
-        <div class="admin-footer">ADMIN ID: 8392479231 | SESSION ACTIVE</div>
     </div>
 
-    <script>
-        // SİSTEM DEĞİŞKENLERİ
-        let currentTON = 0.00000000;
-        let topTON = 0.0000;
-        const earnPerSec = 0.00000123;
+    <div id="wallet" class="page">
+        <h2>Cüzdanım</h2>
+        <div class="stat-card">
+            <div style="flex:1">
+                <span>Varlıklarım</span>
+                <h3 id="total-assets">0.0000 TON</h3>
+            </div>
+        </div>
+        <button class="btn" onclick="alert('Yakında!')">Para Çek</button>
+    </div>
+
+    <div id="friends" class="page">
+        <h2>Arkadaşlar</h2>
+        <p style="color:var(--text-gray)">Referans kodu: <strong>8392479231</strong></p>
+        <button class="btn" onclick="alert('Link Kopyalandı!')">Arkadaşını Davet Et</button>
+    </div>
+
+    <div class="nav-bar">
+        <button class="nav-btn" onclick="switchPage('wallet')"><div class="nav-icon"></div>Wallet</button>
+        <button class="nav-btn" onclick="switchPage('friends')"><div class="nav-icon"></div>Friends</button>
+        <button class="nav-btn active" onclick="switchPage('home')"><div class="nav-icon" style="background:var(--btn-blue)"></div>Home</button>
+        <button class="nav-btn" onclick="alert('Görevler Yakında!')"><div class="nav-icon"></div>Missions</button>
+    </div>
+</div>
+
+<script>
+    let minedAmount = 0.00000000;
+    let walletAmount = 0.0000;
+    const earnRate = 0.00000123;
+
+    // Madencilik Döngüsü
+    function startMining() {
+        setInterval(() => {
+            minedAmount += earnRate;
+            document.getElementById('counter').innerText = minedAmount.toFixed(8);
+        }, 1000);
+    }
+
+    // Sayfa Değiştirme Fonksiyonu
+    function switchPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         
-        const countDisplay = document.getElementById('mainCount');
-        const topTonDisplay = document.getElementById('topTon');
-        const minerArea = document.getElementById('minerArea');
-        
-        const emojiSet = ['💎', '⚡', '🚀', '🟢', '✨', '💰', '🔥', '⚙️'];
+        document.getElementById(pageId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
 
-        // KAZIM DÖNGÜSÜ
-        function startMining() {
-            setInterval(() => {
-                // Bakiyeleri güncelle
-                currentTON += earnPerSec;
-                topTON += (earnPerSec / 5); // Üst bakiye simülasyonu
-                
-                // Ekrana yansıt
-                countDisplay.innerText = currentTON.toFixed(8);
-                topTonDisplay.innerText = topTON.toFixed(4) + " TON";
-                
-                // Canlı emoji fırlatması
-                spawnBurst();
-            }, 1000);
+    // Claim (Topla) İşlevi
+    function claimRewards() {
+        if(minedAmount > 0) {
+            walletAmount += minedAmount;
+            minedAmount = 0;
+            document.getElementById('wallet-ton').innerText = walletAmount.toFixed(4) + " TON";
+            document.getElementById('total-assets').innerText = walletAmount.toFixed(4) + " TON";
+            alert("Ödüller cüzdanınıza aktarıldı!");
+        } else {
+            alert("Toplanacak ödül yok.");
         }
+    }
 
-        // CANLANDIRILMIŞ EMOJİ MOTORU
-        function spawnBurst() {
-            const emoji = document.createElement('div');
-            emoji.className = 'emoji-burst';
-            emoji.innerText = emojiSet[Math.floor(Math.random() * emojiSet.length)];
-            
-            // Rastgele fırlama koordinatları (Dinamik)
-            const randomX = (Math.random() - 0.5) * 450 + "px";
-            const randomY = (Math.random() - 0.5) * 450 - 50 + "px";
-            
-            emoji.style.setProperty('--tx', randomX);
-            emoji.style.setProperty('--ty', randomY);
-            
-            // Görselin tam merkezinden başlasın
-            emoji.style.left = "50%";
-            emoji.style.top = "40%";
-            
-            minerArea.appendChild(emoji);
-            
-            // Animasyon bitince temizle
-            setTimeout(() => {
-                emoji.remove();
-            }, 2000);
-        }
+    // Boost İşlevi
+    function boostSpeed() {
+        alert("Boost aktif edildi! (Admin: 8392479231)");
+    }
 
-        // Sayfa yüklendiğinde başlat
-        window.onload = startMining;
+    window.onload = startMining;
+</script>
 
-        // Admin Log
-        console.log("TONIX Bot UI Loaded. Admin: 8392479231");
-    </script>
 </body>
 </html>
