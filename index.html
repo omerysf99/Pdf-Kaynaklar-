@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TONIX Pro - NVIDIA Mining System</title>
+    <title>TONIX App - NVIDIA Miner</title>
     <style>
         :root {
             --bg-color: #0b1e2d;
             --card-bg: #162b3d;
-            --accent-blue: #0088cc;
-            --nvidia-green: #76b900;
+            --accent-blue: #229ed9;
             --text-main: #ffffff;
             --text-dim: #8ba2b5;
         }
@@ -17,217 +16,207 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-            user-select: none;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; margin: 0; overflow: hidden;
         }
 
         .app-container {
-            width: 360px;
-            height: 640px;
-            background: linear-gradient(180deg, #102536 0%, #0b1e2d 100%);
-            border-radius: 30px;
-            padding: 20px;
-            position: relative;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            display: flex;
-            flex-direction: column;
+            width: 100%; max-width: 380px; height: 680px;
+            background: radial-gradient(circle at top, #162b3d 0%, #0b1e2d 100%);
+            border-radius: 30px; position: relative;
+            display: flex; flex-direction: column; padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
         }
 
-        /* --- SAYFA YÖNETİMİ --- */
-        .page { display: none; flex-direction: column; height: 100%; }
+        /* Sayfa Yapısı */
+        .page { display: none; flex-direction: column; height: 100%; animation: fadeIn 0.3s; }
         .page.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .header { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold; }
+        /* Üst Bilgi */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .header h2 { font-size: 20px; margin: 0; }
 
-        /* --- CÜZDAN KARTLARI --- */
+        /* Bakiye Kartları */
         .balance-card {
-            background: var(--card-bg);
-            border-radius: 18px;
-            padding: 15px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            background: rgba(22, 43, 61, 0.7); border-radius: 18px;
+            padding: 12px 15px; margin-bottom: 10px;
+            display: flex; align-items: center; justify-content: space-between;
             border: 1px solid rgba(255,255,255,0.05);
         }
-
-        .balance-info { display: flex; align-items: center; gap: 15px; }
-        
-        /* Geliştirilmiş TON Simgesi */
-        .ton-logo {
-            width: 40px; height: 40px;
-            background: linear-gradient(135deg, #0088cc, #005588);
-            border-radius: 50%;
+        .balance-info { display: flex; align-items: center; gap: 12px; }
+        .ton-icon { 
+            width: 38px; height: 38px; border-radius: 50%;
+            background: linear-gradient(135deg, #0088cc, #00c2ff);
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 10px rgba(0, 136, 204, 0.5);
-            font-size: 20px;
+            font-size: 18px; box-shadow: 0 0 15px rgba(0, 136, 204, 0.4);
         }
 
-        /* --- MADENCİ ALANI (HOME) --- */
-        .miner-section { text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
-        
-        .miner-wrapper {
+        /* Madenci Görseli (Geliştirilmiş) */
+        .miner-display { text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .fan-container {
             width: 220px; height: 220px; margin: 0 auto;
-            border-radius: 50%; overflow: hidden;
-            border: 4px solid var(--accent-blue);
-            box-shadow: 0 0 30px rgba(0, 136, 204, 0.3);
+            position: relative; border-radius: 50%;
+            overflow: hidden; /* Siyah köşeleri keser */
+            border: 5px solid rgba(34, 158, 217, 0.2);
+            background: #000;
         }
-
-        .miner-img { width: 100%; height: 100%; object-fit: cover; animation: spin 2s linear infinite; }
-
+        .fan-img {
+            width: 100%; height: 100%; object-fit: cover;
+            animation: spin 3s linear infinite;
+            filter: contrast(1.1) brightness(1.1);
+        }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        .mining-numbers { font-size: 32px; font-weight: 800; margin-top: 20px; font-family: monospace; }
-        .status-tag { color: var(--nvidia-green); font-size: 14px; font-weight: bold; margin-top: 5px; }
+        .mining-text { font-size: 32px; font-weight: 700; margin-top: 20px; font-family: 'Courier New', monospace; }
+        .speed-info { color: var(--text-dim); font-size: 14px; margin-top: 5px; display: flex; justify-content: center; align-items: center; gap: 8px; }
 
-        /* --- BUTONLAR --- */
-        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        button {
+        /* Butonlar */
+        .btn-row { display: flex; gap: 10px; margin: 20px 0; }
+        .main-btn {
             flex: 1; padding: 15px; border-radius: 15px; border: none;
-            font-weight: bold; cursor: pointer; transition: 0.2s;
+            font-weight: 700; font-size: 16px; cursor: pointer;
+            transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .btn-blue { background: var(--accent-blue); color: white; }
-        .btn-dark { background: #1a3a54; color: white; }
-        button:active { transform: scale(0.95); }
+        .btn-claim { background: #0088cc; }
+        .btn-boost { background: #1a3a54; border: 1px solid #2a4a64; }
+        .main-btn:active { transform: scale(0.96); }
 
-        /* --- ALT MENÜ --- */
+        /* Alt Menü */
         .nav-bar {
             display: flex; justify-content: space-between;
-            background: rgba(22, 43, 61, 0.9);
-            padding: 12px 20px; border-radius: 20px;
+            background: #112230; padding: 12px 15px; border-radius: 20px;
             border: 1px solid rgba(255,255,255,0.05);
         }
-        .nav-item { text-align: center; font-size: 11px; color: var(--text-dim); cursor: pointer; }
+        .nav-item { flex: 1; text-align: center; font-size: 11px; color: var(--text-dim); cursor: pointer; transition: 0.2s; }
         .nav-item.active { color: var(--accent-blue); }
+        .nav-item i { font-size: 20px; display: block; margin-bottom: 4px; }
 
-        /* --- SEKME İÇERİKLERİ --- */
-        .list-item {
-            background: rgba(255,255,255,0.03);
-            padding: 15px; border-radius: 12px; margin-bottom: 10px;
-            display: flex; justify-content: space-between;
+        /* Listeler (Görevler/Arkadaşlar) */
+        .list-container { overflow-y: auto; flex: 1; padding-right: 5px; }
+        .item { 
+            background: rgba(255,255,255,0.03); padding: 15px; 
+            border-radius: 12px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-
-        /* Bildirim Baloncuğu */
-        .notif { background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 9px; position: absolute; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    
     <div class="header">
-        <span>TONIX App v2.0</span>
-        <span id="admin-id" style="font-size: 10px; color: var(--text-dim);">ID: 8392479231</span>
+        <h2>TONIX App</h2>
+        <span style="opacity: 0.5;">✕</span>
     </div>
 
     <div id="home" class="page active">
         <div class="balance-card">
             <div class="balance-info">
-                <div class="ton-logo">💎</div>
+                <div class="ton-icon">💎</div>
                 <div>
                     <small style="color:var(--text-dim)">Main Balance</small><br>
-                    <b id="main-val">0.0000</b> <b>TON</b>
+                    <b style="font-size: 18px;"><span id="main-val">0.0000</span> TON</b>
                 </div>
             </div>
-            <div style="font-size: 20px; cursor: pointer;">⚡</div>
+            <div class="ton-icon" style="background: #1a3a54; font-size: 14px;">👛</div>
         </div>
 
-        <div class="miner-section">
-            <div class="miner-wrapper">
-                <img src="nvdia.jpg" alt="Miner" class="miner-img">
+        <div class="miner-display">
+            <div class="fan-container">
+                <img src="nvdia.jpg" class="fan-img" alt="GPU Fan">
             </div>
-            <div class="mining-numbers" id="mining-val">0.0000000000</div>
-            <div class="status-tag">NVIDIA CUDA ENGINE ON • 6 GH/s</div>
+            <div class="mining-text" id="mining-val">0.0000000000</div>
+            <div class="speed-info">
+                <span style="color: #00ff88;">●</span> 6 GH/s <span style="color: #f1c40f;">⚡ NVIDIA CUDA</span>
+            </div>
         </div>
 
-        <div class="btn-group">
-            <button class="btn-blue" onclick="claim()">CLAIM</button>
-            <button class="btn-dark" onclick="showPage('missions')">BOOST</button>
+        <div class="btn-row">
+            <button class="main-btn btn-claim" onclick="claim()">💰 Claim</button>
+            <button class="main-btn btn-boost" onclick="switchPage('missions')">🚀 Boost</button>
         </div>
     </div>
 
     <div id="wallet" class="page">
-        <h3>My Wallet</h3>
-        <div class="balance-card"><b>TON:</b> <span id="w-ton">0.0000</span></div>
-        <div class="balance-card"><b>TONIX:</b> <span>500</span></div>
-        <button class="btn-blue" style="width: 100%;">Withdraw Funds</button>
-        <p style="font-size: 12px; color: grey; text-align: center; margin-top: 20px;">Bağlı Cüzdan: TON-A8392...231</p>
+        <h3>Wallet Access</h3>
+        <div class="item"><span>Available TON</span> <b id="w-val">0.0000</b></div>
+        <div class="item"><span>TONIX Tokens</span> <b>500 TX</b></div>
+        <button class="main-btn btn-claim" style="width: 100%; margin-top: 10px;">Withdraw</button>
+        <p style="font-size: 12px; color: var(--text-dim); text-align: center;">Admin ID: 8392479231</p>
     </div>
 
     <div id="friends" class="page">
-        <h3>Referrals</h3>
-        <div class="list-item"><span>@user_721</span> <span style="color:var(--nvidia-green)">+0.5 TON</span></div>
-        <div class="list-item"><span>@crypto_king</span> <span style="color:var(--nvidia-green)">+1.2 TON</span></div>
-        <button class="btn-blue" style="margin-top: auto;">Invite Friends</button>
+        <h3>Referral Program</h3>
+        <div class="list-container">
+            <div class="item"><span>@crypto_user1</span> <span style="color:#00ff88">+0.1 TON</span></div>
+            <div class="item"><span>@ton_miner_88</span> <span style="color:#00ff88">+0.05 TON</span></div>
+        </div>
+        <button class="main-btn btn-claim" style="width: 100%;">Invite Friend</button>
     </div>
 
     <div id="missions" class="page">
-        <h3>Daily Missions</h3>
-        <div class="list-item"><span>Telegram Kanalına Katıl</span> <button class="btn-blue" style="padding: 5px 10px;">Yap</button></div>
-        <div class="list-item"><span>Twitter Takip Et</span> <button class="btn-blue" style="padding: 5px 10px;">Yap</button></div>
+        <h3>Boost Earnings</h3>
+        <div class="list-container">
+            <div class="item"><div><b>Join Telegram</b><br><small>+50 TONIX</small></div> <button class="main-btn btn-boost" style="padding: 5px 15px;">Do</button></div>
+            <div class="item"><div><b>Follow NVIDIA News</b><br><small>+100 TONIX</small></div> <button class="main-btn btn-boost" style="padding: 5px 15px;">Do</button></div>
+        </div>
     </div>
 
     <div id="more" class="page">
-        <h3>Settings</h3>
-        <div class="list-item">Admin ID: 8392479231</div>
-        <div class="list-item">GPU Optimization: Max High</div>
-        <div class="list-item">Language: Turkish</div>
-        <button class="btn-dark" onclick="alert('Çıkış yapıldı')">Logout</button>
+        <h3>Settings & Profile</h3>
+        <div class="item"><span>System Version</span> <b>v2.4.0</b></div>
+        <div class="item"><span>NVIDIA GPU Driver</span> <b style="color:#76b900">Detected</b></div>
+        <div class="item"><span>User ID</span> <b>8392479231</b></div>
+        <button class="main-btn btn-boost" style="width: 100%; background: #e74c3c; border:none;">Log Out</button>
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item" onclick="showPage('wallet')">💼<br>Wallet</div>
-        <div class="nav-item" onclick="showPage('friends')">👥<br>Friends</div>
-        <div class="nav-item active" onclick="showPage('home')" id="home-nav">🌀<br>Home</div>
-        <div class="nav-item" onclick="showPage('missions')">🎯<br>Missions<span class="notif">!</span></div>
-        <div class="nav-item" onclick="showPage('more')">⚙️<br>More</div>
+        <div class="nav-item active" onclick="switchPage('home')">🏠<br>Home</div>
+        <div class="nav-item" onclick="switchPage('wallet')">💼<br>Wallet</div>
+        <div class="nav-item" onclick="switchPage('friends')">👥<br>Friends</div>
+        <div class="nav-item" onclick="switchPage('missions')">🎯<br>Missions</div>
+        <div class="nav-item" onclick="switchPage('more')">⚙️<br>More</div>
     </div>
-
 </div>
 
 <script>
     let mainBalance = 0.0000;
     let miningBalance = 0.0000000000;
-    const speed = 0.0000000035;
+    const miningSpeed = 0.0000000042; // Gerçekçi saniyelik artış
 
-    // Madencilik Döngüsü
+    // Canlı Madencilik Sayacı
     setInterval(() => {
-        miningBalance += speed;
+        miningBalance += miningSpeed;
         document.getElementById('mining-val').innerText = miningBalance.toFixed(10);
     }, 100);
 
-    // Sayfa Değiştirme Fonksiyonu
-    function showPage(pageId) {
+    // Sayfa Değiştirici
+    function switchPage(pageId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         
         document.getElementById(pageId).classList.add('active');
-        // Navigasyon rengini güncellemek için basit mantık
-        if(pageId === 'home') document.getElementById('home-nav').classList.add('active');
+        event.currentTarget.classList.add('active');
     }
 
-    // Claim İşlemi
+    // Claim Fonksiyonu
     function claim() {
-        if(miningBalance > 0) {
+        if (miningBalance > 0) {
             mainBalance += miningBalance;
             document.getElementById('main-val').innerText = mainBalance.toFixed(4);
-            document.getElementById('w-ton').innerText = mainBalance.toFixed(4);
+            document.getElementById('w-val').innerText = mainBalance.toFixed(4);
             
             miningBalance = 0;
             document.getElementById('mining-val').innerText = "0.0000000000";
             
-            // Küçük bir görsel bildirim
-            const btn = document.querySelector('.btn-blue');
-            btn.innerText = "SUCCESS!";
-            setTimeout(() => btn.innerText = "CLAIM", 1000);
+            // Başarı geri bildirimi
+            const claimBtn = document.querySelector('.btn-claim');
+            const originalText = claimBtn.innerHTML;
+            claimBtn.innerHTML = "✅ Success!";
+            setTimeout(() => claimBtn.innerHTML = originalText, 1500);
             
-            console.log("Admin 8392479231: Bakiyeler başarıyla aktarıldı.");
+            console.log("Admin 8392479231: Bakiye aktarıldı.");
         }
     }
 </script>
