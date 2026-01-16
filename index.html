@@ -3,150 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NVIDIA TON Miner</title>
+    <title>NVIDIA Pro Miner - Advanced Edition</title>
     <style>
+        /* TEMEL STİLLER */
         body {
-            background-color: #0b0b0b;
+            background-color: #050505;
             color: #76b900;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Consolas', 'Courier New', monospace;
+            display: flex;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* YAN PANEL (LOGLAR) */
+        .side-panel {
+            width: 300px;
+            background: rgba(10, 10, 10, 0.95);
+            border-right: 1px solid #76b900;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            font-size: 11px;
+            color: #4da3ff;
+            overflow: hidden;
+        }
+
+        .log-container {
+            flex-grow: 1;
+            overflow-y: hidden;
+            margin-top: 10px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            border-left: 2px solid #76b900;
+            padding-left: 5px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* ANA EKRAN */
+        .main-display {
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
+            position: relative;
         }
 
-        /* Tasarımın kalbi: Orta Görsel */
-        .miner-container {
+        /* MERKEZİ GÖRSEL (NVIDIA.JPG) */
+        .miner-wrapper {
             position: relative;
-            text-align: center;
+            width: 250px;
+            height: 250px;
+            margin-bottom: 30px;
         }
 
         .miner-image {
-            width: 220px;
-            height: 220px;
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
             border: 4px solid #76b900;
             object-fit: cover;
-            /* Canlandırma efekti */
-            animation: pulse-glow 2s infinite ease-in-out;
-            z-index: 5;
             position: relative;
+            z-index: 10;
+            box-shadow: 0 0 40px rgba(118, 185, 0, 0.4);
+            animation: pulseMiner 3s infinite ease-in-out;
         }
 
-        @keyframes pulse-glow {
-            0% { transform: scale(1); box-shadow: 0 0 10px #76b900; }
-            50% { transform: scale(1.03); box-shadow: 0 0 30px #76b900; }
-            100% { transform: scale(1); box-shadow: 0 0 10px #76b900; }
+        /* ARKA PLAN HALKALARI */
+        .orbit {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 1px solid rgba(118, 185, 0, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: rotateOrbit linear infinite;
         }
 
-        .balance-box {
-            margin-top: 20px;
+        /* BAKİYE VE İSTATİSTİKLER */
+        .ui-container {
             text-align: center;
+            z-index: 20;
         }
 
-        .balance-text {
-            font-size: 2.5rem;
+        .balance-main {
+            font-size: 3.5rem;
             font-weight: bold;
-            color: white;
-            margin: 5px 0;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(118, 185, 0, 0.6);
+            margin: 0;
         }
 
-        .speed-text {
-            font-size: 1rem;
-            color: #888;
+        .unit-label {
+            font-size: 1.5rem;
+            color: #76b900;
+            letter-spacing: 5px;
         }
 
-        /* Geliştirilmiş Canlı Emojiler */
-        .floating-emoji {
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 120px);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #76b900;
+            text-transform: uppercase;
+        }
+
+        /* CANLI EMOJİLER */
+        .particle {
             position: absolute;
             pointer-events: none;
-            font-size: 2rem;
-            z-index: 10;
-            animation: fly-and-spin 2s ease-out forwards;
+            font-size: 24px;
+            z-index: 100;
+            animation: particleUp 2s ease-out forwards;
         }
 
-        @keyframes fly-and-spin {
-            0% { 
-                transform: translate(0, 0) rotate(0deg) scale(0.5); 
-                opacity: 0; 
-            }
+        /* ANİMASYONLAR */
+        @keyframes pulseMiner {
+            0%, 100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.05); filter: brightness(1.3); }
+        }
+
+        @keyframes rotateOrbit {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes particleUp {
+            0% { transform: translate(0, 0) scale(0.5); opacity: 0; }
             20% { opacity: 1; }
-            100% { 
-                transform: translate(var(--x), var(--y)) rotate(360deg) scale(1.5); 
-                opacity: 0; 
-            }
+            100% { transform: translate(var(--mx), var(--my)) scale(1.5) rotate(360deg); opacity: 0; }
         }
 
-        .admin-footer {
-            position: absolute;
-            bottom: 10px;
-            font-size: 0.8rem;
-            color: #333;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
         }
+
+        /* SAĞ PANEL (SİSTEM VERİSİ) */
+        .right-panel {
+            width: 250px;
+            background: rgba(10, 10, 10, 0.95);
+            border-left: 1px solid #76b900;
+            padding: 15px;
+            font-size: 12px;
+        }
+
+        .admin-badge {
+            background: #76b900;
+            color: #000;
+            padding: 5px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
     </style>
 </head>
 <body>
 
-    <div class="miner-container" id="minerArea">
-        <img src="nvidia.jpg" alt="NVIDIA Miner" class="miner-image">
+    <div class="side-panel">
+        <div style="border-bottom: 1px solid #333; padding-bottom: 5px;">TERMINAL_OUTPUT v4.0</div>
+        <div class="log-container" id="logContainer">
+            </div>
     </div>
 
-    <div class="balance-box">
-        <div style="letter-spacing: 2px;">TOPLAM KAZANÇ</div>
-        <div class="balance-text" id="balanceDisplay">0.00000000</div>
-        <div style="color: #76b900; font-weight: bold; font-size: 1.2rem;">TON</div>
-        <div class="speed-text">Saniyelik Kazanç: +0.00000123</div>
+    <div class="main-display" id="mainDisplay">
+        
+        <div class="orbit" style="width: 400px; height: 400px; animation-duration: 10s;"></div>
+        <div class="orbit" style="width: 500px; height: 500px; animation-duration: 15s; border-style: dashed;"></div>
+
+        <div class="miner-wrapper">
+            <img src="nvidia.jpg" alt="NVIDIA Miner" class="miner-image">
+        </div>
+
+        <div class="ui-container">
+            <div class="unit-label">TOTAL REWARD</div>
+            <div class="balance-main" id="balanceText">0.00000000</div>
+            <div class="unit-label" style="font-size: 1rem;">TON COIN</div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-value" id="hashrate">42.5 MH/s</span>
+                    <span class="stat-label">Hashrate</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="temp">64°C</span>
+                    <span class="stat-label">GPU Temp</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" style="color: #76b900;">ONLINE</span>
+                    <span class="stat-label">Status</span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="admin-footer">Admin ID: 8392479231</div>
+    <div class="right-panel">
+        <div class="admin-badge">ADMIN ACTIVE</div>
+        <p><strong>Admin ID:</strong> 8392479231</p>
+        <p><strong>Network:</strong> TON-MAINNET</p>
+        <p><strong>Protocol:</strong> Stratum v2</p>
+        <p><strong>Latency:</strong> 24ms</p>
+        <hr style="border: 0; border-top: 1px solid #333;">
+        <div style="margin-top: 20px;">
+            <div class="stat-label">Earnings Rate:</div>
+            <div style="color: #fff;">0.00000123 / Sec</div>
+        </div>
+    </div>
 
     <script>
-        let currentBalance = 0.00000000;
-        const earnRate = 0.00000123;
-        const balanceDisplay = document.getElementById('balanceDisplay');
-        const minerArea = document.getElementById('minerArea');
-        
-        const emojiList = ['💎', '⚡', '🚀', '🟢', '💰', '🔥', '✨'];
+        // DEĞİŞKENLER
+        let balance = 0.00000000;
+        const rate = 0.00000123;
+        const adminID = "8392479231";
+        const emojis = ['💎', '⚡', '🚀', '🔥', '💰', '🟢', '✨', '⚙️', '🛠️'];
+        const logMessages = [
+            "New block found on shard #4...",
+            "Accepted share #",
+            "GPU temperature stabilized at ",
+            "Connection optimized...",
+            "Syncing with TON blockchain...",
+            "Admin authentication successful."
+        ];
 
-        function updateMining() {
-            // Kazancı ekle
-            currentBalance += earnRate;
-            balanceDisplay.innerText = currentBalance.toFixed(8);
-            
-            // Emoji canlandır
-            spawnEmoji();
+        // ELEMENTLER
+        const balanceEl = document.getElementById('balanceText');
+        const logContainer = document.getElementById('logContainer');
+        const mainDisplay = document.getElementById('mainDisplay');
+
+        // ANA DÖNGÜ (HER SANİYE)
+        function update() {
+            // 1. Bakiyeyi Güncelle
+            balance += rate;
+            balanceEl.innerText = balance.toFixed(8);
+
+            // 2. Canlı Emoji Efekti
+            createParticle();
+
+            // 3. Log Kaydı Ekle
+            addLog();
+
+            // 4. Rastgele Değer Simülasyonu
+            document.getElementById('hashrate').innerText = (40 + Math.random() * 5).toFixed(1) + " MH/s";
+            document.getElementById('temp').innerText = (60 + Math.random() * 8).toFixed(0) + "°C";
         }
 
-        function spawnEmoji() {
-            const emoji = document.createElement('div');
-            emoji.className = 'floating-emoji';
-            emoji.innerText = emojiList[Math.floor(Math.random() * emojiList.length)];
+        // CANLI PARÇACIK EFEKTİ (GELİŞTİRİLMİŞ)
+        function createParticle() {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.innerText = emojis[Math.floor(Math.random() * emojis.length)];
             
-            // Rastgele fırlama yönleri
-            const randomX = (Math.random() - 0.5) * 400 + "px";
-            const randomY = (Math.random() - 0.5) * 400 - 100 + "px";
-            
-            emoji.style.setProperty('--x', randomX);
-            emoji.style.setProperty('--y', randomY);
-            
-            // Görselin merkezinden başlasın
-            emoji.style.left = "50%";
-            emoji.style.top = "50%";
-            
-            minerArea.appendChild(emoji);
+            // Ekranın ortasından rastgele fırlatma
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 150 + Math.random() * 100;
+            const mx = Math.cos(angle) * dist + "px";
+            const my = Math.sin(angle) * dist + "px";
 
-            // Animasyon bitince temizle
-            setTimeout(() => {
-                emoji.remove();
-            }, 2000);
+            p.style.setProperty('--mx', mx);
+            p.style.setProperty('--my', my);
+            p.style.left = "50%";
+            p.style.top = "45%";
+            
+            mainDisplay.appendChild(p);
+            setTimeout(() => p.remove(), 2000);
         }
 
-        // Her saniye güncelle
-        setInterval(updateMining, 1000);
+        // LOG SİSTEMİ
+        function addLog() {
+            const time = new Date().toLocaleTimeString();
+            const msg = logMessages[Math.floor(Math.random() * logMessages.length)];
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `[${time}] ${msg}${msg.includes('#') ? Math.floor(Math.random()*999) : ''}`;
+            
+            logContainer.prepend(entry);
+
+            // Eski logları temizle
+            if (logContainer.children.length > 25) {
+                logContainer.lastChild.remove();
+            }
+        }
+
+        // BAŞLAT
+        setInterval(update, 1000);
+
+        // Başlangıç Logu
+        addLog();
+        console.log("Miner Initialized for Admin:", adminID);
     </script>
-
 </body>
 </html>
