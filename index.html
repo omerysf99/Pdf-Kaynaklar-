@@ -3,508 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreamX Obsidian v10.0 | Enterprise Video Engine</title>
+    <title>StreamX Plasma v12.0 | Admin: 8392479231</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono:wght@300&display=swap');
 
         :root {
-            --obsidian-base: #020202;
-            --obsidian-surface: #0a0a0b;
-            --obsidian-elevated: #111113;
-            --accent-glow: #3ea6ff;
-            --accent-alpha: rgba(62, 166, 255, 0.15);
-            --danger-core: #ff3e3e;
-            --text-high: #ffffff;
-            --text-low: #6a6a70;
-            --border-thin: rgba(255, 255, 255, 0.06);
-            --border-thick: rgba(255, 255, 255, 0.12);
-            --sidebar-w: 280px;
-            --header-h: 80px;
-            --curve-xl: 32px;
-            --curve-md: 16px;
-            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --p-black: #040406;
+            --p-surface: #0d0d12;
+            --p-accent: #7c4dff;
+            --p-plasma: linear-gradient(135deg, #7c4dff 0%, #ff4081 100%);
+            --p-text: #e2e2e7;
+            --p-dim: #62626e;
+            --p-border: rgba(255, 255, 255, 0.07);
+            --sidebar-w: 260px;
+            --header-h: 90px;
         }
 
-        /* --- ATOMIC RESET --- */
-        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        /* --- PLASMA CORE RESET --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Space Grotesk', sans-serif; }
         body { 
-            background: var(--obsidian-base); color: var(--text-high); 
-            font-family: var(--font-main); height: 100vh; overflow: hidden;
-            letter-spacing: -0.01em;
+            background: var(--p-black); color: var(--p-text); height: 100vh; overflow: hidden;
+            display: grid; grid-template-columns: 90px 1fr; grid-template-rows: var(--header-h) 1fr;
+            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* --- KERNEL ANIMATIONS --- */
-        @keyframes streamIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 var(--accent-alpha); } 70% { box-shadow: 0 0 0 20px rgba(62, 166, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(62, 166, 255, 0); } }
+        body.side-open { grid-template-columns: var(--sidebar-w) 1fr; }
 
-        /* --- LAYOUT ARCHITECTURE --- */
-        #kernel-root {
-            display: grid;
-            grid-template-columns: 90px 1fr;
-            grid-template-rows: var(--header-h) 1fr;
-            height: 100vh;
-            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        #kernel-root.side-expanded { grid-template-columns: var(--sidebar-w) 1fr; }
-
-        /* --- SIDEBAR: NAVIGATION CLUSTER --- */
-        #side-nav {
-            grid-row: 1 / -1; background: var(--obsidian-surface);
-            border-right: 1px solid var(--border-thin); display: flex;
-            flex-direction: column; align-items: center; padding: 30px 0; gap: 40px;
-        }
-        .brand-icon { 
-            width: 45px; height: 45px; background: var(--accent-glow); 
-            border-radius: 14px; display: flex; align-items: center; justify-content: center;
-            font-weight: 800; color: #000; font-size: 20px; box-shadow: 0 0 25px var(--accent-alpha);
-        }
-        .nav-links { display: flex; flex-direction: column; gap: 12px; width: 100%; padding: 0 15px; }
-        .nav-link {
-            height: 56px; display: flex; align-items: center; border-radius: 18px;
-            padding: 0 18px; cursor: pointer; color: var(--text-low); transition: 0.3s;
-            overflow: hidden; text-decoration: none; border: 1px solid transparent;
-        }
-        .nav-link:hover { background: var(--obsidian-elevated); color: #fff; }
-        .nav-link.active { background: var(--accent-alpha); color: var(--accent-glow); border-color: rgba(62, 166, 255, 0.3); }
-        .nav-link .icon { font-size: 24px; min-width: 24px; margin-right: 25px; }
-        .nav-link .label { font-size: 15px; font-weight: 600; white-space: nowrap; opacity: 0; }
-        .side-expanded .nav-link .label { opacity: 1; }
-
-        /* --- HEADER: COMMAND CENTER --- */
-        #command-bar {
-            grid-column: 2; background: rgba(2,2,3,0.7); backdrop-filter: blur(25px);
-            border-bottom: 1px solid var(--border-thin); display: flex;
-            align-items: center; justify-content: space-between; padding: 0 40px; z-index: 100;
-        }
-        .search-pod {
-            background: var(--obsidian-elevated); width: 100%; max-width: 600px;
-            height: 48px; border-radius: 14px; display: flex; align-items: center;
-            padding: 0 20px; border: 1px solid var(--border-thin); transition: 0.3s;
-        }
-        .search-pod:focus-within { border-color: var(--accent-glow); background: #000; box-shadow: 0 0 20px rgba(62,166,255,0.1); }
-        .search-pod input { background: transparent; border: none; color: #fff; width: 100%; margin-left: 15px; font-size: 14px; }
-
-        /* --- MAIN VIEWPORT: THE MATRIX --- */
-        #matrix-scroll { grid-column: 2; padding: 40px; overflow-y: auto; overflow-x: hidden; }
-        .matrix-grid { 
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
-            gap: 32px; animation: streamIn 0.8s ease; 
+        /* --- DRIFT MODE (RANDOM FEATURE) --- */
+        body.drift-mode aside, body.drift-mode header { 
+            filter: blur(20px); opacity: 0.1; pointer-events: none; transform: scale(0.95);
         }
 
-        /* --- ENTITY CARD: VIDEO UNIT --- */
-        .entity { cursor: pointer; transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
-        .entity:hover { transform: translateY(-8px); }
-        .entity-visual {
-            width: 100%; aspect-ratio: 16/9; background: var(--obsidian-elevated);
-            border-radius: 24px; overflow: hidden; position: relative;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4); border: 1px solid var(--border-thin);
+        /* --- SIDEBAR: NEURAL LINK --- */
+        aside {
+            grid-row: 1 / -1; background: var(--p-surface); border-right: 1px solid var(--p-border);
+            display: flex; flex-direction: column; padding: 30px 0; transition: inherit; z-index: 1000;
         }
-        .entity-visual img { width: 100%; height: 100%; object-fit: cover; transition: 0.8s; }
-        .entity:hover .entity-visual img { transform: scale(1.08) rotate(1deg); filter: brightness(0.8); }
-        .duration-tag {
-            position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 800;
+        .logo-box {
+            width: 50px; height: 50px; background: var(--p-plasma); margin: 0 auto 50px;
+            border-radius: 18px; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; color: #fff; box-shadow: 0 10px 30px rgba(124, 77, 255, 0.3);
+            cursor: pointer; transition: 0.3s;
+        }
+        .logo-box:hover { transform: rotate(10deg) scale(1.1); }
+
+        .nav-item {
+            padding: 18px 30px; display: flex; align-items: center; gap: 20px;
+            cursor: pointer; color: var(--p-dim); transition: 0.3s; white-space: nowrap;
+        }
+        .nav-item:hover, .nav-item.active { color: #fff; background: rgba(255,255,255,0.03); }
+        .nav-item.active { border-right: 3px solid var(--p-accent); color: var(--p-accent); }
+        .nav-item span { font-size: 22px; }
+        .nav-label { opacity: 0; transition: 0.3s; }
+        .side-open .nav-label { opacity: 1; }
+
+        /* --- HEADER: SYNC BAR --- */
+        header {
+            grid-column: 2; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px; background: rgba(4,4,6,0.8); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--p-border); transition: inherit;
+        }
+        .search-wrapper {
+            background: #15151b; width: 450px; height: 54px; border-radius: 20px;
+            display: flex; align-items: center; padding: 0 25px; border: 1px solid var(--p-border);
+        }
+        .search-wrapper input { 
+            background: transparent; border: none; color: #fff; width: 100%; 
+            margin-left: 15px; font-size: 15px; outline: none;
         }
 
-        /* --- THEATER MODE: CINEMATIC VIEW --- */
-        #theater-mode { display: none; max-width: 1300px; margin: 0 auto; animation: streamIn 0.5s ease; }
-        .video-stage { 
+        /* --- MAIN VIEWPORT: GRID & THEATER --- */
+        main { grid-column: 2; padding: 40px; overflow-y: auto; position: relative; }
+
+        .plasma-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px; perspective: 1000px;
+        }
+
+        /* --- CARD: ATOMIC UNIT --- */
+        .card {
+            background: var(--p-surface); border-radius: 28px; overflow: hidden;
+            border: 1px solid var(--p-border); cursor: pointer; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .card:hover { transform: translateY(-10px) rotateX(2deg); border-color: var(--p-accent); }
+        .card-thumb { width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; position: relative; }
+        .card-thumb img { width: 100%; height: 100%; object-fit: cover; transition: 0.7s; }
+        .card:hover .card-thumb img { transform: scale(1.1); filter: contrast(1.1); }
+
+        .card-body { padding: 22px; display: flex; gap: 15px; }
+        .card-avatar { width: 44px; height: 44px; border-radius: 14px; background: var(--p-plasma); flex-shrink: 0; }
+        .card-title { font-weight: 700; line-height: 1.4; font-size: 17px; }
+
+        /* --- THEATER LOUNGE --- */
+        #theater-view { display: none; max-width: 1400px; margin: 0 auto; }
+        .video-box { 
             width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 40px; 
-            overflow: hidden; border: 1px solid var(--border-thick);
-            box-shadow: 0 50px 100px rgba(0,0,0,0.7);
+            overflow: hidden; border: 1px solid var(--p-border); box-shadow: 0 60px 100px rgba(0,0,0,0.6);
+            position: relative;
         }
 
-        /* --- STUDIO: UPLOAD INTERFACE --- */
-        #studio-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px);
-            z-index: 2000; display: none; align-items: center; justify-content: center;
+        /* --- DRIFT TRIGGER BUTTON --- */
+        .drift-btn {
+            position: absolute; bottom: 20px; right: 20px; padding: 10px 20px;
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 12px;
+            color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; z-index: 10;
         }
-        .studio-panel {
-            width: 1100px; height: 85vh; background: var(--obsidian-surface); border-radius: 48px;
-            border: 1px solid var(--border-thick); display: grid; grid-template-columns: 1fr 400px;
-            overflow: hidden; box-shadow: 0 100px 200px rgba(0,0,0,0.8);
-        }
-        .studio-main { padding: 60px; overflow-y: auto; }
-        .studio-aside { background: var(--obsidian-elevated); padding: 40px; border-left: 1px solid var(--border-thin); }
 
-        /* --- SYSTEM COMPONENTS --- */
-        .btn-obsidian {
-            background: var(--accent-glow); color: #000; border: none; 
-            padding: 14px 28px; border-radius: 16px; font-weight: 800;
-            cursor: pointer; transition: 0.3s; font-size: 14px;
+        /* --- STUDIO MODAL --- */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(40px);
+            display: none; align-items: center; justify-content: center; z-index: 2000;
         }
-        .btn-obsidian:hover { transform: scale(1.05); box-shadow: 0 0 30px var(--accent-alpha); }
-        .btn-obsidian:disabled { opacity: 0.5; cursor: not-allowed; }
+        .modal-inner {
+            width: 800px; background: var(--p-surface); border-radius: 40px; padding: 50px;
+            border: 1px solid var(--p-border); text-align: center;
+        }
 
-        .form-group { margin-bottom: 25px; }
-        .form-group label { display: block; font-size: 11px; font-weight: 800; color: var(--text-low); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
-        .form-input { 
-            width: 100%; background: #000; border: 1px solid var(--border-thin); 
-            color: #fff; padding: 18px; border-radius: 18px; font-size: 15px; transition: 0.3s;
+        .btn-p {
+            background: var(--p-plasma); color: #fff; border: none; padding: 18px 40px;
+            border-radius: 20px; font-weight: 700; cursor: pointer; transition: 0.3s;
         }
-        .form-input:focus { border-color: var(--accent-glow); }
-
-        /* --- TOAST ENGINE --- */
-        #toast-master { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 10000; }
-        .toast-unit {
-            background: #fff; color: #000; padding: 16px 32px; border-radius: 50px;
-            font-weight: 800; font-size: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            display: flex; align-items: center; gap: 15px; animation: toastIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes toastIn { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .btn-p:hover { box-shadow: 0 0 30px rgba(124, 77, 255, 0.5); transform: translateY(-2px); }
 
     </style>
 </head>
-<body>
+<body id="core-body">
 
-    <div id="security-vault" style="position:fixed; inset:0; z-index:9999; background:var(--obsidian-base); display:flex; align-items:center; justify-content:center;">
-        <div style="text-align:center; width:400px;">
-            <div class="brand-icon" style="margin:0 auto 30px; width:80px; height:80px; font-size:40px;">S</div>
-            <h1 style="font-weight:800; font-size:32px; margin-bottom:10px;">Obsidian Access</h1>
-            <p style="color:var(--text-low); margin-bottom:40px;">Admin ID: 8392479231 | Root Terminal</p>
-            <input type="password" id="admin-key" class="form-input" placeholder="Erişim Anahtarını Girin" style="text-align:center; letter-spacing:5px;">
-            <button onclick="Kernel.unlock()" class="btn-obsidian" style="width:100%; margin-top:20px; height:60px;">KERNEL'I BAŞLAT</button>
+    <aside id="sidebar">
+        <div class="logo-box" onclick="Core.toggleSide()">P</div>
+        <div class="nav-item active" onclick="Core.nav('home')">
+            <span>🏠</span> <div class="nav-label">Plasma Ana Sayfa</div>
+        </div>
+        <div class="nav-item" onclick="Core.nav('shorts')">
+            <span>⚡</span> <div class="nav-label">Shorts Akışı</div>
+        </div>
+        <div class="nav-item" onclick="Core.nav('library')">
+            <span>📂</span> <div class="nav-label">Kalıcı Arşiv</div>
+        </div>
+        <div style="margin-top:auto" class="nav-item" onclick="Core.toggleSide()">
+            <span>🛰️</span> <div class="nav-label">Sistem Genişlet</div>
+        </div>
+    </aside>
+
+    <header>
+        <div class="search-wrapper">
+            <span>🔍</span>
+            <input type="text" placeholder="Global ağda video veya içerik ara...">
+        </div>
+        <div style="display:flex; align-items:center; gap:25px;">
+            <div id="storage-status" style="font-size:12px; color:var(--p-dim)">DB: ONLINE</div>
+            <button class="btn-p" style="padding:12px 24px; font-size:14px;" onclick="Studio.open()">YÜKLE</button>
+            <div style="width:48px; height:48px; border-radius:16px; background:var(--p-surface); border:1px solid var(--p-border)"></div>
+        </div>
+    </header>
+
+    <main>
+        <section id="home-view">
+            <h1 style="font-size:42px; font-weight:700; margin-bottom:40px; letter-spacing:-1px;">Keşfet</h1>
+            <div id="plasma-grid" class="plasma-grid"></div>
+        </section>
+
+        <section id="theater-view">
+            <div class="video-box">
+                <video id="player" controls autoplay style="width:100%; height:100%"></video>
+                <button class="drift-btn" onclick="Core.toggleDrift()">FOKUS MODU</button>
+            </div>
+            <div style="margin-top:40px;">
+                <h1 id="v-title" style="font-size:32px; font-weight:700;">Video Başlığı</h1>
+                <p style="color:var(--p-dim); margin-top:10px;">Yönetici ID: 8392479231 • Yayınlanma: Bugün</p>
+                <div id="v-desc" style="margin-top:30px; padding:30px; background:var(--p-surface); border-radius:30px; color:var(--p-dim); line-height:1.6;"></div>
+            </div>
+        </section>
+    </main>
+
+    <div id="studio-modal" class="modal">
+        <div class="modal-inner">
+            <h2 style="font-size:32px; margin-bottom:20px;">Plasma Studio</h2>
+            <p style="color:var(--p-dim); margin-bottom:40px;">IndexedDB tabanlı sınırsız depolama katmanı.</p>
+            <input type="file" id="f-in" hidden accept="video/*">
+            <button class="btn-p" onclick="document.getElementById('f-in').click()">DOSYA SEÇ VE İŞLE</button>
+            <button class="btn-p" style="background:transparent; color:var(--p-dim);" onclick="Studio.close()">İPTAL</button>
         </div>
     </div>
-
-    <div id="kernel-root">
-        <aside id="side-nav">
-            <div class="brand-icon">S</div>
-            <div class="nav-links">
-                <div class="nav-link active" onclick="Kernel.route('home', this)">
-                    <span class="icon">🏠</span><span class="label">Merkez</span>
-                </div>
-                <div class="nav-link" onclick="Kernel.route('shorts', this)">
-                    <span class="icon">⚡</span><span class="label">Obsidian Shorts</span>
-                </div>
-                <div class="nav-link" onclick="Kernel.route('library', this)">
-                    <span class="icon">📂</span><span class="label">Arşiv</span>
-                </div>
-                <div style="margin:20px 0; height:1px; background:var(--border-thin);"></div>
-                <div class="nav-link" onclick="Kernel.route('trending', this)">
-                    <span class="icon">🔥</span><span class="label">Trendler</span>
-                </div>
-                <div class="nav-link" onclick="Kernel.route('liked', this)">
-                    <span class="icon">💎</span><span class="label">Beğenilenler</span>
-                </div>
-            </div>
-            <div style="margin-top:auto; width:100%; padding:0 15px;">
-                <div class="nav-link" onclick="Kernel.toggleSidebar()">
-                    <span class="icon">💠</span><span class="label">Arayüzü Genişlet</span>
-                </div>
-            </div>
-        </aside>
-
-        <header id="command-bar">
-            <div class="search-pod">
-                <span>🔍</span>
-                <input type="text" placeholder="Global arşivde ara...">
-            </div>
-            <div style="display:flex; align-items:center; gap:25px;">
-                <button class="btn-obsidian" onclick="Studio.open()">YENİ OLUŞTUR</button>
-                <div style="width:44px; height:44px; border-radius:14px; background:var(--obsidian-elevated); border:1px solid var(--border-thick); cursor:pointer;"></div>
-            </div>
-        </header>
-
-        <main id="matrix-scroll">
-            <section id="view-home">
-                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:40px;">
-                    <div>
-                        <h1 style="font-size:42px; font-weight:800; letter-spacing:-2px;">Sistem Akışı</h1>
-                        <p style="color:var(--text-low); margin-top:8px; font-weight:600;">Dinamik veri blokları senkronize edildi.</p>
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                        <span style="padding:8px 16px; background:var(--obsidian-elevated); border-radius:10px; font-size:12px; font-weight:800;">TÜMÜ</span>
-                        <span style="padding:8px 16px; opacity:0.4; font-size:12px; font-weight:800;">MÜZİK</span>
-                        <span style="padding:8px 16px; opacity:0.4; font-size:12px; font-weight:800;">OYUN</span>
-                    </div>
-                </div>
-
-                <div id="video-matrix" class="matrix-grid">
-                    </div>
-            </section>
-
-            <section id="theater-mode">
-                <div class="video-stage">
-                    <video id="main-player" controls autoplay style="width:100%; height:100%;"></video>
-                </div>
-                <div style="margin-top:40px; display:grid; grid-template-columns: 1fr 380px; gap:40px;">
-                    <div class="theater-details">
-                        <h1 id="v-title" style="font-size:32px; font-weight:800; letter-spacing:-1px;">Yükleniyor...</h1>
-                        <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center; padding-bottom:30px; border-bottom:1px solid var(--border-thin);">
-                            <div style="display:flex; align-items:center; gap:15px;">
-                                <div style="width:50px; height:50px; border-radius:18px; background:var(--accent-glow);"></div>
-                                <div>
-                                    <h4 style="font-weight:800;">Obsidian Creator</h4>
-                                    <p style="font-size:12px; color:var(--text-low);">1.2M Abone</p>
-                                </div>
-                                <button class="btn-obsidian" style="background:#fff; margin-left:20px;">ABONE OL</button>
-                            </div>
-                            <div style="display:flex; gap:10px;">
-                                <button class="btn-obsidian" style="background:var(--obsidian-elevated); color:#fff;">👍 42K</button>
-                                <button class="btn-obsidian" style="background:var(--obsidian-elevated); color:#fff;">↪ PAYLAŞ</button>
-                            </div>
-                        </div>
-                        <div id="v-desc" style="margin-top:30px; padding:25px; background:var(--obsidian-elevated); border-radius:24px; color:var(--text-low); line-height:1.6;">
-                            Video açıklaması sistem tarafından yüklendi.
-                        </div>
-                    </div>
-                    <div class="theater-sidebar">
-                        <h3 style="margin-bottom:20px;">Sıradaki</h3>
-                        <div id="up-next-list" style="display:flex; flex-direction:column; gap:20px;"></div>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <div id="studio-overlay">
-        <div class="studio-panel">
-            <div class="studio-main">
-                <div style="display:flex; justify-content:space-between; margin-bottom:50px;">
-                    <h2 style="font-size:28px; font-weight:800;">Studio Obsidian</h2>
-                    <span onclick="Studio.close()" style="cursor:pointer; font-size:24px;">✕</span>
-                </div>
-
-                <div id="studio-drop" class="up-dropzone" style="height:300px; border:2px dashed #333; border-radius:32px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;" onclick="document.getElementById('studio-input').click()">
-                    <div style="font-size:64px; margin-bottom:20px;">📦</div>
-                    <h3>Sınırsız Veri Entegrasyonu</h3>
-                    <p style="color:var(--text-low); margin-top:10px;">MP4, MOV veya WebM dosyalarını işleyin</p>
-                    <input type="file" id="studio-input" hidden accept="video/*">
-                </div>
-
-                <div id="studio-form" style="display:none; margin-top:30px;">
-                    <div class="form-group">
-                        <label>Başlık</label>
-                        <input type="text" id="stu-title" class="form-input" placeholder="İçerik başlığını belirleyin">
-                    </div>
-                    <div class="form-group">
-                        <label>Açıklama</label>
-                        <textarea id="stu-desc" class="form-input" style="height:150px; resize:none;" placeholder="Video hakkında teknik detaylar..."></textarea>
-                    </div>
-                    <div id="stu-progress" style="display:none; margin-top:40px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:12px; font-weight:800;">
-                            <span id="stu-status">Obsidian Katmanları Yazılıyor...</span>
-                            <span id="stu-pct">0%</span>
-                        </div>
-                        <div style="height:8px; background:#000; border-radius:4px; overflow:hidden;">
-                            <div id="stu-bar" style="height:100%; width:0%; background:var(--accent-glow); transition:0.2s cubic-bezier(0.4, 0, 0.2, 1);"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="studio-aside">
-                <h3 style="margin-bottom:30px;">Kalıcı Önizleme</h3>
-                <div id="stu-prev-box" style="width:100%; aspect-ratio:16/9; background:#000; border-radius:24px; overflow:hidden; border:1px solid var(--border-thick);">
-                    <div style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-low); font-size:12px;">Henüz Dosya Seçilmedi</div>
-                </div>
-                <div style="margin-top:auto;">
-                    <button id="stu-pub-btn" class="btn-obsidian" style="width:100%; height:60px;" onclick="Studio.publish()" disabled>OBSIDIAN'A KAYDET</button>
-                    <button class="btn-obsidian" style="width:100%; background:transparent; border:1px solid var(--border-thin); color:#fff; margin-top:15px;" onclick="Studio.close()">İPTAL</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="toast-master"></div>
 
     <script>
         /**
-         * ⚛️ OBSIDIAN KERNEL v10.0
-         * Admin: 8392479231
+         * STREAMX PLASMA v12.0 ENGINE
          */
 
-        const Kernel = {
+        const Core = {
             db: null,
-            state: { view: 'home', isExpanded: false },
+            state: { view: 'home', side: false, drift: false },
 
             async init() {
-                await this.initIndexedDB();
-                this.renderGrid();
-                this.setupCoreEvents();
+                await this.initDB();
+                this.render();
             },
 
-            initIndexedDB() {
-                return new Promise((res) => {
-                    const req = indexedDB.open("Obsidian_Core", 1);
-                    req.onupgradeneeded = (e) => {
-                        const db = e.target.result;
-                        if(!db.objectStoreNames.contains("v_data")) {
-                            db.createObjectStore("v_data", { keyPath: "id" });
-                        }
-                    };
-                    req.onsuccess = (e) => { this.db = e.target.result; res(); };
+            initDB() {
+                return new Promise(res => {
+                    const req = indexedDB.open("Plasma_DB", 1);
+                    req.onupgradeneeded = e => e.target.result.createObjectStore("vault", {keyPath: "id"});
+                    req.onsuccess = e => { this.db = e.target.result; res(); };
                 });
             },
 
-            unlock() {
-                const key = document.getElementById('admin-key').value;
-                if(key === "8392479231") {
-                    document.getElementById('security-vault').style.opacity = '0';
-                    setTimeout(() => {
-                        document.getElementById('security-vault').style.display = 'none';
-                        this.init();
-                    }, 500);
-                    this.toast("Erişim Onaylandı: Root");
-                } else {
-                    alert("Geçersiz Anahtar!");
+            toggleSide() {
+                this.state.side = !this.state.side;
+                document.body.classList.toggle('side-open');
+            },
+
+            // ⚡ RANDOM FEATURE: FOCUS DRIFT
+            toggleDrift() {
+                this.state.drift = !this.state.drift;
+                document.body.classList.toggle('drift-mode');
+                if(this.state.drift) {
+                    console.log("Drift Mode: Alpha-Cinema Protocol Active");
                 }
             },
 
-            toggleSidebar() {
-                this.state.isExpanded = !this.state.isExpanded;
-                document.getElementById('kernel-root').classList.toggle('side-expanded');
+            nav(v) {
+                this.state.view = v;
+                document.getElementById('home-view').style.display = v === 'home' ? 'block' : 'none';
+                document.getElementById('theater-view').style.display = v === 'watch' ? 'block' : 'none';
+                if(v === 'home') this.render();
             },
 
-            route(target, el) {
-                if(el) {
-                    document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-                    el.classList.add('active');
-                }
-                this.state.view = target;
-                document.getElementById('view-home').style.display = target === 'home' ? 'block' : 'none';
-                document.getElementById('theater-mode').style.display = target === 'watch' ? 'block' : 'none';
-                if(target === 'home') this.renderGrid();
-            },
-
-            async renderGrid() {
-                const mount = document.getElementById('video-matrix');
-                const tx = this.db.transaction("v_data", "readonly");
-                const store = tx.objectStore("v_data");
+            async render() {
+                const mount = document.getElementById('plasma-grid');
+                const tx = this.db.transaction("vault", "readonly");
                 const videos = await new Promise(res => {
-                    const r = store.getAll();
+                    const r = tx.objectStore("vault").getAll();
                     r.onsuccess = () => res(r.result);
                 });
 
-                mount.innerHTML = "";
-                if(videos.length === 0) {
-                    mount.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:100px; opacity:0.2;"><h1>Veri Merkezi Boş</h1></div>`;
-                    return;
-                }
-
+                mount.innerHTML = videos.length ? "" : "<div style='grid-column:1/-1; text-align:center; padding:100px; opacity:0.3'><h1>Sistem Boş</h1></div>";
+                
                 videos.reverse().forEach(v => {
-                    const node = document.createElement('div');
-                    node.className = 'entity';
-                    node.onclick = () => this.launchTheater(v.id);
-                    node.innerHTML = `
-                        <div class="entity-visual">
-                            <img src="${v.thumb}">
-                            <div class="duration-tag">04:20</div>
-                        </div>
-                        <div style="display:flex; gap:16px; margin-top:18px;">
-                            <div style="width:40px; height:40px; border-radius:12px; background:var(--accent-glow); flex-shrink:0;"></div>
+                    const el = document.createElement('div');
+                    el.className = 'card';
+                    el.onclick = () => this.watch(v.id);
+                    el.innerHTML = `
+                        <div class="card-thumb"><img src="${v.thumb}"></div>
+                        <div class="card-body">
+                            <div class="card-avatar"></div>
                             <div>
-                                <h3 style="font-size:16px; font-weight:800; line-height:1.4;">${v.title}</h3>
-                                <p style="font-size:13px; color:var(--text-low); margin-top:5px;">Admin • ${v.views} izlenme</p>
+                                <div class="card-title">${v.title}</div>
+                                <div style="font-size:13px; color:var(--p-dim); margin-top:5px;">Admin • 2026</div>
                             </div>
                         </div>
                     `;
-                    mount.appendChild(node);
+                    mount.appendChild(el);
                 });
             },
 
-            async launchTheater(id) {
-                const tx = this.db.transaction("v_data", "readonly");
+            async watch(id) {
+                const tx = this.db.transaction("vault", "readonly");
                 const v = await new Promise(res => {
-                    const r = tx.objectStore("v_data").get(id);
+                    const r = tx.objectStore("vault").get(id);
                     r.onsuccess = () => res(r.result);
                 });
-
-                this.route('watch');
-                const player = document.getElementById('main-player');
-                player.src = URL.createObjectURL(v.blob);
+                this.nav('watch');
+                document.getElementById('player').src = URL.createObjectURL(v.blob);
                 document.getElementById('v-title').innerText = v.title;
-                document.getElementById('v-desc').innerText = v.desc || "Teknik veri tanımlanmadı.";
-            },
-
-            toast(msg) {
-                const m = document.getElementById('toast-master');
-                const t = document.createElement('div');
-                t.className = 'toast-unit';
-                t.innerHTML = `<span>💠</span> ${msg}`;
-                m.appendChild(t);
-                setTimeout(() => t.remove(), 4000);
-            },
-
-            setupCoreEvents() {
-                // Global hotkeys can be added here
+                document.getElementById('v-desc').innerText = v.desc || "Açıklama mevcut değil.";
             }
         };
 
         const Studio = {
-            temp: { file: null, thumb: null },
-
-            open() { document.getElementById('studio-overlay').style.display = 'flex'; },
-            close() { document.getElementById('studio-overlay').style.display = 'none'; },
-
-            async setup() {
-                const inp = document.getElementById('studio-input');
-                inp.onchange = async (e) => {
+            open() { document.getElementById('studio-modal').style.display = 'flex'; },
+            close() { document.getElementById('studio-modal').style.display = 'none'; },
+            
+            async init() {
+                document.getElementById('f-in').onchange = async (e) => {
                     const file = e.target.files[0];
                     if(!file) return;
 
-                    this.temp.file = file;
-                    document.getElementById('studio-drop').style.display = 'none';
-                    document.getElementById('studio-form').style.display = 'block';
-                    document.getElementById('stu-title').value = file.name.split('.')[0];
-                    document.getElementById('stu-pub-btn').disabled = false;
-
-                    const url = URL.createObjectURL(file);
-                    this.temp.thumb = await this.generateThumb(url);
-                    document.getElementById('stu-prev-box').innerHTML = `<img src="${this.temp.thumb}" style="width:100%; height:100%; object-fit:cover;">`;
+                    const title = prompt("Video Başlığı:");
+                    const thumb = await this.genThumb(URL.createObjectURL(file));
+                    
+                    const tx = Core.db.transaction("vault", "readwrite");
+                    tx.objectStore("vault").add({
+                        id: Date.now().toString(),
+                        title: title || "İsimsiz Video",
+                        blob: file,
+                        thumb: thumb,
+                        desc: "Plasma Core v12.0 ile yüklendi."
+                    });
+                    tx.oncomplete = () => {
+                        this.close();
+                        Core.render();
+                    };
                 };
             },
 
-            generateThumb(u) {
+            genThumb(u) {
                 return new Promise(res => {
                     const v = document.createElement('video');
-                    v.src = u; v.currentTime = 1; v.muted = true;
+                    v.src = u; v.currentTime = 2; v.muted = true;
                     v.onseeked = () => {
                         const c = document.createElement('canvas');
-                        c.width = 1280; c.height = 720;
-                        c.getContext('2d').drawImage(v, 0, 0, 1280, 720);
-                        res(c.toDataURL('image/jpeg', 0.8));
+                        c.width = 640; c.height = 360;
+                        c.getContext('2d').drawImage(v, 0, 0, 640, 360);
+                        res(c.toDataURL('image/jpeg'));
                     };
                     v.play();
                 });
-            },
-
-            async publish() {
-                const title = document.getElementById('stu-title').value;
-                if(!title) return;
-
-                document.getElementById('stu-progress').style.display = 'block';
-                document.getElementById('stu-pub-btn').disabled = true;
-
-                const data = {
-                    id: Date.now().toString(),
-                    title: title,
-                    desc: document.getElementById('stu-desc').value,
-                    blob: this.temp.file,
-                    thumb: this.temp.thumb,
-                    views: 0
-                };
-
-                // Simulator
-                let p = 0;
-                const i = setInterval(async () => {
-                    p += Math.floor(Math.random() * 20);
-                    if(p >= 100) {
-                        p = 100; clearInterval(i);
-                        const tx = Kernel.db.transaction("v_data", "readwrite");
-                        tx.objectStore("v_data").add(data);
-                        tx.oncomplete = () => {
-                            Kernel.toast("Obsidian Veritabanı Güncellendi!");
-                            setTimeout(() => location.reload(), 1000);
-                        };
-                    }
-                    document.getElementById('stu-bar').style.width = p + '%';
-                    document.getElementById('stu-pct').innerText = p + '%';
-                }, 150);
             }
         };
 
-        Studio.setup();
+        Core.init();
+        Studio.init();
     </script>
 </body>
 </html>
