@@ -3,301 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube - Admin 8392479231</title>
+    <title>YouTube Clone Pro | Admin 8392479231</title>
     <style>
+        /* --- CSS: MODERN DARK THEME & UX --- */
         :root {
             --bg: #0f0f0f;
             --surface: #0f0f0f;
             --surface-hover: #272727;
             --text: #ffffff;
             --secondary-text: #aaaaaa;
-            --border: #333333;
             --yt-red: #ff0000;
+            --accent: #3ea6ff;
+            --border: #333333;
         }
 
         body {
-            font-family: "Roboto", "Arial", sans-serif;
+            font-family: "Roboto", sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            overflow-x: hidden;
+            overflow: hidden; /* Header ve Nav dışında kaydırmayı biz yöneteceğiz */
         }
 
-        /* --- HEADER --- */
+        /* Layout */
         header {
             position: fixed; top: 0; width: 100%; height: 56px;
             background: var(--bg); display: flex; justify-content: space-between;
             align-items: center; padding: 0 16px; z-index: 2000; box-sizing: border-box;
         }
 
-        .header-left { display: flex; align-items: center; gap: 16px; }
-        .menu-btn { font-size: 22px; cursor: pointer; padding: 8px; border-radius: 50%; }
-        .menu-btn:hover { background: var(--surface-hover); }
-        .logo { color: var(--text); font-size: 20px; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 4px; }
-        .logo span { background: var(--yt-red); color: white; padding: 2px 6px; border-radius: 4px; font-size: 14px; }
-
-        .header-center { flex: 0 1 720px; display: flex; align-items: center; gap: 10px; }
-        .search-bar { 
-            display: flex; flex: 1; background: #121212; border: 1px solid #333; 
-            border-radius: 40px; padding: 0 4px 0 16px; align-items: center;
-        }
-        .search-bar input { background: transparent; border: none; color: white; flex: 1; padding: 8px 0; outline: none; font-size: 16px; }
-        .search-bar button { background: #222; border: none; border-left: 1px solid #333; padding: 8px 20px; border-radius: 0 40px 40px 0; cursor: pointer; color: white; }
-
-        /* --- SIDEBAR --- */
         aside {
             position: fixed; top: 56px; left: 0; width: 240px; height: calc(100vh - 56px);
-            background: var(--bg); overflow-y: auto; padding: 12px 0; box-sizing: border-box;
+            background: var(--bg); padding-top: 12px; z-index: 1000;
         }
+
+        main {
+            margin-top: 56px; margin-left: 240px; height: calc(100vh - 56px);
+            overflow-y: auto; padding: 20px; box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        /* Sidebar Elements */
         .nav-link {
-            padding: 8px 24px; display: flex; align-items: center; gap: 24px;
-            cursor: pointer; font-size: 14px; border-radius: 10px; margin: 0 12px;
+            padding: 10px 24px; display: flex; align-items: center; gap: 24px;
+            cursor: pointer; border-radius: 10px; margin: 0 12px; transition: 0.2s;
         }
-        .nav-link:hover { background: var(--surface-hover); }
-        .nav-link.active { background: var(--surface-hover); font-weight: 500; }
-        
-        .sidebar-sep { border: 0; border-top: 1px solid var(--border); margin: 12px 0; }
-        .sidebar-title { padding: 8px 24px; font-size: 16px; font-weight: 500; display: flex; align-items: center; justify-content: space-between; }
-        
-        .sub-item { display: flex; align-items: center; gap: 16px; padding: 8px 24px; cursor: pointer; border-radius: 10px; margin: 0 12px; }
-        .sub-item:hover { background: var(--surface-hover); }
-        .sub-img { width: 24px; height: 24px; border-radius: 50%; background: #444; object-fit: cover; }
+        .nav-link:hover, .nav-link.active { background: var(--surface-hover); }
 
-        /* --- MAIN CONTENT --- */
-        main { margin-top: 56px; margin-left: 240px; padding: 0 24px 24px 24px; }
-
-        /* Chips (Kategoriler) */
-        .chips {
-            position: sticky; top: 56px; background: var(--bg); padding: 12px 0;
-            display: flex; gap: 12px; overflow-x: auto; z-index: 1000;
+        /* --- SHORTS SECTION (SNAP SCROLLING) --- */
+        #shortsView {
+            display: none; height: calc(100vh - 56px);
+            overflow-y: scroll; scroll-snap-type: y mandatory;
+            background: #000; position: relative;
         }
-        .chip {
-            background: #272727; border: none; color: white; padding: 6px 12px;
-            border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 14px; font-weight: 500;
-        }
-        .chip.active { background: white; color: black; }
 
-        /* Upload UI */
-        .upload-panel {
-            background: #1e1e1e; border-radius: 12px; padding: 20px; margin-bottom: 24px;
-            border: 1px dashed #444; text-align: center;
+        .short-container {
+            height: calc(100vh - 56px); width: 100%;
+            display: flex; justify-content: center; align-items: center;
+            scroll-snap-align: start; position: relative;
         }
-        .btn-upload { background: white; color: black; border: none; padding: 8px 16px; border-radius: 18px; font-weight: 500; cursor: pointer; }
 
-        /* Video Grids */
+        .short-video-wrapper {
+            height: 95%; aspect-ratio: 9/16; background: #111;
+            border-radius: 15px; overflow: hidden; position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        .short-video-wrapper video { width: 100%; height: 100%; object-fit: cover; }
+
+        .short-info {
+            position: absolute; bottom: 20px; left: 20px; right: 20px;
+            z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        /* --- LONG VIDEO GRID --- */
         .video-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; row-gap: 40px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px; row-gap: 32px;
         }
-        .video-card { cursor: pointer; }
-        .thumbnail { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 12px; background: #222; overflow: hidden; }
-        .thumbnail img { width: 100%; height: 100%; object-fit: cover; }
-        .video-info { display: flex; gap: 12px; margin-top: 12px; }
-        .channel-pfp { width: 36px; height: 36px; border-radius: 50%; background: #333; flex-shrink: 0; }
-        .video-text h4 { margin: 0; font-size: 16px; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .video-text p { color: var(--secondary-text); font-size: 14px; margin: 4px 0; }
+        .v-card { cursor: pointer; transition: 0.2s; }
+        .v-thumb { width: 100%; aspect-ratio: 16/9; border-radius: 12px; background: #222; overflow: hidden; }
+        .v-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .v-meta { display: flex; gap: 12px; margin-top: 12px; }
+        .v-pfp { width: 36px; height: 36px; border-radius: 50%; background: #444; }
 
-        /* Shorts Grid */
-        .shorts-section { margin-top: 40px; }
-        .shorts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
-        .shorts-card { cursor: pointer; }
-        .shorts-thumb { width: 100%; aspect-ratio: 9/16; border-radius: 12px; background: #222; overflow: hidden; }
-        .shorts-thumb img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* Overlay Player */
-        #player {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg); z-index: 3000; display: none; padding: 40px; box-sizing: border-box;
+        /* --- UPLOAD UI --- */
+        .upload-modal {
+            background: #1e1e1e; border-radius: 12px; padding: 25px;
+            max-width: 500px; margin: 20px auto; border: 1px solid #333;
         }
-        .player-container { max-width: 1280px; margin: 0 auto; text-align: left; }
-        video { width: 100%; border-radius: 12px; background: black; }
-        .close-btn { position: absolute; top: 20px; right: 20px; font-size: 32px; cursor: pointer; }
+        .btn-up { 
+            background: var(--accent); color: #000; border: none; padding: 10px 20px; 
+            border-radius: 20px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px;
+        }
+        input, textarea {
+            width: 100%; background: #121212; border: 1px solid #333; color: #fff;
+            padding: 10px; border-radius: 8px; margin-bottom: 10px; box-sizing: border-box;
+        }
 
-        @media (max-width: 1000px) { aside { display: none; } main { margin-left: 0; } }
+        /* Progress Bar for Shorts */
+        .shorts-progress {
+            position: absolute; top: 0; left: 0; height: 3px; background: var(--yt-red);
+            width: 0%; z-index: 100; transition: width 0.1s linear;
+        }
+
+        /* Responsive */
+        @media (max-width: 800px) {
+            aside { display: none; }
+            main { margin-left: 0; padding-bottom: 80px; }
+            #shortsView { width: 100vw; }
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="header-left">
-        <div class="menu-btn">☰</div>
-        <a href="#" class="logo">YouTube<sup>TR</sup></a>
+    <div style="display:flex; align-items:center; gap:20px;">
+        <span style="cursor:pointer; font-size:24px;">☰</span>
+        <div style="color:red; font-weight:bold; font-size:22px; cursor:pointer;" onclick="showView('home')">YouTube</div>
     </div>
-    <div class="header-center">
-        <div class="search-bar">
-            <input type="text" placeholder="Ara">
-            <button>🔍</button>
-        </div>
-        <div class="menu-btn">🎤</div>
-    </div>
-    <div style="display:flex; align-items:center; gap:12px;">
-        <div class="menu-btn">+</div>
-        <div class="menu-btn">🔔</div>
-        <div class="channel-pfp" style="width:32px; height:32px;"></div>
+    <div style="font-size: 12px; color: var(--secondary-text)">Admin: 8392479231</div>
+    <div style="display:flex; gap:15px; align-items:center;">
+        <button class="btn-up" style="width:auto; margin:0;" onclick="showView('upload')">+ Oluştur</button>
+        <div class="v-pfp" style="width:32px; height:32px;"></div>
     </div>
 </header>
 
 <aside>
-    <div class="nav-link active">🏠 Ana Sayfa</div>
-    <div class="nav-link">🩳 Shorts</div>
+    <div class="nav-link active" id="btn-home" onclick="showView('home')">🏠 Ana Sayfa</div>
+    <div class="nav-link" id="btn-shorts" onclick="showView('shorts')">🩳 Shorts</div>
+    <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
     <div class="nav-link">📺 Abonelikler</div>
-    <hr class="sidebar-sep">
-    <div class="sidebar-title">Siz ></div>
     <div class="nav-link">🕒 Geçmiş</div>
-    <div class="nav-link">📂 Oynatma listeleri</div>
-    <hr class="sidebar-sep">
-    <div class="sidebar-title">Abonelikler</div>
-    <div class="sub-item"><div class="sub-img"></div> AI REBORNN 🔴</div>
-    <div class="sub-item"><div class="sub-img"></div> Hasan Yayında 🔴</div>
-    <div class="sub-item"><div class="sub-img"></div> Kurtlar Vadisi 🔴</div>
-    <div class="sub-item"><div class="sub-img"></div> Argi TV 🔴</div>
 </aside>
 
-<main>
-    <div class="chips">
-        <button class="chip active">Tümü</button>
-        <button class="chip">Müzik</button>
-        <button class="chip">Mixler</button>
-        <button class="chip">Oyun</button>
-        <button class="chip">Canlı</button>
-        <button class="chip">Rap yapma</button>
-        <button class="chip">Roblox</button>
+<main id="homeView">
+    <h2 style="margin-bottom:20px;">Videolar</h2>
+    <div class="video-grid" id="mainGrid">
+        </div>
+</main>
+
+<div id="shortsView">
     </div>
 
-    <div class="upload-panel">
-        <h3 style="margin-top:0">İçerik Oluştur (Admin: 8392479231)</h3>
-        <input type="file" id="vInput" accept="video/*" style="display:none">
-        <input type="file" id="tInput" accept="image/*" style="display:none">
-        <button class="btn-upload" onclick="document.getElementById('vInput').click()">1. Video Seç</button>
-        <button class="btn-upload" onclick="document.getElementById('tInput').click()">2. Kapak Seç</button>
-        <input type="text" id="vTitle" placeholder="Başlık" style="padding:8px; border-radius:8px; border:1px solid #333; background:#000; color:white; margin:0 10px;">
-        <button class="btn-upload" style="background:var(--yt-red); color:white;" onclick="saveVideo()">YÜKLE</button>
-        <p id="status" style="font-size:12px; color:var(--secondary-text); margin-top:10px;"></p>
-    </div>
-
-    <div class="video-grid" id="mainGrid"></div>
-
-    <div class="shorts-section">
-        <h2 style="font-size:20px; display:flex; align-items:center; gap:10px;">🩳 Shorts</h2>
-        <div class="shorts-grid" id="shortsGrid"></div>
+<main id="uploadView" style="display:none;">
+    <div class="upload-modal">
+        <h2 style="margin-top:0">Video Yükle</h2>
+        <label>Video Seç (MP4/WebM):</label>
+        <input type="file" id="vInp" accept="video/*">
+        <label>Thumbnail Seç (JPG/PNG):</label>
+        <input type="file" id="tInp" accept="image/*">
+        <input type="text" id="vTitle" placeholder="Video Başlığı">
+        <textarea id="vDesc" rows="4" placeholder="Açıklama..."></textarea>
+        <button class="btn-up" onclick="handleUpload()">YAYINLA</button>
+        <p id="upStatus" style="font-size:12px; color:var(--accent); text-align:center;"></p>
     </div>
 </main>
 
-<div id="player">
-    <span class="close-btn" onclick="closePlayer()">×</span>
-    <div class="player-container">
-        <video id="vidElem" controls autoplay></video>
-        <h2 id="vidTitle" style="margin-top:20px;"></h2>
-        <p style="color:var(--secondary-text)">Admin 8392479231 • 2026</p>
-    </div>
-</div>
-
 <script>
-    const DB_NAME = 'YT_Clone_v2_8392479231';
+    /* --- JS: ENGINE & STORAGE --- */
+    const DB_NAME = 'YT_Cenneti_DB';
     let db;
 
-    // 1. Veritabanı Açılışı
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = (e) => {
+    // 1. IndexedDB Başlatma (Kalıcı Veri)
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = (e) => {
         db = e.target.result;
-        db.createObjectStore('content', { keyPath: 'id' });
+        db.createObjectStore('videos', { keyPath: 'id' });
     };
-    req.onsuccess = (e) => {
+    request.onsuccess = (e) => {
         db = e.target.result;
-        renderAll();
+        refreshData();
     };
 
-    // 2. Kaydetme İşlemi
-    async function saveVideo() {
-        const v = document.getElementById('vInput').files[0];
-        const t = document.getElementById('tInput').files[0];
+    // 2. Görünüm Değiştirme (SPA Mantığı)
+    function showView(view) {
+        document.getElementById('homeView').style.display = 'none';
+        document.getElementById('shortsView').style.display = 'none';
+        document.getElementById('uploadView').style.display = 'none';
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+        stopAllVideos();
+
+        if(view === 'home') {
+            document.getElementById('homeView').style.display = 'block';
+            document.getElementById('btn-home').classList.add('active');
+            refreshData();
+        } else if(view === 'shorts') {
+            document.getElementById('shortsView').style.display = 'block';
+            document.getElementById('btn-shorts').classList.add('active');
+            refreshData();
+        } else {
+            document.getElementById('uploadView').style.display = 'block';
+        }
+    }
+
+    // 3. Video Yükleme ve Süre Analizi
+    async function handleUpload() {
+        const vFile = document.getElementById('vInp').files[0];
+        const tFile = document.getElementById('tInp').files[0];
         const title = document.getElementById('vTitle').value;
-        const status = document.getElementById('status');
+        const desc = document.getElementById('vDesc').value;
+        const status = document.getElementById('upStatus');
 
-        if(!v || !t || !title) return alert("Dosya ve başlık eksik!");
+        if(!vFile || !tFile || !title) return alert("Eksik bilgi!");
 
-        status.textContent = "İşleniyor...";
-        const dur = await getDur(v);
+        status.textContent = "Analiz ediliyor...";
+        const duration = await getVideoDuration(vFile);
         
-        const data = {
+        const videoObj = {
             id: crypto.randomUUID(),
             title: title,
-            video: v,
-            thumb: t,
-            isShorts: dur < 60,
+            desc: desc,
+            vBlob: vFile,
+            tBlob: tFile,
+            isShorts: duration <= 60,
             ts: Date.now()
         };
 
-        const tx = db.transaction('content', 'readwrite');
-        tx.objectStore('content').add(data);
+        const tx = db.transaction('videos', 'readwrite');
+        tx.objectStore('videos').add(videoObj);
         tx.oncomplete = () => {
-            status.textContent = "Kaydedildi!";
-            renderAll();
+            status.textContent = "Başarıyla yüklendi!";
+            setTimeout(() => showView('home'), 1000);
         };
     }
 
-    function getDur(f) {
+    function getVideoDuration(file) {
         return new Promise(r => {
             const v = document.createElement('video');
-            v.src = URL.createObjectURL(f);
+            v.src = URL.createObjectURL(file);
             v.onloadedmetadata = () => { URL.revokeObjectURL(v.src); r(v.duration); };
         });
     }
 
-    // 3. Render
-    let urls = [];
-    function renderAll() {
+    // 4. Verileri Arayüze Basma
+    let activeURLs = [];
+    function refreshData() {
         const mg = document.getElementById('mainGrid');
-        const sg = document.getElementById('shortsGrid');
+        const sg = document.getElementById('shortsView');
         mg.innerHTML = ''; sg.innerHTML = '';
-        urls.forEach(u => URL.revokeObjectURL(u));
-        urls = [];
+        activeURLs.forEach(u => URL.revokeObjectURL(u));
+        activeURLs = [];
 
-        const tx = db.transaction('content', 'readonly');
-        tx.objectStore('content').getAll().onsuccess = (e) => {
-            e.target.result.sort((a,b) => b.ts - a.ts).forEach(item => {
-                const tU = URL.createObjectURL(item.thumb);
-                const vU = URL.createObjectURL(item.video);
-                urls.push(tU, vU);
+        const tx = db.transaction('videos', 'readonly');
+        tx.objectStore('videos').getAll().onsuccess = (e) => {
+            const videos = e.target.result.sort((a,b) => b.ts - a.ts);
 
-                if(item.isShorts) {
-                    const el = document.createElement('div');
-                    el.className = 'shorts-card';
-                    el.innerHTML = `<div class="shorts-thumb"><img src="${tU}"></div><p style="font-weight:500; margin-top:8px; font-size:14px;">${item.title}</p>`;
-                    el.onclick = () => play(vU, item.title);
-                    sg.appendChild(el);
-                } else {
-                    const el = document.createElement('div');
-                    el.className = 'video-card';
-                    el.innerHTML = `
-                        <div class="thumbnail"><img src="${tU}"></div>
-                        <div class="video-info">
-                            <div class="channel-pfp"></div>
-                            <div class="video-text">
-                                <h4>${item.title}</h4>
-                                <p>Admin Channel</p>
-                                <p>839B görüntüleme • Az önce</p>
+            videos.forEach((vid, index) => {
+                const vUrl = URL.createObjectURL(vid.vBlob);
+                const tUrl = URL.createObjectURL(vid.tBlob);
+                activeURLs.push(vUrl, tUrl);
+
+                if(vid.isShorts) {
+                    // SHORTS RENDER
+                    const container = document.createElement('div');
+                    container.className = 'short-container';
+                    container.innerHTML = `
+                        <div class="short-video-wrapper">
+                            <div class="shorts-progress" id="progress-${vid.id}"></div>
+                            <video src="${vUrl}" loop playsinline data-id="${vid.id}"></video>
+                            <div class="short-info">
+                                <h3 style="margin:0">${vid.title}</h3>
+                                <p style="font-size:14px; color:#ddd">@admin_8392479231</p>
                             </div>
-                        </div>`;
-                    el.onclick = () => play(vU, item.title);
-                    mg.appendChild(el);
+                        </div>
+                    `;
+                    sg.appendChild(container);
+                } else {
+                    // LONG VIDEO RENDER
+                    const card = document.createElement('div');
+                    card.className = 'v-card';
+                    card.innerHTML = `
+                        <div class="v-thumb"><img src="${tUrl}"></div>
+                        <div class="v-meta">
+                            <div class="v-pfp"></div>
+                            <div class="v-text">
+                                <h4 style="margin:0">${vid.title}</h4>
+                                <p style="font-size:12px; color:var(--secondary-text)">Admin • 999B İzlenme</p>
+                            </div>
+                        </div>
+                    `;
+                    card.onclick = () => {
+                        const win = window.open();
+                        win.document.write(`<body style="background:#000;margin:0;display:flex;align-items:center;justify-content:center;"><video src="${vUrl}" controls autoplay style="max-width:100%;max-height:100vh;"></video></body>`);
+                    };
+                    mg.appendChild(card);
                 }
             });
+            
+            if(document.getElementById('shortsView').style.display === 'block') {
+                handleShortsAutoplay();
+            }
         };
     }
 
-    function play(u, t) {
-        const p = document.getElementById('player');
-        const v = document.getElementById('vidElem');
-        v.src = u;
-        document.getElementById('vidTitle').textContent = t;
-        p.style.display = 'block';
+    // 5. SHORTS AUTOPLAY & SCROLL LOGIC (Video Kaydırma Cenneti)
+    const shortsView = document.getElementById('shortsView');
+    shortsView.addEventListener('scroll', handleShortsAutoplay);
+
+    function handleShortsAutoplay() {
+        const videos = shortsView.querySelectorAll('video');
+        const viewHeight = shortsView.clientHeight;
+
+        videos.forEach(v => {
+            const rect = v.getBoundingClientRect();
+            const progress = document.getElementById(`progress-${v.dataset.id}`);
+
+            // Eğer video ekranın ortasındaysa oynat
+            if(rect.top >= -100 && rect.bottom <= viewHeight + 100) {
+                if(v.paused) v.play();
+                
+                // Progress Bar Güncelleme
+                v.ontimeupdate = () => {
+                    const perc = (v.currentTime / v.duration) * 100;
+                    if(progress) progress.style.width = perc + "%";
+                };
+            } else {
+                v.pause();
+                v.currentTime = 0;
+            }
+        });
     }
 
-    function closePlayer() {
-        document.getElementById('player').style.display = 'none';
-        document.getElementById('vidElem').pause();
+    function stopAllVideos() {
+        document.querySelectorAll('video').forEach(v => v.pause());
     }
+
+    // Sonsuz Döngü (Scroll Check)
+    shortsView.addEventListener('scroll', () => {
+        if (shortsView.scrollTop + shortsView.clientHeight >= shortsView.scrollHeight - 5) {
+            // Son videoya gelindiğinde başa dön (isteğe bağlı)
+            // shortsView.scrollTo({top: 0, behavior: 'smooth'});
+        }
+    });
+
 </script>
-
 </body>
 </html>
