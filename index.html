@@ -2,13 +2,13 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shorts Pro - Kesintisiz Deneyim</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shorts Pro - Kesintisiz Oynatma Sistemi</title>
     <style>
         :root {
             --bg-color: #000;
-            --ui-color: #fff;
-            --accent-color: #ff0050;
+            --accent-color: #ff0050; /* TikTok tarzı pembe/kırmızı */
+            --ui-white: #ffffff;
         }
 
         body, html {
@@ -16,136 +16,190 @@
             width: 100%; height: 100%;
             background-color: var(--bg-color);
             overflow: hidden;
-            font-family: sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         /* Shorts Kaydırma Alanı */
-        .shorts-container {
-            width: 100%; height: 100vh;
+        .shorts-feed {
+            width: 100%;
+            height: 100vh;
             overflow-y: scroll;
             scroll-snap-type: y mandatory;
+            scrollbar-width: none; /* Firefox */
         }
+        .shorts-feed::-webkit-scrollbar { display: none; } /* Chrome/Safari */
 
-        .short-video-wrapper {
+        /* Video Container */
+        .short-item {
             position: relative;
-            width: 100%; height: 100vh;
+            width: 100%;
+            height: 100vh;
             scroll-snap-align: start;
+            scroll-snap-stop: always;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            background: #111;
         }
 
         video {
-            width: 100%; height: 100%;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
+            pointer-events: none; /* Doğrudan tıklamayı engelle, overlay yönetsin */
         }
 
-        /* Sağ Etkileşim Paneli */
-        .side-actions {
+        /* Video Overlay (Sadece manuel pause için) */
+        .video-click-overlay {
             position: absolute;
-            right: 15px;
-            bottom: 100px;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2;
+        }
+
+        /* Sağ Etkileşim Butonları */
+        .interaction-sidebar {
+            position: absolute;
+            right: 12px;
+            bottom: 120px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 25px;
             z-index: 10;
         }
 
-        .action-btn {
+        .btn-action {
             background: none; border: none;
-            color: var(--ui-color);
-            cursor: pointer;
+            color: var(--ui-white);
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.1s;
         }
+        .btn-action:active { transform: scale(0.9); }
+        .btn-action span { font-size: 12px; margin-top: 5px; font-weight: bold; }
+        .btn-action svg { fill: currentColor; width: 32px; height: 32px; }
 
-        .action-btn.liked { color: var(--accent-color); }
+        .btn-action.active-like { color: var(--accent-color); }
 
-        /* Yorum Paneli */
-        .comment-panel {
+        /* Yorum Paneli (Video akmaya devam eder) */
+        .comment-drawer {
             position: absolute;
-            bottom: -100%; /* Başlangıçta gizli */
-            left: 0; width: 100%; height: 60%;
-            background: rgba(20, 20, 20, 0.95);
+            bottom: -100%; /* Gizli */
+            left: 0; width: 100%; height: 65%;
+            background: rgba(18, 18, 18, 0.96);
             backdrop-filter: blur(15px);
-            border-radius: 20px 20px 0 0;
-            transition: bottom 0.3s ease;
+            border-radius: 16px 16px 0 0;
             z-index: 20;
+            transition: bottom 0.3s cubic-bezier(0.25, 1, 0.5, 1);
             padding: 20px;
             box-sizing: border-box;
             color: white;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
         }
+        .comment-drawer.open { bottom: 0; }
+        .drawer-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .close-btn { cursor: pointer; font-size: 24px; }
 
-        .comment-panel.active { bottom: 0; }
-
-        .close-comments {
-            float: right; font-size: 20px; cursor: pointer;
-        }
-
-        /* Overlay - Video üzerine tıklamayı kontrol etmek için */
-        .video-overlay {
+        /* Alt Bilgi */
+        .video-info {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 5;
+            bottom: 30px; left: 15px;
+            color: white; z-index: 5;
+            max-width: 70%;
         }
     </style>
 </head>
 <body>
 
-<div class="shorts-container" id="mainContainer">
-    <div class="short-video-wrapper" id="wrapper-1">
-        <video id="v1" class="shorts-player" loop playsinline muted>
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-lighting-in-the-rain-31215-large.mp4" type="video/mp4">
+<div class="shorts-feed" id="shortsFeed">
+    
+    <div class="short-item" id="short-1">
+        <video id="vid-1" class="main-video" loop playsinline muted>
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-urban-fashion-shoot-of-a-woman-in-a-red-jacket-33358-large.mp4" type="video/mp4">
         </video>
         
-        <div class="video-overlay" onclick="togglePlay('v1')"></div>
+        <div class="video-click-overlay" onclick="manualTogglePlay('vid-1')"></div>
 
-        <div class="side-actions">
-            <button class="action-btn" onclick="handleLike(this, event)">
-                ❤️ <span style="font-size: 12px;">Like</span>
+        <div class="interaction-sidebar">
+            <button class="btn-action" onclick="handleLike(this, event)">
+                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                <span>92K</span>
             </button>
-            <button class="action-btn" onclick="toggleComments('v1', event)">
-                💬 <span style="font-size: 12px;">Yorum</span>
+            <button class="btn-action" onclick="toggleComments('drawer-1', event)">
+                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/></svg>
+                <span>1.2K</span>
             </button>
         </div>
 
-        <div id="comments-v1" class="comment-panel">
-            <span class="close-comments" onclick="closeComments('v1')">✖</span>
-            <h3>Yorumlar</h3>
-            <p>Admin ID: 8392479231 için aktif edildi.</p>
-            <input type="text" placeholder="Yorum yazın..." style="width: 90%; padding: 10px; border-radius: 10px; border: none;">
+        <div class="video-info">
+            <strong>@Admin_8392479231</strong>
+            <p>Kritik Geliştirme: Kesintisiz Etkileşim Testi #Shorts #Tech</p>
+        </div>
+
+        <div id="drawer-1" class="comment-drawer">
+            <div class="drawer-header">
+                <span>Yorumlar (1240)</span>
+                <span class="close-btn" onclick="toggleComments('drawer-1', event)">×</span>
+            </div>
+            <div style="height: 80%; overflow-y: auto;">
+                <p><strong>KullanıcıA:</strong> Video durmadan yorum yazmak harika!</p>
+                <p><strong>KullanıcıB:</strong> Ses hala geliyor, çok akıcı.</p>
+                <hr style="opacity: 0.1">
+                <p style="color: gray; font-size: 12px;">Sistem aktif. Admin ID: 8392479231</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="short-item" id="short-2">
+        <video id="vid-2" class="main-video" loop playsinline muted>
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-neon-light-on-a-young-woman-32666-large.mp4" type="video/mp4">
+        </video>
+        <div class="video-click-overlay" onclick="manualTogglePlay('vid-2')"></div>
+        <div class="interaction-sidebar">
+            <button class="btn-action" onclick="handleLike(this, event)">
+                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                <span>45K</span>
+            </button>
+            <button class="btn-action" onclick="toggleComments('drawer-2', event)">
+                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/></svg>
+                <span>800</span>
+            </button>
+        </div>
+        <div id="drawer-2" class="comment-drawer">
+            <div class="drawer-header"><span>Yorumlar</span><span class="close-btn" onclick="toggleComments('drawer-2', event)">×</span></div>
+            <p>İkinci video test...</p>
         </div>
     </div>
 </div>
 
 <script>
-    // 1. LIKE DAVRANIŞI: Video asla durmaz
+    /**
+     * KRİTİK DAVRANIŞ 1: LIKE ETKİLEŞİMİ
+     * Videoyu durdurmaz, sadece UI durumunu değiştirir.
+     */
     function handleLike(btn, event) {
-        event.stopPropagation(); // Event'in video katmanına gitmesini engelle
-        btn.classList.toggle('liked');
-        console.log("Etkileşim algılandı: Like. Video devam ediyor.");
+        event.stopPropagation(); // Overlay'e tıklama gitmesin
+        btn.classList.toggle('active-like');
+        console.log("Like etkileşimi: Video akışı kesilmedi.");
     }
 
-    // 2. YORUM PANELİ DAVRANIŞI: Video arka planda akmaya devam eder
-    function toggleComments(videoId, event) {
-        event.stopPropagation();
-        const panel = document.getElementById(`comments-${videoId}`);
-        panel.classList.toggle('active');
-        
-        // Sesin açık kalmasını sağla (opsiyonel otomatik un-mute)
-        const video = document.getElementById(videoId);
-        video.muted = false;
-        video.play(); // Her ihtimale karşı oynatmayı zorla
+    /**
+     * KRİTİK DAVRANIŞ 2: YORUM PANELİ
+     * Panel açıldığında video pause EDİLMEZ.
+     */
+    function toggleComments(drawerId, event) {
+        event.stopPropagation(); // Overlay'e tıklama gitmesin
+        const drawer = document.getElementById(drawerId);
+        drawer.classList.toggle('open');
     }
 
-    function closeComments(videoId) {
-        document.getElementById(`comments-${videoId}`).classList.remove('active');
-    }
-
-    // 3. MANUEL PAUSE: Sadece video alanına direkt tıklanırsa
-    function togglePlay(videoId) {
+    /**
+     * KRİTİK DAVRANIŞ 3: MANUEL DURDURMA
+     * Sadece overlay (boş alan) tıklandığında durur.
+     */
+    function manualTogglePlay(videoId) {
         const video = document.getElementById(videoId);
         if (video.paused) {
             video.play();
@@ -154,27 +208,42 @@
         }
     }
 
-    // 4. SCROLL YÖNETİMİ: Ekrandan çıkan video durur
-    const observerOptions = { threshold: 0.6 };
+    /**
+     * KRİTİK DAVRANIŞ 4: SCROLL VE LOOP YÖNETİMİ
+     * IntersectionObserver ile sadece görünür video oynar.
+     */
+    const observerOptions = {
+        threshold: 0.7 // Videonun %70'i görünür olduğunda tetiklenir
+    };
+
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             const video = entry.target.querySelector('video');
+            const drawer = entry.target.querySelector('.comment-drawer');
+            
             if (entry.isIntersecting) {
                 video.play();
+                // Tarayıcı kısıtlamaları nedeniyle ilk etkileşimde ses açılabilir
+                video.muted = false; 
             } else {
                 video.pause();
-                // Video ekrandan çıkarsa yorum panelini de kapat
-                const panel = entry.target.querySelector('.comment-panel');
-                if(panel) panel.classList.remove('active');
+                video.currentTime = 0; // Başa sar (isteğe bağlı)
+                if(drawer) drawer.classList.remove('open'); // Ekrandan çıkınca paneli kapat
             }
         });
     }, observerOptions);
 
-    document.querySelectorAll('.short-video-wrapper').forEach(wrapper => {
-        observer.observe(wrapper);
+    document.querySelectorAll('.short-item').forEach(item => {
+        observer.observe(item);
     });
 
-    // Otomatik Loop zaten HTML 'loop' attribute ile sağlanmıştır.
+    // Ses Kilidini Açma (Kullanıcı ilk tıkladığında sesin açılması için)
+    document.body.addEventListener('click', function() {
+        document.querySelectorAll('video').forEach(v => {
+            if (!v.paused) v.muted = false;
+        });
+    }, { once: true });
+
 </script>
 
 </body>
