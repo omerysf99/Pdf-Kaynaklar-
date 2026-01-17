@@ -3,97 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Nano Banana Live Studio</title>
+    <title>Gemini Image Generator | Admin 8392479231</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #0f172a; color: white; min-height: 100vh; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { background-color: #050505; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+        .gradient-border {
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            padding: 2px;
+            border-radius: 1rem;
+        }
+        .inner-card { background: #0f172a; border-radius: 0.9rem; }
+        .loader {
+            width: 24px; height: 24px;
+            border: 3px solid #FFF; border-bottom-color: transparent;
+            border-radius: 50%; display: inline-block;
+            box-sizing: border-box; animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center p-6">
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div class="max-w-2xl w-full space-y-8">
-        <div class="text-center">
-            <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Gemini Image Studio</h1>
-            <p class="text-gray-400 mt-2">API ile Canlı Görsel Oluşturma</p>
+    <div class="max-w-xl w-full space-y-6">
+        <header class="text-center">
+            <h1 class="text-3xl font-black tracking-tighter text-white uppercase">Nano Banana <span class="text-blue-500">AI</span></h1>
+            <p class="text-gray-500 text-sm mt-1">Yüksek performanslı görsel oluşturma motoru</p>
+        </header>
+
+        <div class="gradient-border">
+            <div class="inner-card p-4 space-y-4">
+                <textarea id="promptInput" 
+                    placeholder="Örn: Futuristic city with flying cars, cinematic lighting, 8k..."
+                    class="w-full h-28 bg-transparent text-white outline-none resize-none placeholder-gray-600"></textarea>
+                
+                <button onclick="generate()" id="genBtn" 
+                    class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-gray-200 transition-all flex items-center justify-center gap-3">
+                    <span id="btnText">GÖRSELİ OLUŞTUR</span>
+                    <span id="btnLoader" class="loader hidden"></span>
+                </button>
+            </div>
         </div>
 
-        <div class="glass p-6 rounded-2xl space-y-4">
-            <textarea id="promptInput" placeholder="Hayalinizdeki görseli tarif edin..." 
-                class="w-full h-24 p-4 rounded-xl bg-slate-900 border border-slate-700 text-white outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-            
-            <button onclick="generateImage()" id="btn" class="w-full py-3 bg-blue-600 hover:bg-blue-500 font-bold rounded-xl transition-all">
-                Görsel Oluştur
-            </button>
+        <div id="outputContainer" class="hidden">
+            <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
+                <img id="resultImg" src="" alt="AI Generated" class="w-full h-auto">
+                <div class="p-4 flex justify-between items-center bg-zinc-900/50 backdrop-blur-md">
+                    <span class="text-xs text-gray-500 italic">Admin ID: 8392479231</span>
+                    <button onclick="download()" class="text-blue-400 text-sm font-semibold hover:text-blue-300">İndir</button>
+                </div>
+            </div>
         </div>
 
-        <div id="resultArea" class="glass p-4 rounded-2xl min-h-[300px] flex flex-col items-center justify-center">
-            <div id="loader" class="loader mb-4"></div>
-            <p id="status" class="text-gray-500 text-sm italic">Henüz bir görsel oluşturulmadı.</p>
-            <img id="outputImg" class="hidden w-full rounded-lg shadow-2xl transition-opacity duration-500">
+        <div id="errorBox" class="hidden p-4 bg-red-900/20 border border-red-500/50 rounded-xl text-red-400 text-sm text-center">
         </div>
     </div>
 
     <script>
-        // SİSTEM AYARLARI
-        const API_KEY = "AIzaSyBTDUY6WzDnGwcKjj7_PvUqw17LiMo8-ME"; // Sizin anahtarınız
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+        const API_KEY = "AIzaSyC1pUJc7AAYA-jqp3wY16F_fOFONoUfMyE";
+        
+        // Not: Görsel oluşturma (Imagen) endpoint'i genellikle "imagen-3" veya 
+        // multimodal modeller üzerinden v1beta sürümünde çalışır.
+        const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
-        async function generateImage() {
+        async function generate() {
             const prompt = document.getElementById('promptInput').value;
-            const btn = document.getElementById('btn');
-            const loader = document.getElementById('loader');
-            const status = document.getElementById('status');
-            const outputImg = document.getElementById('outputImg');
+            const btn = document.getElementById('genBtn');
+            const btnText = document.getElementById('btnText');
+            const btnLoader = document.getElementById('btnLoader');
+            const outputContainer = document.getElementById('outputContainer');
+            const resultImg = document.getElementById('resultImg');
+            const errorBox = document.getElementById('errorBox');
 
-            if (!prompt) return alert("Lütfen bir prompt girin!");
+            if (!prompt) return;
 
             // UI Reset
             btn.disabled = true;
-            loader.style.display = "block";
-            status.innerText = "Yapay zeka hayal ediyor...";
-            outputImg.classList.add('hidden');
+            btnText.innerText = "OLUŞTURULUYOR";
+            btnLoader.classList.remove('hidden');
+            errorBox.classList.add('hidden');
+            outputContainer.classList.add('hidden');
 
             try {
-                // Not: Gemini API üzerinden görsel oluşturma (Imagen) 
-                // şu an belirli bölgelerde ve endpoint'lerde aktiftir.
-                // Bu yapı en güncel multimodal istem yapısıdır.
-                
-                const response = await fetch(API_URL, {
+                const response = await fetch(URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Generate an image based on this description: ${prompt}` }] }]
+                        contents: [{
+                            parts: [{ text: `Generate an image showing: ${prompt}` }]
+                        }]
                     })
                 });
 
                 const data = await response.json();
-                
-                // Gelen yanıtı işleme (Model yanıtına göre burası güncellenebilir)
-                console.log("API Yanıtı:", data);
 
-                // Eğer API doğrudan görsel verisi dönerse (base64):
+                // Gemini API bazen base64 verisini inlineData içinde döner
                 if (data.candidates && data.candidates[0].content.parts[0].inlineData) {
-                    const base64Data = data.candidates[0].content.parts[0].inlineData.data;
-                    outputImg.src = `data:image/png;base64,${base64Data}`;
-                    outputImg.classList.remove('hidden');
-                    status.innerText = "Görsel hazır!";
+                    const base64 = data.candidates[0].content.parts[0].inlineData.data;
+                    resultImg.src = `data:image/png;base64,${base64}`;
+                    outputContainer.classList.remove('hidden');
                 } else {
-                    status.innerText = "API yanıt verdi ancak görsel verisi bulunamadı. Lütfen API yetkilerinizi kontrol edin.";
+                    // Eğer model görsel üretmek yerine açıklama yaptıysa veya hata döndüyse
+                    throw new Error("Görsel verisi alınamadı. API anahtarınızın Image Generation (Imagen) yetkisi olduğundan emin olun.");
                 }
 
-            } catch (error) {
-                console.error(error);
-                status.innerText = "Hata oluştu! API anahtarı geçersiz veya yetkisiz olabilir.";
+            } catch (err) {
+                errorBox.innerText = err.message;
+                errorBox.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
-                loader.style.display = "none";
+                btnText.innerText = "GÖRSELİ OLUŞTUR";
+                btnLoader.classList.add('hidden');
             }
         }
-    </script>
 
-    <footer class="mt-8 text-gray-600 text-[10px]">Admin ID: 8392479231</footer>
+        function download() {
+            const link = document.createElement('a');
+            link.href = document.getElementById('resultImg').src;
+            link.download = `ai-image-${Date.now()}.png`;
+            link.click();
+        }
+    </script>
 </body>
 </html>
