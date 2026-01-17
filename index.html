@@ -2,249 +2,122 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Shorts Pro - Kesintisiz Oynatma Sistemi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Nano Banana - Image Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --bg-color: #000;
-            --accent-color: #ff0050; /* TikTok tarzı pembe/kırmızı */
-            --ui-white: #ffffff;
-        }
-
-        body, html {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            background-color: var(--bg-color);
-            overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        /* Shorts Kaydırma Alanı */
-        .shorts-feed {
-            width: 100%;
-            height: 100vh;
-            overflow-y: scroll;
-            scroll-snap-type: y mandatory;
-            scrollbar-width: none; /* Firefox */
-        }
-        .shorts-feed::-webkit-scrollbar { display: none; } /* Chrome/Safari */
-
-        /* Video Container */
-        .short-item {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            scroll-snap-align: start;
-            scroll-snap-stop: always;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #111;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            pointer-events: none; /* Doğrudan tıklamayı engelle, overlay yönetsin */
-        }
-
-        /* Video Overlay (Sadece manuel pause için) */
-        .video-click-overlay {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 2;
-        }
-
-        /* Sağ Etkileşim Butonları */
-        .interaction-sidebar {
-            position: absolute;
-            right: 12px;
-            bottom: 120px;
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            z-index: 10;
-        }
-
-        .btn-action {
-            background: none; border: none;
-            color: var(--ui-white);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-        .btn-action:active { transform: scale(0.9); }
-        .btn-action span { font-size: 12px; margin-top: 5px; font-weight: bold; }
-        .btn-action svg { fill: currentColor; width: 32px; height: 32px; }
-
-        .btn-action.active-like { color: var(--accent-color); }
-
-        /* Yorum Paneli (Video akmaya devam eder) */
-        .comment-drawer {
-            position: absolute;
-            bottom: -100%; /* Gizli */
-            left: 0; width: 100%; height: 65%;
-            background: rgba(18, 18, 18, 0.96);
-            backdrop-filter: blur(15px);
-            border-radius: 16px 16px 0 0;
-            z-index: 20;
-            transition: bottom 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            padding: 20px;
-            box-sizing: border-box;
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
             color: white;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
         }
-        .comment-drawer.open { bottom: 0; }
-        .drawer-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .close-btn { cursor: pointer; font-size: 24px; }
-
-        /* Alt Bilgi */
-        .video-info {
-            position: absolute;
-            bottom: 30px; left: 15px;
-            color: white; z-index: 5;
-            max-width: 70%;
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        .gradient-text {
+            background: linear-gradient(90deg, #60a5fa, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        #imageOutput img {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: none;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body>
+<body class="flex flex-col items-center justify-center p-6">
 
-<div class="shorts-feed" id="shortsFeed">
-    
-    <div class="short-item" id="short-1">
-        <video id="vid-1" class="main-video" loop playsinline muted>
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-urban-fashion-shoot-of-a-woman-in-a-red-jacket-33358-large.mp4" type="video/mp4">
-        </video>
-        
-        <div class="video-click-overlay" onclick="manualTogglePlay('vid-1')"></div>
-
-        <div class="interaction-sidebar">
-            <button class="btn-action" onclick="handleLike(this, event)">
-                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                <span>92K</span>
-            </button>
-            <button class="btn-action" onclick="toggleComments('drawer-1', event)">
-                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/></svg>
-                <span>1.2K</span>
-            </button>
+    <div class="max-w-4xl w-full space-y-8">
+        <div class="text-center">
+            <h1 class="text-5xl font-extrabold mb-2 gradient-text">Nano Banana</h1>
+            <p class="text-gray-400">Gemini'nin gücüyle hayalindeki görseli oluştur.</p>
         </div>
 
-        <div class="video-info">
-            <strong>@Admin_8392479231</strong>
-            <p>Kritik Geliştirme: Kesintisiz Etkileşim Testi #Shorts #Tech</p>
-        </div>
-
-        <div id="drawer-1" class="comment-drawer">
-            <div class="drawer-header">
-                <span>Yorumlar (1240)</span>
-                <span class="close-btn" onclick="toggleComments('drawer-1', event)">×</span>
+        <div class="glass p-8 rounded-3xl space-y-6">
+            <div class="flex flex-col space-y-2">
+                <label class="text-sm font-medium text-gray-300">Ne oluşturmak istersin?</label>
+                <textarea id="promptInput" 
+                    placeholder="Örn: Siberpunk bir İstanbul sokağı, yağmurlu, neon ışıklar, 8k çözünürlük..."
+                    class="w-full h-32 p-4 rounded-xl bg-slate-900 border border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-all text-white outline-none resize-none"></textarea>
             </div>
-            <div style="height: 80%; overflow-y: auto;">
-                <p><strong>KullanıcıA:</strong> Video durmadan yorum yazmak harika!</p>
-                <p><strong>KullanıcıB:</strong> Ses hala geliyor, çok akıcı.</p>
-                <hr style="opacity: 0.1">
-                <p style="color: gray; font-size: 12px;">Sistem aktif. Admin ID: 8392479231</p>
+
+            <button onclick="generateImage()" id="generateBtn" 
+                class="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg transform active:scale-95 transition-all">
+                Görseli Oluştur
+            </button>
+        </div>
+
+        <div id="resultArea" class="glass p-6 rounded-3xl min-h-[400px] flex flex-col items-center justify-center relative overflow-hidden">
+            <div id="loader" class="loader"></div>
+            <p id="placeholderText" class="text-gray-500">Oluşturulan görsel burada görünecek...</p>
+            <div id="imageOutput">
+                <img id="generatedImg" src="" alt="Görsel">
+                <button onclick="downloadImage()" class="mt-4 text-sm text-blue-400 hover:underline">Görseli İndir</button>
             </div>
         </div>
     </div>
 
-    <div class="short-item" id="short-2">
-        <video id="vid-2" class="main-video" loop playsinline muted>
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-neon-light-on-a-young-woman-32666-large.mp4" type="video/mp4">
-        </video>
-        <div class="video-click-overlay" onclick="manualTogglePlay('vid-2')"></div>
-        <div class="interaction-sidebar">
-            <button class="btn-action" onclick="handleLike(this, event)">
-                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                <span>45K</span>
-            </button>
-            <button class="btn-action" onclick="toggleComments('drawer-2', event)">
-                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/></svg>
-                <span>800</span>
-            </button>
-        </div>
-        <div id="drawer-2" class="comment-drawer">
-            <div class="drawer-header"><span>Yorumlar</span><span class="close-btn" onclick="toggleComments('drawer-2', event)">×</span></div>
-            <p>İkinci video test...</p>
-        </div>
-    </div>
-</div>
+    <footer class="mt-12 text-gray-500 text-xs italic">
+        Sistem Kimliği: 8392479231 | Nano Banana Model v1.0
+    </footer>
 
-<script>
-    /**
-     * KRİTİK DAVRANIŞ 1: LIKE ETKİLEŞİMİ
-     * Videoyu durdurmaz, sadece UI durumunu değiştirir.
-     */
-    function handleLike(btn, event) {
-        event.stopPropagation(); // Overlay'e tıklama gitmesin
-        btn.classList.toggle('active-like');
-        console.log("Like etkileşimi: Video akışı kesilmedi.");
-    }
+    <script>
+        async function generateImage() {
+            const prompt = document.getElementById('promptInput').value;
+            const loader = document.getElementById('loader');
+            const placeholder = document.getElementById('placeholderText');
+            const imgOutput = document.getElementById('generatedImg');
+            const btn = document.getElementById('generateBtn');
 
-    /**
-     * KRİTİK DAVRANIŞ 2: YORUM PANELİ
-     * Panel açıldığında video pause EDİLMEZ.
-     */
-    function toggleComments(drawerId, event) {
-        event.stopPropagation(); // Overlay'e tıklama gitmesin
-        const drawer = document.getElementById(drawerId);
-        drawer.classList.toggle('open');
-    }
-
-    /**
-     * KRİTİK DAVRANIŞ 3: MANUEL DURDURMA
-     * Sadece overlay (boş alan) tıklandığında durur.
-     */
-    function manualTogglePlay(videoId) {
-        const video = document.getElementById(videoId);
-        if (video.paused) {
-            video.play();
-        } else {
-            video.pause();
-        }
-    }
-
-    /**
-     * KRİTİK DAVRANIŞ 4: SCROLL VE LOOP YÖNETİMİ
-     * IntersectionObserver ile sadece görünür video oynar.
-     */
-    const observerOptions = {
-        threshold: 0.7 // Videonun %70'i görünür olduğunda tetiklenir
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            const video = entry.target.querySelector('video');
-            const drawer = entry.target.querySelector('.comment-drawer');
-            
-            if (entry.isIntersecting) {
-                video.play();
-                // Tarayıcı kısıtlamaları nedeniyle ilk etkileşimde ses açılabilir
-                video.muted = false; 
-            } else {
-                video.pause();
-                video.currentTime = 0; // Başa sar (isteğe bağlı)
-                if(drawer) drawer.classList.remove('open'); // Ekrandan çıkınca paneli kapat
+            if (!prompt) {
+                alert("Lütfen bir açıklama girin!");
+                return;
             }
-        });
-    }, observerOptions);
 
-    document.querySelectorAll('.short-item').forEach(item => {
-        observer.observe(item);
-    });
+            // Arayüz Hazırlığı
+            btn.disabled = true;
+            btn.innerText = "İşleniyor...";
+            loader.style.display = "block";
+            placeholder.style.display = "none";
+            imgOutput.style.display = "none";
 
-    // Ses Kilidini Açma (Kullanıcı ilk tıkladığında sesin açılması için)
-    document.body.addEventListener('click', function() {
-        document.querySelectorAll('video').forEach(v => {
-            if (!v.paused) v.muted = false;
-        });
-    }, { once: true });
+            // Simülasyon (API bağlantısı buraya gelecek)
+            // Gerçek API kullanımında fetch() metodu kullanılmalıdır.
+            setTimeout(() => {
+                // Görsel oluşturma simülasyonu (Placeholder bir görsel kullanıyoruz)
+                const mockUrl = `https://picsum.photos/seed/${encodeURIComponent(prompt)}/1024/1024`;
+                
+                imgOutput.src = mockUrl;
+                imgOutput.style.display = "block";
+                loader.style.display = "none";
+                btn.disabled = false;
+                btn.innerText = "Görseli Oluştur";
+            }, 3000);
+        }
 
-</script>
-
+        function downloadImage() {
+            const img = document.getElementById('generatedImg');
+            const link = document.createElement('a');
+            link.href = img.src;
+            link.download = 'nano-banana-image.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
 </body>
 </html>
