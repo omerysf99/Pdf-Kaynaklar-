@@ -2,143 +2,165 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Roblox Tarzı Karakter</title>
+<title>Roblox Tarzı Oyun</title>
 <style>
-  body { margin: 0; overflow: hidden; background: #87ceeb; }
-  #info {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    color: white;
-    font-family: Arial;
-    background: rgba(0,0,0,0.5);
-    padding: 8px;
-    border-radius: 6px;
-  }
+body { margin:0; overflow:hidden; background:#87ceeb; }
+#ui {
+  position:fixed;
+  top:10px;
+  left:10px;
+  color:white;
+  font-family:Arial;
+  background:rgba(0,0,0,0.55);
+  padding:10px;
+  border-radius:8px;
+}
+#crosshair {
+  position:fixed;
+  top:50%;
+  left:50%;
+  width:10px;
+  height:10px;
+  margin:-5px;
+  border:2px solid white;
+  border-radius:50%;
+}
 </style>
 </head>
 <body>
-<div id="info">
+
+<div id="ui">
+<b>Roblox Demo</b><br>
 WASD / Oklar: Yürü<br>
 Space: Zıpla<br>
 Mouse: Kamera
 </div>
+<div id="crosshair"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/controls/PointerLockControls.js"></script>
 
 <script>
-let scene = new THREE.Scene();
+/* SAHNE */
+const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
 
-let camera = new THREE.PerspectiveCamera(
-  75, window.innerWidth / window.innerHeight, 0.1, 1000
-);
-
-let renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 
-/* Işık */
-scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1));
-let dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-dirLight.position.set(5,10,5);
-scene.add(dirLight);
+/* IŞIK */
+scene.add(new THREE.HemisphereLight(0xffffff,0x444444,1));
+const sun = new THREE.DirectionalLight(0xffffff,0.8);
+sun.position.set(5,10,5);
+scene.add(sun);
 
-/* Zemin */
-let ground = new THREE.Mesh(
-  new THREE.BoxGeometry(100,1,100),
-  new THREE.MeshStandardMaterial({ color: 0x55aa55 })
-);
-ground.position.y = -0.5;
-scene.add(ground);
-
-/* Roblox tarzı karakter */
-let player = new THREE.Group();
-
-function box(w,h,d,color,y){
-  let m = new THREE.Mesh(
+/* ZEMİN */
+function platform(x,y,z,w,h,d,color=0x55aa55){
+  const p = new THREE.Mesh(
     new THREE.BoxGeometry(w,h,d),
-    new THREE.MeshStandardMaterial({ color })
+    new THREE.MeshStandardMaterial({color})
   );
-  m.position.y = y;
-  return m;
+  p.position.set(x,y,z);
+  scene.add(p);
+  return p;
 }
 
-player.add(box(1,1.5,0.6,0x0066ff,1.75)); // gövde
-player.add(box(0.8,0.8,0.8,0xffcc99,2.9)); // kafa
-player.add(box(0.3,1,0.3,0x0066ff,0.5)); // sol bacak
-player.add(box(0.3,1,0.3,0x0066ff,0.5)); // sağ bacak
+platform(0,-0.5,0,100,1,100);
+platform(5,1,0,4,1,4);
+platform(-5,2,-3,4,1,4);
+platform(0,3,6,4,1,4);
 
+/* KARAKTER */
+const player = new THREE.Group();
 scene.add(player);
+
+function part(w,h,d,color,x,y,z){
+  const m = new THREE.Mesh(
+    new THREE.BoxGeometry(w,h,d),
+    new THREE.MeshStandardMaterial({color})
+  );
+  m.position.set(x,y,z);
+  player.add(m);
+}
+
+/* Gövde */
+part(1,1.5,0.6,0x0055ff,0,1.75,0);
+/* Kafa */
+part(0.8,0.8,0.8,0xffcc99,0,2.9,0);
+/* Kollar */
+part(0.3,1.2,0.3,0x0055ff,-0.65,1.75,0);
+part(0.3,1.2,0.3,0x0055ff,0.65,1.75,0);
+/* Bacaklar */
+part(0.4,1.2,0.4,0x0033aa,-0.25,0.6,0);
+part(0.4,1.2,0.4,0x0033aa,0.25,0.6,0);
+
 player.position.y = 0;
 
-/* Kamera & Kontrol */
-let controls = new THREE.PointerLockControls(camera, document.body);
-document.body.addEventListener('click', () => controls.lock());
-camera.position.set(0,2,5);
-
-/* Hareket */
-let velocity = new THREE.Vector3();
-let direction = new THREE.Vector3();
+/* HAREKET */
 let keys = {};
+let velY = 0;
 let canJump = false;
-let gravity = 25;
-let speed = 8;
+const speed = 0.15;
+const gravity = 0.02;
 
-document.addEventListener('keydown', e => keys[e.code] = true);
-document.addEventListener('keyup', e => keys[e.code] = false);
+document.addEventListener("keydown", e => keys[e.code]=true);
+document.addEventListener("keyup", e => keys[e.code]=false);
 
-let clock = new THREE.Clock();
+/* MOUSE KAMERA */
+let yaw=0, pitch=0;
+document.body.addEventListener("mousemove", e=>{
+  if(document.pointerLockElement){
+    yaw -= e.movementX * 0.002;
+    pitch -= e.movementY * 0.002;
+    pitch = Math.max(-1.2,Math.min(1.2,pitch));
+  }
+});
+document.body.addEventListener("click",()=>document.body.requestPointerLock());
 
+/* DÖNGÜ */
 function animate(){
   requestAnimationFrame(animate);
-  let delta = clock.getDelta();
 
-  direction.set(0,0,0);
-  if(keys["KeyW"] || keys["ArrowUp"]) direction.z -= 1;
-  if(keys["KeyS"] || keys["ArrowDown"]) direction.z += 1;
-  if(keys["KeyA"] || keys["ArrowLeft"]) direction.x -= 1;
-  if(keys["KeyD"] || keys["ArrowRight"]) direction.x += 1;
+  let dx=0, dz=0;
+  if(keys["KeyW"]||keys["ArrowUp"]) dz-=speed;
+  if(keys["KeyS"]||keys["ArrowDown"]) dz+=speed;
+  if(keys["KeyA"]||keys["ArrowLeft"]) dx-=speed;
+  if(keys["KeyD"]||keys["ArrowRight"]) dx+=speed;
 
-  direction.normalize();
+  const sin = Math.sin(yaw), cos = Math.cos(yaw);
+  player.position.x += dx*cos - dz*sin;
+  player.position.z += dz*cos + dx*sin;
 
-  velocity.x = direction.x * speed;
-  velocity.z = direction.z * speed;
-  velocity.y -= gravity * delta;
-
-  if(keys["Space"] && canJump){
-    velocity.y = 10;
-    canJump = false;
-  }
-
-  player.position.addScaledVector(velocity, delta);
+  velY -= gravity;
+  player.position.y += velY;
 
   if(player.position.y <= 0){
-    velocity.y = 0;
     player.position.y = 0;
+    velY = 0;
     canJump = true;
   }
 
-  // Kamera karakteri takip eder
-  camera.position.lerp(
-    new THREE.Vector3(
-      player.position.x,
-      player.position.y + 2,
-      player.position.z + 5
-    ), 0.1
+  if(keys["Space"] && canJump){
+    velY = 0.35;
+    canJump = false;
+  }
+
+  camera.position.set(
+    player.position.x + Math.sin(yaw)*5,
+    player.position.y + 3,
+    player.position.z + Math.cos(yaw)*5
   );
-  camera.lookAt(player.position.x, player.position.y + 1.5, player.position.z);
+  camera.lookAt(player.position.x, player.position.y+1.5, player.position.z);
 
-  renderer.render(scene, camera);
+  renderer.render(scene,camera);
 }
-
 animate();
 
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+addEventListener("resize",()=>{
+  camera.aspect = innerWidth/innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(innerWidth,innerHeight);
 });
 </script>
 </body>
