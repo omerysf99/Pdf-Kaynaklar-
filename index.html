@@ -3,430 +3,360 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreamX Production v6.0 | Base64 Persistence Engine</title>
+    <title>StreamX Infinite | Production v7.0</title>
     <style>
         :root {
             --bg: #0f0f0f; --side: #0f0f0f; --accent: #3ea6ff; --red: #ff0000;
             --text: #f1f1f1; --dim: #aaaaaa; --brd: rgba(255, 255, 255, 0.1);
-            --glow: 0 0 15px rgba(62, 166, 255, 0.3); --trans: all 0.3s ease;
+            --card-hover: #282828; --glow: 0 0 20px rgba(62, 166, 255, 0.2);
         }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
-        body.locked #app { filter: blur(20px); pointer-events: none; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
 
-        /* AUTH */
-        #gate { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .auth-card { background: #1e1e1e; padding: 40px; border-radius: 24px; width: 400px; text-align: center; border: 1px solid var(--brd); }
-        input { width: 100%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 10px; outline: none; }
-        .btn { cursor: pointer; border: none; transition: var(--trans); font-weight: 700; border-radius: 10px; }
-        .btn-p { background: var(--accent); color: #000; width: 100%; padding: 14px; }
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #444; }
 
-        /* LAYOUT */
-        #app { display: grid; grid-template-columns: 240px 1fr; grid-template-rows: 60px 1fr; height: 100vh; }
-        header { grid-column: 1/-1; border-bottom: 1px solid var(--brd); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100; }
-        aside { border-right: 1px solid var(--brd); padding: 10px; overflow-y: auto; }
-        main { padding: 25px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
+        /* APP LAYOUT */
+        #app { display: grid; grid-template-columns: 240px 1fr; grid-template-rows: 64px 1fr; height: 100vh; transition: 0.3s; }
+        header { grid-column: 1/-1; background: var(--bg); border-bottom: 1px solid var(--brd); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 1000; }
+        
+        aside { border-right: 1px solid var(--brd); padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+        main { overflow-y: auto; padding: 24px; scroll-behavior: smooth; position: relative; }
 
-        .nav-link { display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 10px; cursor: pointer; color: var(--text); text-decoration: none; font-size: 14px; }
-        .nav-link:hover { background: rgba(255,255,255,0.05); }
-        .nav-link.active { background: rgba(62,166,255,0.1); color: var(--accent); font-weight: 600; box-shadow: var(--glow); }
+        /* UI COMPONENTS */
+        .nav-item { display: flex; align-items: center; gap: 20px; padding: 12px 16px; border-radius: 10px; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .nav-item:hover { background: var(--card-hover); }
+        .nav-item.active { background: rgba(62,166,255,0.1); color: var(--accent); font-weight: 600; }
 
-        /* GRID */
-        .v-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .v-card { cursor: pointer; }
-        .v-thumb { width: 100%; aspect-ratio: 16/9; background: #111; border-radius: 12px; overflow: hidden; position: relative; }
-        .v-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        /* GRID & CARDS */
+        .v-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; row-gap: 32px; }
+        .v-card { cursor: pointer; position: relative; }
+        .v-card:hover .v-thumb img { transform: scale(1.05); }
+        .v-thumb { width: 100%; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; background: #111; position: relative; transition: 0.3s; }
+        .v-thumb img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+        
+        .delete-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.8); color: #ff4444; border: none; padding: 8px; border-radius: 50%; opacity: 0; transition: 0.2s; z-index: 10; }
+        .v-card:hover .delete-btn { opacity: 1; }
 
-        /* WATCH & SHORTS */
-        #view-watch { display: none; grid-template-columns: 1fr 350px; gap: 25px; }
-        .player-container { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 16px; overflow: hidden; }
-        #view-shorts { display: none; height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        .short-frame { height: 100%; display: flex; justify-content: center; scroll-snap-align: start; padding: 10px 0; }
-        .short-wrap { height: 100%; aspect-ratio: 9/16; background: #000; border-radius: 15px; overflow: hidden; position: relative; }
+        /* INFINITE LOADER */
+        #scroll-anchor { height: 100px; display: flex; align-items: center; justify-content: center; width: 100%; }
+        .spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* UPLOAD MODAL */
-        #up-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: none; align-items: center; justify-content: center; }
-        .up-box { background: #222; width: 800px; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; }
-        .drop-zone { height: 300px; border: 2px dashed #444; margin: 20px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
-        .up-form { display: none; padding: 20px; grid-template-columns: 1fr 250px; gap: 20px; }
-        .progress-box { padding: 20px; display: none; }
-        .bar-bg { height: 6px; background: #111; border-radius: 3px; overflow: hidden; }
-        .bar-fill { height: 100%; width: 0%; background: var(--accent); transition: 0.2s; }
+        /* MODERN UPLOAD UI */
+        #up-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .up-container { background: #1e1e1e; width: 900px; height: 80vh; border-radius: 24px; border: 1px solid var(--brd); display: flex; flex-direction: column; overflow: hidden; }
+        .up-header { padding: 20px 30px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        
+        .up-content { flex: 1; display: flex; padding: 40px; gap: 40px; overflow-y: auto; }
+        .up-left { flex: 1.5; display: flex; flex-direction: column; gap: 20px; }
+        .up-right { flex: 1; display: flex; flex-direction: column; gap: 20px; }
 
-        /* MINI PLAYER */
-        #mini { position: fixed; bottom: 20px; right: 20px; width: 300px; aspect-ratio: 16/9; background: #000; border-radius: 12px; display: none; z-index: 4000; border: 2px solid #333; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: move; }
-        #mini:hover .mini-ctrl { opacity: 1; }
-        .mini-ctrl { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; gap: 15px; opacity: 0; transition: 0.2s; }
+        .drop-zone-full { flex: 1; border: 2px dashed #444; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; cursor: pointer; transition: 0.3s; }
+        .drop-zone-full:hover { border-color: var(--accent); background: rgba(62,166,255,0.05); }
+
+        .input-sx { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 16px; border-radius: 12px; font-size: 15px; outline: none; }
+        .input-sx:focus { border-color: var(--accent); }
 
         /* TOAST */
-        #t-area { position: fixed; bottom: 20px; left: 20px; z-index: 10000; }
-        .toast { background: #fff; color: #000; padding: 12px 24px; border-radius: 8px; font-weight: 700; margin-top: 10px; animation: tIn 0.3s ease-out; }
-        @keyframes tIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        #toast-shelf { position: fixed; bottom: 30px; left: 30px; z-index: 10001; }
+        .toast { background: #fff; color: #000; padding: 14px 28px; border-radius: 12px; font-weight: 700; margin-top: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+        @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+
+        /* WATCH VIEW */
+        #view-watch { display: none; grid-template-columns: 1fr 350px; gap: 24px; }
+        .player-box { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 16px; overflow: hidden; border: 1px solid var(--brd); }
     </style>
 </head>
-<body class="locked">
-
-    <div id="gate">
-        <div class="auth-card">
-            <h1 style="margin-bottom:10px;">Stream<span style="color:var(--red)">X</span></h1>
-            <p style="color:var(--dim); font-size:12px; margin-bottom:20px;">8392479231 | Root Access</p>
-            <input type="text" id="un" placeholder="Kullanıcı Adı">
-            <input type="email" id="em" placeholder="E-posta">
-            <button onclick="sx.auth()" class="btn btn-p">Platforma Giriş Yap</button>
-        </div>
-    </div>
+<body>
 
     <div id="app">
         <header>
-            <div style="display:flex; align-items:center; gap:15px;">
-                <span style="font-size:24px; cursor:pointer;">☰</span>
-                <h2 style="cursor:pointer;" onclick="sx.nav('home')">Stream<span style="color:var(--red)">X</span></h2>
+            <div style="display:flex; align-items:center; gap:20px;">
+                <span style="font-size:24px; cursor:pointer;" onclick="sx.toggleSidebar()">☰</span>
+                <h2 onclick="sx.nav('home')" style="cursor:pointer; letter-spacing:-1px;">Stream<span style="color:var(--red)">X</span></h2>
             </div>
             <div style="display:flex; align-items:center; gap:20px;">
-                <button onclick="sx.openUp()" class="btn" style="padding:8px 16px; background:var(--accent); border-radius:20px;">+ Yükle</button>
-                <div id="pfp" style="width:36px; height:36px; border-radius:50%; background:#444; display:flex; align-items:center; justify-content:center; font-weight:bold;">?</div>
+                <button onclick="sx.openUp()" style="background:var(--accent); color:#000; border:none; padding:10px 24px; border-radius:30px; font-weight:800; cursor:pointer;">Oluştur</button>
+                <div id="user-pfp" style="width:38px; height:38px; border-radius:50%; background:#444; display:flex; align-items:center; justify-content:center; font-weight:bold;">A</div>
             </div>
         </header>
 
-        <aside>
-            <div class="nav-link active" onclick="sx.nav('home', this)"><i>🏠</i> Ana Sayfa</div>
-            <div class="nav-link" onclick="sx.nav('shorts', this)"><i>🎬</i> Shorts</div>
-            <div class="nav-link" onclick="sx.nav('liked', this)"><i>❤️</i> Beğenilenler</div>
-            <div class="nav-link" onclick="sx.nav('history', this)"><i>🕒</i> Geçmiş</div>
-            <div style="margin-top:20px; padding:10px; font-size:12px; color:var(--dim);">Limit: 50MB (LocalStorage)</div>
+        <aside id="sidebar">
+            <div class="nav-item active" onclick="sx.nav('home', this)"><i>🏠</i> Ana Sayfa</div>
+            <div class="nav-item" onclick="sx.nav('shorts', this)"><i>📱</i> Shorts</div>
+            <div class="nav-item" onclick="sx.nav('liked', this)"><i>❤️</i> Beğenilenler</div>
+            <div class="nav-item" onclick="sx.nav('history', this)"><i>🕒</i> Geçmiş</div>
+            <div style="margin-top:auto; padding:10px; border-top:1px solid var(--brd);">
+                <small style="color:var(--dim)">Admin ID: 8392479231</small>
+            </div>
         </aside>
 
-        <main id="main">
-            <div id="view-home" class="v-grid"></div>
+        <main id="main-scroll">
+            <div id="view-home">
+                <div class="v-grid" id="main-grid"></div>
+                <div id="scroll-anchor">
+                    <div class="spinner"></div>
+                </div>
+            </div>
 
             <div id="view-watch">
-                <div class="w-left">
-                    <div class="player-container">
-                        <video id="p-main" controls autoplay style="width:100%; height:100%;"></video>
+                <div class="w-content">
+                    <div class="player-box">
+                        <video id="v-main" controls autoplay style="width:100%; height:100%"></video>
                     </div>
                     <div style="margin-top:20px;">
-                        <h1 id="w-t">Video Başlığı</h1>
-                        <div style="display:flex; justify-content:space-between; margin-top:15px; border-bottom:1px solid #333; padding-bottom:15px;">
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                <div id="w-ava" style="width:40px; height:40px; border-radius:50%;"></div>
-                                <b id="w-auth">Kanal</b>
-                            </div>
-                            <button onclick="sx.like()" class="btn" style="background:#222; padding:10px 20px; color:#fff; border-radius:20px;">👍 Beğen</button>
-                        </div>
+                        <h1 id="v-title">Video Başlığı</h1>
+                        <p id="v-meta" style="color:var(--dim); margin-top:10px;"></p>
                     </div>
                 </div>
-                <div class="w-right">
-                    <h4 style="margin-bottom:15px;">Önerilenler</h4>
-                    <div id="rel-list"></div>
-                </div>
+                <div class="w-side" id="suggested-list"></div>
             </div>
 
-            <div id="view-shorts"></div>
-
-            <div id="view-list" style="display:none">
-                <h1 id="l-title" style="margin-bottom:20px;">Liste</h1>
-                <div class="v-grid" id="l-grid"></div>
-            </div>
+            <div id="view-shorts" style="display:none; height:100%; overflow-y:auto; scroll-snap-type: y mandatory;"></div>
         </main>
     </div>
 
     <div id="up-modal">
-        <div class="up-box">
-            <div style="padding:20px; border-bottom:1px solid #333; display:flex; justify-content:space-between;">
-                <h3>Video Yayınla (Base64 Kayıt)</h3>
-                <span style="cursor:pointer;" onclick="sx.closeUp()">✕</span>
+        <div class="up-container">
+            <div class="up-header">
+                <h2>Video Yükle</h2>
+                <button onclick="sx.closeUp()" style="background:none; border:none; color:#fff; font-size:24px; cursor:pointer;">✕</button>
             </div>
 
-            <div id="up-init" class="drop-zone" onclick="document.getElementById('f-in').click()">
-                <div style="font-size:50px;">📤</div>
-                <p>Dosyayı seçmek için tıklayın</p>
-                <input type="file" id="f-in" hidden accept="video/*">
-            </div>
-
-            <div id="up-loading" class="progress-box">
-                <p id="up-st" style="margin-bottom:10px; font-weight:600;">Hazırlanıyor... %0</p>
-                <div class="bar-bg"><div id="up-bar" class="bar-fill"></div></div>
-            </div>
-
-            <div id="up-form" class="up-form">
-                <div>
-                    <input type="text" id="up-title" placeholder="Başlık (Zorunlu)">
-                    <textarea id="up-desc" placeholder="Açıklama" style="width:100%; height:100px; background:#000; border:1px solid #333; color:#fff; padding:10px; border-radius:10px; resize:none;"></textarea>
+            <div id="up-step-1" class="up-content" style="display:flex; justify-content:center; align-items:center;">
+                <div class="drop-zone-full" onclick="document.getElementById('file-in').click()">
+                    <div style="font-size:64px;">☁️</div>
+                    <div style="text-align:center">
+                        <h3>Video dosyalarını sürükleyip bırakın</h3>
+                        <p style="color:var(--dim); margin-top:10px;">Veya dosya seçmek için tıklayın</p>
+                    </div>
+                    <input type="file" id="file-in" hidden accept="video/*">
                 </div>
-                <div>
-                    <div id="up-prev" style="width:100%; aspect-ratio:16/9; background:#000; border-radius:10px; overflow:hidden;"></div>
-                    <button onclick="sx.publish()" class="btn btn-p" style="margin-top:15px;">YAYINLA</button>
+            </div>
+
+            <div id="up-step-2" class="up-content" style="display:none">
+                <div class="up-left">
+                    <h3>Ayrıntılar</h3>
+                    <input type="text" id="up-t" class="input-sx" placeholder="Başlık ekleyin">
+                    <textarea id="up-d" class="input-sx" style="height:200px; resize:none;" placeholder="İzleyicilere videonuzdan bahsedin"></textarea>
+                    
+                    <div id="up-prog-wrap" style="display:none">
+                        <p id="up-status" style="margin-bottom:8px; font-size:14px;">Yükleniyor...</p>
+                        <div class="bar-bg"><div id="up-bar" class="bar-fill"></div></div>
+                    </div>
+                </div>
+                <div class="up-right">
+                    <h3>Önizleme</h3>
+                    <div id="up-preview" style="width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden;"></div>
+                    <button id="pub-btn" onclick="sx.publish()" class="btn" style="background:var(--accent); color:#000; width:100%; padding:16px; border-radius:12px; font-weight:bold; margin-top:20px; cursor:pointer; border:none;">YAYINLA</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="mini">
-        <video id="p-mini" autoplay muted loop style="width:100%; height:100%; object-fit:cover;"></video>
-        <div class="mini-ctrl">
-            <button onclick="sx.restore()" style="padding:8px; border-radius:50%; border:none; cursor:pointer;">🔳</button>
-            <button onclick="sx.closeMini()" style="padding:8px; border-radius:50%; border:none; cursor:pointer;">✕</button>
-        </div>
-    </div>
-
-    <div id="t-area"></div>
+    <div id="toast-shelf"></div>
 
     <script>
         /**
-         * STREAMX PERSISTENCE CORE v6.0
-         * Admin: 8392479231
+         * STREAMX ENGINE v7.0 - INFINITE PERSISTENCE
+         * Admin ID: 8392479231
          */
 
         const sx = {
-            db: {
-                v: JSON.parse(localStorage.getItem('sx_v6_vids') || '[]'),
-                u: JSON.parse(localStorage.getItem('sx_v6_user') || 'null'),
-                h: JSON.parse(localStorage.getItem('sx_v6_hist') || '[]'),
-                l: JSON.parse(localStorage.getItem('sx_v6_like') || '[]')
-            },
-
-            state: { view: 'home', active: null, upData: null },
+            db: JSON.parse(localStorage.getItem('sx_data') || '{"v":[], "h":[], "l":[]}'),
+            state: { view: 'home', page: 1, perPage: 6, loading: false, upData: null },
 
             init() {
-                if(this.db.u) this.unlock();
-                this.renderGrid();
-                this.setupUpload();
-                this.setupDrag();
+                this.renderGrid(true);
+                this.setupInfiniteScroll();
+                this.setupFileHandler();
             },
 
-            auth() {
-                const un = document.getElementById('un').value;
-                if(!un) return;
-                this.db.u = { name: un, pfp: '#' + Math.floor(Math.random()*16777215).toString(16) };
-                localStorage.setItem('sx_v6_user', JSON.stringify(this.db.u));
-                this.unlock();
-            },
+            save() { localStorage.setItem('sx_data', JSON.stringify(this.db)); },
 
-            unlock() {
-                document.body.classList.remove('locked');
-                document.getElementById('gate').style.display = 'none';
-                document.getElementById('pfp').innerText = this.db.u.name[0].toUpperCase();
-                document.getElementById('pfp').style.background = this.db.u.pfp;
-            },
-
-            // PERSISTENT NAVIGATION
+            // NAVIGATION
             nav(target, el) {
                 if(el) {
-                    document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+                    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
                     el.classList.add('active');
                 }
+                this.state.view = target;
+                document.getElementById('view-home').style.display = target === 'home' ? 'block' : 'none';
+                document.getElementById('view-watch').style.display = target === 'watch' ? 'grid' : 'none';
+                document.getElementById('view-shorts').style.display = target === 'shorts' ? 'block' : 'none';
 
-                // Mini Player Logic
-                const mainVid = document.getElementById('p-main');
-                if(this.state.view === 'watch' && target !== 'watch' && !mainVid.paused) {
-                    if(target === 'shorts') this.closeMini();
-                    else this.openMini(mainVid.src);
+                if(target === 'home') this.renderGrid(true);
+                if(target === 'shorts') this.renderShorts();
+            },
+
+            // INFINITE GRID
+            renderGrid(reset = false) {
+                if(reset) {
+                    this.state.page = 1;
+                    document.getElementById('main-grid').innerHTML = '';
+                }
+                
+                const start = (this.state.page - 1) * this.state.perPage;
+                const end = start + this.state.perPage;
+                const items = this.db.v.slice(start, end);
+
+                if(items.length === 0 && reset) {
+                    document.getElementById('main-grid').innerHTML = `<p style="grid-column:1/-1; text-align:center; padding:50px; color:#666;">Henüz video yok. Bir tane yükleyerek başlayın!</p>`;
+                    document.getElementById('scroll-anchor').style.display = 'none';
+                    return;
                 }
 
-                this.state.view = target;
-                ['view-home', 'view-watch', 'view-shorts', 'view-list'].forEach(v => document.getElementById(v).style.display = 'none');
+                items.forEach(v => {
+                    const card = document.createElement('div');
+                    card.className = 'v-card';
+                    card.innerHTML = `
+                        <button class="delete-btn" onclick="sx.deleteVideo(${v.id}, event)">🗑️</button>
+                        <div class="v-thumb" onclick="sx.watch(${v.id})">
+                            <img src="${v.thumb}">
+                        </div>
+                        <div style="margin-top:12px; display:flex; gap:12px;">
+                            <div style="width:36px; height:36px; border-radius:50%; background:#444; flex-shrink:0;"></div>
+                            <div>
+                                <h3 style="font-size:15px; line-height:1.4;">${v.title}</h3>
+                                <p style="font-size:12px; color:var(--dim); margin-top:4px;">Kanal • ${v.views} izlenme</p>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('main-grid').appendChild(card);
+                });
 
-                if(target === 'home') {
-                    document.getElementById('view-home').style.display = 'grid';
-                    this.renderGrid();
-                } else if(target === 'shorts') {
-                    document.getElementById('view-shorts').style.display = 'block';
-                    this.renderShorts();
-                    this.closeMini();
-                } else if(target === 'watch') {
-                    document.getElementById('view-watch').style.display = 'grid';
-                    this.closeMini();
+                if(end >= this.db.v.length) {
+                    document.getElementById('scroll-anchor').style.display = 'none';
                 } else {
-                    document.getElementById('view-list').style.display = 'block';
-                    this.renderList(target);
+                    document.getElementById('scroll-anchor').style.display = 'flex';
                 }
             },
 
-            // BASE64 UPLOAD ENGINE (THE SOLUTION)
-            setupUpload() {
-                const fi = document.getElementById('f-in');
+            setupInfiniteScroll() {
+                const observer = new IntersectionObserver((entries) => {
+                    if(entries[0].isIntersecting && !this.state.loading && this.state.view === 'home') {
+                        this.state.page++;
+                        this.renderGrid();
+                    }
+                }, { threshold: 0.5 });
+                observer.observe(document.getElementById('scroll-anchor'));
+            },
+
+            // BASE64 UPLOAD SYSTEM
+            setupFileHandler() {
+                const fi = document.getElementById('file-in');
                 fi.onchange = async (e) => {
                     const file = e.target.files[0];
                     if(!file) return;
 
-                    // Boyut kontrolü (LocalStorage limiti için)
-                    if(file.size > 40 * 1024 * 1024) {
-                        return alert("Video çok büyük! Lütfen 40MB altı bir dosya seçin.");
-                    }
+                    document.getElementById('up-step-1').style.display = 'none';
+                    document.getElementById('up-step-2').style.display = 'flex';
+                    document.getElementById('up-t').value = file.name.split('.')[0];
 
-                    document.getElementById('up-init').style.display = 'none';
-                    document.getElementById('up-loading').style.display = 'block';
-
-                    // 1. Base64 Video Conversion
-                    const videoBase64 = await this.toBase64(file);
-                    
-                    // 2. Temp Object URL for Preview & Meta (Only for this session)
+                    // Process Data
+                    const base64 = await this.toBase64(file);
                     const tempUrl = URL.createObjectURL(file);
-                    
-                    // 3. Metadata & Thumbnail
                     const thumb = await this.genThumb(tempUrl);
-                    const dur = await this.getDur(tempUrl);
 
-                    this.state.upData = { videoBase64, thumb, dur };
-
-                    // Fake Progress
-                    for(let i=0; i<=100; i++) {
-                        await new Promise(r => setTimeout(r, 20));
-                        document.getElementById('up-bar').style.width = i + '%';
-                        document.getElementById('up-st').innerText = `İşleniyor... %${i}`;
-                    }
-
-                    document.getElementById('up-loading').style.display = 'none';
-                    document.getElementById('up-form').style.display = 'grid';
-                    document.getElementById('up-prev').innerHTML = `<img src="${thumb}" style="width:100%; height:100%; object-fit:cover;">`;
+                    this.state.upData = { base64, thumb, dur: 0 };
+                    document.getElementById('up-preview').innerHTML = `<img src="${thumb}" style="width:100%; height:100%; object-fit:cover;">`;
                 };
             },
 
-            toBase64(file) {
-                return new Promise((res, rej) => {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => res(reader.result);
-                    reader.onerror = e => rej(e);
-                });
-            },
+            toBase64: (f) => new Promise((res) => {
+                const r = new FileReader();
+                r.readAsDataURL(f);
+                r.onload = () => res(r.result);
+            }),
 
-            async genThumb(url) {
-                return new Promise(res => {
-                    const v = document.createElement('video');
-                    v.src = url; v.currentTime = 1; v.muted = true;
-                    v.onseeked = () => {
-                        const c = document.createElement('canvas');
-                        c.width = 640; c.height = 360;
-                        c.getContext('2d').drawImage(v, 0, 0, 640, 360);
-                        res(c.toDataURL('image/jpeg', 0.7)); // Komprese edilmiş thumbnail
-                    };
-                });
-            },
+            genThumb: (u) => new Promise((res) => {
+                const v = document.createElement('video');
+                v.src = u; v.currentTime = 1; v.muted = true;
+                v.onseeked = () => {
+                    const c = document.createElement('canvas');
+                    c.width = 640; c.height = 360;
+                    c.getContext('2d').drawImage(v, 0, 0, 640, 360);
+                    res(c.toDataURL('image/jpeg', 0.7));
+                };
+            }),
 
-            getDur(url) {
-                return new Promise(res => {
-                    const v = document.createElement('video');
-                    v.src = url;
-                    v.onloadedmetadata = () => res(v.duration);
-                });
-            },
+            async publish() {
+                if(!document.getElementById('up-t').value) return alert("Başlık gerekli!");
+                
+                document.getElementById('up-prog-wrap').style.display = 'block';
+                const btn = document.getElementById('pub-btn');
+                btn.disabled = true; btn.style.opacity = 0.5;
 
-            publish() {
-                const t = document.getElementById('up-title').value;
-                if(!t) return alert("Başlık şart!");
+                // Fake Progress Simulation
+                for(let i=0; i<=100; i+=5) {
+                    await new Promise(r => setTimeout(r, 50));
+                    document.getElementById('up-bar').style.width = i + '%';
+                    document.getElementById('up-status').innerText = `İşleniyor... %${i}`;
+                }
 
-                const d = this.state.upData;
                 const newVid = {
                     id: Date.now(),
-                    title: t,
-                    src: d.videoBase64, // KALICI VERİ
-                    thumb: d.thumb,    // KALICI VERİ
-                    dur: d.dur,
-                    type: d.dur <= 60 ? 'short' : 'long',
-                    author: this.db.u.name,
-                    authorPfp: this.db.u.pfp,
-                    views: 0,
-                    likes: 0
+                    title: document.getElementById('up-t').value,
+                    desc: document.getElementById('up-d').value,
+                    src: this.state.upData.base64,
+                    thumb: this.state.upData.thumb,
+                    views: 0
                 };
 
                 try {
                     this.db.v.unshift(newVid);
-                    localStorage.setItem('sx_v6_vids', JSON.stringify(this.db.v));
-                    this.toast("Video başarıyla kaydedildi!");
-                    location.reload(); // State temizliği ve taze başlangıç
+                    this.save();
+                    this.toast("Video başarıyla yayınlandı!");
+                    this.closeUp();
+                    this.nav('home');
                 } catch(e) {
-                    alert("Hafıza dolu! Lütfen bazı videoları silin veya daha küçük bir video yükleyin.");
-                    this.db.v.shift();
+                    alert("LocalStorage limiti aşıldı! Lütfen bazı videoları silin.");
                 }
             },
 
-            // RENDERING
-            renderGrid() {
-                const container = document.getElementById('view-home');
-                container.innerHTML = '';
-                this.db.v.forEach(vid => {
-                    container.innerHTML += `
-                        <div class="v-card" onclick="sx.watch(${vid.id})">
-                            <div class="v-thumb">
-                                <img src="${vid.thumb}">
-                                <span style="position:absolute; bottom:5px; right:5px; background:rgba(0,0,0,0.8); padding:2px 5px; font-size:12px; border-radius:4px;">${Math.floor(vid.dur)} sn</span>
-                            </div>
-                            <div style="display:flex; gap:10px; margin-top:10px;">
-                                <div style="width:32px; height:32px; border-radius:50%; background:${vid.authorPfp}"></div>
-                                <div>
-                                    <b style="font-size:14px; display:block;">${vid.title}</b>
-                                    <small style="color:var(--dim)">${vid.author} • ${vid.views} izlenme</small>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-            },
-
-            renderShorts() {
-                const c = document.getElementById('view-shorts');
-                c.innerHTML = '';
-                const shorts = this.db.v.filter(v => v.type === 'short');
-                shorts.forEach(s => {
-                    c.innerHTML += `
-                        <div class="short-frame">
-                            <div class="short-wrap">
-                                <video src="${s.src}" loop autoplay muted style="width:100%; height:100%; object-fit:cover;"></video>
-                                <div style="position:absolute; bottom:20px; left:15px;">
-                                    <b>@${s.author}</b>
-                                    <p>${s.title}</p>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-            },
-
+            // WATCH ENGINE
             watch(id) {
-                const vid = this.db.v.find(x => x.id == id);
-                this.state.active = vid;
+                const v = this.db.v.find(x => x.id == id);
                 this.nav('watch');
-
-                const p = document.getElementById('p-main');
-                p.src = vid.src; // Base64'ten oynatır
-                p.play();
-
-                document.getElementById('w-t').innerText = vid.title;
-                document.getElementById('w-auth').innerText = vid.author;
-                document.getElementById('w-ava').style.background = vid.authorPfp;
-
-                vid.views++;
-                if(!this.db.h.includes(id)) this.db.h.unshift(id);
-                localStorage.setItem('sx_v6_vids', JSON.stringify(this.db.v));
-                localStorage.setItem('sx_v6_hist', JSON.stringify(this.db.h));
+                const player = document.getElementById('v-main');
+                player.src = v.src;
+                document.getElementById('v-title').innerText = v.title;
+                document.getElementById('v-meta').innerText = `${v.views} izlenme • ${new Date(v.id).toLocaleDateString()}`;
+                v.views++;
+                this.save();
             },
 
-            // MINI PLAYER
-            openMini(src) {
-                const m = document.getElementById('mini');
-                const v = document.getElementById('p-mini');
-                v.src = src;
-                m.style.display = 'block';
+            deleteVideo(id, e) {
+                e.stopPropagation();
+                if(confirm("Bu videoyu kalıcı olarak silmek istiyor musunuz?")) {
+                    this.db.v = this.db.v.filter(x => x.id !== id);
+                    this.save();
+                    this.renderGrid(true);
+                    this.toast("Video silindi.");
+                }
             },
-            closeMini() { document.getElementById('mini').style.display = 'none'; document.getElementById('p-mini').pause(); },
-            restore() { if(this.state.active) this.nav('watch'); },
 
             // UTILS
+            openUp() { 
+                document.getElementById('up-modal').style.display = 'flex';
+                document.getElementById('up-step-1').style.display = 'flex';
+                document.getElementById('up-step-2').style.display = 'none';
+            },
+            closeUp() { document.getElementById('up-modal').style.display = 'none'; },
             toast(m) {
                 const t = document.createElement('div');
                 t.className = 'toast'; t.innerText = m;
-                document.getElementById('t-area').appendChild(t);
+                document.getElementById('toast-shelf').appendChild(t);
                 setTimeout(() => t.remove(), 3000);
             },
-            openUp() { document.getElementById('up-modal').style.display = 'flex'; },
-            closeUp() { document.getElementById('up-modal').style.display = 'none'; },
-            setupDrag() {
-                const m = document.getElementById('mini');
-                let d = false, ox, oy;
-                m.onmousedown = (e) => { d = true; ox = e.clientX - m.offsetLeft; oy = e.clientY - m.offsetTop; };
-                window.onmousemove = (e) => { if(d) { m.style.left = (e.clientX - ox) + 'px'; m.style.top = (e.clientY - oy) + 'px'; m.style.bottom = 'auto'; m.style.right = 'auto'; } };
-                window.onmouseup = () => d = false;
+            toggleSidebar() {
+                const side = document.getElementById('sidebar');
+                side.style.display = side.style.display === 'none' ? 'flex' : 'none';
             }
         };
 
