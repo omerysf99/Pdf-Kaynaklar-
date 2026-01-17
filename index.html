@@ -1,391 +1,1010 @@
+# Geliştirilmiş Video Sitesi - Kapak Görselleri ile Video Listeleme
+
+Aşağıda, yüklenen videoların kapak görselleriyle ana sayfada listelendiği ve tıklayınca izlenebildiği geliştirilmiş YouTube benzeri video sitesini sunuyorum:
+
+```html
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VideoTube Elite - NextGen Video Platform | Admin 8392479231</title>
+    <title>VidShare - Video İzleme ve Paylaşma Platformu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-
-        :root {
-            --bg-main: #0a0a0a;
-            --bg-sidebar: #0f0f0f;
-            --yt-red: #ff0000;
-            --accent: #3ea6ff;
-            --text-primary: #ffffff;
-            --text-secondary: #aaaaaa;
-            --card-hover: #212121;
-            --border: #222222;
-            --header-h: 64px;
-            --sidebar-w: 260px;
-        }
-
-        * { box-sizing: border-box; scroll-behavior: smooth; }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-primary);
+        * {
             margin: 0;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', Arial, sans-serif;
         }
-
-        /* --- MODERN HEADER --- */
+        
+        :root {
+            --primary-color: #ff0000;
+            --secondary-color: #282828;
+            --background-color: #0f0f0f;
+            --text-color: #ffffff;
+            --card-color: #202020;
+            --hover-color: #383838;
+        }
+        
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        /* Header Styles */
         header {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: var(--header-h);
-            background: rgba(10, 10, 10, 0.95);
-            backdrop-filter: blur(10px);
+            background-color: var(--secondary-color);
+            padding: 0.8rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 24px;
-            z-index: 2000;
-            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
         }
-
-        .logo-section { display: flex; align-items: center; gap: 18px; }
-        .menu-icon { font-size: 24px; cursor: pointer; color: var(--text-secondary); }
-        .logo { font-size: 22px; font-weight: 700; color: white; text-decoration: none; display: flex; align-items: center; gap: 5px; }
-        .logo span { background: var(--yt-red); padding: 2px 8px; border-radius: 6px; }
-
-        .search-area { flex: 0 1 720px; display: flex; position: relative; }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .logo i {
+            color: var(--primary-color);
+        }
+        
+        .search-container {
+            display: flex;
+            flex: 0 1 600px;
+        }
+        
         .search-input {
-            width: 100%; background: #121212; border: 1px solid #333;
-            color: white; padding: 10px 20px; border-radius: 40px 0 0 40px;
-            font-size: 16px; transition: 0.3s;
+            width: 100%;
+            padding: 0.7rem 1rem;
+            background-color: #121212;
+            border: 1px solid #303030;
+            border-right: none;
+            border-radius: 2px 0 0 2px;
+            color: var(--text-color);
+            font-size: 1rem;
         }
-        .search-input:focus { border-color: var(--accent); }
+        
         .search-btn {
-            background: #222; border: 1px solid #333; padding: 0 25px;
-            border-radius: 0 40px 40px 0; color: white; cursor: pointer;
+            background-color: #303030;
+            border: 1px solid #303030;
+            border-left: none;
+            border-radius: 0 2px 2px 0;
+            color: #888;
+            padding: 0 1.5rem;
+            cursor: pointer;
         }
-
-        .user-tools { display: flex; align-items: center; gap: 20px; }
-        .upload-trigger {
-            background: var(--accent); color: black; border: none;
-            padding: 10px 22px; border-radius: 20px; font-weight: 700;
-            cursor: pointer; transition: 0.3s;
+        
+        .search-btn:hover {
+            background-color: #404040;
         }
-        .upload-trigger:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(62,166,255,0.4); }
-
-        /* --- DİNAMİK SİDEBAR --- */
-        nav {
-            width: var(--sidebar-w);
-            margin-top: var(--header-h);
-            background: var(--bg-sidebar);
-            height: calc(100vh - var(--header-h));
-            overflow-y: auto;
-            padding: 15px 10px;
-            border-right: 1px solid var(--border);
-            transition: 0.3s;
+        
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
-
-        .nav-group { border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px; }
-        .nav-link {
-            padding: 12px 15px; border-radius: 12px; display: flex;
-            align-items: center; gap: 15px; cursor: pointer;
-            transition: 0.2s; font-weight: 400; color: var(--text-primary);
+        
+        .upload-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 2px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
         }
-        .nav-link:hover { background: var(--card-hover); }
-        .nav-link.active { background: #333; font-weight: 500; }
-        .nav-label { font-size: 14px; font-weight: 600; color: var(--text-secondary); padding: 10px 15px; }
-
-        /* --- ANA İÇERİK --- */
-        main {
-            flex-grow: 1;
-            margin-top: var(--header-h);
-            height: calc(100vh - var(--header-h));
-            overflow-y: auto;
-            padding: 24px;
-            background: var(--bg-main);
+        
+        .upload-btn:hover {
+            background-color: #cc0000;
         }
-
-        /* Kategori Filtreleri */
-        .category-scroll {
-            display: flex; gap: 12px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 10px;
+        
+        .user-icon {
+            background-color: #3ea6ff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
         }
-        .chip {
-            background: #222; padding: 8px 16px; border-radius: 10px;
-            white-space: nowrap; cursor: pointer; font-size: 14px;
+        
+        /* Main Content */
+        .container {
+            display: flex;
+            padding: 1.5rem;
+            gap: 1.5rem;
         }
-        .chip.active { background: white; color: black; }
-
+        
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-nav {
+            background-color: var(--secondary-color);
+            border-radius: 8px;
+            padding: 0.8rem 0;
+            margin-bottom: 1rem;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--hover-color);
+        }
+        
+        .nav-item i {
+            width: 24px;
+            text-align: center;
+        }
+        
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+        }
+        
+        .section-title {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-title h2 {
+            font-size: 1.4rem;
+        }
+        
         /* Video Grid */
-        .grid {
+        .video-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
-
-        .v-card { cursor: pointer; animation: fadeIn 0.5s ease; }
-        .v-card:hover .v-thumb { border-radius: 0; }
-        .v-thumb-box { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; background: #1a1a1a; }
-        .v-thumb-box img { width: 100%; height: 100%; object-fit: cover; }
-        .v-duration { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); padding: 3px 6px; border-radius: 4px; font-size: 12px; }
-
-        .v-meta { display: flex; gap: 14px; margin-top: 14px; }
-        .chan-img { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(45deg, #f09, #3ea6ff); }
-        .v-info h4 { margin: 0; font-size: 16px; color: #fff; line-height: 1.4; }
-        .v-info p { margin: 5px 0 0; font-size: 14px; color: var(--text-secondary); }
-
-        /* --- İZLEME SAYFASI (DETAYLAR) --- */
-        #watchView { display: none; max-width: 1400px; margin: 0 auto; gap: 30px; }
-        .watch-main { flex: 1; }
-        .watch-sidebar { width: 400px; }
-
-        .video-container { width: 100%; border-radius: 16px; overflow: hidden; background: #000; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
-        video { width: 100%; display: block; }
-
-        .video-details-card { margin-top: 20px; padding: 20px; background: #161616; border-radius: 16px; }
-        .action-buttons { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-action { background: #2a2a2a; border: none; color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-
-        /* ANALİZ PANELİ (Chart Simülasyonu) */
-        .analytics-box { background: #161616; padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #333; }
-        .chart-container { height: 150px; display: flex; align-items: flex-end; gap: 8px; margin-top: 15px; }
-        .bar { flex: 1; background: var(--accent); border-radius: 4px 4px 0 0; transition: 0.5s; }
-
-        /* MODAL */
-        .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-content { background: #1e1e1e; width: 500px; padding: 40px; border-radius: 24px; position: relative; border: 1px solid var(--accent); }
-        .close-modal { position: absolute; top: 20px; right: 20px; font-size: 24px; cursor: pointer; color: #555; }
-
-        input, select { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 12px; border: 1px solid #333; background: #0a0a0a; color: white; font-size: 16px; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-main); }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        
+        .video-card {
+            background-color: var(--card-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .thumbnail-container {
+            width: 100%;
+            height: 160px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background-color: #333;
+            transition: transform 0.3s;
+        }
+        
+        .video-card:hover .thumbnail {
+            transform: scale(1.05);
+        }
+        
+        .play-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .video-card:hover .play-overlay {
+            opacity: 1;
+        }
+        
+        .play-icon {
+            font-size: 3rem;
+            color: white;
+            background-color: rgba(255, 0, 0, 0.7);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .video-info {
+            padding: 1rem;
+        }
+        
+        .video-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .video-meta {
+            color: #aaa;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        /* Video Player */
+        .video-player-container {
+            display: none;
+            margin-bottom: 2rem;
+        }
+        
+        .video-player {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .video-player video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .video-details {
+            background-color: var(--card-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+        
+        .player-title {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .player-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #aaa;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #383838;
+        }
+        
+        .player-description {
+            line-height: 1.6;
+        }
+        
+        .back-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Upload Form */
+        .upload-container {
+            display: none;
+            background-color: var(--card-color);
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .upload-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+        }
+        
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .form-label {
+            font-weight: 500;
+        }
+        
+        .form-input, .form-textarea {
+            padding: 0.8rem;
+            background-color: #121212;
+            border: 1px solid #383838;
+            border-radius: 4px;
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+        
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        /* File Upload */
+        .file-upload-area {
+            border: 2px dashed #383838;
+            border-radius: 8px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        .file-upload-area:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .file-upload-area i {
+            font-size: 3rem;
+            color: #777;
+            margin-bottom: 1rem;
+        }
+        
+        .file-upload-area p {
+            color: #aaa;
+            margin-bottom: 0.5rem;
+        }
+        
+        .file-upload-area span {
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        .selected-file {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #121212;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .thumbnail-preview {
+            margin-top: 1rem;
+            display: none;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .thumbnail-preview img {
+            max-width: 200px;
+            max-height: 120px;
+            border-radius: 4px;
+            border: 1px solid #383838;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+            }
+            
+            .sidebar-nav {
+                display: flex;
+                overflow-x: auto;
+                padding: 0.5rem;
+            }
+            
+            .nav-item {
+                flex-shrink: 0;
+                padding: 0.5rem 1rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .search-container {
+                display: none;
+            }
+            
+            .video-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+        }
+        
+        /* Notifications */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 4px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Loading Spinner */
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #aaa;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #555;
+        }
+        
+        /* Video Categories */
+        .category-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+        
+        .category-tab {
+            background-color: var(--secondary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+        
+        .category-tab:hover, .category-tab.active {
+            background-color: var(--hover-color);
+        }
     </style>
 </head>
 <body>
-
+    <!-- Header -->
     <header>
-        <div class="logo-section">
-            <div class="menu-icon">☰</div>
-            <a href="#" class="logo" onclick="location.reload()"><span>▶</span> VideoTube Elite</a>
+        <div class="logo">
+            <i class="fas fa-play-circle"></i>
+            <span>VidShare</span>
         </div>
-        <div class="search-area">
-            <input type="text" class="search-input" placeholder="Yapay zeka ile ara veya Admin ID sorgula...">
-            <button class="search-btn">🔍</button>
+        
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Video ara...">
+            <button class="search-btn">
+                <i class="fas fa-search"></i>
+            </button>
         </div>
-        <div class="user-tools">
-            <button class="upload-trigger" onclick="openModal()">+ VİDEO OLUŞTUR</button>
-            <div class="chan-img" style="width:34px; height:34px; cursor:pointer;"></div>
+        
+        <div class="user-actions">
+            <button class="upload-btn" id="showUploadForm">
+                <i class="fas fa-upload"></i>
+                <span>Yükle</span>
+            </button>
+            <div class="user-icon">K</div>
         </div>
     </header>
-
-    <nav id="sidebar">
-        <div class="nav-group">
-            <div class="nav-link active">🏠 Ana Sayfa</div>
-            <div class="nav-link">🩳 Shorts</div>
-            <div class="nav-link">📁 Abonelikler</div>
-        </div>
-        <div class="nav-group">
-            <div class="nav-label">KÜTÜPHANE</div>
-            <div class="nav-link">🕒 Geçmiş</div>
-            <div class="nav-link">🎞️ Videolarınız</div>
-            <div class="nav-link">📊 Analizler (Pro)</div>
-            <div class="nav-link">⌚ Daha Sonra İzle</div>
-        </div>
-        <div class="nav-group">
-            <div class="nav-label">ABONELİKLER</div>
-            <div class="nav-link"><div class="chan-img" style="width:24px; height:24px;"></div> Admin 8392479231</div>
-            <div class="nav-link"><div class="chan-img" style="width:24px; height:24px; background:orange;"></div> Global Tech</div>
-        </div>
-        <div style="padding: 20px; font-size: 12px; color: #444; text-align: center;">
-            System Version: 2026.1.7<br>
-            Authorized ID: 8392479231
-        </div>
-    </nav>
-
-    <main id="mainContainer">
-        <div id="homeView">
-            <div class="category-scroll">
-                <div class="chip active">Tümü</div>
-                <div class="chip">Canlı</div>
-                <div class="chip">Oyun</div>
-                <div class="chip">Müzik</div>
-                <div class="chip">Yazılım Testleri</div>
-                <div class="chip">Siber Güvenlik</div>
-                <div class="chip">Kripto Veri</div>
-                <div class="chip">İstanbul Turu</div>
+    
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-nav">
+                <div class="nav-item active" data-section="home">
+                    <i class="fas fa-home"></i>
+                    <span>Ana Sayfa</span>
+                </div>
+                <div class="nav-item" data-section="trending">
+                    <i class="fas fa-fire"></i>
+                    <span>Trend</span>
+                </div>
+                <div class="nav-item" data-section="subscriptions">
+                    <i class="fas fa-users"></i>
+                    <span>Abonelikler</span>
+                </div>
+                <div class="nav-item" data-section="library">
+                    <i class="fas fa-history"></i>
+                    <span>Geçmiş</span>
+                </div>
+                <div class="nav-item" data-section="liked">
+                    <i class="fas fa-thumbs-up"></i>
+                    <span>Beğenilenler</span>
+                </div>
             </div>
-            <div class="grid" id="videoGrid">
-                </div>
         </div>
-
-        <div id="watchView">
-            <div class="watch-main">
-                <div class="video-container">
-                    <video id="player" controls autoplay></video>
+        
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Video Player (Hidden by default) -->
+            <div class="video-player-container" id="videoPlayerContainer">
+                <button class="back-btn" id="backButton">
+                    <i class="fas fa-arrow-left"></i>
+                    Geri
+                </button>
+                <div class="video-player">
+                    <video id="mainVideoPlayer" controls>
+                        Tarayıcınız video etiketini desteklemiyor.
+                    </video>
                 </div>
-                <div class="video-details-card">
-                    <h1 id="watchTitle" style="margin:0; font-size:24px;">Video Başlığı Bekleniyor...</h1>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
-                        <div style="display:flex; align-items:center; gap:15px;">
-                            <div class="chan-img"></div>
-                            <div>
-                                <b style="display:block;">Admin 8392479231</b>
-                                <small style="color:#aaa;">1.2M Abone</small>
-                            </div>
-                            <button style="background:white; color:black; border:none; padding:10px 20px; border-radius:25px; font-weight:bold; cursor:pointer; margin-left:20px;">ABONE OL</button>
-                        </div>
-                        <div class="action-buttons">
-                            <button class="btn-action">👍 24K</button>
-                            <button class="btn-action">👎</button>
-                            <button class="btn-action">🔄 Paylaş</button>
-                            <button class="btn-action">💾 Kaydet</button>
-                        </div>
+                <div class="video-details">
+                    <h2 class="player-title" id="playerTitle">Video Başlığı</h2>
+                    <div class="player-meta">
+                        <div class="player-views" id="playerViews">1.2M görüntülenme</div>
+                        <div class="player-date" id="playerDate">2 gün önce</div>
+                    </div>
+                    <div class="player-description" id="playerDescription">
+                        Video açıklaması buraya gelecek.
                     </div>
                 </div>
-                <div class="video-details-card" style="background:#222; font-size:14px;">
-                    <b>1.240.531 görüntüleme • 17 Ocak 2026</b><br><br>
-                    Bu video Admin 8392479231 tarafından geliştirilen özel bir video platformu testi için yüklenmiştir. 
-                    Sistem 2026 standartlarında optimize edilmiştir.
-                </div>
             </div>
-
-            <div class="watch-sidebar">
-                <div class="analytics-box">
-                    <h4 style="margin:0; color:var(--accent);">CANLI ANALİTİK PANELİ</h4>
-                    <p style="font-size:12px; color:#aaa; margin-top:5px;">Şu anki izlenme hızı: 1.2K / dk</p>
-                    <div class="chart-container" id="chart">
+            
+            <!-- Video Upload Form (Hidden by default) -->
+            <div class="upload-container" id="uploadContainer">
+                <h2 class="upload-title">Video Yükle</h2>
+                <form class="upload-form" id="uploadForm">
+                    <div class="form-group">
+                        <label class="form-label" for="videoTitle">Video Başlığı</label>
+                        <input type="text" class="form-input" id="videoTitle" placeholder="Video başlığını girin" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="videoDescription">Video Açıklaması</label>
+                        <textarea class="form-textarea" id="videoDescription" placeholder="Video açıklamasını girin"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Video Dosyası</label>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Video dosyasını sürükleyip bırakın veya tıklayarak seçin</p>
+                            <span>MP4, WebM, Ogg formatları desteklenir (Max. 50MB)</span>
                         </div>
-                </div>
-                <h4 style="margin-bottom:15px;">Sıradaki Videolar</h4>
-                <div id="recommendations"></div>
+                        <div class="selected-file" id="selectedFile" style="display: none;">
+                            <span id="fileName"></span>
+                            <button type="button" id="removeFileBtn" class="btn btn-secondary">Kaldır</button>
+                        </div>
+                        <input type="file" id="videoFile" accept="video/*" style="display: none;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Kapak Görseli (Opsiyonel)</label>
+                        <div class="file-upload-area" id="thumbnailUploadArea">
+                            <i class="fas fa-image"></i>
+                            <p>Kapak görselini sürükleyip bırakın veya tıklayarak seçin</p>
+                            <span>JPG, PNG formatları desteklenir</span>
+                        </div>
+                        <div class="thumbnail-preview" id="thumbnailPreview">
+                            <span>Kapak görseli önizlemesi:</span>
+                            <img id="thumbnailPreviewImg" src="" alt="Kapak görseli önizleme">
+                        </div>
+                        <input type="file" id="thumbnailFile" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelUpload">İptal</button>
+                        <button type="submit" class="btn btn-primary">Video Yükle</button>
+                    </div>
+                </form>
             </div>
-        </div>
-    </main>
-
-    <div class="modal-bg" id="uploadModal">
-        <div class="modal-content">
-            <div class="close-modal" onclick="closeModal()">×</div>
-            <h2 style="margin-top:0;">Yeni Video Dağıtımı</h2>
-            <p style="color:#aaa; font-size:14px;">Admin paneli üzerinden yüksek çözünürlüklü veri girişi.</p>
             
-            <label>MP4 Video Dosyası</label>
-            <input type="file" id="inpVideo" accept="video/*">
-            
-            <label>Thumbnail (Kapak Görseli)</label>
-            <input type="file" id="inpThumb" accept="image/*">
-            
-            <label>Video Başlığı</label>
-            <input type="text" id="inpTitle" placeholder="Dikkat çekici bir başlık girin...">
-            
-            <label>Kategori</label>
-            <select>
-                <option>Yazılım</option>
-                <option>Oyun</option>
-                <option>Eğitim</option>
-                <option>Günlük</option>
-            </select>
-            
-            <button onclick="publishVideo()" style="background:var(--yt-red); color:white; border:none; width:100%; padding:15px; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; margin-top:10px;">YAYINLA VE ANALİZİ BAŞLAT</button>
+            <!-- Home Content (Visible by default) -->
+            <div id="homeContent">
+                <div class="section-title">
+                    <h2>Önerilen Videolar</h2>
+                </div>
+                
+                <!-- Category Tabs -->
+                <div class="category-tabs" id="categoryTabs">
+                    <div class="category-tab active" data-category="all">Tümü</div>
+                    <div class="category-tab" data-category="nature">Doğa</div>
+                    <div class="category-tab" data-category="tech">Teknoloji</div>
+                    <div class="category-tab" data-category="music">Müzik</div>
+                    <div class="category-tab" data-category="sports">Spor</div>
+                    <div class="category-tab" data-category="food">Yemek</div>
+                </div>
+                
+                <!-- Loading Spinner -->
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <p>Videolar yükleniyor...</p>
+                </div>
+                
+                <!-- Video Grid -->
+                <div class="video-grid" id="videoGrid">
+                    <!-- Videos will be dynamically added here -->
+                </div>
+                
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <i class="fas fa-video-slash"></i>
+                    <h3>Henüz video yok</h3>
+                    <p>İlk video yüklemek için "Yükle" butonuna tıklayın.</p>
+                </div>
+            </div>
         </div>
     </div>
-
+    
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        Video başarıyla yüklendi!
+    </div>
+    
     <script>
+        // Sample video data with thumbnails
+        const sampleVideos = [
+            {
+                id: 1,
+                title: "Doğa Manzaraları - 4K Ultra HD",
+                description: "Dünyanın dört bir yanından muhteşem doğa manzaraları. Dağlar, ormanlar, nehirler ve okyanusların büyüleyici görüntüleri.",
+                views: "1.2M",
+                date: "2 gün önce",
+                thumbnail: "https://images.unsplash.com/photo-1501854140801-50d01698950b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                category: "nature"
+            },
+            {
+                id: 2,
+                title: "Yemek Tarifleri: Ev Yapımı Pizza",
+                description: "Evde kolayca hazırlayabileceğiniz nefis pizza tarifi. Malzemeler ve adım adım yapılışı.",
+                views: "850K",
+                date: "1 hafta önce",
+                thumbnail: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                category: "food"
+            },
+            {
+                id: 3,
+                title: "En İyi Futbol Golleri 2023",
+                description: "2023 yılının en unutulmaz futbol golleri. Messi, Ronaldo, Haaland ve daha fazlası.",
+                views: "3.5M",
+                date: "1 ay önce",
+                thumbnail: "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+                category: "sports"
+            },
+            {
+                id: 4,
+                title: "JavaScript Dersleri: Başlangıç Rehberi",
+                description: "JavaScript öğrenmeye başlamak isteyenler için temel kavramlar ve örnekler.",
+                views: "520K",
+                date: "3 gün önce",
+                thumbnail: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+                category: "tech"
+            },
+            {
+                id: 5,
+                title: "En Popüler Müzik Videoları",
+                description: "Bu ayın en çok izlenen müzik videoları. Pop, rock, hip-hop ve daha fazlası.",
+                views: "2.1M",
+                date: "5 gün önce",
+                thumbnail: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+                category: "music"
+            },
+            {
+                id: 6,
+                title: "Evde Egzersiz: Full Body Workout",
+                description: "Evde ekipmansız yapabileceğiniz tam vücut egzersiz rutini. Sadece 20 dakika!",
+                views: "980K",
+                date: "2 hafta önce",
+                thumbnail: "https://images.unsplash.com/photo-1536922246289-88c42f957773?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+                category: "sports"
+            }
+        ];
+        
+        // Default thumbnail for uploaded videos
+        const DEFAULT_THUMBNAIL = "https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80";
+        
+        // DOM Elements
+        const videoGrid = document.getElementById('videoGrid');
+        const videoPlayerContainer = document.getElementById('videoPlayerContainer');
+        const mainVideoPlayer = document.getElementById('mainVideoPlayer');
+        const playerTitle = document.getElementById('playerTitle');
+        const playerViews = document.getElementById('playerViews');
+        const playerDate = document.getElementById('playerDate');
+        const playerDescription = document.getElementById('playerDescription');
+        const homeContent = document.getElementById('homeContent');
+        const uploadContainer = document.getElementById('uploadContainer');
+        const showUploadFormBtn = document.getElementById('showUploadForm');
+        const cancelUploadBtn = document.getElementById('cancelUpload');
+        const uploadForm = document.getElementById('uploadForm');
+        const videoFileInput = document.getElementById('videoFile');
+        const thumbnailFileInput = document.getElementById('thumbnailFile');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const thumbnailUploadArea = document.getElementById('thumbnailUploadArea');
+        const selectedFile = document.getElementById('selectedFile');
+        const fileName = document.getElementById('fileName');
+        const removeFileBtn = document.getElementById('removeFileBtn');
+        const thumbnailPreview = document.getElementById('thumbnailPreview');
+        const thumbnailPreviewImg = document.getElementById('thumbnailPreviewImg');
+        const backButton = document.getElementById('backButton');
+        const notification = document.getElementById('notification');
+        const navItems = document.querySelectorAll('.nav-item');
+        const searchInput = document.querySelector('.search-input');
+        const searchBtn = document.querySelector('.search-btn');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const emptyState = document.getElementById('emptyState');
+        const categoryTabs = document.querySelectorAll('.category-tab');
+        
+        // Application state
         let videos = [];
-
-        function openModal() { document.getElementById('uploadModal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('uploadModal').style.display = 'none'; }
-
-        function publishVideo() {
-            const title = document.getElementById('inpTitle').value;
-            const vFile = document.getElementById('inpVideo').files[0];
-            const tFile = document.getElementById('inpThumb').files[0];
-
-            if(!title || !vFile || !tFile) return alert("Lütfen tüm verileri eksiksiz girin.");
-
-            const item = {
-                id: Date.now(),
-                title: title,
-                video: URL.createObjectURL(vFile),
-                thumb: URL.createObjectURL(tFile),
-                views: "0",
-                date: "Şimdi"
-            };
-
-            videos.unshift(item);
-            renderHome();
-            closeModal();
-            alert("Sistem Başarılı: Video 2026 sunucularına enjekte edildi!");
+        let uploadedVideos = [];
+        let selectedVideoFile = null;
+        let selectedThumbnailFile = null;
+        let currentCategory = "all";
+        
+        // Initialize the app
+        function init() {
+            // Load videos from localStorage or use sample videos
+            const storedVideos = localStorage.getItem('vidShareVideos');
+            
+            if (storedVideos) {
+                uploadedVideos = JSON.parse(storedVideos);
+                videos = [...sampleVideos, ...uploadedVideos];
+            } else {
+                videos = [...sampleVideos];
+            }
+            
+            // Show loading spinner
+            loadingSpinner.style.display = 'block';
+            
+            // Simulate loading delay
+            setTimeout(() => {
+                // Render initial videos
+                renderVideos(videos);
+                loadingSpinner.style.display = 'none';
+                
+                // Show empty state if no videos
+                if (videos.length === 0) {
+                    emptyState.style.display = 'block';
+                }
+            }, 800);
+            
+            // Set up event listeners
+            setupEventListeners();
         }
-
-        function renderHome() {
-            const grid = document.getElementById('videoGrid');
-            grid.innerHTML = '';
-            videos.forEach(v => {
-                grid.innerHTML += `
-                    <div class="v-card" onclick="playVideo(${v.id})">
-                        <div class="v-thumb-box">
-                            <img src="${v.thumb}">
-                            <div class="v-duration">14:02</div>
-                        </div>
-                        <div class="v-meta">
-                            <div class="chan-img" style="background:hsl(${Math.random()*360}, 70%, 50%)"></div>
-                            <div class="v-info">
-                                <h4>${v.title}</h4>
-                                <p>Admin 8392479231</p>
-                                <p>${v.views} izlenme • ${v.date}</p>
+        
+        // Render videos to the grid
+        function renderVideos(videosToRender) {
+            videoGrid.innerHTML = '';
+            
+            if (videosToRender.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            videosToRender.forEach(video => {
+                const videoCard = document.createElement('div');
+                videoCard.className = 'video-card';
+                videoCard.dataset.id = video.id;
+                
+                videoCard.innerHTML = `
+                    <div class="thumbnail-container">
+                        <img src="${video.thumbnail}" alt="${video.title}" class="thumbnail" onerror="this.src='${DEFAULT_THUMBNAIL}'">
+                        <div class="play-overlay">
+                            <div class="play-icon">
+                                <i class="fas fa-play"></i>
                             </div>
+                        </div>
+                    </div>
+                    <div class="video-info">
+                        <h3 class="video-title">${video.title}</h3>
+                        <div class="video-meta">
+                            <span class="video-views">${video.views} görüntülenme</span>
+                            <span class="video-date">${video.date}</span>
                         </div>
                     </div>
                 `;
+                
+                videoGrid.appendChild(videoCard);
+            });
+            
+            // Add click event to each video card
+            document.querySelectorAll('.video-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const videoId = parseInt(this.dataset.id);
+                    playVideo(videoId);
+                });
             });
         }
-
-        function playVideo(id) {
-            const v = videos.find(x => x.id === id);
-            document.getElementById('homeView').style.display = 'none';
-            document.getElementById('sidebar').style.display = 'none';
-            document.getElementById('watchView').style.display = 'flex';
-            document.getElementById('player').src = v.video;
-            document.getElementById('watchTitle').innerText = v.title;
-            createChart();
-            window.scrollTo(0,0);
-        }
-
-        function createChart() {
-            const container = document.getElementById('chart');
-            container.innerHTML = '';
-            for(let i=0; i<15; i++) {
-                const height = Math.random() * 100 + 10;
-                const bar = document.createElement('div');
-                bar.className = 'bar';
-                bar.style.height = height + '%';
-                container.appendChild(bar);
+        
+        // Play selected video
+        function playVideo(videoId) {
+            const video = videos.find(v => v.id === videoId);
+            
+            if (!video) return;
+            
+            // Update player with video data
+            playerTitle.textContent = video.title;
+            playerViews.textContent = `${video.views} görüntülenme`;
+            playerDate.textContent = video.date;
+            playerDescription.textContent = video.description;
+            mainVideoPlayer.src = video.videoUrl;
+            
+            // Show player and hide home content
+            videoPlayerContainer.style.display = 'block';
+            homeContent.style.display = 'none';
+            uploadContainer.style.display = 'none';
+            
+            // Play the video
+            mainVideoPlayer.load();
+            
+            // Update view count (simulated)
+            if (video.views.includes('K')) {
+                // Already formatted, skip
+            } else if (typeof video.views === 'string') {
+                const viewsNum = parseInt(video.views.replace(/[^0-9]/g, ''));
+                video.views = formatViewCount(viewsNum + 1);
             }
         }
-
-        // İlk açılış demosu
-        window.onload = () => {
-            videos.push({
-                id: 1, 
-                title: "2026 Gelecek Teknolojileri ve Admin Paneli Kullanımı", 
-                thumb: "https://picsum.photos/id/10/640/360", 
-                video: "https://www.w3schools.com/html/mov_bbb.mp4",
-                views: "450K",
-                date: "2 gün önce"
-            });
-            videos.push({
-                id: 2, 
-                title: "Flow360 Canlı Konser Serisi - İstanbul Etkinliği", 
-                thumb: "https://picsum.photos/id/20/640/360", 
-                video: "https://www.w3schools.com/html/mov_bbb.mp4",
-                views: "1.2M",
-                date: "1 hafta önce"
-            });
-            renderHome();
-        };
-    </script>
-</body>
-</html>
+        
+        // Format view count
+        function formatViewCount(count) {
+            if (count >= 1000000) {
+                return (count / 1000000).toFixed(1) + 'M';
+            } else if (count >= 1000) {
+                return (count / 1000).toFixed(1) + 'K';
+            }
+            return count.toString();
+        }
+        
+        // Show upload form
+        function showUploadForm() {
+            uploadContainer.style.display = 'block';
+            homeContent.style.display = 'none';
+            videoPlayerContainer.style.display = 'none';
+            
+            // Reset form
+            uploadForm.reset();
+            selectedFile.style.display = 'none';
+            thumbnailPreview.style.display = 'none';
+            videoFileInput.value = '';
+            thumbnailFileInput.value = '';
+            selectedVideoFile = null;
+            selectedThumbnailFile = null;
+        }
+        
+        // Show home content
+        function showHomeContent() {
+            homeContent.style.display = 'block';
+            videoPlayerContainer.style.display = 'none';
+            uploadContainer.style.display = 'none';
+        }
+        
+        // Handle video file selection
+        function handleVideoFileSelect(file) {
+            if (file && file.type.startsWith('video/')) {
+                selectedVideoFile = file;
+                fileName.textContent = file.name;
+                selectedFile.style.display = 'flex';
+            } else {
+                showNotification('Lütfen geçerli bir video dosyası seçin.');
+            }
+        }
+        
+        // Handle thumbnail file selection
+        function handleThumbnailFileSelect(file) {
+            if (file && file.type.startsWith('image/')) {
+                selectedThumbnailFile = file;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    thumbnailPreviewImg.src = e.target.result;
+                    thumbnailPreview.style.display = 'flex';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                showNotification('Lütfen geçerli bir resim dosyası seçin.');
+            }
+        }
+        
+        // Generate thumbnail from video (simulated)
+        function generateThumbnailFromVideo(videoFile) {
+            // In a real app, you would extract a frame from the video
+            // For this demo, we'll return a default thumbnail
+            return DEFAULT_THUMBNAIL;
+        }
+        
+        // Upload video (simulated - uses localStorage)
+        function uploadVideo(videoData) {
+            // Generate a unique ID for the new video
+            const newId = videos.length > 0 ? Math.max(...videos.map(v => v.id)) + 1 :
