@@ -3,269 +3,411 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexTube Pro | Secure Access</title>
+    <title>NexTube Pro | Secure Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Roboto:wght@400;500&display=swap');
         
-        :root { --yt-red: #FF0000; --bg-dark: #0f0f0f; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-dark); color: #f1f1f1; overflow: hidden; margin: 0; }
-
-        /* --- AUTH BLOCKER (FULL SCREEN) --- */
-        #authBlocker {
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0f0f0f; color: #f1f1f1; overflow: hidden; }
+        
+        /* --- AUTH LAYER --- */
+        #authOverlay {
             position: fixed; inset: 0; z-index: 9999;
-            background: radial-gradient(circle at center, rgba(20,20,20,0.8) 0%, rgba(15,15,15,1) 100%);
-            backdrop-filter: blur(40px);
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #000; display: flex; align-items: center; justify-content: center;
         }
 
-        .auth-card {
-            width: 100%; max-width: 420px;
-            background: #1a1a1a;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 32px; padding: 48px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            transform: scale(1); opacity: 1;
-            transition: all 0.5s ease;
-        }
-
-        /* --- LOGIN SIMULATION POPUP --- */
-        #gmailPopup {
-            position: fixed; inset: 0; z-index: 10000;
-            background: rgba(0,0,0,0.85);
-            display: none; align-items: center; justify-content: center;
-        }
-
-        .gmail-box {
+        /* --- GOOGLE STYLE MODAL --- */
+        .google-card {
             background: white; color: #202124;
-            width: 100%; max-width: 400px;
-            padding: 40px; border-radius: 8px;
-            font-family: 'Roboto', Arial, sans-serif;
+            width: 100%; max-width: 450px;
+            min-height: 500px; padding: 48px 40px 36px;
+            border-radius: 8px; font-family: 'Roboto', sans-serif;
+            display: flex; flex-direction: column;
         }
 
-        /* --- UI BLUR & STATE --- */
-        #mainApp { transition: filter 0.8s ease; filter: blur(30px); pointer-events: none; }
-        body.authenticated #mainApp { filter: blur(0); pointer-events: auto; }
-        body.authenticated #authBlocker { opacity: 0; pointer-events: none; visibility: hidden; }
-
-        .google-btn {
-            background: white; color: #3c4043;
-            border: 1px solid #dadce0;
-            transition: all 0.2s;
+        .g-input {
+            width: 100%; height: 56px; border: 1px solid #dadce0;
+            border-radius: 4px; padding: 13px 15px; font-size: 16px;
+            transition: border 0.2s; outline: none;
         }
-        .google-btn:hover { background: #f8f9fa; border-color: #d2e3fc; box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); }
+        .g-input:focus { border: 2px solid #1a73e8; padding: 12px 14px; }
+        .g-input.error { border: 1px solid #d93025; }
 
-        /* --- ANIMATIONS --- */
-        .fade-in { animation: fadeIn 0.5s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-blue {
+            background: #1a73e8; color: white; padding: 0 24px;
+            height: 36px; border-radius: 4px; font-weight: 500;
+            font-size: 14px; transition: background 0.2s;
+        }
+        .btn-blue:hover { background: #1b66c9; box-shadow: 0 1px 3px 1px rgba(60,64,67,.15); }
 
-        .progress-bar { height: 4px; background: #e8eaed; border-radius: 2px; overflow: hidden; }
-        .progress-fill { height: 100%; background: #1a73e8; width: 0%; transition: width 1.5s ease-in-out; }
+        #mainApp { filter: blur(50px); pointer-events: none; opacity: 0; transition: all 1s ease; }
+        body.unlocked #mainApp { filter: blur(0); pointer-events: auto; opacity: 1; }
+        body.unlocked #authOverlay { display: none; }
+
+        .shake { animation: shake 0.4s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
     </style>
 </head>
-<body class="antialiased">
+<body>
 
-    <div id="authBlocker">
-        <div class="auth-card text-center">
-            <div class="flex justify-center mb-8">
-                <div class="w-20 h-20 bg-red-600 rounded-[24px] flex items-center justify-center shadow-2xl shadow-red-600/30">
-                    <i data-lucide="play" class="w-10 h-10 fill-white text-white"></i>
-                </div>
+    <div id="authOverlay">
+        <div class="google-card" id="loginCard">
+            <div class="flex justify-center mb-3">
+                <svg width="75" height="24" viewBox="0 0 75 24"><path d="M10.4 19.3c-4.4 0-8-3.5-8-8s3.6-8 8-8c2.4 0 4.2.9 5.6 2.3L14.3 7c-1-1-2.3-1.5-3.9-1.5-3.1 0-5.7 2.5-5.7 5.7s2.6 5.7 5.7 5.7c2 0 3.2-.8 3.9-1.5.6-.6 1-1.5 1.1-2.7h-5v-2.3h7.3c.1.4.1.8.1 1.3 0 2.2-.6 4.8-2.6 6.8-2 2-4.6 3-7.3 3" fill="#4285F4"/><path d="M26.2 18.8c-3.1 0-5.6-2.4-5.6-5.5s2.5-5.5 5.6-5.5 5.6 2.4 5.6 5.5-2.5 5.5-5.6 5.5m0-2.3c1.8 0 3.3-1.5 3.3-3.2s-1.5-3.2-3.3-3.2-3.3 1.5-3.3 3.2 1.5 3.2 3.3 3.2" fill="#EA4335"/><path d="M38.5 18.8c-3.1 0-5.6-2.4-5.6-5.5s2.5-5.5 5.6-5.5 5.6 2.4 5.6 5.5-2.5 5.5-5.6 5.5m0-2.3c1.8 0 3.3-1.5 3.3-3.2s-1.5-3.2-3.3-3.2-3.3 1.5-3.3 3.2 1.5 3.2 3.3 3.2" fill="#FBBC05"/><path d="M50.6 23.3c-3.1 0-5.5-2.4-5.5-5.5s2.4-5.5 5.5-5.5c1.4 0 2.5.6 3.1 1.2l-1.1 1.1c-.5-.4-1.2-.7-2-.7-1.8 0-3.3 1.5-3.3 3.2s1.4 3.2 3.3 3.2c1.9 0 2.7-1.4 2.8-2.1H50.6v-1.5H55c.1.4.1.8.1 1.3 0 2-.7 5.5-4.5 5.5" fill="#4285F4"/><path d="M57.6 1.1h2.3v17.7h-2.3V1.1z" fill="#34A853"/><path d="M68.7 18.8c-2.9 0-5.4-2.2-5.4-5.5s2.4-5.5 5.2-5.5c1.4 0 2.5.6 3.1 1.2l-1.1 1.1c-.4-.4-1.1-.8-2-.8-1.7 0-3 1.4-3 3.2s1.3 3.2 3 3.2c1.3 0 2-.6 2.6-1.2l1.1 1.1c-.8.8-1.9 1.5-3.8 1.5" fill="#EA4335"/></svg>
             </div>
-            <h1 class="text-3xl font-black mb-2 tracking-tighter">NexTube Pro</h1>
-            <p class="text-gray-500 text-sm mb-12 px-4">Video dünyasına erişmek için oturum açmanız gerekmektedir.</p>
-            
-            <div class="space-y-4">
-                <button onclick="auth.openGmailFlow()" class="w-full flex items-center justify-center gap-4 bg-white text-black h-14 rounded-2xl font-bold text-sm hover:bg-zinc-200 transition-all active:scale-[0.98]">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                    Gmail ile devam et
-                </button>
-                <button class="w-full h-14 border border-white/10 rounded-2xl text-sm font-bold text-gray-400 hover:bg-white/5 transition">
-                    Hesap oluştur
-                </button>
-            </div>
-            
-            <p class="mt-12 text-[10px] text-gray-600 font-mono">ENCRYPTED NODE: 8392479231-A</p>
-        </div>
-    </div>
 
-    <div id="gmailPopup">
-        <div class="gmail-box">
-            <div class="flex justify-center mb-6">
-                <svg width="75" height="24" viewBox="0 0 75 24"><g fill="none" fill-rule="evenodd"><path d="M10.4 19.3c-4.4 0-8-3.5-8-8s3.6-8 8-8c2.4 0 4.2.9 5.6 2.3L14.3 7c-1-1-2.3-1.5-3.9-1.5-3.1 0-5.7 2.5-5.7 5.7s2.6 5.7 5.7 5.7c2 0 3.2-.8 3.9-1.5.6-.6 1-1.5 1.1-2.7h-5v-2.3h7.3c.1.4.1.8.1 1.3 0 2.2-.6 4.8-2.6 6.8-2 2-4.6 3-7.3 3" fill="#4285F4"/><path d="M26.2 18.8c-3.1 0-5.6-2.4-5.6-5.5s2.5-5.5 5.6-5.5 5.6 2.4 5.6 5.5-2.5 5.5-5.6 5.5m0-2.3c1.8 0 3.3-1.5 3.3-3.2s-1.5-3.2-3.3-3.2-3.3 1.5-3.3 3.2 1.5 3.2 3.3 3.2" fill="#EA4335"/><path d="M38.5 18.8c-3.1 0-5.6-2.4-5.6-5.5s2.5-5.5 5.6-5.5 5.6 2.4 5.6 5.5-2.5 5.5-5.6 5.5m0-2.3c1.8 0 3.3-1.5 3.3-3.2s-1.5-3.2-3.3-3.2-3.3 1.5-3.3 3.2 1.5 3.2 3.3 3.2" fill="#FBBC05"/><path d="M50.6 23.3c-3.1 0-5.5-2.4-5.5-5.5s2.4-5.5 5.5-5.5c1.4 0 2.5.6 3.1 1.2l-1.1 1.1c-.5-.4-1.2-.7-2-.7-1.8 0-3.3 1.5-3.3 3.2s1.4 3.2 3.3 3.2c1.9 0 2.7-1.4 2.8-2.1H50.6v-1.5H55c.1.4.1.8.1 1.3 0 2-.7 5.5-4.5 5.5" fill="#4285F4"/><path d="M57.6 1.1h2.3v17.7h-2.3V1.1z" fill="#34A853"/><path d="M68.7 18.8c-2.9 0-5.4-2.2-5.4-5.5s2.4-5.5 5.2-5.5c1.4 0 2.5.6 3.1 1.2l-1.1 1.1c-.4-.4-1.1-.8-2-.8-1.7 0-3 1.4-3 3.2s1.3 3.2 3 3.2c1.3 0 2-.6 2.6-1.2l1.1 1.1c-.8.8-1.9 1.5-3.8 1.5" fill="#EA4335"/></g></svg>
-            </div>
-            
-            <div id="gmailStep1" class="fade-in">
-                <h2 class="text-2xl font-normal text-center mb-2">Oturum açın</h2>
-                <p class="text-center mb-8 text-sm">NexTube Pro uygulamasına devam et</p>
-                <div class="mb-8">
-                    <input type="email" id="gmailInput" placeholder="E-posta veya telefon" class="w-full h-12 border border-gray-300 rounded px-4 outline-none focus:border-[#1a73e8] focus:border-2 transition-all">
-                    <p id="gmailError" class="text-red-600 text-[12px] mt-1 hidden font-medium flex items-center gap-1">
-                        <i data-lucide="alert-circle" class="w-3 h-3"></i> Geçerli bir Gmail adresi girin
-                    </p>
+            <div id="stepEmail">
+                <h1 class="text-2xl font-normal text-center mb-2">Oturum açın</h1>
+                <p class="text-center mb-8 text-[16px]">NexTube Pro'ya devam et</p>
+                <div class="mb-10">
+                    <input type="email" id="emailInput" class="g-input" placeholder="E-posta veya telefon">
+                    <div id="emailErr" class="text-[#d93025] text-xs mt-1 hidden flex items-center gap-1">
+                        <i data-lucide="alert-circle" class="w-3 h-3"></i> <span>Google hesabı bulunamadı</span>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center">
-                    <button class="text-[#1a73e8] font-bold text-sm">Hesap oluşturun</button>
-                    <button onclick="auth.validateGmail()" class="bg-[#1a73e8] text-white px-6 py-2 rounded font-bold hover:bg-[#1557b0] transition">İleri</button>
+                <div class="mt-auto flex justify-between items-center">
+                    <button class="text-[#1a73e8] font-bold text-sm hover:bg-blue-50 px-2 py-1 rounded">Hesap oluşturun</button>
+                    <button onclick="handleEmailNext()" class="btn-blue">İleri</button>
                 </div>
             </div>
 
-            <div id="gmailStep2" class="hidden fade-in text-center">
-                <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                    <i data-lucide="user" class="text-gray-600"></i>
+            <div id="stepPassword" class="hidden">
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center gap-2 border border-gray-200 rounded-full px-3 py-1 text-sm font-medium mb-4">
+                        <i data-lucide="user-circle" class="w-4 h-4 text-blue-600"></i>
+                        <span id="userDisplay"></span>
+                    </div>
+                    <h1 class="text-2xl font-normal">Hoş geldiniz</h1>
                 </div>
-                <h2 id="displayEmail" class="text-sm font-medium mb-8"></h2>
-                <div class="progress-bar mb-10"><div class="progress-fill" id="gmailProgress"></div></div>
-                <p class="text-sm text-gray-600">Kimlik doğrulanıyor, lütfen bekleyin...</p>
+                <div class="mb-10">
+                    <input type="password" id="passInput" class="g-input" placeholder="Şifrenizi girin">
+                    <div id="passErr" class="text-[#d93025] text-xs mt-1 hidden flex items-center gap-1">
+                        <i data-lucide="alert-circle" class="w-3 h-3"></i> <span>Yanlış şifre. Tekrar deneyin.</span>
+                    </div>
+                </div>
+                <div class="mt-auto flex justify-between items-center">
+                    <button class="text-[#1a73e8] font-bold text-sm">Şifrenizi mi unuttunuz?</button>
+                    <button onclick="handleLoginFinal()" class="btn-blue">İleri</button>
+                </div>
+            </div>
+
+            <div class="mt-12 text-xs text-gray-500 leading-relaxed">
+                NexTube Pro uygulamasına devam etmek için Google, adınızı, e-posta adresinizi ve profil resminizi paylaşacaktır.
             </div>
         </div>
     </div>
 
-    <div id="mainApp">
-        <header class="h-16 fixed top-0 w-full glass border-b border-white/5 flex items-center justify-between px-6 z-[100]">
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-1 cursor-pointer">
-                    <div class="bg-red-600 p-1.5 rounded-xl"><i data-lucide="play" class="fill-white text-white w-5 h-5"></i></div>
-                    <span class="text-xl font-black italic uppercase tracking-tighter">NexTube</span>
-                </div>
+    <div id="mainApp" class="h-screen flex flex-col">
+        <header class="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-[#0f0f0f]">
+            <div class="flex items-center gap-2">
+                <div class="bg-red-600 p-1.5 rounded-lg"><i data-lucide="play" class="w-5 h-5 fill-white text-white"></i></div>
+                <span class="text-xl font-black italic">NexTube</span>
             </div>
-
-            <div class="hidden md:flex flex-1 max-w-xl mx-10">
-                <div class="relative w-full">
-                    <input type="text" placeholder="Ara..." class="w-full bg-white/5 border border-white/10 rounded-full py-2.5 px-6 outline-none focus:border-red-600/50 transition-all">
-                </div>
-            </div>
-
             <div class="flex items-center gap-4">
-                <button onclick="ui.openModal('upload')" class="bg-white text-black px-5 py-2 rounded-full font-bold text-xs hover:bg-zinc-200 transition">VİDEO YÜKLE</button>
-                <div class="flex items-center gap-3 bg-white/5 p-1 rounded-full border border-white/10 pr-4">
-                    <div id="userAvatar" class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-black text-xs">U</div>
-                    <span id="userEmailShort" class="text-[11px] font-bold text-gray-400 hidden lg:block"></span>
-                    <button onclick="auth.logout()" class="p-1.5 hover:text-red-500 transition"><i data-lucide="log-out" class="w-4 h-4"></i></button>
-                </div>
+                <span id="userProfileTag" class="text-xs bg-white/5 px-4 py-2 rounded-full border border-white/10"></span>
+                <button onclick="logout()" class="text-xs text-gray-500 hover:text-red-500 font-bold">Çıkış Yap</button>
             </div>
         </header>
-
-        <main class="pt-24 px-8 pb-20">
-            <div id="videoGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="flex-1 flex items-center justify-center p-10">
+            <div class="text-center">
+                <h1 class="text-5xl font-black mb-4">Hoş Geldin, <span id="welcomeName" class="text-red-600"></span></h1>
+                <p class="text-gray-500">Admin ID: 8392479231 onaylı oturum aktif.</p>
+                <div class="mt-10 p-20 border-2 border-dashed border-white/10 rounded-[40px] text-gray-600">
+                    Video Akışı Hazırlanıyor...
                 </div>
-        </main>
+            </div>
+        </div>
     </div>
 
     <script>
-        /**
-         * NexTube Auth Engine
-         * Admin ID: 8392479231
-         */
-
-        const auth = {
-            currentUser: JSON.parse(localStorage.getItem('nextube_session')) || null,
-
-            init() {
-                if (this.currentUser) {
-                    this.completeLogin(false);
-                }
-                lucide.createIcons();
-            },
-
-            openGmailFlow() {
-                document.getElementById('gmailPopup').style.display = 'flex';
-            },
-
-            validateGmail() {
-                const input = document.getElementById('gmailInput');
-                const error = document.getElementById('gmailError');
-                const email = input.value.trim().toLowerCase();
-
-                if (email.endsWith('@gmail.com') && email.length > 10) {
-                    error.classList.add('hidden');
-                    this.showProcessing(email);
-                } else {
-                    error.classList.remove('hidden');
-                    input.classList.add('border-red-600');
-                }
-            },
-
-            showProcessing(email) {
-                document.getElementById('gmailStep1').classList.add('hidden');
-                document.getElementById('gmailStep2').classList.remove('hidden');
-                document.getElementById('displayEmail').innerText = email;
-                
-                // Simulate verification delay
-                setTimeout(() => document.getElementById('gmailProgress').style.width = '100%', 100);
-                
-                setTimeout(() => {
-                    this.currentUser = {
-                        email: email,
-                        id: 'NT-' + Math.floor(Math.random()*100000),
-                        avatar: email[0].toUpperCase()
-                    };
-                    localStorage.setItem('nextube_session', JSON.stringify(this.currentUser));
-                    this.completeLogin(true);
-                }, 2000);
-            },
-
-            completeLogin(withAnim) {
-                document.body.classList.add('authenticated');
-                document.getElementById('gmailPopup').style.display = 'none';
-                document.getElementById('userAvatar').innerText = this.currentUser.avatar;
-                document.getElementById('userEmailShort').innerText = this.currentUser.email.split('@')[0];
-                document.getElementById('userEmailShort').classList.remove('hidden');
-                
-                if(withAnim) ui.showToast("Giriş yapıldı: " + this.currentUser.email);
-                ui.renderGrid();
-            },
-
-            logout() {
-                localStorage.removeItem('nextube_session');
-                location.reload();
-            }
+        // --- AUTH LOGIC (Admin: 8392479231) ---
+        
+        // Simüle edilmiş "Gerçek" kullanıcılar
+        const validUsers = {
+            "admin@gmail.com": "admin123",
+            "test@gmail.com": "password",
+            "gemini@gmail.com": "pro2026"
         };
 
-        const ui = {
-            renderGrid() {
-                const grid = document.getElementById('videoGrid');
-                // Örnek başlangıç verisi (Giriş yapmadan görünmez)
-                const mockVideos = [
-                    { title: "Yeni Nesil Teknoloji", user: "TeknoKanal", likes: 0 },
-                    { title: "Shorts Denemesi #1", user: "NexTube", likes: 0 },
-                    { title: "Geleceğin Web Dünyası", user: "DevTeam", likes: 0 },
-                    { title: "Minimal Yaşam", user: "LifeStyle", likes: 0 }
-                ];
+        let tempEmail = "";
 
-                grid.innerHTML = mockVideos.map(v => `
-                    <div class="group cursor-pointer">
-                        <div class="aspect-video bg-zinc-900 rounded-3xl mb-4 overflow-hidden relative border border-white/5">
-                            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition">
-                                <i data-lucide="play" class="fill-white text-white"></i>
-                            </div>
-                        </div>
-                        <h3 class="font-bold text-sm line-clamp-2">${v.title}</h3>
-                        <p class="text-xs text-gray-500 mt-1 uppercase font-black">${v.user}</p>
+        function handleEmailNext() {
+            const email = document.getElementById('emailInput').value.trim().toLowerCase();
+            const err = document.getElementById('emailErr');
+            const input = document.getElementById('emailInput');
+
+            // Format ve Varlık Kontrolü
+            if (email.endsWith('@gmail.com') && validUsers.hasOwnProperty(email)) {
+                tempEmail = email;
+                document.getElementById('stepEmail').classList.add('hidden');
+                document.getElementById('stepPassword').classList.remove('hidden');
+                document.getElementById('userDisplay').innerText = email;
+                err.classList.add('hidden');
+            } else {
+                input.classList.add('error', 'shake');
+                err.classList.remove('hidden');
+                setTimeout(() => input.classList.remove('shake'), 400);
+            }
+        }
+
+        function handleLoginFinal() {
+            const pass = document.getElementById('passInput').value;
+            const err = document.getElementById('passErr');
+            const input = document.getElementById('passInput');
+
+            if (validUsers[tempEmail] === pass) {
+                // BAŞARILI GİRİŞ
+                const userData = { email: tempEmail, time: new Date() };
+                localStorage.setItem('nextube_auth', JSON.stringify(userData));
+                unlockApp(tempEmail);
+            } else {
+                // HATALI ŞİFRE
+                input.classList.add('error', 'shake');
+                err.classList.remove('hidden');
+                setTimeout(() => input.classList.remove('shake'), 400);
+            }
+        }
+
+        function unlockApp(email) {
+            document.body.classList.add('unlocked');
+            document.getElementById('userProfileTag').innerText = email;
+            document.getElementById('welcomeName').innerText = email.split('@')[0].toUpperCase();
+            lucide.createIcons();
+        }
+
+        function logout() {
+            localStorage.removeItem('nextube_auth');
+            location.reload();
+        }
+
+        // Sayfa yüklendiğinde oturum kontrolü
+        window.onload = () => {
+            const session = localStorage.getItem('nextube_auth');
+            if (session) {
+                const data = JSON.parse(session);
+                unlockApp(data.email);
+            }
+            lucide.createIcons();
+        };
+
+        // Enter tuşu desteği
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if (!document.getElementById('stepEmail').classList.contains('hidden')) handleEmailNext();
+                else if (!document.getElementById('stepPassword').classList.contains('hidden')) handleLoginFinal();
+            }
+        });
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexTube Pro | Secure Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Roboto:wght@400;500&display=swap');
+        
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0f0f0f; color: #f1f1f1; overflow: hidden; }
+        
+        /* --- AUTH LAYER --- */
+        #authOverlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: #000; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* --- GOOGLE STYLE MODAL --- */
+        .google-card {
+            background: white; color: #202124;
+            width: 100%; max-width: 450px;
+            min-height: 500px; padding: 48px 40px 36px;
+            border-radius: 8px; font-family: 'Roboto', sans-serif;
+            display: flex; flex-direction: column;
+        }
+
+        .g-input {
+            width: 100%; height: 56px; border: 1px solid #dadce0;
+            border-radius: 4px; padding: 13px 15px; font-size: 16px;
+            transition: border 0.2s; outline: none;
+        }
+        .g-input:focus { border: 2px solid #1a73e8; padding: 12px 14px; }
+        .g-input.error { border: 1px solid #d93025; }
+
+        .btn-blue {
+            background: #1a73e8; color: white; padding: 0 24px;
+            height: 36px; border-radius: 4px; font-weight: 500;
+            font-size: 14px; transition: background 0.2s;
+        }
+        .btn-blue:hover { background: #1b66c9; box-shadow: 0 1px 3px 1px rgba(60,64,67,.15); }
+
+        #mainApp { filter: blur(50px); pointer-events: none; opacity: 0; transition: all 1s ease; }
+        body.unlocked #mainApp { filter: blur(0); pointer-events: auto; opacity: 1; }
+        body.unlocked #authOverlay { display: none; }
+
+        .shake { animation: shake 0.4s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="authOverlay">
+        <div class="google-card" id="loginCard">
+            <div class="flex justify-center mb-3">
+                <svg width="75" height="24" viewBox="0 0 75 24"><path d="M10.4 19.3c-4.4 0-8-3.5-8-8s3.6-8 8-8c2.4 0 4.2.9 5.6 2.3L14.3 7c-1-1-2.3-1.5-3.9-1.5-3.1 0-5.7 2.5-5.7 5.7s2.6 5.7 5.7 5.7c2 0 3.2-.8 3.9-1.5.6-.6 1-1.5 1.1-2.7h-5v-2.3h7.3c.1.4.1.8.1 1.3 0 2.2-.6 4.8-2.6 6.8-2 2-4.6 3-7.3 3" fill="#4285F4"/><path d="M26.2 18.8c-3.1 0-5.6-2.4-5.6-5.5s2.5-5.5 5.6-5.5 5.6 2.4 5.6 5.5-2.5 5.5-5.6 5.5m0-2.3c1.8 0 3.3-1.5 3.3-3.2s-1.5-3.2-3.3-3.2-3.3 1.5-3.3 3.2 1.5 3.2 3.3 3.2" fill="#EA4335"/><path d="M38.5 18.8c-3.1 0-5.6-2.4-5.6-5.5s2.5-5.5 5.6-5.5 5.6 2.4 5.6 5.5-2.5 5.5-5.6 5.5m0-2.3c1.8 0 3.3-1.5 3.3-3.2s-1.5-3.2-3.3-3.2-3.3 1.5-3.3 3.2 1.5 3.2 3.3 3.2" fill="#FBBC05"/><path d="M50.6 23.3c-3.1 0-5.5-2.4-5.5-5.5s2.4-5.5 5.5-5.5c1.4 0 2.5.6 3.1 1.2l-1.1 1.1c-.5-.4-1.2-.7-2-.7-1.8 0-3.3 1.5-3.3 3.2s1.4 3.2 3.3 3.2c1.9 0 2.7-1.4 2.8-2.1H50.6v-1.5H55c.1.4.1.8.1 1.3 0 2-.7 5.5-4.5 5.5" fill="#4285F4"/><path d="M57.6 1.1h2.3v17.7h-2.3V1.1z" fill="#34A853"/><path d="M68.7 18.8c-2.9 0-5.4-2.2-5.4-5.5s2.4-5.5 5.2-5.5c1.4 0 2.5.6 3.1 1.2l-1.1 1.1c-.4-.4-1.1-.8-2-.8-1.7 0-3 1.4-3 3.2s1.3 3.2 3 3.2c1.3 0 2-.6 2.6-1.2l1.1 1.1c-.8.8-1.9 1.5-3.8 1.5" fill="#EA4335"/></svg>
+            </div>
+
+            <div id="stepEmail">
+                <h1 class="text-2xl font-normal text-center mb-2">Oturum açın</h1>
+                <p class="text-center mb-8 text-[16px]">NexTube Pro'ya devam et</p>
+                <div class="mb-10">
+                    <input type="email" id="emailInput" class="g-input" placeholder="E-posta veya telefon">
+                    <div id="emailErr" class="text-[#d93025] text-xs mt-1 hidden flex items-center gap-1">
+                        <i data-lucide="alert-circle" class="w-3 h-3"></i> <span>Google hesabı bulunamadı</span>
                     </div>
-                `).join('');
-                lucide.createIcons();
-            },
+                </div>
+                <div class="mt-auto flex justify-between items-center">
+                    <button class="text-[#1a73e8] font-bold text-sm hover:bg-blue-50 px-2 py-1 rounded">Hesap oluşturun</button>
+                    <button onclick="handleEmailNext()" class="btn-blue">İleri</button>
+                </div>
+            </div>
 
-            showToast(msg) {
-                const toast = document.createElement('div');
-                toast.className = "fixed bottom-10 right-10 bg-white text-black px-6 py-4 rounded-2xl shadow-2xl z-[1000] font-bold text-sm fade-in border border-zinc-200 flex items-center gap-3";
-                toast.innerHTML = `<i data-lucide="check-circle" class="text-green-600"></i> ${msg}`;
-                document.body.appendChild(toast);
-                lucide.createIcons();
-                setTimeout(() => toast.remove(), 4000);
-            }
+            <div id="stepPassword" class="hidden">
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center gap-2 border border-gray-200 rounded-full px-3 py-1 text-sm font-medium mb-4">
+                        <i data-lucide="user-circle" class="w-4 h-4 text-blue-600"></i>
+                        <span id="userDisplay"></span>
+                    </div>
+                    <h1 class="text-2xl font-normal">Hoş geldiniz</h1>
+                </div>
+                <div class="mb-10">
+                    <input type="password" id="passInput" class="g-input" placeholder="Şifrenizi girin">
+                    <div id="passErr" class="text-[#d93025] text-xs mt-1 hidden flex items-center gap-1">
+                        <i data-lucide="alert-circle" class="w-3 h-3"></i> <span>Yanlış şifre. Tekrar deneyin.</span>
+                    </div>
+                </div>
+                <div class="mt-auto flex justify-between items-center">
+                    <button class="text-[#1a73e8] font-bold text-sm">Şifrenizi mi unuttunuz?</button>
+                    <button onclick="handleLoginFinal()" class="btn-blue">İleri</button>
+                </div>
+            </div>
+
+            <div class="mt-12 text-xs text-gray-500 leading-relaxed">
+                NexTube Pro uygulamasına devam etmek için Google, adınızı, e-posta adresinizi ve profil resminizi paylaşacaktır.
+            </div>
+        </div>
+    </div>
+
+    <div id="mainApp" class="h-screen flex flex-col">
+        <header class="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-[#0f0f0f]">
+            <div class="flex items-center gap-2">
+                <div class="bg-red-600 p-1.5 rounded-lg"><i data-lucide="play" class="w-5 h-5 fill-white text-white"></i></div>
+                <span class="text-xl font-black italic">NexTube</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="userProfileTag" class="text-xs bg-white/5 px-4 py-2 rounded-full border border-white/10"></span>
+                <button onclick="logout()" class="text-xs text-gray-500 hover:text-red-500 font-bold">Çıkış Yap</button>
+            </div>
+        </header>
+        <div class="flex-1 flex items-center justify-center p-10">
+            <div class="text-center">
+                <h1 class="text-5xl font-black mb-4">Hoş Geldin, <span id="welcomeName" class="text-red-600"></span></h1>
+                <p class="text-gray-500">Admin ID: 8392479231 onaylı oturum aktif.</p>
+                <div class="mt-10 p-20 border-2 border-dashed border-white/10 rounded-[40px] text-gray-600">
+                    Video Akışı Hazırlanıyor...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- AUTH LOGIC (Admin: 8392479231) ---
+        
+        // Simüle edilmiş "Gerçek" kullanıcılar
+        const validUsers = {
+            "admin@gmail.com": "admin123",
+            "test@gmail.com": "password",
+            "gemini@gmail.com": "pro2026"
         };
 
-        // Initialize
-        window.onload = () => auth.init();
+        let tempEmail = "";
+
+        function handleEmailNext() {
+            const email = document.getElementById('emailInput').value.trim().toLowerCase();
+            const err = document.getElementById('emailErr');
+            const input = document.getElementById('emailInput');
+
+            // Format ve Varlık Kontrolü
+            if (email.endsWith('@gmail.com') && validUsers.hasOwnProperty(email)) {
+                tempEmail = email;
+                document.getElementById('stepEmail').classList.add('hidden');
+                document.getElementById('stepPassword').classList.remove('hidden');
+                document.getElementById('userDisplay').innerText = email;
+                err.classList.add('hidden');
+            } else {
+                input.classList.add('error', 'shake');
+                err.classList.remove('hidden');
+                setTimeout(() => input.classList.remove('shake'), 400);
+            }
+        }
+
+        function handleLoginFinal() {
+            const pass = document.getElementById('passInput').value;
+            const err = document.getElementById('passErr');
+            const input = document.getElementById('passInput');
+
+            if (validUsers[tempEmail] === pass) {
+                // BAŞARILI GİRİŞ
+                const userData = { email: tempEmail, time: new Date() };
+                localStorage.setItem('nextube_auth', JSON.stringify(userData));
+                unlockApp(tempEmail);
+            } else {
+                // HATALI ŞİFRE
+                input.classList.add('error', 'shake');
+                err.classList.remove('hidden');
+                setTimeout(() => input.classList.remove('shake'), 400);
+            }
+        }
+
+        function unlockApp(email) {
+            document.body.classList.add('unlocked');
+            document.getElementById('userProfileTag').innerText = email;
+            document.getElementById('welcomeName').innerText = email.split('@')[0].toUpperCase();
+            lucide.createIcons();
+        }
+
+        function logout() {
+            localStorage.removeItem('nextube_auth');
+            location.reload();
+        }
+
+        // Sayfa yüklendiğinde oturum kontrolü
+        window.onload = () => {
+            const session = localStorage.getItem('nextube_auth');
+            if (session) {
+                const data = JSON.parse(session);
+                unlockApp(data.email);
+            }
+            lucide.createIcons();
+        };
+
+        // Enter tuşu desteği
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if (!document.getElementById('stepEmail').classList.contains('hidden')) handleEmailNext();
+                else if (!document.getElementById('stepPassword').classList.contains('hidden')) handleLoginFinal();
+            }
+        });
     </script>
 </body>
 </html>
