@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProTube Professional - Home Core v1.0</title>
+    <title>ProTube Ultimate - Video Engine v1.0</title>
     <style>
         :root {
             --yt-black: #0f0f0f;
@@ -12,315 +12,372 @@
             --yt-gray: #aaaaaa;
             --yt-dark-gray: #272727;
             --yt-border: rgba(255, 255, 255, 0.1);
-            --yt-blue: #3ea6ff;
             --ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
             --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* Temel Reset ve Kaydırma */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Roboto", sans-serif; }
         body { background-color: var(--yt-black); color: var(--yt-white); overflow: hidden; height: 100vh; }
 
-        /* --- NAVIGATION SYSTEM --- */
+        /* --- HEADER & NAVIGATION --- */
         header {
             height: 56px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between;
             position: fixed; top: 0; width: 100%; z-index: 5000; background: var(--yt-black);
         }
-
         .sidebar {
             width: 240px; height: calc(100vh - 56px); position: fixed; top: 56px; left: 0;
             padding: 12px; border-right: 1px solid var(--yt-border); z-index: 4000; background: var(--yt-black);
-            transition: transform 0.3s var(--ease-in-out);
         }
-
         .nav-item {
-            display: flex; align-items: center; gap: 24px; padding: 12px; border-radius: 10px;
-            cursor: pointer; color: #fff; font-size: 14px; transition: background 0.2s;
+            display: flex; align-items: center; gap: 24px; padding: 10px 12px; border-radius: 10px;
+            cursor: pointer; color: #fff; font-size: 14px; transition: 0.2s;
         }
         .nav-item:hover { background: var(--yt-dark-gray); }
-        
-        /* KRİTİK: Başlangıç Aktif State */
-        .nav-item.active { 
-            background: var(--yt-dark-gray); 
-            font-weight: 500; 
-        }
-        .nav-item.active svg { fill: white; }
+        .nav-item.active { background: var(--yt-dark-gray); font-weight: 500; }
 
-        /* --- VIEW CONTROLLERS --- */
-        .main-view {
+        /* --- VIEW CONTROLLER --- */
+        .view {
             margin-left: 240px; margin-top: 56px; height: calc(100vh - 56px);
-            overflow-y: auto; display: none; /* Varsayılan kapalı, JS ile açılacak */
+            overflow-y: auto; display: none;
         }
-
-        /* ANA SAYFA GRID (ZORUNLU GÖRÜNÜM) */
         #home-view { display: block; padding: 24px; }
+
+        /* --- HOME GRID --- */
         .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-            gap: 16px; row-gap: 40px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px; row-gap: 32px;
         }
-
-        .v-card { cursor: pointer; animation: fadeIn 0.5s ease; }
-        .v-thumbnail {
-            width: 100%; aspect-ratio: 16/9; background: #222; border-radius: 12px;
-            overflow: hidden; position: relative; margin-bottom: 12px;
+        .v-card { cursor: pointer; }
+        .v-thumb { 
+            width: 100%; aspect-ratio: 16/9; background: #222; 
+            border-radius: 12px; overflow: hidden; margin-bottom: 12px; 
         }
-        .v-thumbnail img { width: 100%; height: 100%; object-fit: cover; transition: border-radius 0.2s; }
-        .v-card:hover img { border-radius: 0; }
+        .v-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-        .v-info { display: flex; gap: 12px; }
-        .v-avatar { width: 36px; height: 36px; border-radius: 50%; background: #333; flex-shrink: 0; }
-        .v-text h3 { font-size: 16px; line-height: 22px; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .v-text p { color: var(--yt-gray); font-size: 14px; }
-
-        /* --- WATCH PAGE (Dinamik Katman) --- */
-        #watch-view { padding: 24px 60px; }
-        .watch-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; max-width: 1700px; margin: 0 auto; }
-        .player-container { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden; }
-        video { width: 100%; height: 100%; }
-
-        /* --- SHORTS (Dikey Akış) --- */
-        #shorts-view {
-            overflow-y: scroll; scroll-snap-type: y mandatory; padding: 0;
-            background: #000;
+        /* --- UPLOAD MODAL --- */
+        #upload-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            z-index: 6000; display: none; align-items: center; justify-content: center;
         }
-        .short-frame { 
+        .upload-card {
+            background: var(--yt-dark-gray); width: 600px; padding: 32px;
+            border-radius: 16px; position: relative;
+        }
+        .progress-container {
+            width: 100%; height: 4px; background: #444; margin: 20px 0; border-radius: 2px;
+            display: none; overflow: hidden;
+        }
+        #progress-bar { width: 0%; height: 100%; background: var(--yt-red); transition: width 0.3s; }
+
+        /* --- SHORTS ENGINE (SNAP SCROLL) --- */
+        #shorts-view { margin-left: 240px; padding: 0; scroll-snap-type: y mandatory; }
+        .short-container {
             height: 100%; width: 100%; scroll-snap-align: start;
             display: flex; justify-content: center; align-items: center; position: relative;
+            background: #000;
+        }
+        .short-player {
+            height: 90%; aspect-ratio: 9/16; background: #111;
+            border-radius: 16px; overflow: hidden; position: relative;
+        }
+        .short-actions {
+            position: absolute; bottom: 40px; right: 20px;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+        .s-btn { 
+            display: flex; flex-direction: column; align-items: center; cursor: pointer; 
+            gap: 5px; font-size: 12px; 
+        }
+        .s-icon { 
+            width: 48px; height: 48px; background: #222; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
         }
 
-        /* --- INTERACTIVE BUTTONS (Dopamin Layer) --- */
-        .action-btn {
-            background: var(--yt-dark-gray); padding: 8px 16px; border-radius: 20px;
-            display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s;
-        }
-        .action-btn:hover { background: #3f3f3f; }
-        .action-btn.liked { color: var(--yt-red); }
-        .action-btn.liked svg { fill: var(--yt-red); animation: bounce 0.4s var(--ease-bounce); }
-
-        /* --- COMMENTS PANEL (Slide-up %70) --- */
-        #comment-panel {
+        /* --- COMMENT DRAWER (%70) --- */
+        #comment-drawer {
             position: fixed; bottom: 0; left: 240px; right: 0; height: 70%;
-            background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px);
-            z-index: 6000; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1);
-            border-top: 1px solid var(--yt-border);
+            background: rgba(15, 15, 15, 0.98); backdrop-filter: blur(20px);
+            z-index: 7000; transform: translateY(100%); transition: transform 0.4s var(--ease-in-out);
+            border-top: 1px solid var(--yt-border); padding: 24px;
         }
-        #comment-panel.active { transform: translateY(0); }
+        #comment-drawer.open { transform: translateY(0); }
 
-        /* --- TOAST SYSTEM --- */
-        .toast-msg {
-            position: fixed; bottom: 24px; right: 24px; background: white; color: black;
-            padding: 12px 24px; border-radius: 8px; font-weight: 500; z-index: 10000;
-            transform: translateY(100px); transition: 0.3s;
+        /* --- TOAST --- */
+        #toast {
+            position: fixed; bottom: 32px; right: 32px; background: #fff; color: #000;
+            padding: 12px 24px; border-radius: 8px; font-weight: 500;
+            transform: translateY(150%); transition: 0.3s; z-index: 10000;
         }
-        .toast-msg.show { transform: translateY(0); }
+        #toast.show { transform: translateY(0); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Animations */
+        .liked svg { fill: var(--yt-red) !important; animation: bounce 0.4s var(--ease-bounce); }
         @keyframes bounce { 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
-
+        input, textarea { 
+            width: 100%; background: transparent; border: 1px solid #444; 
+            color: white; padding: 12px; border-radius: 8px; margin-bottom: 12px; outline: none;
+        }
     </style>
 </head>
 <body>
 
     <header>
         <div style="display:flex; align-items:center; gap:16px;">
-            <div style="cursor:pointer; padding:8px;" onclick="toggleSidebar()">
-                <svg viewBox="0 0 24 24" width="24" fill="white"><path d="M21 6H3V5h18v1zm0 5H3v1h18v-1zm0 6H3v1h18v-1z"></path></svg>
-            </div>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" height="20" style="cursor:pointer" onclick="navigate('home')">
+            <span style="cursor:pointer" onclick="toggleSidebar()">☰</span>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" height="20" onclick="navigate('home')">
         </div>
-        <div style="flex:0 1 600px; display:flex;">
-            <input type="text" placeholder="Ara" style="width:100%; background:#121212; border:1px solid #333; border-radius:40px 0 0 40px; padding:0 20px; color:white; outline:none;">
-            <button style="background:var(--yt-dark-gray); border:none; border-radius:0 40px 40px 0; padding:0 24px; color:white;">🔍</button>
-        </div>
-        <div style="display:flex; gap:16px; align-items:center;">
-            <div class="action-btn" style="background:transparent;" onclick="openUpload()">
-                <svg viewBox="0 0 24 24" width="24" fill="white"><path d="M14 13h-3v3H9v-3H6v-2h3V8h2v3h3v2zm3-7H3v12h14v-6.39l4 3.83V7.56l-4 3.83V6m1-1v14L13 14v5H2V5h11v5l5-5z"></path></svg>
-                <span>Oluştur</span>
-            </div>
-            <div style="width:32px; height:32px; border-radius:50%; background:#ff4e45; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px; cursor:pointer;">A</div>
+        <div style="display:flex; gap:16px;">
+            <button onclick="showUpload()" style="background:var(--yt-red); border:none; color:white; padding:8px 16px; border-radius:20px; cursor:pointer; font-weight:bold;">YÜKLE</button>
+            <div style="width:32px; height:32px; background:blue; border-radius:50%;"></div>
         </div>
     </header>
 
-    <nav class="sidebar" id="app-sidebar">
-        <div class="nav-item active" id="nav-home" onclick="navigate('home')">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M4 10V21h6v-6h4v6h6V10l-8-7z"></path></svg>
-            <span>Ana Sayfa</span>
-        </div>
-        <div class="nav-item" id="nav-shorts" onclick="navigate('shorts')">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M10 14.65v-5.3L14.5 12 10 14.65zM17.77 10.32l-1.2-.5L18 8.82a3.74 3.74 0 00-2.45-5.75 3.74 3.74 0 00-2.69.95l-9.3 5.37a3.74 3.74 0 00-.03 6.48l1.2.5L3.5 17.37a3.74 3.74 0 005.14 4.8 3.74 3.74 0 002.69-.95l9.3-5.37a3.74 3.74 0 00.03-6.48-.01.01 0 00-.89-.05z"></path></svg>
-            <span>Shorts</span>
-        </div>
-        <div class="nav-item">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M10 18v-6l5 3-5 3zm7-15H7v1h10V3zm3 3H4v1h16V6zm2 3H2v12h20V9zM3 10h18v10H3V10z"></path></svg>
-            <span>Abonelikler</span>
-        </div>
-        <hr style="border:none; border-top:1px solid var(--yt-border); margin:12px 0;">
-        <div style="padding:0 12px 8px; font-weight:bold;">Siz ></div>
-        <div class="nav-item"><span>Geçmiş</span></div>
-        <div class="nav-item"><span>Videolarınız</span></div>
+    <nav class="sidebar">
+        <div class="nav-item active" id="btn-home" onclick="navigate('home')">🏠 Ana Sayfa</div>
+        <div class="nav-item" id="btn-shorts" onclick="navigate('shorts')">🎬 Shorts</div>
     </nav>
 
-    <main class="main-view" id="home-view">
-        <div class="video-grid" id="home-grid">
-            </div>
+    <main id="home-view" class="view">
+        <div class="video-grid" id="home-grid"></div>
     </main>
 
-    <main class="main-view" id="shorts-view">
-        <div id="shorts-container" style="height: 100%;"></div>
+    <main id="shorts-view" class="view">
+        <div id="shorts-feed" style="height: 100%;"></div>
     </main>
 
-    <main class="main-view" id="watch-view">
-        <div class="watch-grid">
-            <div class="watch-main">
-                <div class="player-container">
-                    <video id="global-player" controls></video>
-                </div>
-                <h1 id="watch-title" style="margin:20px 0 10px; font-size:20px;">Video Başlığı</h1>
-                <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:16px; border-bottom:1px solid var(--yt-border);">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div class="v-avatar"></div>
-                        <div>
-                            <div style="font-weight:bold;">Kanal Adı</div>
-                            <div style="font-size:12px; color:var(--yt-gray);">1.5M Abone</div>
-                        </div>
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                        <div class="action-btn" onclick="handleLike()">
-                            <svg viewBox="0 0 24 24" width="22" fill="white"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"></path></svg>
-                            <span id="like-num">12B</span>
-                        </div>
-                        <div class="action-btn" onclick="openComments()">
-                            <span>💬 Yorumlar</span>
-                        </div>
-                    </div>
-                </div>
+    <main id="watch-view" class="view">
+        <div style="max-width: 1200px; margin: 0 auto; padding: 24px;">
+            <div class="v-thumb" style="aspect-ratio: 16/9; height: auto;">
+                <video id="main-player" controls style="width: 100%; height: 100%;"></video>
             </div>
-            <div class="watch-side" id="suggested-col"></div>
+            <h1 id="watch-title" style="margin-top:20px;"></h1>
+            <div id="watch-actions" style="display:flex; gap:16px; margin:20px 0; border-bottom:1px solid #333; padding-bottom:16px;">
+                <div class="s-btn" onclick="toggleLike(this)"><div class="s-icon">❤️</div><span>0</span></div>
+                <div class="s-btn" onclick="openComments()"><div class="s-icon">💬</div><span>Yorumlar</span></div>
+            </div>
+            <p id="watch-desc" style="color:var(--yt-gray);"></p>
         </div>
     </main>
 
-    <div id="comment-panel">
-        <div style="padding:16px 24px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--yt-border);">
-            <h3>Yorumlar</h3>
-            <span onclick="closeComments()" style="cursor:pointer; font-size:24px;">&times;</span>
+    <div id="upload-overlay">
+        <div class="upload-card">
+            <h2 id="up-header">Video Yükle</h2>
+            <div id="up-form">
+                <input type="file" id="file-input" accept="video/*">
+                <input type="text" id="up-title" placeholder="Başlık">
+                <textarea id="up-desc" placeholder="Açıklama" rows="4"></textarea>
+                <button onclick="startUpload()" style="width:100%; background:white; color:black; padding:12px; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">YAYINLA</button>
+            </div>
+            <div class="progress-container" id="prog-cont">
+                <div id="progress-bar"></div>
+            </div>
+            <p id="up-status" style="text-align:center; margin-top:10px; font-size:14px;"></p>
         </div>
-        <div style="flex:1; padding:24px; overflow-y:auto;" id="comment-body"></div>
     </div>
 
-    <div id="toast" class="toast-msg">İşlem Başarılı</div>
+    <div id="comment-drawer">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <h3>Yorumlar</h3>
+            <span onclick="closeComments()" style="cursor:pointer; font-size:24px;">✕</span>
+        </div>
+        <div id="comment-list" style="overflow-y:auto; height:80%;"></div>
+        <div style="position:absolute; bottom:20px; left:24px; right:24px; display:flex; gap:10px;">
+            <input type="text" id="comm-input" placeholder="Yorum ekle..." style="margin:0;">
+            <button onclick="addComment()" style="background:var(--yt-red); border:none; color:white; padding:0 20px; border-radius:8px;">Gönder</button>
+        </div>
+    </div>
+
+    <div id="toast">Bildirim</div>
 
     <script>
-        /**
-         * STATE MANAGEMENT & DATA
-         */
-        const MOCK_VIDEOS = [
-            { id: 'v1', title: 'Modern Web Geliştirme Eğitimi 2026', thumb: 'https://picsum.photos/seed/web/800/450', views: '1.2M', date: '2 gün önce', url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' },
-            { id: 'v2', title: 'Şehirde Bir Gün: Sokak Lezzetleri', thumb: 'https://picsum.photos/seed/city/800/450', views: '500B', date: '5 saat önce', url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4' },
-            { id: 'v3', title: 'Uzay Yolculuğu: Mars Görevi', thumb: 'https://picsum.photos/seed/space/800/450', views: '2.4M', date: '1 hafta önce', url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4' }
-        ];
+        // --- DATABASE & STATE ---
+        let videos = [];
+        let currentWatchId = null;
 
-        let currentView = 'home';
+        // --- NAVIGATION ---
+        function navigate(target) {
+            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(`${target}-view`).style.display = 'block';
+            document.getElementById(`btn-${target === 'watch' ? 'home' : target}`).classList.add('active');
+            
+            // Video kontrolü
+            if (target !== 'watch') document.getElementById('main-player').pause();
+            if (target === 'shorts') initShortsObserver();
+        }
 
-        /**
-         * CORE INITIALIZATION (ZORUNLU BAŞLANGIÇ)
-         */
-        window.onload = () => {
-            console.log("🔥 ProTube initialized. Default: HOME");
-            navigate('home'); // Kesin başlangıç emri
+        // --- UPLOAD ENGINE ---
+        function showUpload() { document.getElementById('upload-overlay').style.display = 'flex'; }
+
+        async function startUpload() {
+            const file = document.getElementById('file-input').files[0];
+            const title = document.getElementById('up-title').value;
+            const desc = document.getElementById('up-desc').value;
+
+            if(!file || !title) return alert("Dosya ve başlık zorunlu!");
+
+            // Formu gizle, barı aç
+            document.getElementById('up-form').style.display = 'none';
+            document.getElementById('prog-cont').style.display = 'block';
+            document.getElementById('up-header').innerText = "Yükleniyor...";
+
+            // 10 Saniyelik Simülasyon
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 1;
+                document.getElementById('progress-bar').style.width = progress + "%";
+                document.getElementById('up-status').innerText = `%${progress} yüklendi...`;
+                
+                if(progress >= 100) {
+                    clearInterval(interval);
+                    processVideo(file, title, desc);
+                }
+            }, 100);
+        }
+
+        async function processVideo(file, title, desc) {
+            const videoUrl = URL.createObjectURL(file);
+            
+            // Süre ve Thumbnail Ölçümü
+            const tempVideo = document.createElement('video');
+            tempVideo.src = videoUrl;
+            
+            tempVideo.onloadedmetadata = async () => {
+                const duration = tempVideo.duration;
+                const type = duration <= 60 ? 'short' : 'long';
+                
+                // Canvas ile Thumbnail Al
+                tempVideo.currentTime = 1; // 1. saniyeden kare al
+                tempVideo.onseeked = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 320; canvas.height = 180;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+                    const thumb = canvas.toDataURL('image/jpeg');
+
+                    const newVideo = {
+                        id: Date.now(),
+                        title, desc, url: videoUrl, thumb, type,
+                        likes: 0, comments: []
+                    };
+
+                    videos.push(newVideo);
+                    finalizeUpload();
+                };
+            };
+        }
+
+        function finalizeUpload() {
+            document.getElementById('upload-overlay').style.display = 'none';
+            // Reset form
+            document.getElementById('up-form').style.display = 'block';
+            document.getElementById('prog-cont').style.display = 'none';
+            document.getElementById('up-header').innerText = "Video Yükle";
+            
+            showToast("Video başarıyla yüklendi");
             renderHome();
-        };
+            renderShorts();
+        }
 
-        /**
-         * NAVIGASYON MOTORU
-         */
-        const navigate = (view) => {
-            // Video durdurma kuralı
-            const player = document.getElementById('global-player');
-            player.pause();
-
-            // Tüm view'ları kapat
-            document.querySelectorAll('.main-view').forEach(v => v.style.display = 'none');
-            
-            // Aktif view'ı aç
-            document.getElementById(`${view}-view`).style.display = 'block';
-            
-            // Sidebar state güncelle
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            document.getElementById(`nav-${view === 'watch' ? 'home' : view}`).classList.add('active');
-
-            currentView = view;
-            if(view === 'shorts') initShorts();
-            
-            // Yorum panelini her navigasyonda kapat
-            closeComments();
-        };
-
-        /**
-         * ANA SAYFA RENDER (ZORUNLU)
-         */
-        const renderHome = () => {
+        // --- RENDER ENGINES ---
+        function renderHome() {
             const grid = document.getElementById('home-grid');
-            grid.innerHTML = MOCK_VIDEOS.map(v => `
-                <div class="v-card" onclick="openWatch('${v.id}')">
-                    <div class="v-thumbnail">
-                        <img src="${v.thumb}" alt="thumb">
-                    </div>
-                    <div class="v-info">
-                        <div class="v-avatar" style="background:linear-gradient(45deg, #ff4e45, #3ea6ff)"></div>
-                        <div class="v-text">
-                            <h3>${v.title}</h3>
-                            <p>ProChannel TR</p>
-                            <p>${v.views} görüntüleme • ${v.date}</p>
+            grid.innerHTML = videos.filter(v => v.type === 'long').map(v => `
+                <div class="v-card" onclick="openWatch(${v.id})">
+                    <div class="v-thumb"><img src="${v.thumb}"></div>
+                    <h3>${v.title}</h3>
+                    <p style="color:var(--yt-gray); font-size:14px;">ProTube • Yeni</p>
+                </div>
+            `).join('');
+        }
+
+        function openWatch(id) {
+            const v = videos.find(x => x.id === id);
+            currentWatchId = id;
+            navigate('watch');
+            document.getElementById('watch-title').innerText = v.title;
+            document.getElementById('watch-desc').innerText = v.desc;
+            const player = document.getElementById('main-player');
+            player.src = v.url;
+            player.play();
+        }
+
+        function renderShorts() {
+            const feed = document.getElementById('shorts-feed');
+            feed.innerHTML = videos.filter(v => v.type === 'short').map(v => `
+                <div class="short-container" data-id="${v.id}">
+                    <div class="short-player">
+                        <video src="${v.url}" loop playsinline></video>
+                        <div class="short-actions">
+                            <div class="s-btn" onclick="toggleLike(this, ${v.id})"><div class="s-icon">❤️</div><span>${v.likes}</span></div>
+                            <div class="s-btn" onclick="openComments(${v.id})"><div class="s-icon">💬</div><span>${v.comments.length}</span></div>
+                            <div class="s-btn" onclick="showToast('Bağlantı kopyalandı')"><div class="s-icon">🔗</div><span>Paylaş</span></div>
+                        </div>
+                        <div style="position:absolute; bottom:20px; left:20px;">
+                            <h4>@Kanal</h4><p>${v.title}</p>
                         </div>
                     </div>
                 </div>
             `).join('');
-        };
+            initShortsObserver();
+        }
 
-        /**
-         * İZLEME EKRANI (OTOMATİK OYNATMA YOK - SADECE TIKLAYINCA)
-         */
-        const openWatch = (id) => {
-            const video = MOCK_VIDEOS.find(v => v.id === id);
-            navigate('watch');
-            
-            const player = document.getElementById('global-player');
-            player.src = video.url;
-            document.getElementById('watch-title').innerText = video.title;
-            
-            // Kullanıcı tıkladığı için başlat
-            player.play();
-        };
+        // --- SHORTS AUTO-PLAY LOGIC ---
+        function initShortsObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target.querySelector('video');
+                    if(entry.isIntersecting) video.play();
+                    else { video.pause(); video.currentTime = 0; }
+                });
+            }, { threshold: 0.8 });
 
-        /**
-         * ETKİLEŞİMLER
-         */
-        const handleLike = () => {
-            const btn = document.querySelector('.action-btn');
+            document.querySelectorAll('.short-container').forEach(c => observer.observe(c));
+        }
+
+        // --- INTERACTIONS ---
+        function toggleLike(btn, id = null) {
             btn.classList.toggle('liked');
-            if(btn.classList.contains('liked')) showToast("Beğenildi");
-        };
+            let span = btn.querySelector('span');
+            let count = parseInt(span.innerText);
+            if(btn.classList.contains('liked')) {
+                span.innerText = count + 1;
+                showToast("Beğenildi");
+            } else {
+                span.innerText = count - 1;
+            }
+        }
 
-        const openComments = () => {
-            document.getElementById('comment-panel').classList.add('active');
-            const body = document.getElementById('comment-body');
-            body.innerHTML = `<div style="color:var(--yt-gray); text-align:center; padding-top:40px;">Birebir yorum katmanı yükleniyor...</div>`;
-        };
+        function openComments(id = null) {
+            document.getElementById('comment-drawer').classList.add('open');
+            // Video durmaz kuralı otomatik sağlanır (Player'a dokunulmaz)
+        }
 
-        const closeComments = () => {
-            document.getElementById('comment-panel').classList.remove('active');
-        };
+        function closeComments() { document.getElementById('comment-drawer').classList.remove('open'); }
 
-        const showToast = (msg) => {
+        function addComment() {
+            const input = document.getElementById('comm-input');
+            if(!input.value) return;
+            const list = document.getElementById('comment-list');
+            const div = document.createElement('div');
+            div.style.marginBottom = "15px";
+            div.innerHTML = `<strong>@Kullanıcı</strong><br>${input.value}`;
+            list.prepend(div);
+            input.value = "";
+            showToast("Yorum eklendi");
+        }
+
+        function showToast(msg) {
             const t = document.getElementById('toast');
             t.innerText = msg;
             t.classList.add('show');
             setTimeout(() => t.classList.remove('show'), 3000);
-        };
+        }
 
-        const toggleSidebar = () => {
-            const sb = document.getElementById('app-sidebar');
-            const views = document.querySelectorAll('.main-view');
+        function toggleSidebar() {
+            const sb = document.querySelector('.sidebar');
+            const views = document.querySelectorAll('.view');
             if(sb.style.transform === "translateX(-240px)") {
                 sb.style.transform = "translateX(0)";
                 views.forEach(v => v.style.marginLeft = "240px");
@@ -328,13 +385,7 @@
                 sb.style.transform = "translateX(-240px)";
                 views.forEach(v => v.style.marginLeft = "0");
             }
-        };
-
-        const openUpload = () => {
-            showToast("Video yükleme modülü hazır.");
-            // Bir önceki adımda hazırlanan Studio modülü buraya tetiklenebilir.
-        };
-
+        }
     </script>
 </body>
 </html>
