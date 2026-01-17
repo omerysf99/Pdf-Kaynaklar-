@@ -3,29 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexTube | Video & Shorts Paradise</title>
+    <title>NexTube Pro | Premium Video Experience</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
         
+        :root {
+            --bg-deep: #050505;
+            --bg-card: #121212;
+            --accent-red: #ff0033;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f0f0f;
-            color: #ffffff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-deep);
+            color: #f8fafc;
             overflow: hidden;
         }
 
-        /* SHORTS SNAP SCROLLING */
-        .shorts-container {
+        /* --- MODERN SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+        /* --- GLASSMORPHISM & BLUR --- */
+        .glass-header {
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(12px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+        }
+
+        /* --- SHORTS SNAP SCROLLING --- */
+        .shorts-wrapper {
             height: calc(100vh - 56px);
             scroll-snap-type: y mandatory;
-            overflow-y: scroll;
+            overflow-y: auto;
             scrollbar-width: none;
         }
-        .shorts-container::-webkit-scrollbar { display: none; }
-        
-        .short-item {
+        .short-slide {
             height: calc(100vh - 56px);
             scroll-snap-align: start;
             scroll-snap-stop: always;
@@ -35,112 +64,128 @@
             justify-content: center;
         }
 
-        .short-video-wrapper {
-            height: 100%;
+        .short-video-box {
+            height: 96%;
+            margin-top: 1%;
             aspect-ratio: 9/16;
+            border-radius: 20px;
+            overflow: hidden;
             position: relative;
-            background: #000;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
 
-        .short-video-wrapper video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        /* --- ANIMATIONS --- */
+        .like-bounce { animation: bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.4); } }
 
-        /* SHORTS ICON BAR */
-        .action-blur {
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(8px);
+        .slide-up { animation: slideUp 0.4s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        /* --- SHORTS UI OVERLAY --- */
+        .short-actions {
+            position: absolute;
+            right: 16px;
+            bottom: 100px;
+            display: flex;
+            flex-col: column;
+            gap: 20px;
+            z-index: 50;
+        }
+        .action-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         }
-
-        .like-active { color: #ff4b4b !important; fill: #ff4b4b; }
-
-        /* MODAL ANIMATION */
-        .panel-transition {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-
-        .page-transition { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .action-btn:active { transform: scale(0.9); }
+        .active-heart { color: #ff0033; fill: #ff0033; filter: drop-shadow(0 0 8px #ff0033); }
     </style>
 </head>
-<body class="antialiased">
+<body>
 
-    <header class="h-14 fixed top-0 w-full bg-[#0f0f0f] border-b border-white/10 flex items-center justify-between px-4 z-[100]">
+    <header class="h-16 fixed top-0 w-full glass-header flex items-center justify-between px-6 z-[100]">
         <div class="flex items-center gap-4">
-            <button class="p-2 hover:bg-white/10 rounded-full md:block hidden"><i data-lucide="menu"></i></button>
-            <div class="flex items-center gap-1 cursor-pointer" onclick="ui.showPage('home')">
-                <div class="bg-red-600 p-1 rounded-lg"><i data-lucide="play" class="fill-white text-white w-4 h-4"></i></div>
-                <span class="text-xl font-bold tracking-tighter">NexTube</span>
+            <div class="flex items-center gap-2 cursor-pointer group" onclick="ui.showPage('home')">
+                <div class="bg-red-600 p-1.5 rounded-xl group-hover:rotate-12 transition-transform duration-300">
+                    <i data-lucide="play" class="fill-white text-white w-5 h-5"></i>
+                </div>
+                <span class="text-xl font-extrabold tracking-tight">NexTube<span class="text-red-600">.</span></span>
             </div>
         </div>
-        <div class="flex-1 max-w-[500px] mx-4 hidden md:flex">
-            <input type="text" placeholder="Ara" class="w-full bg-[#121212] border border-white/10 rounded-full px-5 py-2 outline-none focus:border-red-500 transition">
+
+        <div class="hidden md:flex flex-1 max-w-xl mx-8">
+            <div class="relative w-full group">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-red-500 transition-colors"></i>
+                <input type="text" placeholder="Keşfet..." class="w-full bg-white/5 border border-white/10 rounded-2xl py-2.5 pl-11 pr-4 outline-none focus:bg-white/10 focus:border-red-500/50 transition-all">
+            </div>
         </div>
-        <div class="flex items-center gap-2">
-            <button onclick="ui.toggleModal('upload', true)" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium transition">
-                <i data-lucide="plus" class="w-5 h-5"></i> <span class="hidden sm:inline">Yükle</span>
+
+        <div class="flex items-center gap-4">
+            <button onclick="ui.toggleModal('upload', true)" class="w-10 h-10 md:w-auto md:px-5 md:gap-2 flex items-center justify-center bg-white text-black rounded-2xl font-bold hover:bg-gray-200 transition active:scale-95">
+                <i data-lucide="plus" class="w-5 h-5 text-black"></i> <span class="hidden md:inline text-sm">Yükle</span>
             </button>
-            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-500 to-red-600 border border-white/20" title="Admin ID: 8392479231"></div>
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 border border-white/20 p-0.5" title="Admin ID: 8392479231">
+                <div class="w-full h-full bg-black rounded-[14px] flex items-center justify-center text-[10px] font-bold">AD</div>
+            </div>
         </div>
     </header>
 
-    <div class="flex pt-14 h-screen">
-        <nav class="w-64 hidden md:flex flex-col p-3 border-r border-white/5 bg-[#0f0f0f]">
-            <button onclick="ui.showPage('home')" class="flex items-center gap-5 p-3 hover:bg-white/10 rounded-xl transition text-sm font-medium"><i data-lucide="home"></i> Ana Sayfa</button>
-            <button onclick="ui.showPage('shorts')" class="flex items-center gap-5 p-3 hover:bg-white/10 rounded-xl transition text-sm font-medium"><i data-lucide="zap"></i> Shorts</button>
+    <div class="flex pt-16 h-screen">
+        <aside class="w-72 hidden lg:flex flex-col p-4 gap-2 border-r border-white/5">
+            <button onclick="ui.showPage('home')" id="nav-home" class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 font-semibold text-sm transition-all border border-white/5"><i data-lucide="home"></i> Ana Sayfa</button>
+            <button onclick="ui.showPage('shorts')" id="nav-shorts" class="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 text-gray-400 font-semibold text-sm transition-all border border-transparent"><i data-lucide="zap"></i> Shorts</button>
             <hr class="border-white/5 my-4">
-            <p class="text-[10px] text-gray-500 px-4 uppercase font-bold tracking-widest">Admin: 8392479231</p>
-        </nav>
+            <div class="px-4 py-2 bg-red-600/10 border border-red-600/20 rounded-2xl">
+                <p class="text-[11px] text-red-500 font-bold uppercase tracking-widest">Premium Erişimi</p>
+                <p class="text-[10px] text-gray-400 mt-1 italic">ID: 8392479231</p>
+            </div>
+        </aside>
 
-        <main class="flex-1 overflow-hidden relative">
-            
-            <section id="view-home" class="h-full overflow-y-auto p-4 md:p-8 page-transition">
-                <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <main class="flex-1 relative overflow-hidden">
+            <section id="view-home" class="h-full overflow-y-auto p-6 lg:p-10 page-transition">
+                <div class="flex items-center gap-2 mb-8">
+                    <div class="h-8 w-1 bg-red-600 rounded-full"></div>
+                    <h2 class="text-2xl font-bold tracking-tight">Sizin İçin Seçilenler</h2>
+                </div>
+                <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
                     </div>
             </section>
 
-            <section id="view-shorts" class="hidden h-full bg-black page-transition">
-                <div id="shorts-flow" class="shorts-container">
+            <section id="view-shorts" class="hidden h-full bg-black">
+                <div id="shorts-flow" class="shorts-wrapper">
                     </div>
             </section>
 
-            <section id="view-watch" class="hidden h-full overflow-y-auto p-4 md:p-8 bg-[#0f0f0f] page-transition">
-                <div class="max-w-6xl mx-auto flex flex-col lg:flex-row gap-8">
-                    <div class="flex-1">
-                        <div class="bg-black rounded-2xl overflow-hidden aspect-video shadow-2xl border border-white/5">
-                            <video id="main-player" controls autoplay class="w-full h-full"></video>
+            <section id="view-watch" class="hidden h-full overflow-y-auto p-4 md:p-10 page-transition">
+                <div class="max-w-5xl mx-auto">
+                    <div class="rounded-3xl overflow-hidden bg-black shadow-2xl aspect-video border border-white/5">
+                        <video id="main-player" controls autoplay class="w-full h-full"></video>
+                    </div>
+                    <div class="mt-8">
+                        <h1 id="watch-title" class="text-3xl font-bold">Video Başlığı</h1>
+                        <div class="flex flex-wrap items-center justify-between gap-4 mt-6 border-b border-white/5 pb-8">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 to-pink-600"></div>
+                                <div><p class="font-bold">Admin Creator</p><p class="text-xs text-gray-500">0 Abone</p></div>
+                                <button class="ml-4 px-6 py-2.5 bg-white text-black rounded-full font-bold text-sm hover:bg-gray-200 transition">Abone Ol</button>
+                            </div>
+                            <div class="flex items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/10">
+                                <button onclick="app.toggleLike()" class="flex items-center gap-2 px-5 py-2.5 hover:bg-white/10 rounded-xl transition">
+                                    <i data-lucide="heart" id="watch-like-icon" class="w-5 h-5"></i> <span id="watch-like-count">0</span>
+                                </button>
+                                <div class="w-px h-6 bg-white/10"></div>
+                                <button class="px-5 py-2.5 hover:bg-white/10 rounded-xl transition"><i data-lucide="share-2" class="w-5 h-5"></i></button>
+                            </div>
                         </div>
-                        <div class="mt-6 flex flex-col gap-4">
-                            <h1 id="watch-title" class="text-2xl font-bold">Video Başlığı</h1>
-                            <div class="flex items-center justify-between border-b border-white/10 pb-6">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-red-600"></div>
-                                    <div><p class="font-bold text-sm">NexTube Creator</p><p class="text-xs text-gray-400">0 Abone</p></div>
-                                    <button class="bg-white text-black px-4 py-2 rounded-full text-xs font-bold ml-4">Abone Ol</button>
-                                </div>
-                                <div class="flex items-center gap-2 bg-white/5 rounded-full p-1 border border-white/10">
-                                    <button id="long-like-btn" onclick="app.toggleLike()" class="flex items-center gap-2 px-4 py-2 hover:bg-white/10 rounded-full transition border-r border-white/10">
-                                        <i data-lucide="thumbs-up" class="w-5 h-5"></i> <span id="long-like-count">0</span>
-                                    </button>
-                                    <button class="px-4 py-2 hover:bg-white/10 rounded-full transition"><i data-lucide="thumbs-down" class="w-5 h-5"></i></button>
-                                </div>
-                            </div>
-                            <div class="bg-white/5 p-4 rounded-xl">
-                                <p id="watch-desc" class="text-sm text-gray-300"></p>
-                            </div>
-                            <div class="mt-4">
-                                <h3 class="font-bold mb-4">Yorumlar</h3>
-                                <div class="flex gap-4 mb-6">
-                                    <input type="text" id="long-comment-input" placeholder="Yorum ekle..." class="flex-1 bg-transparent border-b border-white/10 py-2 outline-none focus:border-red-500">
-                                    <button onclick="app.addComment('long')" class="bg-white/10 px-4 py-2 rounded-full text-sm hover:bg-white/20">Yorum Yap</button>
-                                </div>
-                                <div id="long-comment-list" class="space-y-4"></div>
-                            </div>
+                        <div class="mt-8 bg-white/5 p-6 rounded-3xl border border-white/5">
+                            <h3 class="font-bold mb-4">Açıklama</h3>
+                            <p id="watch-desc" class="text-gray-400 text-sm leading-relaxed"></p>
                         </div>
                     </div>
                 </div>
@@ -148,37 +193,42 @@
         </main>
     </div>
 
-    <nav class="md:hidden fixed bottom-0 w-full h-16 bg-[#0f0f0f] border-t border-white/10 flex items-center justify-around z-[100]">
-        <button onclick="ui.showPage('home')" class="flex flex-col items-center gap-1 text-[10px]"><i data-lucide="home" class="w-5 h-5"></i> Ana Sayfa</button>
-        <button onclick="ui.showPage('shorts')" class="flex flex-col items-center gap-1 text-[10px]"><i data-lucide="zap" class="w-5 h-5 text-red-500"></i> Shorts</button>
-        <button onclick="ui.toggleModal('upload', true)" class="flex flex-col items-center gap-1 text-[10px]"><i data-lucide="plus-circle" class="w-5 h-5"></i> Yükle</button>
+    <nav class="lg:hidden fixed bottom-0 w-full h-20 glass-header border-t border-white/10 flex items-center justify-around px-4 z-[100]">
+        <button onclick="ui.showPage('home')" class="flex flex-col items-center gap-1.5 text-red-500"><i data-lucide="home" class="w-6 h-6"></i><span class="text-[10px] font-bold">Ana Sayfa</span></button>
+        <button onclick="ui.showPage('shorts')" class="flex flex-col items-center gap-1.5 text-gray-500"><i data-lucide="zap" class="w-6 h-6"></i><span class="text-[10px] font-bold">Shorts</span></button>
+        <button onclick="ui.toggleModal('upload', true)" class="flex flex-col items-center gap-1.5 text-gray-500"><i data-lucide="plus-square" class="w-6 h-6"></i><span class="text-[10px] font-bold">Yükle</span></button>
     </nav>
 
-    <div id="comment-panel" class="fixed inset-0 bg-black/50 z-[200] hidden items-end md:items-center justify-center">
-        <div class="bg-[#1e1e1e] w-full md:w-[450px] h-[70vh] md:h-[600px] rounded-t-3xl md:rounded-3xl flex flex-col shadow-2xl border border-white/10 panel-transition translate-y-full" id="panel-content">
-            <div class="p-4 border-b border-white/10 flex justify-between items-center">
-                <h3 class="font-bold">Yorumlar <span id="short-comment-total" class="text-gray-500 ml-1 text-sm font-normal">0</span></h3>
+    <div id="comment-drawer" class="fixed inset-0 z-[200] hidden items-end justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+        <div class="w-full md:w-[450px] bg-[#121212] rounded-t-[40px] border-t border-white/10 shadow-2xl flex flex-col slide-up overflow-hidden" style="height: 75vh;">
+            <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto my-4"></div>
+            <div class="px-6 py-4 flex justify-between items-center border-b border-white/5">
+                <h3 class="font-extrabold text-lg">Yorumlar <span id="drawer-count" class="text-gray-500 text-sm font-normal ml-2">0</span></h3>
                 <button onclick="ui.toggleModal('comment', false)" class="p-2 hover:bg-white/10 rounded-full"><i data-lucide="x"></i></button>
             </div>
-            <div id="short-comment-list" class="flex-1 overflow-y-auto p-4 space-y-4 text-sm hide-scrollbar"></div>
-            <div class="p-4 bg-[#0f0f0f] border-t border-white/10 flex gap-2">
-                <input type="text" id="short-comment-input" placeholder="Yorum yaz..." class="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 outline-none focus:border-red-500">
-                <button onclick="app.addComment('short')" class="p-2 bg-red-600 rounded-full hover:bg-red-700"><i data-lucide="send" class="w-5 h-5"></i></button>
+            <div id="drawer-list" class="flex-1 overflow-y-auto p-6 space-y-6"></div>
+            <div class="p-6 bg-black/40 border-t border-white/5 flex gap-3">
+                <input type="text" id="drawer-input" placeholder="Düşüncelerini paylaş..." class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-3 outline-none focus:border-red-500 transition">
+                <button onclick="app.addComment('short')" class="w-12 h-12 bg-red-600 rounded-2xl flex items-center justify-center hover:bg-red-700 transition"><i data-lucide="send" class="w-5 h-5 text-white"></i></button>
             </div>
         </div>
     </div>
 
-    <div id="upload-modal" class="fixed inset-0 bg-black/90 z-[300] hidden items-center justify-center p-4">
-        <div class="bg-[#1e1e1e] w-full max-w-lg rounded-3xl p-8 border border-white/10 shadow-2xl">
-            <h2 class="text-xl font-bold mb-6 flex items-center gap-2"><i data-lucide="upload-cloud" class="text-red-500"></i> Video Yükle</h2>
-            <div class="space-y-4">
-                <input type="file" id="up-file" accept="video/*" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-white/10 file:text-white hover:file:bg-white/20 transition">
-                <input type="file" id="up-thumb" accept="image/*" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-zinc-800 file:text-white transition">
-                <input type="text" id="up-title" placeholder="Başlık" class="w-full bg-black/50 border border-white/10 p-3 rounded-xl outline-none focus:border-red-500 transition">
-                <textarea id="up-desc" placeholder="Açıklama" rows="3" class="w-full bg-black/50 border border-white/10 p-3 rounded-xl outline-none focus:border-red-500 transition resize-none"></textarea>
-                <div id="up-status" class="hidden text-center text-xs text-red-500 animate-pulse">Süre analiz ediliyor...</div>
-                <button onclick="app.upload()" id="btn-publish" class="w-full bg-red-600 py-4 rounded-2xl font-bold hover:bg-red-700 transition">YAYINLA</button>
-                <button onclick="ui.toggleModal('upload', false)" class="w-full text-sm text-gray-500">İptal</button>
+    <div id="upload-modal" class="fixed inset-0 z-[300] hidden items-center justify-center bg-black/90 backdrop-blur-xl p-6">
+        <div class="w-full max-w-xl bg-[#121212] rounded-[40px] border border-white/10 p-10 shadow-2xl">
+            <div class="flex justify-between items-center mb-10">
+                <h2 class="text-3xl font-black">Video Yükle</h2>
+                <button onclick="ui.toggleModal('upload', false)" class="p-3 hover:bg-white/5 rounded-2xl"><i data-lucide="x"></i></button>
+            </div>
+            <div class="space-y-6">
+                <div class="border-2 border-dashed border-white/10 rounded-[30px] p-12 text-center hover:border-red-500/50 transition bg-white/[0.02] cursor-pointer group" onclick="document.getElementById('file-in').click()">
+                    <i data-lucide="upload" class="w-12 h-12 mx-auto mb-4 text-gray-500 group-hover:text-red-500 group-hover:scale-110 transition-all"></i>
+                    <p id="file-label" class="text-sm font-bold">Video Dosyasını Sürükle veya Seç</p>
+                    <input type="file" id="file-in" class="hidden" accept="video/*" onchange="app.handleFileSelect(this)">
+                </div>
+                <input type="text" id="up-title" placeholder="Başlık ekle..." class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-red-500">
+                <textarea id="up-desc" placeholder="Video hakkında bilgi ver..." rows="3" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-red-500 resize-none"></textarea>
+                <button onclick="app.upload()" id="publish-btn" class="w-full py-5 bg-red-600 rounded-[20px] font-black text-lg hover:bg-red-700 transition shadow-xl shadow-red-600/20 active:scale-[0.98]">YAYINLA</button>
             </div>
         </div>
     </div>
@@ -186,109 +236,97 @@
     
 
     <script>
-        // --- DATA & STATE MANAGEMENT ---
+        // APP LOGIC
         const app = {
-            shorts: [], // ≤ 60 sn
-            longs: [],  // > 60 sn
-            activeVideo: null, // O an izlenen video (Short veya Long)
+            shorts: [], longs: [], activeVideo: null,
 
-            init() {
-                // LocalStorage desteği (Demo amaçlı sadece yapı)
-                this.renderAll();
+            handleFileSelect(input) {
+                if(input.files[0]) document.getElementById('file-label').innerText = input.files[0].name;
             },
 
             async upload() {
-                const fileInput = document.getElementById('up-file');
-                const thumbInput = document.getElementById('up-thumb');
-                const titleInput = document.getElementById('up-title');
-                const descInput = document.getElementById('up-desc');
+                const file = document.getElementById('file-in').files[0];
+                const title = document.getElementById('up-title').value;
+                const desc = document.getElementById('up-desc').value;
 
-                if (!fileInput.files[0] || !titleInput.value) return alert("Dosya ve Başlık zorunludur!");
+                if(!file || !title) return alert("Dosya ve başlık eksik!");
 
-                const status = document.getElementById('up-status');
-                status.classList.remove('hidden');
+                const btn = document.getElementById('publish-btn');
+                btn.innerText = "İşleniyor...";
+                btn.disabled = true;
 
-                const videoUrl = URL.createObjectURL(fileInput.files[0]);
-                const tempVideo = document.createElement('video');
-                tempVideo.src = videoUrl;
+                const url = URL.createObjectURL(file);
+                const temp = document.createElement('video');
+                temp.src = url;
 
-                tempVideo.onloadedmetadata = () => {
-                    const duration = tempVideo.duration;
+                temp.onloadedmetadata = () => {
+                    const duration = temp.duration;
                     const item = {
-                        id: Date.now(),
-                        title: titleInput.value,
-                        desc: descInput.value,
-                        url: videoUrl,
-                        thumb: thumbInput.files[0] ? URL.createObjectURL(thumbInput.files[0]) : 'https://picsum.photos/seed/'+Math.random()+'/640/360',
-                        duration: duration,
-                        likes: 0,
-                        isLiked: false,
-                        comments: [],
-                        type: duration <= 60 ? 'short' : 'long'
+                        id: Date.now(), title, desc, url, duration,
+                        likes: 0, isLiked: false, comments: [],
+                        thumb: 'https://picsum.photos/seed/'+Math.random()+'/800/450'
                     };
 
-                    if (item.type === 'short') this.shorts.unshift(item);
+                    if(duration <= 60) this.shorts.unshift(item);
                     else this.longs.unshift(item);
 
                     ui.renderAll();
                     ui.toggleModal('upload', false);
-                    status.classList.add('hidden');
-                    this.resetForm();
+                    btn.innerText = "YAYINLA";
+                    btn.disabled = false;
+                    this.reset();
                 };
             },
 
-            resetForm() {
-                document.getElementById('up-title').value = '';
-                document.getElementById('up-desc').value = '';
-                document.getElementById('up-file').value = '';
-                document.getElementById('up-thumb').value = '';
-            },
-
             toggleLike(id = null) {
-                // Eğer ID varsa Short'tur, yoksa Watch sayfasındaki aktif videodur
                 const video = id ? this.shorts.find(s => s.id === id) : this.activeVideo;
-                if (!video) return;
+                if(!video) return;
 
-                if (video.isLiked) {
-                    video.likes--;
-                    video.isLiked = false;
-                } else {
-                    video.likes++;
-                    video.isLiked = true;
-                }
+                video.isLiked = !video.isLiked;
+                video.likes += video.isLiked ? 1 : -1;
+                
                 ui.renderAll();
-                if(!id) ui.updateWatchUI(); // Uzun video sayfasındaysa orayı da güncelle
+                if(!id) ui.updateWatchUI();
             },
 
             addComment(type) {
-                const inputId = type === 'short' ? 'short-comment-input' : 'long-comment-input';
-                const input = document.getElementById(inputId);
-                if (!input.value.trim() || !this.activeVideo) return;
+                const input = document.getElementById('drawer-input');
+                const text = input.value.trim();
+                if(!text || !this.activeVideo) return;
 
-                this.activeVideo.comments.push({
-                    user: 'Admin 8392479231',
-                    text: input.value,
-                    date: 'Az önce'
-                });
-
+                this.activeVideo.comments.push({ user: 'Admin 8392479231', text, time: 'Az önce' });
                 input.value = '';
-                ui.renderComments(type);
+                ui.renderComments();
                 ui.renderAll();
+            },
+
+            reset() {
+                document.getElementById('up-title').value = '';
+                document.getElementById('up-desc').value = '';
+                document.getElementById('file-in').value = '';
+                document.getElementById('file-label').innerText = "Video Dosyasını Sürükle veya Seç";
             }
         };
 
-        // --- UI RENDERING & CONTROLS ---
+        // UI RENDERER
         const ui = {
             showPage(page) {
                 ['view-home', 'view-shorts', 'view-watch'].forEach(id => document.getElementById(id).classList.add('hidden'));
                 document.getElementById('view-' + page).classList.remove('hidden');
 
-                // Video durdurma kontrolleri
-                if (page !== 'watch') document.getElementById('main-player').pause();
-                if (page !== 'shorts') document.querySelectorAll('.short-vid').forEach(v => v.pause());
-                else this.initShortsObserver();
+                // Nav highlight
+                document.querySelectorAll('aside button').forEach(b => {
+                    b.classList.remove('bg-white/5', 'text-white');
+                    b.classList.add('text-gray-400', 'border-transparent');
+                });
+                const active = document.getElementById('nav-' + page);
+                if(active) {
+                    active.classList.add('bg-white/5', 'text-white', 'border-white/5');
+                    active.classList.remove('text-gray-400', 'border-transparent');
+                }
 
-                window.scrollTo(0, 0);
+                if(page !== 'shorts') document.querySelectorAll('.short-vid').forEach(v => v.pause());
+                else this.initShorts();
             },
 
             renderAll() {
@@ -299,21 +337,28 @@
 
             renderGrid() {
                 const grid = document.getElementById('video-grid');
-                if (app.longs.length === 0) {
-                    grid.innerHTML = `<div class="col-span-full py-20 text-center text-gray-500">Video bulunamadı. Hemen bir tane yükle!</div>`;
+                if(app.longs.length === 0) {
+                    grid.innerHTML = `<div class="col-span-full py-20 text-center text-gray-600 italic">Henüz video yüklenmedi...</div>`;
                     return;
                 }
                 grid.innerHTML = app.longs.map(v => `
-                    <div class="cursor-pointer group" onclick="ui.watchVideo(${v.id})">
-                        <div class="relative aspect-video rounded-2xl overflow-hidden bg-zinc-800 border border-white/5">
-                            <img src="${v.thumb}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                            <span class="absolute bottom-2 right-2 bg-black/80 text-[10px] font-bold px-1.5 py-0.5 rounded">${Math.floor(v.duration)} sn</span>
+                    <div class="glass-card rounded-[32px] overflow-hidden cursor-pointer flex flex-col" onclick="ui.watchVideo(${v.id})">
+                        <div class="relative aspect-video overflow-hidden">
+                            <img src="${v.thumb}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <div class="w-12 h-12 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/30">
+                                    <i data-lucide="play" class="fill-white w-5 h-5 ml-1"></i>
+                                </div>
+                            </div>
+                            <span class="absolute bottom-3 right-3 bg-black/80 px-2 py-1 rounded-lg text-[10px] font-bold border border-white/10">${Math.floor(v.duration)} sn</span>
                         </div>
-                        <div class="mt-3 flex gap-3">
-                            <div class="w-9 h-9 rounded-full bg-red-600 flex-shrink-0"></div>
-                            <div>
-                                <h3 class="text-sm font-bold line-clamp-2">${v.title}</h3>
-                                <p class="text-xs text-gray-500 mt-1">Admin 8392479231 • ${v.likes} beğeni</p>
+                        <div class="p-5 flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex-shrink-0"></div>
+                            <div class="flex-1">
+                                <h3 class="font-bold text-sm line-clamp-2 leading-relaxed">${v.title}</h3>
+                                <p class="text-[11px] text-gray-500 mt-2 flex items-center gap-2">
+                                    <i data-lucide="heart" class="w-3 h-3"></i> ${v.likes} Beğeni • 1 saat önce
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -322,50 +367,58 @@
 
             renderShorts() {
                 const flow = document.getElementById('shorts-flow');
-                if (app.shorts.length === 0) {
-                    flow.innerHTML = `<div class="short-item items-center text-gray-500">Henüz Shorts yüklenmedi.</div>`;
+                if(app.shorts.length === 0) {
+                    flow.innerHTML = `<div class="h-full flex items-center justify-center text-gray-500">Shorts içeriği yok.</div>`;
                     return;
                 }
                 flow.innerHTML = app.shorts.map(s => `
-                    <div class="short-item" data-id="${s.id}">
-                        <div class="short-video-wrapper">
-                            <video src="${s.url}" loop class="short-vid"></video>
+                    <div class="short-slide" data-id="${s.id}">
+                        <div class="short-video-box">
+                            <video src="${s.url}" loop class="short-vid w-full h-full object-cover"></video>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none"></div>
                             
-                            <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none">
-                                <h3 class="font-bold text-base mb-1">${s.title}</h3>
-                                <p class="text-xs text-gray-300 opacity-80">${s.desc.substring(0, 40)}...</p>
+                            <div class="short-actions">
+                                <div class="flex flex-col items-center gap-1">
+                                    <button onclick="app.toggleLike(${s.id})" class="action-btn">
+                                        <i data-lucide="heart" class="w-6 h-6 ${s.isLiked ? 'active-heart like-bounce' : ''}"></i>
+                                    </button>
+                                    <span class="text-xs font-bold text-white shadow-sm">${s.likes}</span>
+                                </div>
+                                <div class="flex flex-col items-center gap-1">
+                                    <button onclick="ui.toggleModal('comment', true, ${s.id})" class="action-btn">
+                                        <i data-lucide="message-circle" class="w-6 h-6"></i>
+                                    </button>
+                                    <span class="text-xs font-bold text-white shadow-sm">${s.comments.length}</span>
+                                </div>
+                                <button class="action-btn"><i data-lucide="share" class="w-6 h-6"></i></button>
                             </div>
 
-                            <div class="absolute right-4 bottom-20 flex flex-col gap-5 items-center">
-                                <button onclick="app.toggleLike(${s.id})" class="action-blur p-3 rounded-full flex flex-col items-center group transition active:scale-90">
-                                    <i data-lucide="heart" class="w-6 h-6 ${s.isLiked ? 'like-active' : ''}"></i>
-                                    <span class="text-[10px] font-bold mt-1">${s.likes}</span>
-                                </button>
-                                <button onclick="ui.toggleModal('comment', true, ${s.id})" class="action-blur p-3 rounded-full flex flex-col items-center group transition active:scale-90">
-                                    <i data-lucide="message-square" class="w-6 h-6"></i>
-                                    <span class="text-[10px] font-bold mt-1">${s.comments.length}</span>
-                                </button>
-                                <button class="action-blur p-3 rounded-full flex flex-col items-center"><i data-lucide="share-2" class="w-6 h-6"></i></button>
+                            <div class="absolute bottom-0 left-0 p-6 w-full">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md border border-white/20"></div>
+                                    <span class="font-bold text-sm">@nextube_admin</span>
+                                    <button class="bg-white text-black px-4 py-1.5 rounded-full text-[10px] font-bold">Takip Et</button>
+                                </div>
+                                <h3 class="text-sm font-medium line-clamp-2">${s.title}</h3>
                             </div>
                         </div>
                     </div>
                 `).join('');
-                this.initShortsObserver();
             },
 
-            initShortsObserver() {
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        const vid = entry.target.querySelector('video');
-                        if (entry.isIntersecting) {
+            initShorts() {
+                const obs = new IntersectionObserver((entries) => {
+                    entries.forEach(e => {
+                        const vid = e.target.querySelector('video');
+                        if(e.isIntersecting) {
                             vid.play();
-                            app.activeVideo = app.shorts.find(s => s.id == entry.target.dataset.id);
+                            app.activeVideo = app.shorts.find(s => s.id == e.target.dataset.id);
                         } else {
                             vid.pause();
                         }
                     });
                 }, { threshold: 0.8 });
-                document.querySelectorAll('.short-item').forEach(el => observer.observe(el));
+                document.querySelectorAll('.short-slide').forEach(s => obs.observe(s));
             },
 
             watchVideo(id) {
@@ -375,67 +428,52 @@
                 const p = document.getElementById('main-player');
                 p.src = v.url;
                 document.getElementById('watch-title').innerText = v.title;
-                document.getElementById('watch-desc').innerText = v.desc || "Açıklama eklenmemiş.";
+                document.getElementById('watch-desc').innerText = v.desc || "Açıklama belirtilmedi.";
                 this.updateWatchUI();
-                this.renderComments('long');
             },
 
             updateWatchUI() {
-                if (!app.activeVideo) return;
-                const btn = document.getElementById('long-like-btn');
-                const count = document.getElementById('long-like-count');
-                count.innerText = app.activeVideo.likes;
-                btn.querySelector('i').className = app.activeVideo.isLiked ? 'w-5 h-5 like-active fill-red-500' : 'w-5 h-5';
+                const v = app.activeVideo;
+                document.getElementById('watch-like-count').innerText = v.likes;
+                const icon = document.getElementById('watch-like-icon');
+                icon.className = v.isLiked ? 'w-5 h-5 active-heart' : 'w-5 h-5';
+                lucide.createIcons();
             },
 
-            renderComments(type) {
-                const listId = type === 'short' ? 'short-comment-list' : 'long-comment-list';
-                const list = document.getElementById(listId);
-                if (!app.activeVideo) return;
-
-                if (type === 'short') document.getElementById('short-comment-total').innerText = app.activeVideo.comments.length;
+            renderComments() {
+                const list = document.getElementById('drawer-list');
+                const count = document.getElementById('drawer-count');
+                count.innerText = app.activeVideo.comments.length;
 
                 list.innerHTML = app.activeVideo.comments.map(c => `
-                    <div class="flex gap-3 items-start animate-in slide-in-from-bottom-2 duration-300">
-                        <div class="w-8 h-8 rounded-full bg-indigo-500 flex-shrink-0"></div>
+                    <div class="flex gap-4">
+                        <div class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex-shrink-0"></div>
                         <div>
-                            <p class="text-[11px] font-bold text-gray-400">${c.user} • ${c.date}</p>
-                            <p class="mt-0.5">${c.text}</p>
+                            <p class="text-xs font-bold text-gray-400 mb-1">${c.user} • ${c.time}</p>
+                            <p class="text-sm leading-relaxed">${c.text}</p>
                         </div>
                     </div>
-                `).join('');
+                `).join('') || '<p class="text-center text-gray-500 py-10">İlk yorumu sen yaz!</p>';
             },
 
             toggleModal(type, show, id = null) {
-                const modalId = type === 'upload' ? 'upload-modal' : 'comment-panel';
-                const el = document.getElementById(modalId);
-                
-                if (type === 'comment' && id) {
-                    app.activeVideo = app.shorts.find(s => s.id === id);
-                    this.renderComments('short');
-                }
-
-                if (show) {
-                    el.classList.remove('hidden');
-                    el.classList.add('flex');
-                    if (type === 'comment') {
-                        setTimeout(() => document.getElementById('panel-content').classList.remove('translate-y-full'), 10);
+                const modal = document.getElementById(type === 'upload' ? 'upload-modal' : 'comment-drawer');
+                if(show) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                    if(id) {
+                        app.activeVideo = app.shorts.find(s => s.id === id);
+                        this.renderComments();
                     }
                 } else {
-                    if (type === 'comment') {
-                        document.getElementById('panel-content').classList.add('translate-y-full');
-                        setTimeout(() => { el.classList.add('hidden'); el.classList.remove('flex'); }, 300);
-                    } else {
-                        el.classList.add('hidden');
-                        el.classList.remove('flex');
-                    }
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
                 }
                 lucide.createIcons();
             }
         };
 
-        // --- START ---
-        window.onload = () => app.init();
+        window.onload = () => { ui.renderAll(); ui.showPage('home'); };
     </script>
 </body>
 </html>
