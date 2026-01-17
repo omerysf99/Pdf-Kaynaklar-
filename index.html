@@ -3,229 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VideoTube Pro - Persistent Storage</title>
+    <title>VideoTube Pro - Kalıcı Ana Sayfa</title>
     <style>
-        :root { --primary: #ff0000; --bg: #f9f9f9; --card: #fff; --text: #0f0f0f; }
-        body { font-family: 'Roboto', sans-serif; margin: 0; background: var(--bg); color: var(--text); }
-        
-        /* Header */
-        header { 
-            background: var(--card); padding: 10px 5%; display: flex; 
-            justify-content: space-between; align-items: center; 
-            position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 10px rgba(0,0,0,0.1); 
+        :root {
+            --yt-red: #ff0000;
+            --yt-bg: #ffffff;
+            --yt-text: #0f0f0f;
+            --yt-secondary: #606060;
+            --yt-hover: #f2f2f2;
         }
-        .logo { color: var(--primary); font-size: 22px; font-weight: 900; text-decoration: none; }
-        
-        /* Layout */
-        .container { display: grid; grid-template-columns: 1fr 380px; gap: 20px; padding: 20px 5%; max-width: 1600px; margin: auto; }
-        
-        /* Video Player Area */
-        .player-section video { width: 100%; border-radius: 12px; background: #000; aspect-ratio: 16/9; }
-        .video-meta { padding: 15px 0; border-bottom: 1px solid #e5e5e5; }
-        
-        /* Upload Area */
-        .upload-card { 
-            background: var(--card); border: 2px dashed #ccc; border-radius: 12px; 
-            padding: 30px; text-align: center; margin-bottom: 20px; transition: 0.3s;
+
+        body {
+            font-family: "Roboto", Arial, sans-serif;
+            margin: 0;
+            background-color: var(--yt-bg);
+            color: var(--yt-text);
+            overflow-x: hidden;
         }
-        .upload-card:hover { border-color: var(--primary); }
-        .upload-input { display: none; }
-        .upload-label { cursor: pointer; color: var(--primary); font-weight: bold; }
 
-        /* Video Grid / List */
-        .video-list { display: flex; flex-direction: column; gap: 15px; }
-        .video-item { 
-            display: flex; gap: 12px; cursor: pointer; background: var(--card); 
-            padding: 8px; border-radius: 8px; transition: 0.2s;
+        /* --- HEADER --- */
+        header {
+            position: fixed; top: 0; width: 100%; height: 56px;
+            background: white; display: flex; justify-content: space-between;
+            align-items: center; padding: 0 16px; z-index: 2000;
         }
-        .video-item:hover { background: #f0f0f0; }
-        .video-item .thumb-container { position: relative; width: 160px; height: 90px; flex-shrink: 0; }
-        .video-item img { width: 100%; height: 100%; border-radius: 6px; object-fit: cover; background: #eee; }
-        .video-item .info h4 { margin: 0 0 5px 0; font-size: 14px; line-height: 1.2; }
-        .video-item .info p { margin: 0; font-size: 12px; color: #606060; }
 
-        /* Status Indicator */
-        #status { font-size: 12px; color: green; margin-top: 5px; }
+        .left-section { display: flex; align-items: center; gap: 16px; }
+        .menu-icon { font-size: 20px; cursor: pointer; padding: 8px; border-radius: 50%; }
+        .menu-icon:hover { background: var(--yt-hover); }
+        .logo { color: var(--yt-red); font-size: 20px; font-weight: bold; text-decoration: none; letter-spacing: -1px; }
 
-        @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } }
+        .search-section { flex: 0 1 728px; display: flex; align-items: center; }
+        .search-bar {
+            width: 100%; display: flex; border: 1px solid #ccc;
+            border-radius: 40px; overflow: hidden; margin-left: 40px;
+        }
+        .search-bar input {
+            width: 100%; border: none; padding: 8px 20px; outline: none; font-size: 16px;
+        }
+        .search-bar button {
+            background: #f8f8f8; border: none; border-left: 1px solid #ccc;
+            padding: 0 20px; cursor: pointer;
+        }
+
+        /* --- SIDEBAR --- */
+        nav {
+            position: fixed; top: 56px; left: 0; width: 240px; height: calc(100vh - 56px);
+            background: white; padding-top: 12px; z-index: 1000;
+        }
+        .nav-item {
+            padding: 10px 24px; display: flex; align-items: center; gap: 24px;
+            cursor: pointer; transition: 0.2s; font-size: 14px;
+        }
+        .nav-item:hover { background: var(--yt-hover); }
+        .nav-item.active { background: var(--yt-hover); font-weight: 500; }
+
+        /* --- MAIN CONTENT --- */
+        main {
+            margin-top: 56px; margin-left: 240px; padding: 24px;
+        }
+
+        .upload-zone {
+            background: #f9f9f9; border: 2px dashed #ddd; border-radius: 12px;
+            padding: 20px; margin-bottom: 30px; text-align: center;
+        }
+        .btn-upload {
+            background: var(--yt-text); color: white; border: none;
+            padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: 500;
+        }
+
+        /* --- VIDEO GRID --- */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            row-gap: 40px;
+        }
+
+        .video-card { cursor: pointer; display: flex; flex-direction: column; gap: 12px; }
+        .thumbnail-box {
+            position: relative; width: 100%; aspect-ratio: 16/9;
+            background: #e5e5e5; border-radius: 12px; overflow: hidden;
+        }
+        .thumbnail-box img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .video-details { display: flex; gap: 12px; }
+        .channel-ghost { width: 36px; height: 36px; background: #ddd; border-radius: 50%; flex-shrink: 0; }
+        .meta h3 { margin: 0; font-size: 16px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .meta p { margin: 4px 0 0; color: var(--yt-secondary); font-size: 14px; }
+
+        /* --- PLAYER OVERLAY --- */
+        #playerOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 3000; display: none; overflow-y: auto;
+        }
+        .close-player { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 24px; z-index: 3001; }
+        .player-container { max-width: 1200px; margin: 60px auto; padding: 20px; }
+        video { width: 100%; border-radius: 12px; background: black; }
+
+        @media (max-width: 792px) {
+            nav { display: none; }
+            main { margin-left: 0; }
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <a href="#" class="logo">VideoTube DB</a>
-    <div style="font-size: 12px;">Admin ID: 8392479231 | <span id="db-status">DB Bağlanıyor...</span></div>
+    <div class="left-section">
+        <div class="menu-icon">☰</div>
+        <a href="#" class="logo" onclick="location.reload()">VideoTube</a>
+    </div>
+    <div class="search-section">
+        <div class="search-bar">
+            <input type="text" placeholder="Ara">
+            <button>🔍</button>
+        </div>
+    </div>
+    <div style="font-size: 12px; color: var(--yt-secondary)">Admin: 8392479231</div>
 </header>
 
-<div class="container">
-    <main>
-        <div class="upload-card">
-            <h3 style="margin-top:0">Yeni Video Yükle</h3>
-            <p>Videolar tarayıcı veritabanına (IndexedDB) kalıcı olarak kaydedilir.</p>
-            <label class="upload-label" for="videoFile">VİDEO SEÇ</label>
-            <input type="file" id="videoFile" class="upload-input" accept="video/*">
-            <div id="status"></div>
-        </div>
+<nav>
+    <div class="nav-item active">🏠 Ana Sayfa</div>
+    <div class="nav-item">🩳 Shorts</div>
+    <div class="nav-item">📺 Abonelikler</div>
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 12px 0;">
+    <div class="nav-item">📚 Kitaplık</div>
+    <div class="nav-item">🕒 Geçmiş</div>
+</nav>
 
-        <div class="player-section">
-            <video id="mainPlayer" controls autoplay></video>
-            <div class="video-meta">
-                <h1 id="mainTitle">Video Seçin veya Yükleyin</h1>
-                <p id="mainDesc">Açıklama: IndexedDB kalıcı depolama aktif.</p>
-            </div>
-        </div>
-    </main>
+<main>
+    <div class="upload-zone">
+        <h3>Kendi Videonu Paylaş</h3>
+        <p>Yüklediğin videolar IndexedDB'de Admin ID: 8392479231 adına kalıcı saklanır.</p>
+        <input type="file" id="videoInput" accept="video/*" style="display: none;">
+        <button class="btn-upload" onclick="document.getElementById('videoInput').click()">VİDEO YÜKLE</button>
+        <p id="statusMsg" style="font-size: 12px; margin-top: 10px;"></p>
+    </div>
 
-    <aside>
-        <h3 style="margin-top:0">Kütüphaneniz (Kalıcı)</h3>
-        <div id="videoLibrary" class="video-list">
-            </div>
-    </aside>
+    <div class="video-grid" id="mainGrid">
+        </div>
+</main>
+
+<div id="playerOverlay">
+    <div class="close-player" onclick="closeVideo()">✖</div>
+    <div class="player-container">
+        <video id="fullPlayer" controls></video>
+        <h1 id="playerTitle" style="font-size: 20px; margin-top: 15px;">Video Başlığı</h1>
+        <p style="color: var(--yt-secondary);">Admin ID: 8392479231 • 2026</p>
+    </div>
 </div>
 
 <script>
-    /** * MİMARİ: IndexedDB Yönetimi
-     */
     const DB_NAME = 'VideoPlatformDB';
-    const DB_VERSION = 1;
+    const STORE_NAME = 'videos';
     let db;
 
-    // 1. Veritabanını Başlat
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
+    // 1. IndexedDB Başlatma
+    const request = indexedDB.open(DB_NAME, 1);
     request.onupgradeneeded = (e) => {
         db = e.target.result;
-        if (!db.objectStoreNames.contains('videos')) {
-            const store = db.createObjectStore('videos', { keyPath: 'id' });
-            store.createIndex('createdAt', 'createdAt', { unique: false });
-        }
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
     };
-
     request.onsuccess = (e) => {
         db = e.target.result;
-        document.getElementById('db-status').textContent = "DB Bağlı (Kalıcı)";
-        loadVideosFromDB(); // Sayfa açılışında yükle
+        renderHome();
     };
 
-    request.onerror = () => {
-        alert("IndexedDB erişim hatası! Lütfen gizli sekmeyi kapatın veya izin verin.");
-    };
-
-    /**
-     * 2. Video İşleme ve Kaydetme
-     */
-    const videoInput = document.getElementById('videoFile');
-    const statusText = document.getElementById('status');
-
-    videoInput.addEventListener('change', async (e) => {
+    // 2. Video Yükleme ve Thumbnail Üretme
+    document.getElementById('videoInput').addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        statusText.textContent = "İşleniyor: Thumbnail oluşturuluyor ve DB'ye yazılıyor...";
-        
-        try {
-            const thumbnailBlob = await generateThumbnail(file);
-            const videoData = {
-                id: crypto.randomUUID(),
-                title: file.name,
-                description: "Kullanıcı tarafından yüklendi.",
-                videoBlob: file, // Gerçek dosya verisi
-                thumbnailBlob: thumbnailBlob,
-                createdAt: Date.now(),
-                type: file.size > 50000000 ? 'long' : 'shorts' // Basit mantık
-            };
+        const status = document.getElementById('statusMsg');
+        status.textContent = "Kaydediliyor...";
 
-            const tx = db.transaction('videos', 'readwrite');
-            const store = tx.objectStore('videos');
-            await store.add(videoData);
+        const thumbBlob = await createThumb(file);
+        const newVideo = {
+            id: crypto.randomUUID(),
+            title: file.name.replace(/\.[^/.]+$/, ""),
+            videoBlob: file,
+            thumbBlob: thumbBlob,
+            views: Math.floor(Math.random() * 1000) + "B",
+            date: "Şimdi"
+        };
 
-            tx.oncomplete = () => {
-                statusText.textContent = "✅ Başarıyla kaydedildi!";
-                loadVideosFromDB(); // Listeyi güncelle
-            };
-        } catch (err) {
-            console.error(err);
-            statusText.textContent = "❌ Hata oluştu!";
-        }
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).add(newVideo);
+        tx.oncomplete = () => {
+            status.textContent = "Tamamlandı!";
+            renderHome();
+        };
     });
 
-    // Thumbnail Oluşturucu (Canvas)
-    function generateThumbnail(file) {
-        return new Promise((resolve) => {
-            const video = document.createElement('video');
-            const canvas = document.createElement('canvas');
-            video.src = URL.createObjectURL(file);
-            video.load();
-            video.onloadeddata = () => {
-                video.currentTime = 1; // 1. saniyeden kare al
-            };
-            video.onseeked = () => {
-                canvas.width = 320;
-                canvas.height = 180;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                canvas.toBlob((blob) => {
-                    URL.revokeObjectURL(video.src);
-                    resolve(blob);
-                }, 'image/jpeg', 0.7);
+    async function createThumb(file) {
+        return new Promise(resolve => {
+            const v = document.createElement('video');
+            v.src = URL.createObjectURL(file);
+            v.onloadeddata = () => { v.currentTime = 1; };
+            v.onseeked = () => {
+                const c = document.createElement('canvas');
+                c.width = 640; c.height = 360;
+                c.getContext('2d').drawImage(v, 0, 0, 640, 360);
+                c.toBlob(b => { URL.revokeObjectURL(v.src); resolve(b); }, 'image/jpeg');
             };
         });
     }
 
-    /**
-     * 3. Veriyi Çekme ve Render (Persistence)
-     */
-    let activeObjectURLs = [];
+    // 3. Ana Sayfayı Render Etme (Kalıcı Veriden)
+    let activeURLs = [];
+    function renderHome() {
+        const grid = document.getElementById('mainGrid');
+        grid.innerHTML = '';
+        activeURLs.forEach(u => URL.revokeObjectURL(u));
+        activeURLs = [];
 
-    async function loadVideosFromDB() {
-        const library = document.getElementById('videoLibrary');
-        library.innerHTML = ''; // Temizle
-
-        // Bellek sızıntısını önlemek için eski URL'leri iptal et
-        activeObjectURLs.forEach(url => URL.revokeObjectURL(url));
-        activeObjectURLs = [];
-
-        const tx = db.transaction('videos', 'readonly');
-        const store = tx.objectStore('videos');
-        const request = store.getAll();
-
-        request.onsuccess = () => {
-            const videos = request.result.sort((a,b) => b.createdAt - a.createdAt);
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        tx.objectStore(STORE_NAME).getAll().onsuccess = (e) => {
+            const videos = e.target.result;
             
-            videos.forEach(vid => {
-                // Blob'lardan yeni oturum URL'leri türet
-                const vUrl = URL.createObjectURL(vid.videoBlob);
-                const tUrl = URL.createObjectURL(vid.thumbnailBlob);
-                activeObjectURLs.push(vUrl, tUrl);
+            if(videos.length === 0) {
+                grid.innerHTML = "<p>Henüz video yok. Yukarıdan bir tane yükleyin!</p>";
+                return;
+            }
 
-                const item = document.createElement('div');
-                item.className = 'video-item';
-                item.innerHTML = `
-                    <div class="thumb-container">
-                        <img src="${tUrl}" alt="thumb">
-                    </div>
-                    <div class="info">
-                        <h4>${vid.title}</h4>
-                        <p>${new Date(vid.createdAt).toLocaleDateString()}</p>
+            videos.reverse().forEach(vid => {
+                const tUrl = URL.createObjectURL(vid.thumbBlob);
+                const vUrl = URL.createObjectURL(vid.videoBlob);
+                activeURLs.push(tUrl, vUrl);
+
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.innerHTML = `
+                    <div class="thumbnail-box"><img src="${tUrl}"></div>
+                    <div class="video-details">
+                        <div class="channel-ghost"></div>
+                        <div class="meta">
+                            <h3>${vid.title}</h3>
+                            <p>Admin Channel</p>
+                            <p>${vid.views} izlenme • ${vid.date}</p>
+                        </div>
                     </div>
                 `;
-                item.onclick = () => playVideo(vUrl, vid.title);
-                library.appendChild(item);
+                card.onclick = () => openVideo(vUrl, vid.title);
+                grid.appendChild(card);
             });
-
-            // Eğer video varsa ilkini oynatıcıya koy (Opsiyonel)
-            if(videos.length > 0 && !document.getElementById('mainPlayer').src) {
-                const first = videos[0];
-                playVideo(URL.createObjectURL(first.videoBlob), first.title);
-            }
         };
     }
 
-    function playVideo(url, title) {
-        const player = document.getElementById('mainPlayer');
-        document.getElementById('mainTitle').textContent = title;
+    // 4. Player Fonksiyonları
+    function openVideo(url, title) {
+        const overlay = document.getElementById('playerOverlay');
+        const player = document.getElementById('fullPlayer');
+        document.getElementById('playerTitle').textContent = title;
         player.src = url;
+        overlay.style.display = 'block';
+        document.body.style.overflow = 'hidden';
         player.play();
+    }
+
+    function closeVideo() {
+        const overlay = document.getElementById('playerOverlay');
+        const player = document.getElementById('fullPlayer');
+        player.pause();
+        player.src = "";
+        overlay.style.display = 'none';
+        document.body.style.overflow = 'auto';
     }
 </script>
 
