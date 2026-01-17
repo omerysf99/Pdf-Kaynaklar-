@@ -3,126 +3,294 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nano Banana AI Chat | Admin 8392479231</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Video Platform | Zorunlu Giriş</title>
     <style>
-        body { background: #050505; color: #fff; font-family: 'Inter', sans-serif; }
-        .chat-container { height: calc(100vh - 200px); }
-        .message-ai { background: #111; border: 1px solid #222; border-radius: 20px 20px 20px 5px; }
-        .message-user { background: #2563eb; border-radius: 20px 20px 5px 20px; }
-        .custom-input { background: #0a0a0a; border: 1px solid #222; border-radius: 15px; outline: none; transition: 0.3s; }
-        .custom-input:focus { border-color: #3b82f6; }
-        .shimmer { animation: shimmer 2s infinite linear; background: linear-gradient(90deg, #111 0%, #222 50%, #111 100%); background-size: 200% 100%; }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: #050505; }
-        ::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
+        :root {
+            --bg-color: #0f0f0f;
+            --card-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --accent-color: #3ea6ff;
+            --error-color: #ff4e4e;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* 17.1 SİTE AÇILIŞ DAVRANIŞI (KRİTİK) */
+        body.locked {
+            overflow: hidden; /* Scroll kilitli */
+        }
+
+        #main-app {
+            transition: filter 0.5s ease;
+        }
+
+        body.locked #main-app {
+            filter: blur(15px); /* Ana arayüz blur */
+            pointer-events: none; /* Tıklanamaz */
+            user-select: none;
+        }
+
+        /* AUTH MODAL */
+        #auth-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .auth-card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #333;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        input {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            padding: 12px;
+            border-radius: 6px;
+            color: white;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .btn-action {
+            background: var(--accent-color);
+            color: black;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .error-msg {
+            color: var(--error-color);
+            font-size: 13px;
+            margin-top: 10px;
+            min-height: 18px;
+            animation: shake 0.3s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* GİRİŞ SONRASI ÜST BAR */
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 15px;
+        }
+
+        .avatar-circle {
+            width: 32px;
+            height: 32px;
+            background: #ff5722;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .hidden { display: none !important; }
     </style>
 </head>
-<body class="flex flex-col items-center p-4 md:p-8">
+<body class="locked">
 
-    <div class="max-w-4xl w-full flex flex-col space-y-4">
-        <header class="flex justify-between items-center border-b border-zinc-900 pb-4">
-            <div>
-                <h1 class="text-2xl font-black italic tracking-tighter">NANO <span class="text-blue-500">CHAT</span></h1>
-                <p class="text-[10px] text-zinc-600 font-mono">GPT-5 NANO ENGINE | ID: 8392479231</p>
+    <div id="auth-overlay">
+        <div class="auth-card">
+            <h2 id="modal-title">Hoş Geldiniz</h2>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('signup')">Hesap Oluştur</button>
+                <button class="tab-btn" onclick="switchTab('login')">Giriş Yap</button>
             </div>
-            <button onclick="clearChat()" class="text-[10px] text-zinc-500 hover:text-red-500 transition-colors uppercase font-bold tracking-widest">Sohbeti Temizle</button>
-        </header>
 
-        <div id="chatWindow" class="chat-container overflow-y-auto space-y-4 p-4 flex flex-col custom-scrollbar">
-            <div class="message-ai p-4 max-w-[80%] self-start text-sm leading-relaxed">
-                Merhaba Admin **8392479231**. Ben Nano Banana Sohbet Botu. Bugün sana nasıl yardımcı olabilirim?
+            <div id="signup-form" class="auth-form">
+                <input type="text" id="reg-username" placeholder="Kullanıcı Adı">
+                <input type="email" id="reg-email" placeholder="E-posta">
+                <button class="btn-action" onclick="handleSignup()">Kaydı Tamamla</button>
             </div>
-        </div>
 
-        <div class="relative mt-auto">
-            <div id="typingIndicator" class="hidden absolute -top-8 left-2 text-[10px] text-zinc-500 italic animate-pulse">Bot yanıt yazıyor...</div>
-            <div class="flex gap-2 bg-zinc-950 p-2 rounded-2xl border border-zinc-900">
-                <input type="text" id="userInput" onkeypress="handleKey(event)"
-                    placeholder="Mesajınızı buraya yazın..." 
-                    class="flex-1 p-4 custom-input text-sm">
-                <button onclick="sendMessage()" id="sendBtn" 
-                    class="bg-blue-600 hover:bg-blue-500 text-white px-6 rounded-xl font-bold transition-all active:scale-95">
-                    GÖNDER
-                </button>
+            <div id="login-form" class="auth-form hidden">
+                <input type="text" id="login-id" placeholder="Kullanıcı Adı veya E-posta">
+                <button class="btn-action" onclick="handleLogin()">Giriş Yap</button>
             </div>
+
+            <div id="error-box" class="error-msg"></div>
         </div>
     </div>
 
+    <div id="main-app">
+        <header style="display: flex; justify-content: space-between; padding: 15px; background: #202020;">
+            <div class="logo">VIDEO PLATFORM</div>
+            <div id="header-user" class="user-profile">
+                </div>
+        </header>
+
+        <main style="padding: 20px; text-align: center;">
+            <h1>Sisteme Başarıyla Giriş Yaptınız!</h1>
+            <p>Artık tüm içeriklere erişebilir, video yükleyebilir ve etkileşimde bulunabilirsiniz.</p>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 40px;">
+                <div style="background: #1e1e1e; height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">Video 1</div>
+                <div style="background: #1e1e1e; height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">Video 2</div>
+                <div style="background: #1e1e1e; height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">Video 3</div>
+            </div>
+        </main>
+    </div>
+
     <script>
-        const API_KEY = "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";
-        let conversationHistory = [
-            { role: "system", content: "Sen yardımsever, profesyonel ve zeki bir asistansın. Kullanıcı (Admin 8392479231) ile konuşuyorsun." }
-        ];
+        // 17.2 & 17.3 LOCAL STORAGE MANTIĞI
+        const usersDB = JSON.parse(localStorage.getItem('platform_users') || '[]');
+        let currentUser = JSON.parse(localStorage.getItem('current_session') || 'null');
 
-        function handleKey(e) { if (e.key === 'Enter') sendMessage(); }
+        // Sayfa açılışında kontrol
+        window.onload = () => {
+            if (currentUser) {
+                unlockApp();
+            }
+        };
 
-        async function sendMessage() {
-            const input = document.getElementById('userInput');
-            const chatWindow = document.getElementById('chatWindow');
-            const sendBtn = document.getElementById('sendBtn');
-            const typing = document.getElementById('typingIndicator');
-            const text = input.value.trim();
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('signup-form').classList.add('hidden');
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('error-box').innerText = '';
 
-            if (!text) return;
-
-            // Kullanıcı Mesajını Ekle
-            appendMessage('user', text);
-            input.value = '';
-            conversationHistory.push({ role: "user", content: text });
-
-            // UI Ayarları
-            sendBtn.disabled = true;
-            typing.classList.remove('hidden');
-
-            try {
-                const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: "gpt-4-turbo", // GPT-5 Nano henüz genel API'ye tam açılmamışsa en stabil sürüm budur
-                        messages: conversationHistory,
-                        temperature: 0.7
-                    })
-                });
-
-                const data = await response.json();
-                const aiResponse = data.choices[0].message.content;
-
-                // AI Mesajını Ekle
-                appendMessage('ai', aiResponse);
-                conversationHistory.push({ role: "assistant", content: aiResponse });
-
-            } catch (err) {
-                appendMessage('ai', "Hata: Mesaj iletilemedi. Lütfen API bağlantınızı kontrol edin.");
-            } finally {
-                sendBtn.disabled = false;
-                typing.classList.add('hidden');
-                chatWindow.scrollTop = chatWindow.scrollHeight;
+            if (tab === 'signup') {
+                document.getElementById('signup-form').classList.remove('hidden');
+                document.getElementsByClassName('tab-btn')[0].classList.add('active');
+            } else {
+                document.getElementById('login-form').classList.remove('hidden');
+                document.getElementsByClassName('tab-btn')[1].classList.add('active');
             }
         }
 
-        function appendMessage(role, text) {
-            const chatWindow = document.getElementById('chatWindow');
-            const div = document.createElement('div');
-            div.className = `p-4 max-w-[85%] text-sm leading-relaxed ${role === 'user' ? 'message-user self-end' : 'message-ai self-start'}`;
-            
-            // Markdown benzeri basit formatlama (yıldızlar için)
-            div.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-            
-            chatWindow.appendChild(div);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+        function handleSignup() {
+            const user = document.getElementById('reg-username').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const errorBox = document.getElementById('error-box');
+
+            if (!user || !email) {
+                errorBox.innerText = "Lütfen tüm alanları doldurun.";
+                return;
+            }
+
+            if (usersDB.find(u => u.username === user)) {
+                errorBox.innerText = "Bu kullanıcı adı zaten alınmış.";
+                return;
+            }
+
+            const newUser = {
+                username: user,
+                email: email,
+                created_at: new Date().toISOString(),
+                admin_id: "8392479231" // Sistem referansı
+            };
+
+            usersDB.push(newUser);
+            localStorage.setItem('platform_users', JSON.stringify(usersDB));
+            loginSuccess(newUser);
         }
 
-        function clearChat() {
-            document.getElementById('chatWindow').innerHTML = '';
-            conversationHistory = [conversationHistory[0]];
-            appendMessage('ai', "Sohbet geçmişi temizlendi, Admin.");
+        function handleLogin() {
+            const loginID = document.getElementById('login-id').value.trim();
+            const errorBox = document.getElementById('error-box');
+
+            const user = usersDB.find(u => u.username === loginID || u.email === loginID);
+
+            if (user) {
+                loginSuccess(user);
+            } else {
+                errorBox.innerText = "Kullanıcı bulunamadı.";
+            }
+        }
+
+        function loginSuccess(user) {
+            localStorage.setItem('current_session', JSON.stringify(user));
+            currentUser = user;
+            unlockApp();
+        }
+
+        function unlockApp() {
+            document.body.classList.remove('locked');
+            document.getElementById('auth-overlay').style.display = 'none';
+            
+            const headerUser = document.getElementById('header-user');
+            headerUser.innerHTML = `
+                <div class="avatar-circle">${currentUser.username[0].toUpperCase()}</div>
+                <span>${currentUser.username}</span>
+                <button onclick="logout()" style="background:none; border:1px solid #444; color:white; padding:5px 10px; cursor:pointer; margin-left:10px; border-radius:4px;">Çıkış Yap</button>
+            `;
+        }
+
+        function logout() {
+            localStorage.removeItem('current_session');
+            location.reload();
+        }
+
+        // 17.6 GİRİŞ KONTROLÜ (ÖRNEK AKSİYON)
+        function checkAction(actionName) {
+            if (!currentUser) {
+                alert("Hata: " + actionName + " yapabilmek için giriş yapmalısınız!");
+                return false;
+            }
+            return true;
         }
     </script>
 </body>
