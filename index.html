@@ -1,207 +1,600 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" class="dark">
 <head>
-<meta charset="UTF-8" />
-<title>Video Platform Prototype</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexTube Pro | Admin: 8392479231</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --yt-red: #FF0000;
+            --bg-main: #0f0f0f;
+            --glass: rgba(15, 15, 15, 0.85);
+        }
 
-<style>
-/* ========== GLOBAL ========== */
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
-body{background:#0f0f0f;color:#fff;display:flex;height:100vh;overflow:hidden}
-button{cursor:pointer}
-.hidden{display:none}
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-main);
+            color: #f1f1f1;
+            overflow: hidden;
+        }
 
-/* ========== SIDEBAR ========== */
-#sidebar{
-  width:220px;background:#181818;padding:15px;display:flex;flex-direction:column;gap:8px
-}
-#sidebar button{
-  background:none;border:none;color:#ccc;text-align:left;
-  padding:10px;border-radius:8px;font-size:14px
-}
-#sidebar button.active,#sidebar button:hover{background:#272727;color:#fff}
+        /* --- Shorts Scroll Engine --- */
+        .shorts-container {
+            height: calc(100vh - 64px);
+            scroll-snap-type: y mandatory;
+            overflow-y: scroll;
+            scrollbar-width: none;
+        }
+        .shorts-container::-webkit-scrollbar { display: none; }
+        .short-slide {
+            height: calc(100vh - 64px);
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            position: relative;
+            background: #000;
+            display: flex;
+            justify-content: center;
+        }
 
-/* ========== MAIN ========== */
-#main{flex:1;overflow:auto;padding:20px}
+        /* --- Animations & UI --- */
+        .sidebar-item.active { background: rgba(255,255,255,0.1); border-left: 4px solid var(--yt-red); color: #fff; font-weight: 700; }
+        .glass { backdrop-filter: blur(20px); background: var(--glass); }
+        .like-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
+        
+        .progress-fill { transition: width 0.1s linear; }
 
-/* ========== UPLOAD ========== */
-#uploadBox{
-  background:#1e1e1e;padding:15px;border-radius:10px;max-width:500px
-}
-#uploadBox input,#uploadBox textarea{
-  width:100%;margin-bottom:10px;padding:8px;border-radius:6px;border:none
-}
-#progress{
-  height:8px;background:#333;border-radius:5px;overflow:hidden;margin-top:10px
-}
-#bar{height:100%;width:0;background:#ff0000}
+        #miniPlayer {
+            position: fixed; bottom: 85px; right: 25px; width: 300px; aspect-ratio: 16/9;
+            z-index: 100; border-radius: 16px; overflow: hidden; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);
+        }
 
-/* ========== VIDEO GRID ========== */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:15px}
-.card{background:#1c1c1c;border-radius:10px;overflow:hidden;cursor:pointer}
-.card img{width:100%;height:130px;object-fit:cover}
-.card div{padding:8px;font-size:14px}
-
-/* ========== PLAYER ========== */
-#player{max-width:900px}
-#player video{width:100%;border-radius:10px}
-.actions button{background:none;border:none;color:#fff;margin-right:10px}
-
-/* ========== SHORTS ========== */
-#shorts{height:100%;overflow-y:auto;scroll-snap-type:y mandatory}
-.short{
-  height:100vh;position:relative;scroll-snap-align:start;
-}
-.short video{
-  width:100%;height:100%;object-fit:cover
-}
-.shortActions{
-  position:absolute;right:10px;bottom:100px;
-  background:rgba(0,0,0,.35);padding:10px;border-radius:20px
-}
-.shortActions button{
-  display:block;background:none;border:none;color:#fff;margin:10px 0
-}
-
-/* ========== TOAST ========== */
-#toast{
-  position:fixed;right:20px;bottom:20px;
-  background:rgba(0,0,0,.6);padding:10px 15px;
-  border-radius:8px;backdrop-filter:blur(5px);display:none
-}
-</style>
+        .drawer-up { animation: slideUp 0.4s cubic-bezier(0, 0.55, 0.45, 1); }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    </style>
 </head>
+<body class="antialiased">
 
-<body>
+    <header class="h-16 fixed top-0 w-full glass border-b border-white/5 flex items-center justify-between px-6 z-[100]">
+        <div class="flex items-center gap-4">
+            <button onclick="ui.toggleSidebar()" class="lg:hidden p-2 hover:bg-white/10 rounded-full"><i data-lucide="menu"></i></button>
+            <div class="flex items-center gap-1 cursor-pointer" onclick="ui.nav('home')">
+                <div class="bg-red-600 p-1 rounded-lg"><i data-lucide="play" class="fill-white text-white w-5 h-5"></i></div>
+                <span class="text-xl font-black tracking-tighter italic uppercase">NexTube</span>
+            </div>
+        </div>
 
-<div id="sidebar">
-  <button class="active" onclick="showHome()">🏠 Ana Sayfa</button>
-  <button onclick="showShorts()">🎬 Shorts</button>
-  <button onclick="showUpload()">➕ Video Yükle</button>
-</div>
+        <div class="hidden md:flex flex-1 max-w-xl mx-10">
+            <div class="relative w-full">
+                <input type="text" id="searchInput" oninput="app.search()" placeholder="Ara..." class="w-full bg-white/5 border border-white/10 rounded-full py-2 px-6 outline-none focus:border-red-600/50 transition-all">
+                <i data-lucide="search" class="absolute right-5 top-2.5 text-gray-500 w-4 h-4"></i>
+            </div>
+        </div>
 
-<div id="main">
-  <!-- HOME -->
-  <div id="home">
-    <div class="grid" id="videoGrid"></div>
-  </div>
+        <div class="flex items-center gap-4">
+            <button onclick="ui.openModal('upload')" class="bg-white text-black px-5 py-2 rounded-full font-bold text-xs hover:bg-zinc-200 transition flex items-center gap-2">
+                <i data-lucide="plus" class="w-4 h-4"></i> <span class="hidden sm:inline">YÜKLE</span>
+            </button>
+            <div class="w-10 h-10 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center font-bold text-[10px]" title="Admin ID: 8392479231">AD</div>
+        </div>
+    </header>
 
-  <!-- PLAYER -->
-  <div id="player" class="hidden"></div>
+    <div class="flex pt-16 h-screen">
+        
+        <aside id="sidebar" class="fixed lg:relative inset-y-0 left-0 w-64 bg-[#0f0f0f] border-r border-white/5 z-[150] transition-transform -translate-x-full lg:translate-x-0 p-4">
+            <nav class="space-y-1">
+                <button onclick="ui.nav('home')" id="nav-home" class="sidebar-item active w-full flex items-center gap-4 px-4 py-3 rounded-xl transition text-sm"><i data-lucide="home"></i> Ana Sayfa</button>
+                <button onclick="ui.nav('shorts')" id="nav-shorts" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition text-sm"><i data-lucide="zap"></i> Shorts</button>
+                <hr class="border-white/5 my-4">
+                <button class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition text-sm text-gray-500"><i data-lucide="flame"></i> Trendler</button>
+                <button class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition text-sm text-gray-500"><i data-lucide="heart"></i> Beğenilenler</button>
+                <button class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition text-sm text-gray-500"><i data-lucide="history"></i> Geçmiş</button>
+            </nav>
+            <div class="absolute bottom-20 left-4 right-4 p-4 bg-red-600/5 rounded-2xl border border-red-600/10">
+                <p class="text-[10px] font-bold text-red-500">ADMIN ID</p>
+                <p class="text-[10px] text-gray-500 font-mono">8392479231</p>
+            </div>
+        </aside>
 
-  <!-- SHORTS -->
-  <div id="shorts" class="hidden"></div>
+        <main class="flex-1 relative overflow-hidden bg-[#050505]">
+            
+            <section id="view-home" class="h-full overflow-y-auto p-6 lg:p-10">
+                <div id="videoGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 pb-24">
+                    </div>
+            </section>
 
-  <!-- UPLOAD -->
-  <div id="upload" class="hidden">
-    <div id="uploadBox">
-      <input type="file" id="videoFile" accept="video/*">
-      <input type="file" id="thumbFile" accept="image/*">
-      <input placeholder="Başlık" id="title">
-      <textarea placeholder="Açıklama"></textarea>
-      <button onclick="startUpload()">Yükle</button>
-      <div id="progress"><div id="bar"></div></div>
+            <section id="view-shorts" class="hidden h-full bg-black">
+                <div id="shortsFlow" class="shorts-container">
+                    </div>
+            </section>
+
+            <section id="view-watch" class="hidden h-full overflow-y-auto p-4 lg:p-10 bg-[#0f0f0f]">
+                <div class="max-w-6xl mx-auto flex flex-col lg:flex-row gap-8">
+                    <div class="flex-1">
+                        <div class="aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/5">
+                            <video id="mainPlayer" controls class="w-full h-full"></video>
+                        </div>
+                        <div class="mt-6">
+                            <h1 id="watchTitle" class="text-2xl font-black mb-4">Video Başlığı</h1>
+                            <div class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-white/10">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-11 h-11 rounded-2xl bg-red-600"></div>
+                                    <div><p class="font-bold text-sm">NexTube Admin</p><p class="text-xs text-gray-500">0 abone</p></div>
+                                </div>
+                                <div class="flex items-center gap-2 bg-white/5 p-1 rounded-2xl">
+                                    <button onclick="app.likeToggle()" class="flex items-center gap-2 px-5 py-2 hover:bg-white/10 rounded-xl transition">
+                                        <i data-lucide="heart" id="watchLikeIcon" class="w-5 h-5"></i> <span id="watchLikeCount">0</span>
+                                    </button>
+                                    <button onclick="app.share()" class="flex items-center gap-2 px-5 py-2 hover:bg-white/10 rounded-xl transition">
+                                        <i data-lucide="share-2" class="w-5 h-5"></i> Paylaş
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mt-6 bg-white/5 p-6 rounded-3xl text-sm text-gray-400 leading-relaxed" id="watchDesc"></div>
+                        </div>
+                    </div>
+                    <div class="w-full lg:w-[400px]">
+                        <h3 class="font-bold mb-6">Yorumlar <span id="watchCommentTotal" class="text-xs font-normal text-gray-500">(0)</span></h3>
+                        <div class="flex gap-2 mb-6">
+                            <input type="text" id="watchCommentIn" placeholder="Yorum ekle..." class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:border-red-600">
+                            <button onclick="app.addComment('watch')" class="p-2 bg-red-600 rounded-xl"><i data-lucide="send" class="w-5 h-5"></i></button>
+                        </div>
+                        <div id="watchCommentsList" class="space-y-5"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
-  </div>
-</div>
 
-<div id="toast"></div>
+    <div id="miniPlayer" class="hidden">
+        <video id="miniVideo" muted class="w-full h-full object-cover"></video>
+        <div class="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-4 transition-opacity">
+            <button onclick="ui.closeMini()" class="p-2 bg-red-600 rounded-full"><i data-lucide="x" class="w-4 h-4"></i></button>
+            <button onclick="ui.expandMini()" class="p-2 bg-white text-black rounded-full"><i data-lucide="maximize" class="w-4 h-4"></i></button>
+        </div>
+    </div>
 
-<script>
-/* ========== DATA ========== */
-let videos=[]
-let shorts=[]
-const grid=document.getElementById("videoGrid")
-const shortsBox=document.getElementById("shorts")
+    <div id="modalUpload" class="fixed inset-0 z-[200] hidden items-center justify-center bg-black/95 backdrop-blur-xl p-6">
+        <div class="w-full max-w-xl bg-[#121212] rounded-[40px] border border-white/10 p-10 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div id="uploadHeader" class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-black">Video Yayınla</h2>
+                <button onclick="ui.closeModal('upload')" id="closeModalBtn" class="p-2 hover:bg-white/5 rounded-full"><i data-lucide="x"></i></button>
+            </div>
+            
+            <div id="uploadForm" class="space-y-6">
+                <div class="border-2 border-dashed border-white/10 rounded-[30px] p-10 text-center hover:border-red-600/50 transition cursor-pointer bg-white/[0.02]" onclick="document.getElementById('fileIn').click()">
+                    <i data-lucide="upload-cloud" class="w-12 h-12 mx-auto mb-4 text-gray-500"></i>
+                    <p id="fileLabel" class="text-sm font-bold">Video dosyasını sürükleyin veya seçin</p>
+                    <input type="file" id="fileIn" class="hidden" accept="video/*" onchange="app.handleFileSelect(this)">
+                </div>
 
-/* ========== NAV ========== */
-function reset(){
-  home.style.display=player.style.display=shortsBox.style.display=upload.style.display="none"
-}
-function showHome(){reset();home.style.display="block"}
-function showShorts(){reset();shortsBox.style.display="block"}
-function showUpload(){reset();upload.style.display="block"}
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white/5 border border-white/10 rounded-2xl p-4 text-center cursor-pointer hover:border-blue-500" onclick="document.getElementById('thumbIn').click()">
+                        <p class="text-[10px] font-bold text-gray-500 uppercase mb-2">Thumbnail</p>
+                        <i data-lucide="image" class="w-5 h-5 mx-auto"></i>
+                        <input type="file" id="thumbIn" class="hidden" accept="image/*" onchange="app.handleThumbSelect(this)">
+                    </div>
+                    <div id="thumbPreviewBox" class="rounded-2xl border border-white/10 bg-black overflow-hidden flex items-center justify-center relative">
+                        <span class="text-[10px] text-gray-600">Önizleme</span>
+                        <img id="thumbPreviewImg" class="hidden absolute inset-0 w-full h-full object-cover">
+                    </div>
+                </div>
 
-/* ========== UPLOAD ========== */
-function startUpload(){
-  const file=videoFile.files[0]
-  if(!file)return
-  let p=0;bar.style.width="0%"
-  const int=setInterval(()=>{
-    p++;bar.style.width=p+"%"
-    if(p>=100){
-      clearInterval(int)
-      createVideo(file)
-      toast("Video başarıyla yüklendi")
-    }
-  },100)
-}
+                <input type="text" id="upTitle" placeholder="Video Başlığı" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-red-600">
+                <textarea id="upDesc" placeholder="Açıklama ekleyin..." rows="3" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-red-600 resize-none"></textarea>
+                
+                <button onclick="app.startUpload()" id="publishBtn" class="w-full py-5 bg-red-600 rounded-[24px] font-black text-lg hover:bg-red-700 transition shadow-xl shadow-red-600/30">VİDEOYU YAYINLA</button>
+            </div>
 
-/* ========== CREATE VIDEO ========== */
-function createVideo(file){
-  const url=URL.createObjectURL(file)
-  const v=document.createElement("video")
-  v.src=url
-  v.onloadedmetadata=()=>{
-    const isShort=v.duration<=60
-    const obj={url,title:title.value||"Video",likes:0,comments:0}
-    isShort?addShort(obj):addLong(obj)
-  }
-}
+            <div id="uploadProgress" class="hidden py-10 text-center space-y-8">
+                <div class="relative w-32 h-32 mx-auto">
+                    <svg class="w-full h-full rotate-[-90deg]" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="45" stroke="currentColor" stroke-width="5" fill="transparent" class="text-white/5"/>
+                        <circle cx="50" cy="50" r="45" stroke="currentColor" stroke-width="5" fill="transparent" class="text-red-600" id="progressCircle" stroke-dasharray="282.7" stroke-dashoffset="282.7" style="transition: stroke-dashoffset 0.1s linear"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center font-black text-2xl" id="progressText">0%</div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold">Video İşleniyor...</h3>
+                    <p class="text-sm text-gray-500 mt-2">Lütfen bu pencereyi kapatmayın.</p>
+                </div>
+                <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/10">
+                    <div id="progressBarFill" class="h-full bg-red-600 w-0 progress-fill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-/* ========== LONG VIDEO ========== */
-function addLong(v){
-  const card=document.createElement("div")
-  card.className="card"
-  card.innerHTML=`<img><div>${v.title}</div>`
-  card.onclick=()=>playVideo(v)
-  grid.appendChild(card)
+    <div id="shortComments" class="fixed inset-0 z-[250] hidden items-end justify-center bg-black/60 backdrop-blur-sm" onclick="ui.toggleShortComments(false)">
+        <div class="w-full md:w-[450px] bg-[#1a1a1a] rounded-t-[40px] border-t border-white/10 flex flex-col drawer-up overflow-hidden" style="height: 75vh;" onclick="event.stopPropagation()">
+            <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto my-4"></div>
+            <div class="px-8 py-4 flex justify-between items-center border-b border-white/5">
+                <h3 class="font-bold">Yorumlar <span id="shortCommentTotal" class="text-sm font-normal text-gray-500 ml-2">0</span></h3>
+                <button onclick="ui.toggleShortComments(false)" class="p-2 hover:bg-white/10 rounded-full"><i data-lucide="x"></i></button>
+            </div>
+            <div id="shortCommentList" class="flex-1 overflow-y-auto p-8 space-y-6"></div>
+            <div class="p-8 bg-black/40 border-t border-white/5 flex gap-3">
+                <input type="text" id="shortCommentIn" placeholder="Yorum ekle..." class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-red-600">
+                <button onclick="app.addComment('short')" class="w-14 h-14 bg-red-600 rounded-2xl flex items-center justify-center hover:bg-red-700 transition"><i data-lucide="send" class="w-6 h-6"></i></button>
+            </div>
+        </div>
+    </div>
 
-  const vid=document.createElement("video")
-  vid.src=v.url
-  vid.currentTime=1
-  vid.onloadeddata=()=>{
-    const c=document.createElement("canvas")
-    c.width=320;c.height=180
-    c.getContext("2d").drawImage(vid,0,0,320,180)
-    card.querySelector("img").src=c.toDataURL()
-  }
-}
+    <div id="toast" class="fixed bottom-24 right-6 glass border border-white/10 px-6 py-3 rounded-2xl shadow-2xl z-[300] hidden items-center gap-3">
+        <i data-lucide="check-circle" class="text-green-500 w-4 h-4"></i>
+        <span class="text-xs font-bold" id="toastMsg">İşlem başarılı</span>
+    </div>
 
-/* ========== PLAYER ========== */
-function playVideo(v){
-  reset();player.style.display="block"
-  player.innerHTML=`
-    <video controls autoplay src="${v.url}"></video>
-    <div class="actions">
-      <button onclick="v.likes++;toast('Beğenildi')">❤️ ${v.likes}</button>
-      <button onclick="v.comments++;toast('Yorum eklendi')">💬 ${v.comments}</button>
-      <button onclick="toast('Link kopyalandı')">🔗 Paylaş</button>
-    </div>`
-}
+    <canvas id="canvasUtil" class="hidden"></canvas>
 
-/* ========== SHORTS ========== */
-function addShort(v){
-  const box=document.createElement("div")
-  box.className="short"
-  box.innerHTML=`
-    <video src="${v.url}" autoplay loop muted></video>
-    <div class="shortActions">
-      <button onclick="v.likes++;toast('Beğenildi')">❤️ ${v.likes}</button>
-      <button onclick="v.comments++;toast('Yorum eklendi')">💬 ${v.comments}</button>
-      <button onclick="toast('Link kopyalandı')">🔗</button>
-    </div>`
-  shortsBox.appendChild(box)
-}
+    <script>
+        // --- DATABASE ---
+        let videos = JSON.parse(localStorage.getItem('nextube_data')) || [];
 
-/* ========== TOAST ========== */
-function toast(t){
-  toastDiv.innerText=t
-  toastDiv.style.display="block"
-  setTimeout(()=>toastDiv.style.display="none",1500)
-}
-const toastDiv=document.getElementById("toast")
-</script>
+        // --- CORE APP ---
+        const app = {
+            tempFile: null,
+            tempManualThumb: null,
+            tempAutoThumb: null,
+            activeId: null,
+
+            handleFileSelect(input) {
+                const file = input.files[0];
+                if (!file) return;
+                this.tempFile = file;
+                document.getElementById('fileLabel').innerText = file.name;
+
+                // Smart Thumbnail Generator
+                const v = document.createElement('video');
+                v.src = URL.createObjectURL(file);
+                v.onloadeddata = () => { v.currentTime = 1.5; };
+                v.onseeked = () => {
+                    const canvas = document.getElementById('canvasUtil');
+                    canvas.width = 640; canvas.height = 360;
+                    canvas.getContext('2d').drawImage(v, 0, 0, 640, 360);
+                    this.tempAutoThumb = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    if(!this.tempManualThumb) {
+                        const img = document.getElementById('thumbPreviewImg');
+                        img.src = this.tempAutoThumb;
+                        img.classList.remove('hidden');
+                        document.querySelector('#thumbPreviewBox span').classList.add('hidden');
+                    }
+                };
+            },
+
+            handleThumbSelect(input) {
+                const file = input.files[0];
+                if (!file) return;
+                this.tempManualThumb = URL.createObjectURL(file);
+                const img = document.getElementById('thumbPreviewImg');
+                img.src = this.tempManualThumb;
+                img.classList.remove('hidden');
+                document.querySelector('#thumbPreviewBox span').classList.add('hidden');
+            },
+
+            startUpload() {
+                const title = document.getElementById('upTitle').value;
+                if (!this.tempFile || !title) return alert("Hata: Dosya ve başlık zorunludur!");
+
+                document.getElementById('uploadForm').classList.add('hidden');
+                document.getElementById('closeModalBtn').classList.add('hidden');
+                document.getElementById('uploadProgress').classList.remove('hidden');
+                
+                let progress = 0;
+                const circle = document.getElementById('progressCircle');
+                const circ = 2 * Math.PI * 45;
+
+                const timer = setInterval(() => {
+                    progress += 1;
+                    circle.style.strokeDashoffset = circ - (progress / 100) * circ;
+                    document.getElementById('progressBarFill').style.width = progress + '%';
+                    document.getElementById('progressText').innerText = progress + '%';
+
+                    if (progress >= 100) {
+                        clearInterval(timer);
+                        this.finalizeUpload();
+                    }
+                }, 100); // 100ms * 100 = 10 Saniye
+            },
+
+            finalizeUpload() {
+                const url = URL.createObjectURL(this.tempFile);
+                const v = document.createElement('video');
+                v.src = url;
+
+                v.onloadedmetadata = () => {
+                    const duration = v.duration;
+                    const isShort = duration <= 60;
+
+                    const newVideo = {
+                        id: Date.now(),
+                        title: document.getElementById('upTitle').value,
+                        desc: document.getElementById('upDesc').value || "Açıklama yok.",
+                        url: url,
+                        thumb: this.tempManualThumb || this.tempAutoThumb,
+                        type: isShort ? 'short' : 'long',
+                        duration: duration,
+                        likes: 0,
+                        isLiked: false,
+                        comments: []
+                    };
+                    
+                    videos.unshift(newVideo);
+                    this.save();
+                    ui.closeModal('upload');
+                    ui.renderAll();
+                    ui.showToast("Video başarıyla yüklendi! 🚀");
+                    this.resetUpload();
+                };
+            },
+
+            resetUpload() {
+                this.tempFile = null; this.tempManualThumb = null; this.tempAutoThumb = null;
+                document.getElementById('upTitle').value = "";
+                document.getElementById('upDesc').value = "";
+                document.getElementById('fileIn').value = "";
+                document.getElementById('fileLabel').innerText = "Video dosyasını sürükleyin veya seçin";
+                document.getElementById('thumbPreviewImg').classList.add('hidden');
+                document.querySelector('#thumbPreviewBox span').classList.remove('hidden');
+                document.getElementById('uploadForm').classList.remove('hidden');
+                document.getElementById('uploadProgress').classList.add('hidden');
+                document.getElementById('closeModalBtn').classList.remove('hidden');
+            },
+
+            likeToggle(id = null) {
+                const vidId = id || this.activeId;
+                const v = videos.find(x => x.id === vidId);
+                v.isLiked = !v.isLiked;
+                v.likes += v.isLiked ? 1 : -1;
+                this.save();
+                ui.renderAll();
+                if (ui.currentPage === 'watch') ui.updateWatchUI();
+                ui.showToast(v.isLiked ? "Beğenildi ❤️" : "Beğeni Kaldırıldı");
+            },
+
+            addComment(type) {
+                const input = document.getElementById(type === 'watch' ? 'watchCommentIn' : 'shortCommentIn');
+                if (!input.value.trim()) return;
+                const v = videos.find(x => x.id === this.activeId);
+                v.comments.unshift({ user: 'Admin', text: input.value, date: 'Az önce' });
+                input.value = "";
+                this.save();
+                if (type === 'watch') { ui.renderWatchComments(); ui.updateWatchUI(); }
+                else { ui.renderShortComments(v.id); ui.renderShorts(); }
+                ui.showToast("Yorum eklendi 💬");
+            },
+
+            share() {
+                navigator.clipboard.writeText("https://nextube.pro/v/" + this.activeId);
+                ui.showToast("Link kopyalandı! 🔗");
+            },
+
+            search() {
+                const q = document.getElementById('searchInput').value.toLowerCase();
+                ui.renderGrid(q);
+            },
+
+            save() { localStorage.setItem('nextube_data', JSON.stringify(videos)); }
+        };
+
+        // --- UI RENDERER ---
+        const ui = {
+            currentPage: 'home',
+
+            nav(page) {
+                this.currentPage = page;
+                ['view-home', 'view-shorts', 'view-watch'].forEach(v => document.getElementById(v).classList.add('hidden'));
+                document.getElementById('view-' + page).classList.remove('hidden');
+                
+                document.querySelectorAll('.sidebar-item').forEach(v => v.classList.remove('active'));
+                const el = document.getElementById('nav-' + page);
+                if (el) el.classList.add('active');
+
+                // Mini Player logic
+                if (page === 'home' && !document.getElementById('mainPlayer').paused) this.openMini();
+                else this.closeMini();
+
+                if (page !== 'watch') document.getElementById('mainPlayer').pause();
+                if (page === 'shorts') this.initShortsObserver();
+                else document.querySelectorAll('.short-vid').forEach(v => v.pause());
+
+                if (window.innerWidth < 1024) this.toggleSidebar(false);
+                this.renderAll();
+            },
+
+            renderGrid(query = "") {
+                const grid = document.getElementById('videoGrid');
+                const data = videos.filter(v => v.type === 'long' && v.title.toLowerCase().includes(query));
+                if (data.length === 0) return grid.innerHTML = `<div class="col-span-full py-20 text-center text-gray-600">Video bulunamadı.</div>`;
+                
+                grid.innerHTML = data.map(v => `
+                    <div class="group cursor-pointer" onclick="ui.watchVideo(${v.id})">
+                        <div class="relative aspect-video rounded-2xl overflow-hidden bg-zinc-900">
+                            <img src="${v.thumb}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <div class="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-[10px] font-bold border border-white/5">
+                                ${Math.floor(v.duration / 60)}:${Math.floor(v.duration % 60).toString().padStart(2, '0')}
+                            </div>
+                        </div>
+                        <div class="mt-4 flex gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-600 to-orange-500 flex-shrink-0"></div>
+                            <div>
+                                <h3 class="font-bold text-sm leading-snug line-clamp-2">${v.title}</h3>
+                                <p class="text-[11px] text-gray-500 mt-1 font-medium">NexTube Admin • ${v.likes} Beğeni</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                lucide.createIcons();
+            },
+
+            renderShorts() {
+                const flow = document.getElementById('shortsFlow');
+                const data = videos.filter(v => v.type === 'short');
+                if (data.length === 0) return flow.innerHTML = `<div class="h-full flex items-center justify-center text-gray-600">Shorts bulunamadı.</div>`;
+                
+                flow.innerHTML = data.map(s => `
+                    <div class="short-slide" data-id="${s.id}">
+                        <div class="relative h-[92%] mt-[2%] aspect-[9/16] rounded-[35px] overflow-hidden bg-zinc-900 border border-white/5 shadow-2xl">
+                            <video src="${s.url}" loop class="short-vid w-full h-full object-cover"></video>
+                            
+                            <div class="absolute right-4 bottom-24 flex flex-col gap-6 items-center z-10">
+                                <div class="flex flex-col items-center gap-1">
+                                    <button onclick="app.likeToggle(${s.id})" class="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-75 transition">
+                                        <i data-lucide="heart" class="w-6 h-6 ${s.isLiked ? 'fill-red-600 text-red-600 like-pop' : ''}"></i>
+                                    </button>
+                                    <span class="text-[10px] font-bold">${s.likes}</span>
+                                </div>
+                                <div class="flex flex-col items-center gap-1">
+                                    <button onclick="ui.toggleShortComments(true, ${s.id})" class="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                                        <i data-lucide="message-circle" class="w-6 h-6"></i>
+                                    </button>
+                                    <span class="text-[10px] font-bold">${s.comments.length}</span>
+                                </div>
+                                <button onclick="app.share()" class="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                                    <i data-lucide="share" class="w-6 h-6"></i>
+                                </button>
+                            </div>
+
+                            <div class="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-black/80 to-transparent">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="w-10 h-10 rounded-full bg-red-600"></div>
+                                    <span class="font-black text-sm">NexTube Admin</span>
+                                </div>
+                                <p class="text-sm font-semibold">${s.title}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                lucide.createIcons();
+            },
+
+            initShortsObserver() {
+                const obs = new IntersectionObserver(entries => {
+                    entries.forEach(e => {
+                        const v = e.target.querySelector('video');
+                        if (e.isIntersecting) { 
+                            v.play(); 
+                            app.activeId = parseInt(e.target.dataset.id); 
+                        } else {
+                            v.pause();
+                        }
+                    });
+                }, { threshold: 0.8 });
+                document.querySelectorAll('.short-slide').forEach(s => obs.observe(s));
+            },
+
+            watchVideo(id) {
+                const v = videos.find(x => x.id === id);
+                app.activeId = id;
+                this.nav('watch');
+                const player = document.getElementById('mainPlayer');
+                player.src = v.url;
+                player.play();
+                document.getElementById('watchTitle').innerText = v.title;
+                document.getElementById('watchDesc').innerText = v.desc;
+                this.updateWatchUI();
+                this.renderWatchComments();
+            },
+
+            updateWatchUI() {
+                const v = videos.find(x => x.id === app.activeId);
+                document.getElementById('watchLikeCount').innerText = v.likes;
+                document.getElementById('watchCommentTotal').innerText = `(${v.comments.length})`;
+                const i = document.getElementById('watchLikeIcon');
+                i.className = v.isLiked ? 'w-5 h-5 fill-red-600 text-red-600 like-pop' : 'w-5 h-5';
+                lucide.createIcons();
+            },
+
+            renderWatchComments() {
+                const v = videos.find(x => x.id === app.activeId);
+                document.getElementById('watchCommentsList').innerHTML = v.comments.map(c => `
+                    <div class="flex gap-4">
+                        <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center font-bold text-xs uppercase">${c.user[0]}</div>
+                        <div>
+                            <p class="text-[11px] font-bold text-gray-500">${c.user} • ${c.date}</p>
+                            <p class="text-sm text-gray-300 mt-1">${c.text}</p>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            renderShortComments(id) {
+                const v = videos.find(x => x.id === id);
+                document.getElementById('shortCommentTotal').innerText = v.comments.length;
+                document.getElementById('shortCommentList').innerHTML = v.comments.map(c => `
+                    <div class="flex gap-4">
+                        <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center font-bold text-xs uppercase">${c.user[0]}</div>
+                        <div class="flex-1 bg-white/5 p-4 rounded-2xl">
+                            <p class="text-[10px] font-bold text-gray-500">${c.user} • ${c.date}</p>
+                            <p class="text-sm text-gray-300 mt-1">${c.text}</p>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            toggleShortComments(show, id = null) {
+                const d = document.getElementById('shortComments');
+                if (show) { 
+                    app.activeId = id; 
+                    this.renderShortComments(id); 
+                    d.classList.replace('hidden', 'flex'); 
+                } else {
+                    d.classList.replace('flex', 'hidden'); 
+                }
+            },
+
+            showToast(msg) {
+                const t = document.getElementById('toast');
+                document.getElementById('toastMsg').innerText = msg;
+                t.classList.replace('hidden', 'flex');
+                setTimeout(() => t.classList.replace('flex', 'hidden'), 3000);
+            },
+
+            openMini() {
+                const m = document.getElementById('miniPlayer');
+                const v = document.getElementById('miniVideo');
+                v.src = document.getElementById('mainPlayer').src;
+                v.currentTime = document.getElementById('mainPlayer').currentTime;
+                v.play(); m.classList.remove('hidden');
+            },
+            closeMini() { document.getElementById('miniPlayer').classList.add('hidden'); document.getElementById('miniVideo').pause(); },
+            expandMini() { this.closeMini(); this.nav('watch'); },
+
+            renderAll() { this.renderGrid(); this.renderShorts(); },
+            openModal(id) { document.getElementById('modal' + id.charAt(0).toUpperCase() + id.slice(1)).classList.replace('hidden', 'flex'); },
+            closeModal(id) { document.getElementById('modal' + id.charAt(0).toUpperCase() + id.slice(1)).classList.replace('flex', 'hidden'); },
+            toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
+        };
+
+        // --- KEYBOARD ENGINE ---
+        window.onkeydown = (e) => {
+            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+            const p = document.getElementById('mainPlayer');
+            
+            if (ui.currentPage === 'watch') {
+                switch(e.code) {
+                    case 'Space': e.preventDefault(); p.paused ? p.play() : p.pause(); break;
+                    case 'ArrowLeft': p.currentTime -= 5; break;
+                    case 'ArrowRight': p.currentTime += 5; break;
+                    case 'ArrowUp': e.preventDefault(); p.volume = Math.min(1, p.volume + 0.1); break;
+                    case 'ArrowDown': e.preventDefault(); p.volume = Math.max(0, p.volume - 0.1); break;
+                    case 'KeyF': p.requestFullscreen(); break;
+                    case 'KeyM': p.muted = !p.muted; break;
+                }
+            } else if (ui.currentPage === 'shorts') {
+                const container = document.querySelector('.shorts-container');
+                if (e.code === 'ArrowDown') container.scrollBy(0, window.innerHeight - 64);
+                if (e.code === 'ArrowUp') container.scrollBy(0, -(window.innerHeight - 64));
+            }
+        };
+
+        window.onload = () => { ui.renderAll(); lucide.createIcons(); };
+    </script>
 </body>
 </html>
