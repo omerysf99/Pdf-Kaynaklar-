@@ -3,179 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube - Sinematik İzleme</title>
+    <title>VideoTube Pro | Admin 8392479231</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0f0f0f;
-            --surface: #1e1e1e;
-            --surface-hover: #2a2a2a;
+            --surface: #0f0f0f;
+            --surface-hover: #272727;
             --text: #ffffff;
             --secondary: #aaaaaa;
             --yt-red: #ff0000;
+            --accent: #3ea6ff;
+            --glass: rgba(0, 0, 0, 0.5);
             --border: #333333;
         }
 
         body {
-            font-family: "Roboto", Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         /* --- HEADER --- */
         header {
             position: fixed; top: 0; width: 100%; height: 56px;
             background: var(--bg); display: flex; justify-content: space-between;
-            align-items: center; padding: 0 16px; z-index: 2000; box-sizing: border-box;
+            align-items: center; padding: 0 16px; z-index: 3000; box-sizing: border-box;
         }
-        .search-box {
-            display: flex; align-items: center; background: #121212;
-            border: 1px solid #333; border-radius: 40px; padding: 0 16px; width: 40%;
+        .search-container { flex: 0 1 720px; display: flex; background: #121212; border: 1px solid #333; border-radius: 40px; padding: 0 16px; align-items: center; }
+        .search-container input { background: transparent; border: none; color: white; flex: 1; padding: 10px; outline: none; }
+
+        /* --- SIDEBAR --- */
+        aside {
+            position: fixed; top: 56px; left: 0; width: 240px; height: calc(100vh - 56px);
+            background: var(--bg); padding-top: 12px; overflow-y: auto; z-index: 2000;
         }
-        .search-box input { background: transparent; border: none; color: white; padding: 8px; width: 100%; outline: none; }
-
-        /* --- MAIN LAYOUT --- */
-        .content-wrapper { display: flex; margin-top: 56px; }
-
-        /* Sidebar (Ana Sayfa İçin) */
-        aside { width: 240px; height: calc(100vh - 56px); position: sticky; top: 56px; padding-top: 12px; }
-        .nav-item { padding: 10px 24px; display: flex; align-items: center; gap: 20px; cursor: pointer; border-radius: 10px; margin: 0 10px; }
-        .nav-item:hover { background: var(--surface-hover); }
-
-        /* Ana Grid */
-        main { flex: 1; padding: 24px; }
-        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; row-gap: 30px; }
-
-        /* --- VİDEO İZLEME EKRANI (FULL PAGE OVERLAY) --- */
-        #watchPage {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: var(--bg); z-index: 3000; display: none; overflow-y: auto;
-            padding-top: 70px;
+        .nav-link {
+            padding: 10px 24px; display: flex; align-items: center; gap: 24px;
+            cursor: pointer; border-radius: 10px; margin: 0 12px; transition: 0.2s; font-size: 14px;
         }
+        .nav-link:hover, .nav-link.active { background: var(--surface-hover); }
+        .sep { border: 0; border-top: 1px solid var(--border); margin: 12px 0; }
 
-        .watch-container {
-            max-width: 1300px; margin: 0 auto; display: grid;
-            grid-template-columns: 1fr 350px; gap: 24px; padding: 0 24px;
+        /* --- MAIN VIEWPORTS --- */
+        .viewport {
+            margin-top: 56px; margin-left: 240px; height: calc(100vh - 56px);
+            overflow-y: auto; display: none; padding: 20px; box-sizing: border-box;
         }
+        .viewport.active { display: block; }
 
-        /* Sol Taraf: Video ve Detaylar */
-        .player-section video { width: 100%; border-radius: 12px; background: #000; aspect-ratio: 16/9; }
-        .video-info-box { margin-top: 15px; }
-        .video-info-box h1 { font-size: 20px; margin: 0 0 10px 0; }
-        .channel-row { display: flex; align-items: center; justify-content: space-between; margin-top: 15px; }
-        .c-pfp { width: 40px; height: 40px; border-radius: 50%; background: #444; }
-        .action-btns button { background: var(--surface-hover); color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; margin-left: 8px; }
-
-        /* Sağ Taraf: Öneriler ve Sıradaki */
-        .next-video-box { background: var(--surface); border-radius: 12px; padding: 12px; margin-bottom: 15px; }
-        .rec-chips { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
-        .chip { background: var(--surface-hover); border: none; color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; white-space: nowrap; cursor: pointer; }
-        .chip.active { background: white; color: black; }
-
-        .suggested-card { display: flex; gap: 8px; margin-bottom: 12px; cursor: pointer; }
-        .suggested-thumb { width: 160px; aspect-ratio: 16/9; border-radius: 8px; background: #333; overflow: hidden; flex-shrink: 0; }
-        .suggested-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .suggested-meta h4 { margin: 0; font-size: 14px; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .suggested-meta p { font-size: 12px; color: var(--secondary); margin: 4px 0 0 0; }
-
-        .back-btn { position: absolute; top: 15px; left: 15px; font-size: 24px; cursor: pointer; z-index: 3001; }
-
-        /* Video Kartı */
+        /* --- LONG VIDEO GRID --- */
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; row-gap: 32px; }
         .v-card { cursor: pointer; }
-        .v-thumb { width: 100%; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; background: #222; }
+        .v-thumb { width: 100%; aspect-ratio: 16/9; border-radius: 12px; background: #111; overflow: hidden; position: relative; }
         .v-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .v-meta { display: flex; gap: 12px; margin-top: 12px; }
+        .v-pfp { width: 36px; height: 36px; border-radius: 50%; background: #333; }
 
-        @media (max-width: 1000px) {
-            .watch-container { grid-template-columns: 1fr; }
-            aside { display: none; }
-        }
+        /* --- WATCH PAGE (aad248 Style) --- */
+        #watchView { padding: 24px; margin-left: 0; position: fixed; top: 56px; width: 100%; z-index: 2500; background: var(--bg); }
+        .watch-container { display: grid; grid-template-columns: 1fr 400px; gap: 24px; max-width: 1700px; margin: 0 auto; }
+        video { width: 100%; border-radius: 12px; background: #000; outline: none; }
+        .v-actions { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-action { background: var(--surface-hover); border: none; color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .btn-action.liked { color: var(--yt-red); }
+
+        /* --- SHORTS VIEW (Vertical Snap) --- */
+        #shortsView { margin-left: 240px; padding: 0; scroll-snap-type: y mandatory; overflow-y: scroll; height: calc(100vh - 56px); }
+        .short-item { height: calc(100vh - 56px); scroll-snap-align: start; display: flex; justify-content: center; align-items: center; position: relative; background: #000; }
+        .short-video-box { height: 90%; aspect-ratio: 9/16; position: relative; border-radius: 15px; overflow: hidden; }
+        .short-actions { position: absolute; right: -70px; bottom: 40px; display: flex; flex-direction: column; gap: 20px; align-items: center; }
+        .short-btn { width: 48px; height: 48px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(10px); }
+        .short-btn span { font-size: 11px; margin-top: 4px; }
+
+        /* --- COMMENTS PANEL --- */
+        .comments-panel { position: fixed; bottom: -100%; left: 0; width: 100%; height: 70%; background: #1e1e1e; z-index: 4000; border-radius: 20px 20px 0 0; transition: 0.4s; padding: 20px; box-sizing: border-box; }
+        .comments-panel.open { bottom: 0; }
+
+        /* --- TOAST --- */
+        #toast { position: fixed; bottom: 30px; right: 30px; background: rgba(255,255,255,0.9); color: black; padding: 12px 24px; border-radius: 8px; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 5000; pointer-events: none; }
+
+        /* --- MINI PLAYER --- */
+        #miniPlayer { position: fixed; bottom: 20px; right: 20px; width: 300px; aspect-ratio: 16/9; background: #000; border-radius: 12px; z-index: 3500; display: none; overflow: hidden; border: 1px solid #333; }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="display:flex; align-items:center; gap:20px;">
-        <span style="font-size:20px; cursor:pointer;">☰</span>
-        <div style="font-weight:bold; font-size:20px;">YouTube<sup>TR</sup></div>
+    <div style="display:flex; align-items:center; gap:16px;">
+        <span style="font-size:24px; cursor:pointer;" onclick="toggleSidebar()">☰</span>
+        <div style="color:var(--yt-red); font-weight:bold; font-size:20px; cursor:pointer;" onclick="nav('home')">YouTube<sup>TR</sup></div>
     </div>
-    <div class="search-box">
+    <div class="search-container">
         <input type="text" placeholder="Ara">
+        <span>🔍</span>
     </div>
-    <div style="font-size:12px; color:var(--secondary)">ID: 8392479231</div>
+    <div style="font-size:12px; color:var(--secondary)">Admin 8392479231</div>
 </header>
 
-<div class="content-wrapper">
-    <aside id="mainSidebar">
-        <div class="nav-item">🏠 Ana Sayfa</div>
-        <div class="nav-item">🩳 Shorts</div>
-        <div class="nav-item">📺 Abonelikler</div>
-        <hr style="border:0; border-top:1px solid #333; margin:15px 0;">
-        <div style="padding:0 24px; font-weight:bold; margin-bottom:10px;">Abonelikler</div>
-        <div class="nav-item">🔴 AI REBORNN</div>
-        <div class="nav-item">🔴 Hasan Yayında</div>
-    </aside>
+<aside id="sidebar">
+    <div class="nav-link active" onclick="nav('home')">🏠 Ana Sayfa</div>
+    <div class="nav-link" onclick="nav('shorts')">🩳 Shorts</div>
+    <div class="nav-link" onclick="nav('upload')">➕ Video Yükle</div>
+    <hr class="sep">
+    <div class="nav-link">❤️ Beğenilenler</div>
+    <div class="nav-link">🕒 Son İzlenenler</div>
+    <div class="nav-link">📂 Kategoriler</div>
+</aside>
 
-    <main>
-        <div style="background:var(--surface); padding:20px; border-radius:15px; margin-bottom:24px; border:1px dashed #444;">
-            <h3 style="margin-top:0">Video Yükle</h3>
-            <input type="file" id="vInp" accept="video/*">
-            <input type="file" id="tInp" accept="image/*">
-            <input type="text" id="vTitle" placeholder="Başlık Girin" style="background:#000; border:1px solid #333; color:#fff; padding:8px; border-radius:5px;">
-            <button onclick="uploadVideo()" style="background:white; color:black; border:none; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer;">YÜKLE</button>
-        </div>
-        <div class="video-grid" id="mainGrid"></div>
-    </main>
+<div id="homeView" class="viewport active">
+    <div class="video-grid" id="mainGrid"></div>
 </div>
 
-<div id="watchPage">
-    <div class="back-btn" onclick="closeWatch()">←</div>
+<div id="shortsView" class="viewport"></div>
+
+<div id="watchView" class="viewport">
     <div class="watch-container">
-        <div class="player-section">
+        <div class="player-side">
             <video id="pVid" controls autoplay></video>
-            <div class="video-info-box">
-                <h1 id="pTitle">Video Başlığı</h1>
-                <div class="channel-row">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div class="c-pfp"></div>
-                        <div>
-                            <div style="font-weight:bold;">Admin Channel</div>
-                            <div style="font-size:12px; color:var(--secondary)">1,3 Mn abone</div>
-                        </div>
-                        <button style="background:white; color:black; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; margin-left:15px; cursor:pointer;">Abone Ol</button>
-                    </div>
-                    <div class="action-btns">
-                        <button>👍 61 B</button>
-                        <button>↪ Paylaş</button>
-                        <button>⬇ İndir</button>
-                    </div>
-                </div>
+            <h1 id="pTitle" style="margin-top:20px;"></h1>
+            <div class="v-actions">
+                <button class="btn-action" onclick="toggleLike()"><span id="likeIco">🤍</span> <span id="pLikes">0</span></button>
+                <button class="btn-action" onclick="showComments()">💬 <span id="pCommCount">0</span></button>
+                <button class="btn-action" onclick="copyLink()">🔗 Paylaş</button>
+            </div>
+            <div style="background:#1e1e1e; padding:15px; border-radius:12px; margin-top:20px;">
+                <p id="pDesc" style="font-size:14px; color:var(--secondary)"></p>
             </div>
         </div>
-
-        <div class="sidebar-section">
-            <div class="next-video-box">
-                <div style="font-size:14px; margin-bottom:8px;">Sonraki: BLOK3 - GÜZEL KIZIM</div>
-                <div style="font-size:12px; color:var(--secondary)">Mix - NASTEISHA VE ERA7CAPONE...</div>
+        <div class="suggest-side" id="suggestGrid">
             </div>
-            
-            <div class="rec-chips">
-                <button class="chip active">Tümü</button>
-                <button class="chip">Seriden videolar</button>
-                <button class="chip">Blok3 adlı...</button>
-            </div>
-
-            <div id="suggestedList">
-                </div>
-        </div>
     </div>
 </div>
 
-<script>
-    const DB_NAME = 'YT_Cinema_8392479231';
-    let db;
+<div id="uploadView" class="viewport">
+    <div style="max-width:600px; margin: 0 auto; background:#1e1e1e; padding:30px; border-radius:15px;">
+        <h2>Yeni Video Yükle</h2>
+        <input type="file" id="vInp" accept="video/*">
+        <p style="font-size:12px; color:var(--secondary)">Thumbnail yüklemezseniz videodan otomatik alınacaktır.</p>
+        <input type="file" id="tInp" accept="image/*">
+        <input type="text" id="vTitleInp" placeholder="Başlık">
+        <textarea id="vDescInp" placeholder="Açıklama" style="width:100%; background:#000; color:#fff; border:1px solid #333; padding:10px; border-radius:8px; margin:10px 0;"></textarea>
+        <button onclick="uploadVideo()" id="upBtn" style="width:100%; background:var(--yt-red); color:white; border:none; padding:12px; border-radius:20px; cursor:pointer; font-weight:bold;">YÜKLE</button>
+        <canvas id="thumbGen" style="display:none"></canvas>
+    </div>
+</div>
 
-    // IndexedDB Kurulum
+<div class="comments-panel" id="commPanel">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3>Yorumlar</h3>
+        <span style="font-size:30px; cursor:pointer;" onclick="closeComments()">×</span>
+    </div>
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
+        <input type="text" id="commInp" placeholder="Yorum ekle..." style="flex:1">
+        <button onclick="addComment()">Gönder</button>
+    </div>
+    <div id="commList"></div>
+</div>
+
+<div id="miniPlayer">
+    <video id="miniVid" muted autoplay loop></video>
+    <div style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.7); cursor:pointer;" onclick="closeMini()">×</div>
+</div>
+
+<div id="toast">Bildirim</div>
+
+<script>
+    /* --- DATABASE & CORE ENGINE --- */
+    const DB_NAME = 'VideoTubePro_8392479231';
+    let db, currentVideoId = null;
+
     const request = indexedDB.open(DB_NAME, 1);
     request.onupgradeneeded = (e) => {
         db = e.target.result;
@@ -183,66 +182,242 @@
     };
     request.onsuccess = (e) => {
         db = e.target.result;
-        renderAll();
+        refreshUI();
     };
 
+    /* --- NAVIGATION --- */
+    function nav(view) {
+        document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
+        document.getElementById(view + 'View').classList.add('active');
+        
+        // Stop current videos
+        document.querySelectorAll('video').forEach(v => v.pause());
+        
+        if(view === 'home' && currentVideoId) showMini(); else closeMini();
+        if(view === 'shorts') handleShortsAutoplay();
+        
+        refreshUI();
+    }
+
+    /* --- UPLOAD & AUTO THUMBNAIL --- */
     async function uploadVideo() {
         const vFile = document.getElementById('vInp').files[0];
         const tFile = document.getElementById('tInp').files[0];
-        const title = document.getElementById('vTitle').value;
-        if(!vFile || !tFile || !title) return alert("Eksik alan!");
+        const title = document.getElementById('vTitleInp').value;
+        const desc = document.getElementById('vDescInp').value;
 
-        const data = { id: crypto.randomUUID(), title, vFile, tFile, ts: Date.now() };
+        if(!vFile || !title) return alert("Başlık ve video zorunlu!");
+
+        showToast("Video işleniyor...");
+        const duration = await getDuration(vFile);
+        let thumbBlob = tFile;
+
+        if(!thumbBlob) {
+            thumbBlob = await generateAutoThumb(vFile);
+        }
+
+        const videoObj = {
+            id: crypto.randomUUID(),
+            title, desc, duration,
+            vBlob: vFile, tBlob: thumbBlob,
+            isShorts: duration <= 60,
+            likes: 0, liked: false, comments: [],
+            ts: Date.now()
+        };
+
         const tx = db.transaction('videos', 'readwrite');
-        tx.objectStore('videos').add(data);
-        tx.oncomplete = () => renderAll();
+        tx.objectStore('videos').add(videoObj);
+        tx.oncomplete = () => {
+            showToast("Video Yayında!");
+            nav('home');
+        };
     }
 
+    function generateAutoThumb(file) {
+        return new Promise(resolve => {
+            const v = document.createElement('video');
+            v.src = URL.createObjectURL(file);
+            v.currentTime = 2; // Capture at 2 seconds
+            v.onseeked = () => {
+                const canvas = document.getElementById('thumbGen');
+                canvas.width = 640; canvas.height = 360;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(v, 0, 0, 640, 360);
+                canvas.toBlob(resolve, 'image/jpeg');
+            };
+        });
+    }
+
+    function getDuration(file) {
+        return new Promise(r => {
+            const v = document.createElement('video');
+            v.src = URL.createObjectURL(file);
+            v.onloadedmetadata = () => r(v.duration);
+        });
+    }
+
+    /* --- UI RENDERING --- */
     let activeURLs = [];
-    function renderAll() {
+    function refreshUI() {
         const grid = document.getElementById('mainGrid');
-        const sList = document.getElementById('suggestedList');
-        grid.innerHTML = ''; sList.innerHTML = '';
+        const sView = document.getElementById('shortsView');
+        const suggest = document.getElementById('suggestGrid');
+        
+        grid.innerHTML = ''; sView.innerHTML = ''; suggest.innerHTML = '';
         activeURLs.forEach(u => URL.revokeObjectURL(u));
         activeURLs = [];
 
         const tx = db.transaction('videos', 'readonly');
         tx.objectStore('videos').getAll().onsuccess = (e) => {
-            const vids = e.target.result;
+            const vids = e.target.result.sort((a,b) => b.ts - a.ts);
+
             vids.forEach(vid => {
-                const tU = URL.createObjectURL(vid.tFile);
-                const vU = URL.createObjectURL(vid.vFile);
-                activeURLs.push(tU, vU);
+                const vUrl = URL.createObjectURL(vid.vBlob);
+                const tUrl = URL.createObjectURL(vid.tBlob);
+                activeURLs.push(vUrl, tUrl);
 
-                // Ana Sayfa Kartı
-                const card = document.createElement('div');
-                card.className = 'v-card';
-                card.innerHTML = `<div class="v-thumb"><img src="${tU}"></div><h4 style="margin:10px 0 5px;">${vid.title}</h4>`;
-                card.onclick = () => openWatch(vU, vid.title);
-                grid.appendChild(card);
+                if(!vid.isShorts) {
+                    // Home Grid
+                    const card = document.createElement('div');
+                    card.className = 'v-card';
+                    card.innerHTML = `
+                        <div class="v-thumb"><img src="${tUrl}"></div>
+                        <div class="v-meta">
+                            <div class="v-pfp"></div>
+                            <div>
+                                <h4 style="margin:0">${vid.title}</h4>
+                                <p style="font-size:12px; color:var(--secondary)">Admin • ${vid.likes} Beğeni</p>
+                            </div>
+                        </div>
+                    `;
+                    card.onclick = () => openWatch(vid, vUrl);
+                    grid.appendChild(card);
 
-                // Sağ Öneri Kartı (İzleme Sayfası İçin)
-                const sCard = document.createElement('div');
-                sCard.className = 'suggested-card';
-                sCard.innerHTML = `<div class="suggested-thumb"><img src="${tU}"></div><div class="suggested-meta"><h4>${vid.title}</h4><p>Admin • 54 B izlenme</p></div>`;
-                sCard.onclick = () => openWatch(vU, vid.title);
-                sList.appendChild(sCard);
+                    // Suggested List (Watch View Sidebar)
+                    const sCard = card.cloneNode(true);
+                    sCard.style.marginBottom = "15px";
+                    sCard.onclick = () => openWatch(vid, vUrl);
+                    suggest.appendChild(sCard);
+                } else {
+                    // Shorts Scroll
+                    const sItem = document.createElement('div');
+                    sItem.className = 'short-item';
+                    sItem.innerHTML = `
+                        <div class="short-video-box">
+                            <video src="${vUrl}" loop playsinline data-id="${vid.id}"></video>
+                            <div class="short-actions">
+                                <div class="short-btn" onclick="likeShort('${vid.id}')"><span style="${vid.liked?'color:red':''}">❤️</span><span>${vid.likes}</span></div>
+                                <div class="short-btn" onclick="showComments('${vid.id}')">💬<span>${vid.comments.length}</span></div>
+                                <div class="short-btn" onclick="copyLink()">🔗</div>
+                            </div>
+                            <div style="position:absolute; bottom:20px; left:20px;">
+                                <h4>${vid.title}</h4>
+                                <p style="font-size:12px">@Admin_8392479231</p>
+                            </div>
+                        </div>
+                    `;
+                    sView.appendChild(sItem);
+                }
             });
         };
     }
 
-    function openWatch(url, title) {
+    /* --- INTERACTIVE FUNCTIONS --- */
+    function openWatch(vid, url) {
+        currentVideoId = vid.id;
         document.getElementById('pVid').src = url;
-        document.getElementById('pTitle').textContent = title;
-        document.getElementById('watchPage').style.display = 'block';
-        document.body.style.overflow = 'hidden';
+        document.getElementById('pTitle').textContent = vid.title;
+        document.getElementById('pDesc').textContent = vid.desc;
+        document.getElementById('pLikes').textContent = vid.likes;
+        document.getElementById('pCommCount').textContent = vid.comments.length;
+        document.getElementById('likeIco').textContent = vid.liked ? '❤️' : '🤍';
+        nav('watch');
     }
 
-    function closeWatch() {
-        document.getElementById('watchPage').style.display = 'none';
-        document.getElementById('pVid').pause();
-        document.body.style.overflow = 'auto';
+    function toggleLike() {
+        const tx = db.transaction('videos', 'readwrite');
+        const store = tx.objectStore('videos');
+        store.get(currentVideoId).onsuccess = (e) => {
+            const vid = e.target.result;
+            if(vid.liked) {
+                vid.likes--; vid.liked = false;
+                showToast("Beğeni kaldırıldı");
+            } else {
+                vid.likes++; vid.liked = true;
+                showToast("Beğenildi ❤️");
+            }
+            store.put(vid);
+            tx.oncomplete = () => {
+                document.getElementById('pLikes').textContent = vid.likes;
+                document.getElementById('likeIco').textContent = vid.liked ? '❤️' : '🤍';
+                refreshUI();
+            };
+        };
     }
+
+    function addComment() {
+        const txt = document.getElementById('commInp').value;
+        if(!txt) return;
+
+        const tx = db.transaction('videos', 'readwrite');
+        const store = tx.objectStore('videos');
+        store.get(currentVideoId).onsuccess = (e) => {
+            const vid = e.target.result;
+            vid.comments.push({ text: txt, ts: Date.now() });
+            store.put(vid);
+            tx.oncomplete = () => {
+                document.getElementById('commInp').value = '';
+                showToast("Yorum eklendi 💬");
+                closeComments();
+                refreshUI();
+            };
+        };
+    }
+
+    /* --- UTILS --- */
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.style.opacity = 1;
+        setTimeout(() => t.style.opacity = 0, 3000);
+    }
+
+    function copyLink() {
+        navigator.clipboard.writeText("https://videotube.local/v/" + currentVideoId);
+        showToast("Link kopyalandı 🔗");
+    }
+
+    function handleShortsAutoplay() {
+        const shorts = document.getElementById('shortsView');
+        shorts.addEventListener('scroll', () => {
+            const vids = shorts.querySelectorAll('video');
+            vids.forEach(v => {
+                const rect = v.getBoundingClientRect();
+                if(rect.top >= 0 && rect.bottom <= window.innerHeight) {
+                    if(v.paused) v.play();
+                } else {
+                    v.pause();
+                }
+            });
+        });
+    }
+
+    function showComments(id) { if(id) currentVideoId = id; document.getElementById('commPanel').classList.add('open'); }
+    function closeComments() { document.getElementById('commPanel').classList.remove('open'); }
+    function showMini() { 
+        const mv = document.getElementById('miniVid');
+        mv.src = document.getElementById('pVid').src;
+        document.getElementById('miniPlayer').style.display = 'block';
+    }
+    function closeMini() { document.getElementById('miniPlayer').style.display = 'none'; document.getElementById('miniVid').pause(); }
+
+    // Keyboard Shortcuts
+    window.onkeydown = (e) => {
+        const v = document.querySelector('.viewport.active video');
+        if(!v) return;
+        if(e.code === 'Space') { e.preventDefault(); v.paused ? v.play() : v.pause(); }
+        if(e.code === 'KeyF') v.requestFullscreen();
+        if(e.code === 'KeyM') v.muted = !v.muted;
+    };
 </script>
 </body>
 </html>
