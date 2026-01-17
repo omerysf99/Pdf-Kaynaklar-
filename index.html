@@ -7,69 +7,108 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-        body { font-family: 'Roboto', sans-serif; background-color: #0f0f0f; color: white; overflow: hidden; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
-        /* Shorts Kaydırma Alanı */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f0f0f;
+            color: #ffffff;
+            overflow: hidden; /* Header ve Nav sabit kalacak */
+        }
+
+        /* SHORTS KAYDIRMA SİSTEMİ (Snap Scroll) */
         .shorts-container {
+            height: calc(100vh - 56px); /* Header sonrası alan */
             scroll-snap-type: y mandatory;
             overflow-y: scroll;
-            height: calc(100vh - 56px);
-            scrollbar-width: none;
+            scrollbar-width: none; /* Firefox */
         }
         .shorts-container::-webkit-scrollbar { display: none; }
+
         .short-item {
-            scroll-snap-align: start;
             height: calc(100vh - 56px);
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             position: relative;
+            background: #000;
         }
+
         .short-video-wrapper {
-            height: 90%;
+            height: 95%;
             aspect-ratio: 9/16;
-            background: black;
-            border-radius: 16px;
-            overflow: hidden;
             position: relative;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
         }
-        .short-video-wrapper video { width: 100%; height: 100%; object-fit: cover; }
-        
-        .page-transition { animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .short-video-wrapper video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* UI Efektleri */
+        .glass-ui {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+        }
+
+        .active-nav { color: #ef4444; }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .live-dot { animation: pulse-red 2s infinite; }
     </style>
 </head>
-<body>
+<body class="antialiased">
 
-    <header class="h-14 fixed top-0 w-full bg-[#0f0f0f] flex items-center justify-between px-4 z-[100] border-b border-white/10">
+    <header class="h-14 fixed top-0 w-full bg-[#0f0f0f] border-b border-white/10 flex items-center justify-between px-4 z-[100]">
         <div class="flex items-center gap-4">
-            <button class="p-2 hover:bg-white/10 rounded-full" onclick="ui.toggleSidebar()"><i data-lucide="menu"></i></button>
+            <button class="p-2 hover:bg-white/10 rounded-full md:block hidden"><i data-lucide="menu"></i></button>
             <div class="flex items-center gap-1 cursor-pointer" onclick="ui.showPage('home')">
                 <div class="bg-red-600 p-1 rounded-lg"><i data-lucide="play" class="fill-white text-white w-5 h-5"></i></div>
                 <span class="text-xl font-bold tracking-tighter">NexTube</span>
             </div>
         </div>
+
+        <div class="flex-1 max-w-[600px] mx-4 hidden md:flex">
+            <div class="flex w-full">
+                <input type="text" id="search-input" placeholder="Ara" oninput="app.search()" 
+                    class="w-full bg-[#121212] border border-white/10 rounded-l-full px-5 py-2 outline-none focus:border-blue-500">
+                <button class="bg-white/10 px-5 border border-l-0 border-white/10 rounded-r-full hover:bg-white/20">
+                    <i data-lucide="search" class="w-5 h-5 text-gray-400"></i>
+                </button>
+            </div>
+        </div>
+
         <div class="flex items-center gap-2">
-            <button onclick="ui.toggleModal(true)" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium transition">
-                <i data-lucide="plus" class="w-5 h-5"></i> <span>Oluştur</span>
+            <button onclick="ui.toggleModal(true)" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full text-sm font-medium transition">
+                <i data-lucide="plus" class="w-5 h-5"></i> <span class="hidden sm:inline">Yükle</span>
             </button>
-            <div class="w-8 h-8 rounded-full bg-emerald-600 border border-white/20" title="Admin: 8392479231"></div>
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-red-500 border border-white/20 cursor-help" title="Admin ID: 8392479231"></div>
         </div>
     </header>
 
     <div class="flex pt-14 h-screen">
-        <nav id="sidebar" class="w-64 bg-[#0f0f0f] border-r border-white/5 p-3 flex flex-col gap-2 transition-all duration-300">
-            <button onclick="ui.showPage('home')" class="flex items-center gap-5 p-3 hover:bg-white/10 rounded-xl transition"><i data-lucide="home"></i> <span>Ana Sayfa</span></button>
-            <button onclick="ui.showPage('shorts')" class="flex items-center gap-5 p-3 hover:bg-white/10 rounded-xl transition text-red-500"><i data-lucide="zap" class="fill-current"></i> <span class="font-bold">Shorts</span></button>
-            <hr class="border-white/10 my-2">
-            <div class="text-[10px] text-gray-500 px-3 uppercase font-bold tracking-widest">Admin ID: 8392479231</div>
+        <nav class="w-20 lg:w-64 hidden md:flex flex-col p-3 border-r border-white/5 bg-[#0f0f0f]">
+            <div class="space-y-1">
+                <button onclick="ui.showPage('home')" id="nav-home" class="w-full flex items-center gap-5 p-3 hover:bg-white/10 rounded-xl active-nav"><i data-lucide="home"></i> <span class="hidden lg:inline text-sm font-medium">Ana Sayfa</span></button>
+                <button onclick="ui.showPage('shorts')" id="nav-shorts" class="w-full flex items-center gap-5 p-3 hover:bg-white/10 rounded-xl text-gray-400"><i data-lucide="zap"></i> <span class="hidden lg:inline text-sm font-medium">Shorts</span></button>
+            </div>
         </nav>
 
-        <main class="flex-1 relative overflow-hidden">
-            <section id="view-home" class="p-6 overflow-y-auto h-full page-transition">
-                <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+        <main class="flex-1 overflow-hidden relative">
+            
+            <section id="view-home" class="h-full overflow-y-auto p-4 md:p-8 custom-scrollbar page-transition">
+                <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    </div>
             </section>
 
             <section id="view-shorts" class="hidden h-full bg-black page-transition">
@@ -77,155 +116,262 @@
                     </div>
             </section>
 
-            <section id="view-watch" class="hidden p-6 overflow-y-auto h-full page-transition bg-[#0f0f0f]">
+            <section id="view-watch" class="hidden h-full overflow-y-auto p-4 md:p-8 bg-[#0f0f0f] page-transition">
                 <div class="max-w-4xl mx-auto">
-                    <video id="main-player" controls autoplay class="w-full aspect-video rounded-2xl bg-black"></video>
-                    <h1 id="watch-title" class="text-2xl font-bold mt-4"></h1>
-                    <p id="watch-desc" class="mt-2 text-gray-400"></p>
+                    <button onclick="ui.showPage('home')" class="mb-4 flex items-center gap-2 text-gray-400 hover:text-white transition"><i data-lucide="arrow-left"></i> Geri Dön</button>
+                    <div class="bg-black rounded-2xl overflow-hidden aspect-video shadow-2xl">
+                        <video id="main-player" controls autoplay class="w-full h-full"></video>
+                    </div>
+                    <h1 id="watch-title" class="text-2xl font-bold mt-6">Video Başlığı</h1>
+                    <div class="mt-4 p-4 bg-white/5 rounded-xl text-gray-300 text-sm" id="watch-desc"></div>
                 </div>
             </section>
+
         </main>
     </div>
 
-    <div id="upload-modal" class="fixed inset-0 bg-black/90 z-[200] hidden items-center justify-center p-4">
-        <div class="bg-[#1e1e1e] w-full max-w-lg rounded-3xl p-8 border border-white/10 shadow-2xl">
-            <h2 class="text-xl font-bold mb-6">Yeni İçerik Yükle</h2>
+    <nav class="md:hidden fixed bottom-0 w-full h-16 bg-[#0f0f0f] border-t border-white/10 flex items-center justify-around z-[100]">
+        <button onclick="ui.showPage('home')" class="flex flex-col items-center gap-1 text-[10px]"><i data-lucide="home"></i> Ana Sayfa</button>
+        <button onclick="ui.showPage('shorts')" class="flex flex-col items-center gap-1 text-[10px] text-red-500"><i data-lucide="zap"></i> Shorts</button>
+        <button onclick="ui.toggleModal(true)" class="flex flex-col items-center gap-1 text-[10px]"><i data-lucide="plus-circle"></i> Yükle</button>
+    </nav>
+
+    <div id="upload-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4">
+        <div class="bg-[#1e1e1e] w-full max-w-lg rounded-3xl border border-white/10 shadow-2xl overflow-hidden p-6 md:p-10">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold flex items-center gap-2"><i data-lucide="upload-cloud" class="text-blue-500"></i> İçerik Yükle</h2>
+                <button onclick="ui.toggleModal(false)" class="p-2 hover:bg-white/10 rounded-full transition"><i data-lucide="x"></i></button>
+            </div>
+            
             <div class="space-y-4">
-                <div class="border-2 border-dashed border-white/10 p-6 rounded-2xl text-center cursor-pointer hover:border-blue-500 transition" onclick="document.getElementById('file-input').click()">
-                    <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto mb-2 text-gray-500"></i>
-                    <p id="file-name" class="text-sm">Video dosyasını seçin</p>
-                    <input type="file" id="file-input" class="hidden" accept="video/*" onchange="app.handleVideoSelect(this)">
+                <div class="group relative border-2 border-dashed border-white/10 rounded-2xl p-8 text-center hover:border-blue-500/50 transition bg-black/20" onclick="document.getElementById('file-input').click()">
+                    <i data-lucide="video" class="w-12 h-12 mx-auto mb-3 text-gray-500 group-hover:text-blue-500 transition"></i>
+                    <p id="file-name" class="text-sm font-medium">Video Dosyasını Seç (mp4, webm)</p>
+                    <p class="text-xs text-gray-500 mt-1">60sn altı otomatik Shorts olur</p>
+                    <input type="file" id="file-input" class="hidden" accept="video/*" onchange="app.handleFileSelect(this)">
                 </div>
-                <input type="text" id="up-title" placeholder="Başlık" class="w-full bg-black/50 border border-white/10 p-3 rounded-xl outline-none">
-                <p class="text-[10px] text-gray-500 italic">* 60 saniyeden kısa videolar otomatik olarak Shorts akışına eklenir.</p>
-                <button onclick="app.upload()" id="publish-btn" class="w-full bg-blue-600 py-4 rounded-2xl font-bold hover:bg-blue-700 transition">YAYINLA</button>
-                <button onclick="ui.toggleModal(false)" class="w-full text-sm text-gray-500">İptal</button>
+
+                <div class="flex items-center gap-4 bg-white/5 p-4 rounded-xl">
+                    <input type="file" id="thumb-input" class="hidden" accept="image/*" onchange="app.handleThumbSelect(this)">
+                    <button onclick="document.getElementById('thumb-input').click()" class="bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg text-xs font-bold">Thumbnail Seç</button>
+                    <span id="thumb-name" class="text-[10px] text-gray-500 truncate">Kapak fotoğrafı zorunlu değil</span>
+                </div>
+
+                <input type="text" id="up-title" placeholder="Video Başlığı" class="w-full bg-black/40 border border-white/10 p-3 rounded-xl outline-none focus:border-blue-500 transition">
+                <textarea id="up-desc" placeholder="Açıklama" rows="3" class="w-full bg-black/40 border border-white/10 p-3 rounded-xl outline-none focus:border-blue-500 transition resize-none"></textarea>
+
+                <div id="prog-container" class="hidden">
+                    <div class="flex justify-between text-[10px] font-bold mb-1"><span class="text-blue-400">Analiz ediliyor...</span><span id="prog-val">0%</span></div>
+                    <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden"><div id="prog-bar" class="bg-blue-600 h-full w-0 transition-all"></div></div>
+                </div>
+
+                <button onclick="app.upload()" id="btn-publish" class="w-full bg-red-600 hover:bg-red-700 py-4 rounded-2xl font-bold shadow-lg shadow-red-600/20 transition">YAYINLA</button>
             </div>
         </div>
     </div>
 
-    
-
     <script>
+        // APP STATE
         const app = {
-            videos: [], // Normal Videolar
-            shorts: [], // Kısa Videolar (<60sn)
-            currentVideo: null,
+            videos: [],
+            shorts: [],
+            selectedFile: null,
+            selectedThumb: null,
 
-            handleVideoSelect(input) {
-                const file = input.files[0];
-                if(file) document.getElementById('file-name').innerText = file.name;
+            handleFileSelect(input) {
+                this.selectedFile = input.files[0];
+                if(this.selectedFile) document.getElementById('file-name').innerText = this.selectedFile.name;
+            },
+
+            handleThumbSelect(input) {
+                this.selectedThumb = input.files[0];
+                if(this.selectedThumb) document.getElementById('thumb-name').innerText = this.selectedThumb.name;
             },
 
             async upload() {
-                const fileInput = document.getElementById('file-input');
-                const titleInput = document.getElementById('up-title');
-                
-                if(!fileInput.files[0] || !titleInput.value) return alert("Dosya ve başlık eksik!");
+                const title = document.getElementById('up-title').value;
+                const desc = document.getElementById('up-desc').value;
 
-                const file = fileInput.files[0];
-                const videoUrl = URL.createObjectURL(file);
+                if(!this.selectedFile || !title) return alert("Dosya ve Başlık seçimi zorunludur!");
 
-                // Video Süresini Ölç
+                const btn = document.getElementById('btn-publish');
+                const prog = document.getElementById('prog-container');
+                btn.disabled = true;
+                prog.classList.remove('hidden');
+
+                // Süre Analizi
+                const videoUrl = URL.createObjectURL(this.selectedFile);
                 const tempVideo = document.createElement('video');
                 tempVideo.src = videoUrl;
+
                 tempVideo.onloadedmetadata = () => {
                     const duration = tempVideo.duration;
-                    const contentObj = {
-                        id: Date.now(),
-                        title: titleInput.value,
-                        url: videoUrl,
-                        duration: duration,
-                        date: 'Şimdi'
-                    };
+                    let p = 0;
+                    const interval = setInterval(() => {
+                        p += 10;
+                        document.getElementById('prog-bar').style.width = p + '%';
+                        document.getElementById('prog-val').innerText = p + '%';
+                        
+                        if(p >= 100) {
+                            clearInterval(interval);
+                            const content = {
+                                id: Date.now(),
+                                title: title,
+                                desc: desc,
+                                url: videoUrl,
+                                thumb: this.selectedThumb ? URL.createObjectURL(this.selectedThumb) : 'https://picsum.photos/seed/'+Math.random()+'/640/360',
+                                duration: duration,
+                                date: 'Bugün'
+                            };
 
-                    if(duration < 60) {
-                        this.shorts.unshift(contentObj);
-                        alert("Harika! Videon Shorts akışına eklendi.");
-                    } else {
-                        this.videos.unshift(contentObj);
-                        alert("Videon ana sayfaya eklendi.");
-                    }
+                            if(duration <= 60) {
+                                this.shorts.unshift(content);
+                                ui.renderShorts();
+                            } else {
+                                this.videos.unshift(content);
+                                ui.renderGrid();
+                            }
 
-                    ui.renderAll();
-                    ui.toggleModal(false);
+                            ui.toggleModal(false);
+                            this.resetForm();
+                            alert(duration <= 60 ? "Video Shorts akışına eklendi!" : "Video ana sayfaya eklendi!");
+                        }
+                    }, 100);
                 };
+            },
+
+            search() {
+                const term = document.getElementById('search-input').value.toLowerCase();
+                ui.renderGrid(term);
+            },
+
+            resetForm() {
+                document.getElementById('up-title').value = '';
+                document.getElementById('up-desc').value = '';
+                document.getElementById('file-name').innerText = 'Video Dosyasını Seç (mp4, webm)';
+                document.getElementById('prog-container').classList.add('hidden');
+                document.getElementById('btn-publish').disabled = false;
+                this.selectedFile = null;
+                this.selectedThumb = null;
             }
         };
 
+        // UI LOGIC
         const ui = {
-            showPage(pageId) {
-                ['view-home', 'view-shorts', 'view-watch'].forEach(id => {
-                    document.getElementById(id).classList.add('hidden');
-                });
-                document.getElementById('view-' + pageId).classList.remove('hidden');
-                
-                // Shorts sayfasında değilsek tüm shorts videolarını durdur
-                if(pageId !== 'shorts') {
-                    document.querySelectorAll('.short-item video').forEach(v => v.pause());
-                } else {
-                    this.playCurrentShort();
-                }
-            },
-
-            renderAll() {
-                // Ana Sayfa Render
+            renderGrid(filter = '') {
                 const grid = document.getElementById('video-grid');
-                grid.innerHTML = app.videos.map(v => `
-                    <div class="cursor-pointer group" onclick="ui.watch(${v.id})">
-                        <video src="${v.url}" class="aspect-video w-full object-cover rounded-xl bg-black"></video>
-                        <h3 class="font-bold mt-2 line-clamp-2">${v.title}</h3>
-                        <p class="text-xs text-gray-500">Normal Video • ${Math.round(v.duration)}sn</p>
-                    </div>
-                `).join('');
-
-                // Shorts Akışı Render
-                const shortsFlow = document.getElementById('shorts-flow');
-                shortsFlow.innerHTML = app.shorts.map(s => `
-                    <div class="short-item">
-                        <div class="short-video-wrapper">
-                            <video src="${s.url}" loop class="short-vid-element"></video>
-                            <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/80 to-transparent">
-                                <h3 class="font-bold text-lg">${s.title}</h3>
-                                <p class="text-sm opacity-70">@NexTube_Admin</p>
-                            </div>
+                const filtered = app.videos.filter(v => v.title.toLowerCase().includes(filter));
+                
+                grid.innerHTML = filtered.map(v => `
+                    <div class="cursor-pointer group" onclick="ui.watchVideo(${v.id})">
+                        <div class="relative aspect-video rounded-2xl overflow-hidden bg-zinc-800">
+                            <img src="${v.thumb}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <span class="absolute bottom-2 right-2 bg-black/80 text-[10px] font-bold px-1.5 py-0.5 rounded">${Math.floor(v.duration)} sn</span>
                         </div>
-                        <div class="ml-4 flex flex-col gap-6">
-                            <button class="flex flex-col items-center"><div class="p-3 bg-white/10 rounded-full"><i data-lucide="thumbs-up"></i></div><span class="text-xs">Beğen</span></button>
-                            <button class="flex flex-col items-center"><div class="p-3 bg-white/10 rounded-full"><i data-lucide="message-square"></i></div><span class="text-xs">Yorum</span></button>
-                            <button class="flex flex-col items-center"><div class="p-3 bg-white/10 rounded-full"><i data-lucide="share-2"></i></div><span class="text-xs">Paylaş</span></button>
+                        <div class="mt-3 flex gap-3">
+                            <div class="w-9 h-9 rounded-full bg-zinc-700 flex-shrink-0 bg-gradient-to-tr from-blue-600 to-purple-600"></div>
+                            <div>
+                                <h3 class="text-sm font-bold line-clamp-2 leading-tight">${v.title}</h3>
+                                <p class="text-xs text-gray-500 mt-1">Admin • 1.2B izlenme • ${v.date}</p>
+                            </div>
                         </div>
                     </div>
                 `).join('');
                 lucide.createIcons();
             },
 
-            watch(id) {
+            renderShorts() {
+                const flow = document.getElementById('shorts-flow');
+                if(app.shorts.length === 0) {
+                    flow.innerHTML = `<div class="short-item text-gray-500">Henüz Shorts yüklenmedi.</div>`;
+                    return;
+                }
+                
+                flow.innerHTML = app.shorts.map(s => `
+                    <div class="short-item">
+                        <div class="short-video-wrapper">
+                            <video src="${s.url}" loop class="short-vid-element"></video>
+                            <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/90 to-transparent pointer-events-none">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-8 h-8 rounded-full bg-red-600 live-dot"></div>
+                                    <span class="font-bold text-sm">@nextube_admin</span>
+                                    <button class="bg-white text-black px-3 py-1 rounded-full text-[10px] font-bold">Abone Ol</button>
+                                </div>
+                                <h3 class="text-sm font-medium mb-1">${s.title}</h3>
+                                <p class="text-xs text-gray-300 opacity-80">${s.desc.substring(0, 50)}...</p>
+                            </div>
+                            <div class="absolute right-3 bottom-20 flex flex-col gap-6 items-center">
+                                <button class="flex flex-col items-center gap-1"><div class="p-3 glass-ui rounded-full"><i data-lucide="heart" class="w-6 h-6 fill-white"></i></div><span class="text-[10px]">12B</span></button>
+                                <button class="flex flex-col items-center gap-1"><div class="p-3 glass-ui rounded-full"><i data-lucide="message-square" class="w-6 h-6"></i></div><span class="text-[10px]">432</span></button>
+                                <button class="flex flex-col items-center gap-1"><div class="p-3 glass-ui rounded-full"><i data-lucide="share-2" class="w-6 h-6"></i></div><span class="text-[10px]">Paylaş</span></button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                lucide.createIcons();
+                this.initShortsObserver();
+            },
+
+            initShortsObserver() {
+                // Her kaydırmada aktif videoyu oynat, diğerlerini durdur
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        const vid = entry.target.querySelector('video');
+                        if (entry.isIntersecting) {
+                            vid.play();
+                        } else {
+                            vid.pause();
+                            vid.currentTime = 0;
+                        }
+                    });
+                }, { threshold: 0.7 });
+
+                document.querySelectorAll('.short-item').forEach(item => {
+                    if(item.querySelector('video')) observer.observe(item);
+                });
+            },
+
+            watchVideo(id) {
                 const v = app.videos.find(x => x.id === id);
                 this.showPage('watch');
                 const p = document.getElementById('main-player');
                 p.src = v.url;
                 document.getElementById('watch-title').innerText = v.title;
+                document.getElementById('watch-desc').innerText = v.desc || "Açıklama yok.";
             },
 
-            playCurrentShort() {
-                // Intersection Observer ile kaydırdıkça oynat
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        const vid = entry.target.querySelector('video');
-                        if(entry.isIntersecting) vid.play();
-                        else vid.pause();
-                    });
-                }, { threshold: 0.8 });
+            showPage(page) {
+                document.getElementById('view-home').classList.add('hidden');
+                document.getElementById('view-shorts').classList.add('hidden');
+                document.getElementById('view-watch').classList.add('hidden');
+                
+                document.getElementById('view-' + page).classList.remove('hidden');
+                
+                // Nav Styles
+                document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-nav'));
+                const activeBtn = document.getElementById('nav-' + page);
+                if(activeBtn) activeBtn.classList.add('active-nav');
 
-                document.querySelectorAll('.short-item').forEach(item => observer.observe(item));
+                // Stop other players
+                if(page !== 'watch') document.getElementById('main-player').pause();
+                if(page !== 'shorts') {
+                    document.querySelectorAll('.short-vid-element').forEach(v => v.pause());
+                } else {
+                    this.initShortsObserver(); // Refresh observer on page switch
+                }
             },
 
-            toggleModal(show) { document.getElementById('upload-modal').style.display = show ? 'flex' : 'none'; },
-            toggleSidebar() { document.getElementById('sidebar').classList.toggle('w-0'); document.getElementById('sidebar').classList.toggle('opacity-0'); }
+            toggleModal(show) {
+                document.getElementById('upload-modal').style.display = show ? 'flex' : 'none';
+            }
         };
 
-        lucide.createIcons();
+        // START
+        window.onload = () => {
+            lucide.createIcons();
+            ui.renderGrid();
+        };
     </script>
 </body>
 </html>
