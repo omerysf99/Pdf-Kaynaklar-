@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VideoTube | Admin 8392479231</title>
+    <title>VideoTube Pro | Admin 8392479231</title>
     <style>
         :root {
             --yt-red: #ff0000;
@@ -13,163 +13,187 @@
         }
 
         body {
-            font-family: Roboto, Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* Üst Menü */
         header {
             background: var(--bg);
-            padding: 10px 20px;
+            padding: 10px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #333;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        .logo { color: var(--yt-red); font-weight: bold; font-size: 1.5rem; display: flex; align-items: center; gap: 5px; }
+        .logo { color: var(--yt-red); font-weight: bold; font-size: 1.6rem; cursor: pointer; }
 
-        /* Ana İçerik */
+        .admin-id { background: #222; padding: 5px 15px; border-radius: 20px; font-size: 13px; border: 1px solid var(--yt-red); }
+
         .container {
             display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 20px;
-            padding: 20px;
-            overflow-y: auto;
+            grid-template-columns: 1fr 400px;
+            gap: 25px;
+            padding: 25px;
+            max-width: 1600px;
+            margin: auto;
         }
 
-        /* Video Oynatıcı */
-        .video-main video {
+        /* Ana Oynatıcı Alanı */
+        .player-section h2 { margin-top: 15px; font-size: 1.4rem; }
+        video {
             width: 100%;
+            border-radius: 15px;
             background: #000;
-            border-radius: 12px;
-            aspect-ratio: 16 / 9;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
 
         /* Yükleme Paneli */
-        .upload-section {
+        .upload-card {
             background: var(--card-bg);
             padding: 20px;
-            border-radius: 12px;
+            border-radius: 15px;
             margin-top: 20px;
+            border: 1px dashed #444;
         }
 
-        .upload-btn {
-            background: var(--yt-red);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        .upload-card input { margin-bottom: 10px; width: 100%; }
 
-        /* Yan Liste */
-        .video-sidebar {
+        /* Dinamik Video Listesi (Ana Sayfa Akışı) */
+        .video-list {
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
 
-        .video-item {
+        .video-card {
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            background: #181818;
+            padding: 10px;
+            border-radius: 10px;
             cursor: pointer;
+            transition: 0.3s;
         }
 
-        .video-item .thumb {
-            width: 120px;
-            height: 68px;
+        .video-card:hover { background: #2a2a2a; }
+
+        .thumbnail-box {
+            width: 160px;
+            height: 90px;
             background: #333;
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            overflow: hidden;
+            flex-shrink: 0;
         }
 
-        .video-info h4 { margin: 0; font-size: 0.9rem; }
-        .video-info p { font-size: 0.8rem; color: #aaa; margin: 5px 0; }
+        .thumbnail-box video { height: 100%; width: 100%; object-fit: cover; }
 
-        .admin-badge {
-            font-size: 12px;
-            background: #333;
-            padding: 5px 10px;
-            border-radius: 5px;
-            color: var(--yt-red);
-        }
+        .card-info h4 { margin: 0; font-size: 14px; color: #fff; line-height: 1.2; }
+        .card-info p { margin: 5px 0 0; font-size: 12px; color: #aaa; }
+
+        h3 { border-bottom: 1px solid #333; padding-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo"><span>▶</span> VideoTube</div>
-    <div class="admin-badge">Admin ID: 8392479231</div>
+    <div class="logo">▶ VideoTube</div>
+    <div class="admin-id">Sistem Yetkilisi: 8392479231</div>
 </header>
 
 <div class="container">
-    <div class="video-main">
-        <video id="mainPlayer" controls>
-            <source src="" type="video/mp4">
-            Tarayıcınız video oynatmayı desteklemiyor.
+    <div class="player-section">
+        <video id="mainVideo" controls autoplay>
+            <source src="" id="videoSource">
         </video>
-        
-        <h2 id="videoTitle">Sistem Hazır - Lütfen Video Yükleyin</h2>
-        <p style="color: #aaa;">124.532 izlenme • 17 Oca 2026</p>
+        <h2 id="currentTitle">Henüz bir video seçilmedi</h2>
+        <p id="currentMeta" style="color:#aaa;">Video yükleyin veya listeden birini seçin.</p>
 
-        <div class="upload-section">
-            <h3>Video Yükle (Admin Paneli)</h3>
-            <input type="file" id="videoLoader" accept="video/mp4, video/webm" style="margin-bottom: 10px;">
-            <br>
-            <button class="btn upload-btn" onclick="alert('Video sunucuya gönderiliyor...')">YAYINLA</button>
+        <div class="upload-card">
+            <h3>Yeni Video Ekle</h3>
+            <input type="file" id="fileInput" accept="video/*">
+            <p style="font-size: 11px; color: #888;">Dosya seçtiğinizde otomatik olarak listeye eklenir.</p>
         </div>
     </div>
 
-    <div class="video-sidebar">
-        <h3>Sıradaki</h3>
-        
-        <div class="video-item" onclick="playDemo('Demo Video 1')">
-            <div class="thumb">ÖNİZLEME</div>
-            <div class="video-info">
-                <h4>Geleceğin Yazılım Teknolojileri</h4>
-                <p>Admin 8392479231</p>
+    <div class="sidebar">
+        <h3>Yüklenen Videolar</h3>
+        <div id="videoContainer" class="video-list">
             </div>
-        </div>
-
-        <div class="video-item" onclick="playDemo('Demo Video 2')">
-            <div class="thumb">ÖNİZLEME</div>
-            <div class="video-info">
-                <h4>HTML5 ile Video Platformu</h4>
-                <p>Kod Dünyası</p>
-            </div>
-        </div>
     </div>
 </div>
 
 <script>
-    const videoLoader = document.getElementById('videoLoader');
-    const mainPlayer = document.getElementById('mainPlayer');
-    const videoTitle = document.getElementById('videoTitle');
+    const fileInput = document.getElementById('fileInput');
+    const videoContainer = document.getElementById('videoContainer');
+    const mainVideo = document.getElementById('mainVideo');
+    const currentTitle = document.getElementById('currentTitle');
 
-    // Video Yükleme ve Oynatma İşlemi
-    videoLoader.addEventListener('change', function(e) {
+    // Video Veritabanı (Geçici Hafıza)
+    let videoLibrary = [];
+
+    fileInput.onchange = function(e) {
         const file = e.target.files[0];
-        if (file) {
-            const url = URL.createObjectURL(file);
-            mainPlayer.src = url;
-            videoTitle.innerText = file.name.replace('.mp4', '').toUpperCase();
-            mainPlayer.play();
-            console.log("Sistem Log: Video başarıyla yüklendi. Admin: 8392479231");
-        }
-    });
+        if (!file) return;
 
-    function playDemo(title) {
-        alert(title + " şu an sistemde yüklü değil, lütfen 'Video Yükle' kısmını kullanın.");
+        const videoURL = URL.createObjectURL(file);
+        const videoData = {
+            id: Date.now(),
+            title: file.name.split('.')[0],
+            url: videoURL,
+            date: new Date().toLocaleDateString()
+        };
+
+        // Kütüphaneye ekle
+        videoLibrary.push(videoData);
+        
+        // Listeyi güncelle
+        renderList();
+        
+        // Hemen oynat
+        playVideo(videoData.id);
+    };
+
+    function renderList() {
+        videoContainer.innerHTML = '';
+        
+        videoLibrary.forEach(vid => {
+            const card = document.createElement('div');
+            card.className = 'video-card';
+            card.onclick = () => playVideo(vid.id);
+
+            card.innerHTML = `
+                <div class="thumbnail-box">
+                    <video src="${vid.url}" muted></video>
+                </div>
+                <div class="card-info">
+                    <h4>${vid.title}</h4>
+                    <p>Admin 8392479231</p>
+                    <p>${vid.date}</p>
+                </div>
+            `;
+            videoContainer.prepend(card); // En yeni videoyu en üste koy
+        });
+    }
+
+    function playVideo(id) {
+        const selected = videoLibrary.find(v => v.id === id);
+        if (selected) {
+            mainVideo.src = selected.url;
+            currentTitle.innerText = selected.title;
+            mainVideo.play();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     }
 </script>
 
