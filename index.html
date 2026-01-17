@@ -3,242 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VideoTube - Video Paylaşım Platformu</title>
+    <title>VideoTube Pro - Persistent Storage</title>
     <style>
-        /* Genel Tasarım */
-        body {
-            font-family: 'Roboto', Arial, sans-serif;
-            margin: 0;
-            background-color: #f9f9f9;
-            color: #030303;
+        :root { --primary: #ff0000; --bg: #f9f9f9; --card: #fff; --text: #0f0f0f; }
+        body { font-family: 'Roboto', sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+        
+        /* Header */
+        header { 
+            background: var(--card); padding: 10px 5%; display: flex; 
+            justify-content: space-between; align-items: center; 
+            position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 10px rgba(0,0,0,0.1); 
         }
+        .logo { color: var(--primary); font-size: 22px; font-weight: 900; text-decoration: none; }
+        
+        /* Layout */
+        .container { display: grid; grid-template-columns: 1fr 380px; gap: 20px; padding: 20px 5%; max-width: 1600px; margin: auto; }
+        
+        /* Video Player Area */
+        .player-section video { width: 100%; border-radius: 12px; background: #000; aspect-ratio: 16/9; }
+        .video-meta { padding: 15px 0; border-bottom: 1px solid #e5e5e5; }
+        
+        /* Upload Area */
+        .upload-card { 
+            background: var(--card); border: 2px dashed #ccc; border-radius: 12px; 
+            padding: 30px; text-align: center; margin-bottom: 20px; transition: 0.3s;
+        }
+        .upload-card:hover { border-color: var(--primary); }
+        .upload-input { display: none; }
+        .upload-label { cursor: pointer; color: var(--primary); font-weight: bold; }
 
-        /* Navigasyon Çubuğu */
-        header {
-            background-color: #fff;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
-            z-index: 100;
+        /* Video Grid / List */
+        .video-list { display: flex; flex-direction: column; gap: 15px; }
+        .video-item { 
+            display: flex; gap: 12px; cursor: pointer; background: var(--card); 
+            padding: 8px; border-radius: 8px; transition: 0.2s;
         }
+        .video-item:hover { background: #f0f0f0; }
+        .video-item .thumb-container { position: relative; width: 160px; height: 90px; flex-shrink: 0; }
+        .video-item img { width: 100%; height: 100%; border-radius: 6px; object-fit: cover; background: #eee; }
+        .video-item .info h4 { margin: 0 0 5px 0; font-size: 14px; line-height: 1.2; }
+        .video-item .info p { margin: 0; font-size: 12px; color: #606060; }
 
-        .logo {
-            color: #ff0000;
-            font-size: 24px;
-            font-weight: bold;
-            text-decoration: none;
-        }
+        /* Status Indicator */
+        #status { font-size: 12px; color: green; margin-top: 5px; }
 
-        .search-bar {
-            flex: 0 1 600px;
-            display: flex;
-        }
-
-        .search-bar input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            border-radius: 20px 0 0 20px;
-            outline: none;
-        }
-
-        .search-bar button {
-            padding: 8px 20px;
-            border: 1px solid #ccc;
-            border-left: none;
-            background-color: #f8f8f8;
-            border-radius: 0 20px 20px 0;
-            cursor: pointer;
-        }
-
-        /* Ana İçerik Alanı */
-        .container {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 20px;
-            padding: 20px;
-            max-width: 1400px;
-            margin: auto;
-        }
-
-        /* Video Oynatıcı Bölümü */
-        .main-video {
-            background: #fff;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        video {
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            background: #000;
-        }
-
-        .video-info {
-            padding: 15px 0;
-        }
-
-        .video-info h1 {
-            font-size: 20px;
-            margin: 0 0 10px 0;
-        }
-
-        /* Video Yükleme Alanı */
-        .upload-section {
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-
-        .upload-btn-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            width: 100%;
-        }
-
-        .btn-upload {
-            border: 2px dashed #ccc;
-            color: #606060;
-            background-color: white;
-            padding: 40px 20px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            width: 100%;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .upload-btn-wrapper input[type=file] {
-            font-size: 100px;
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-        }
-
-        /* Yan Menü (Önerilen Videolar) */
-        .side-bar {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .suggested-video {
-            display: flex;
-            gap: 10px;
-            cursor: pointer;
-        }
-
-        .suggested-video img {
-            width: 120px;
-            height: 68px;
-            border-radius: 8px;
-            background: #ddd;
-            object-fit: cover;
-        }
-
-        .suggested-video-info h4 {
-            margin: 0;
-            font-size: 14px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        @media (max-width: 900px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-        }
+        @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
 <header>
-    <a href="#" class="logo">VideoTube</a>
-    <div class="search-bar">
-        <input type="text" placeholder="Ara...">
-        <button>🔍</button>
-    </div>
-    <div class="user-id" style="font-size: 12px; color: #606060;">Admin ID: 8392479231</div>
+    <a href="#" class="logo">VideoTube DB</a>
+    <div style="font-size: 12px;">Admin ID: 8392479231 | <span id="db-status">DB Bağlanıyor...</span></div>
 </header>
 
 <div class="container">
     <main>
-        <div class="upload-section">
-            <h3>Yeni Video Yükle</h3>
-            <div class="upload-btn-wrapper">
-                <button class="btn-upload" id="upload-label">Dosya seçin veya buraya sürükleyin</button>
-                <input type="file" id="videoInput" accept="video/*" />
-            </div>
+        <div class="upload-card">
+            <h3 style="margin-top:0">Yeni Video Yükle</h3>
+            <p>Videolar tarayıcı veritabanına (IndexedDB) kalıcı olarak kaydedilir.</p>
+            <label class="upload-label" for="videoFile">VİDEO SEÇ</label>
+            <input type="file" id="videoFile" class="upload-input" accept="video/*">
+            <div id="status"></div>
         </div>
 
-        <div class="main-video">
-            <video id="mainPlayer" controls poster="https://via.placeholder.com/800x450?text=Video+Hazır">
-                Tarayıcınız video etiketini desteklemiyor.
-            </video>
-            <div class="video-info">
-                <h1 id="videoTitle">Hoş Geldiniz! Bir video yükleyerek başlayın.</h1>
-                <p style="color: #606060; font-size: 14px;">123.456 izlenme • 17 Ocak 2026</p>
-                <hr>
-                <p><strong>Açıklama:</strong> Bu platform Admin ID: 8392479231 için özel olarak tasarlanmış bir demo arayüzüdür.</p>
+        <div class="player-section">
+            <video id="mainPlayer" controls autoplay></video>
+            <div class="video-meta">
+                <h1 id="mainTitle">Video Seçin veya Yükleyin</h1>
+                <p id="mainDesc">Açıklama: IndexedDB kalıcı depolama aktif.</p>
             </div>
         </div>
     </main>
 
-    <aside class="side-bar">
-        <h3>Sonraki</h3>
-        <div class="suggested-video">
-            <img src="https://via.placeholder.com/120x68/FF0000/FFFFFF?text=Örnek+1" alt="thumb">
-            <div class="suggested-video-info">
-                <h4>Modern Web Tasarımı Eğitimi 2026</h4>
-                <p style="font-size: 12px; color: #606060;">Web Akademi</p>
+    <aside>
+        <h3 style="margin-top:0">Kütüphaneniz (Kalıcı)</h3>
+        <div id="videoLibrary" class="video-list">
             </div>
-        </div>
-        <div class="suggested-video">
-            <img src="https://via.placeholder.com/120x68/00FF00/FFFFFF?text=Örnek+2" alt="thumb">
-            <div class="suggested-video-info">
-                <h4>JavaScript ile Proje Geliştirme</h4>
-                <p style="font-size: 12px; color: #606060;">Kod Dünyası</p>
-            </div>
-        </div>
     </aside>
 </div>
 
 <script>
-    const videoInput = document.getElementById('videoInput');
-    const mainPlayer = document.getElementById('mainPlayer');
-    const videoTitle = document.getElementById('videoTitle');
-    const uploadLabel = document.getElementById('upload-label');
+    /** * MİMARİ: IndexedDB Yönetimi
+     */
+    const DB_NAME = 'VideoPlatformDB';
+    const DB_VERSION = 1;
+    let db;
 
-    // Video Yükleme ve Oynatma İşlemi
-    videoInput.addEventListener('change', function() {
-        const file = this.files[0];
-        if (file) {
-            // Dosya adını başlık yap
-            videoTitle.textContent = file.name;
-            uploadLabel.textContent = "Seçilen: " + file.name;
+    // 1. Veritabanını Başlat
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-            // Video için yerel bir URL oluştur
-            const fileURL = URL.createObjectURL(file);
-            mainPlayer.src = fileURL;
-            mainPlayer.play();
+    request.onupgradeneeded = (e) => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains('videos')) {
+            const store = db.createObjectStore('videos', { keyPath: 'id' });
+            store.createIndex('createdAt', 'createdAt', { unique: false });
+        }
+    };
 
-            // Bellek yönetimi için eski URL'yi temizleme (isteğe bağlı)
-            mainPlayer.onloadeddata = () => {
-                console.log("Video yüklendi ve oynatılmaya hazır.");
+    request.onsuccess = (e) => {
+        db = e.target.result;
+        document.getElementById('db-status').textContent = "DB Bağlı (Kalıcı)";
+        loadVideosFromDB(); // Sayfa açılışında yükle
+    };
+
+    request.onerror = () => {
+        alert("IndexedDB erişim hatası! Lütfen gizli sekmeyi kapatın veya izin verin.");
+    };
+
+    /**
+     * 2. Video İşleme ve Kaydetme
+     */
+    const videoInput = document.getElementById('videoFile');
+    const statusText = document.getElementById('status');
+
+    videoInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        statusText.textContent = "İşleniyor: Thumbnail oluşturuluyor ve DB'ye yazılıyor...";
+        
+        try {
+            const thumbnailBlob = await generateThumbnail(file);
+            const videoData = {
+                id: crypto.randomUUID(),
+                title: file.name,
+                description: "Kullanıcı tarafından yüklendi.",
+                videoBlob: file, // Gerçek dosya verisi
+                thumbnailBlob: thumbnailBlob,
+                createdAt: Date.now(),
+                type: file.size > 50000000 ? 'long' : 'shorts' // Basit mantık
             };
+
+            const tx = db.transaction('videos', 'readwrite');
+            const store = tx.objectStore('videos');
+            await store.add(videoData);
+
+            tx.oncomplete = () => {
+                statusText.textContent = "✅ Başarıyla kaydedildi!";
+                loadVideosFromDB(); // Listeyi güncelle
+            };
+        } catch (err) {
+            console.error(err);
+            statusText.textContent = "❌ Hata oluştu!";
         }
     });
+
+    // Thumbnail Oluşturucu (Canvas)
+    function generateThumbnail(file) {
+        return new Promise((resolve) => {
+            const video = document.createElement('video');
+            const canvas = document.createElement('canvas');
+            video.src = URL.createObjectURL(file);
+            video.load();
+            video.onloadeddata = () => {
+                video.currentTime = 1; // 1. saniyeden kare al
+            };
+            video.onseeked = () => {
+                canvas.width = 320;
+                canvas.height = 180;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob((blob) => {
+                    URL.revokeObjectURL(video.src);
+                    resolve(blob);
+                }, 'image/jpeg', 0.7);
+            };
+        });
+    }
+
+    /**
+     * 3. Veriyi Çekme ve Render (Persistence)
+     */
+    let activeObjectURLs = [];
+
+    async function loadVideosFromDB() {
+        const library = document.getElementById('videoLibrary');
+        library.innerHTML = ''; // Temizle
+
+        // Bellek sızıntısını önlemek için eski URL'leri iptal et
+        activeObjectURLs.forEach(url => URL.revokeObjectURL(url));
+        activeObjectURLs = [];
+
+        const tx = db.transaction('videos', 'readonly');
+        const store = tx.objectStore('videos');
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+            const videos = request.result.sort((a,b) => b.createdAt - a.createdAt);
+            
+            videos.forEach(vid => {
+                // Blob'lardan yeni oturum URL'leri türet
+                const vUrl = URL.createObjectURL(vid.videoBlob);
+                const tUrl = URL.createObjectURL(vid.thumbnailBlob);
+                activeObjectURLs.push(vUrl, tUrl);
+
+                const item = document.createElement('div');
+                item.className = 'video-item';
+                item.innerHTML = `
+                    <div class="thumb-container">
+                        <img src="${tUrl}" alt="thumb">
+                    </div>
+                    <div class="info">
+                        <h4>${vid.title}</h4>
+                        <p>${new Date(vid.createdAt).toLocaleDateString()}</p>
+                    </div>
+                `;
+                item.onclick = () => playVideo(vUrl, vid.title);
+                library.appendChild(item);
+            });
+
+            // Eğer video varsa ilkini oynatıcıya koy (Opsiyonel)
+            if(videos.length > 0 && !document.getElementById('mainPlayer').src) {
+                const first = videos[0];
+                playVideo(URL.createObjectURL(first.videoBlob), first.title);
+            }
+        };
+    }
+
+    function playVideo(url, title) {
+        const player = document.getElementById('mainPlayer');
+        document.getElementById('mainTitle').textContent = title;
+        player.src = url;
+        player.play();
+    }
 </script>
 
 </body>
