@@ -3,400 +3,508 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreamX Unlimited | Core v8.0 (IndexedDB)</title>
+    <title>StreamX Obsidian v10.0 | Enterprise Video Engine</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
 
         :root {
-            --bg: #050505; --card: #121212; --accent: #3ea6ff; --red: #ff0000;
-            --text: #ffffff; --dim: #888888; --brd: rgba(255, 255, 255, 0.08);
-            --glass: rgba(255, 255, 255, 0.03);
+            --obsidian-base: #020202;
+            --obsidian-surface: #0a0a0b;
+            --obsidian-elevated: #111113;
+            --accent-glow: #3ea6ff;
+            --accent-alpha: rgba(62, 166, 255, 0.15);
+            --danger-core: #ff3e3e;
+            --text-high: #ffffff;
+            --text-low: #6a6a70;
+            --border-thin: rgba(255, 255, 255, 0.06);
+            --border-thick: rgba(255, 255, 255, 0.12);
+            --sidebar-w: 280px;
+            --header-h: 80px;
+            --curve-xl: 32px;
+            --curve-md: 16px;
+            --font-main: 'Plus Jakarta Sans', sans-serif;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* --- ATOMIC RESET --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         body { 
-            background: var(--bg); color: var(--text); 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            overflow: hidden; height: 100vh;
+            background: var(--obsidian-base); color: var(--text-high); 
+            font-family: var(--font-main); height: 100vh; overflow: hidden;
+            letter-spacing: -0.01em;
         }
 
-        /* --- UI SCROLLBAR --- */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        /* --- KERNEL ANIMATIONS --- */
+        @keyframes streamIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 var(--accent-alpha); } 70% { box-shadow: 0 0 0 20px rgba(62, 166, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(62, 166, 255, 0); } }
 
-        /* --- MAIN LAYOUT --- */
-        #app { 
-            display: grid; grid-template-columns: 80px 1fr; 
-            height: 100vh; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        /* --- LAYOUT ARCHITECTURE --- */
+        #kernel-root {
+            display: grid;
+            grid-template-columns: 90px 1fr;
+            grid-template-rows: var(--header-h) 1fr;
+            height: 100vh;
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        #app.sidebar-open { grid-template-columns: 260px 1fr; }
+        #kernel-root.side-expanded { grid-template-columns: var(--sidebar-w) 1fr; }
 
-        /* --- SIDEBAR --- */
-        aside { 
-            background: var(--bg); border-right: 1px solid var(--brd); 
-            display: flex; flex-direction: column; align-items: center; 
-            padding: 20px 0; gap: 20px; z-index: 1000;
+        /* --- SIDEBAR: NAVIGATION CLUSTER --- */
+        #side-nav {
+            grid-row: 1 / -1; background: var(--obsidian-surface);
+            border-right: 1px solid var(--border-thin); display: flex;
+            flex-direction: column; align-items: center; padding: 30px 0; gap: 40px;
         }
-        .nav-item { 
-            width: 50px; height: 50px; display: flex; align-items: center; 
-            justify-content: center; border-radius: 15px; cursor: pointer;
-            transition: 0.3s; position: relative; color: var(--dim);
+        .brand-icon { 
+            width: 45px; height: 45px; background: var(--accent-glow); 
+            border-radius: 14px; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; color: #000; font-size: 20px; box-shadow: 0 0 25px var(--accent-alpha);
         }
-        .nav-item:hover { background: var(--glass); color: #fff; }
-        .nav-item.active { background: var(--accent); color: #000; box-shadow: 0 0 20px rgba(62,166,255,0.4); }
-        .nav-text { display: none; position: absolute; left: 70px; white-space: nowrap; font-weight: 600; }
-        .sidebar-open .nav-text { display: block; }
-        .sidebar-open .nav-item { width: 220px; justify-content: flex-start; padding-left: 20px; }
+        .nav-links { display: flex; flex-direction: column; gap: 12px; width: 100%; padding: 0 15px; }
+        .nav-link {
+            height: 56px; display: flex; align-items: center; border-radius: 18px;
+            padding: 0 18px; cursor: pointer; color: var(--text-low); transition: 0.3s;
+            overflow: hidden; text-decoration: none; border: 1px solid transparent;
+        }
+        .nav-link:hover { background: var(--obsidian-elevated); color: #fff; }
+        .nav-link.active { background: var(--accent-alpha); color: var(--accent-glow); border-color: rgba(62, 166, 255, 0.3); }
+        .nav-link .icon { font-size: 24px; min-width: 24px; margin-right: 25px; }
+        .nav-link .label { font-size: 15px; font-weight: 600; white-space: nowrap; opacity: 0; }
+        .side-expanded .nav-link .label { opacity: 1; }
 
-        /* --- HEADER --- */
-        header { 
-            position: fixed; top: 0; right: 0; left: 80px; height: 70px;
-            background: rgba(5,5,5,0.8); backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--brd); display: flex; 
-            align-items: center; justify-content: space-between; padding: 0 30px; z-index: 900;
-            transition: 0.4s;
+        /* --- HEADER: COMMAND CENTER --- */
+        #command-bar {
+            grid-column: 2; background: rgba(2,2,3,0.7); backdrop-filter: blur(25px);
+            border-bottom: 1px solid var(--border-thin); display: flex;
+            align-items: center; justify-content: space-between; padding: 0 40px; z-index: 100;
         }
-        .sidebar-open header { left: 260px; }
-
-        /* --- CONTENT AREA --- */
-        main { 
-            margin-top: 70px; padding: 30px; overflow-y: auto; 
-            height: calc(100vh - 70px); scroll-behavior: smooth;
+        .search-pod {
+            background: var(--obsidian-elevated); width: 100%; max-width: 600px;
+            height: 48px; border-radius: 14px; display: flex; align-items: center;
+            padding: 0 20px; border: 1px solid var(--border-thin); transition: 0.3s;
         }
+        .search-pod:focus-within { border-color: var(--accent-glow); background: #000; box-shadow: 0 0 20px rgba(62,166,255,0.1); }
+        .search-pod input { background: transparent; border: none; color: #fff; width: 100%; margin-left: 15px; font-size: 14px; }
 
-        /* --- VIDEO CARDS --- */
-        .grid { 
+        /* --- MAIN VIEWPORT: THE MATRIX --- */
+        #matrix-scroll { grid-column: 2; padding: 40px; overflow-y: auto; overflow-x: hidden; }
+        .matrix-grid { 
             display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
-            gap: 25px; 
-        }
-        .v-card { 
-            background: var(--card); border-radius: 20px; overflow: hidden;
-            border: 1px solid var(--brd); transition: 0.4s; cursor: pointer;
-        }
-        .v-card:hover { transform: translateY(-8px); border-color: var(--accent); }
-        .v-thumb { 
-            width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden;
-            background: #000;
-        }
-        .v-thumb img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s; }
-        .v-card:hover .v-thumb img { transform: scale(1.1); filter: brightness(0.7); }
-        
-        .v-info { padding: 15px; display: flex; gap: 12px; }
-        .v-title { font-size: 16px; font-weight: 700; line-height: 1.3; }
-        .v-meta { color: var(--dim); font-size: 13px; margin-top: 5px; }
-
-        /* --- UNLIMITED UPLOAD MODAL --- */
-        #up-modal { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); 
-            z-index: 10000; display: none; align-items: center; justify-content: center;
-        }
-        .up-panel { 
-            background: #111; width: 1000px; height: 85vh; border-radius: 30px;
-            display: grid; grid-template-columns: 1fr 380px; gap: 2px;
-            overflow: hidden; border: 1px solid var(--brd);
-        }
-        .up-main { padding: 40px; overflow-y: auto; }
-        .up-side { background: #181818; padding: 40px; border-left: 1px solid var(--brd); }
-
-        .drop-zone { 
-            border: 2px dashed #333; height: 250px; border-radius: 20px;
-            display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; gap: 15px; cursor: pointer; transition: 0.3s;
-        }
-        .drop-zone:hover { border-color: var(--accent); background: var(--glass); }
-
-        .sx-input { 
-            width: 100%; background: #000; border: 1px solid #222; 
-            color: #fff; padding: 18px; border-radius: 15px; margin-bottom: 20px;
-            font-size: 15px; font-family: inherit;
+            gap: 32px; animation: streamIn 0.8s ease; 
         }
 
-        /* --- BUTTONS --- */
-        .btn-glow { 
-            background: var(--accent); color: #000; border: none; 
-            padding: 15px 30px; border-radius: 15px; font-weight: 800;
-            cursor: pointer; transition: 0.3s; width: 100%;
+        /* --- ENTITY CARD: VIDEO UNIT --- */
+        .entity { cursor: pointer; transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
+        .entity:hover { transform: translateY(-8px); }
+        .entity-visual {
+            width: 100%; aspect-ratio: 16/9; background: var(--obsidian-elevated);
+            border-radius: 24px; overflow: hidden; position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4); border: 1px solid var(--border-thin);
         }
-        .btn-glow:hover { box-shadow: 0 0 30px rgba(62,166,255,0.4); transform: scale(1.02); }
+        .entity-visual img { width: 100%; height: 100%; object-fit: cover; transition: 0.8s; }
+        .entity:hover .entity-visual img { transform: scale(1.08) rotate(1deg); filter: brightness(0.8); }
+        .duration-tag {
+            position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 800;
+        }
 
-        /* --- LOADER --- */
-        .loader-ring { 
-            width: 40px; height: 40px; border: 4px solid #222; 
-            border-top-color: var(--accent); border-radius: 50%;
-            animation: spin 1s linear infinite; margin: 20px auto;
+        /* --- THEATER MODE: CINEMATIC VIEW --- */
+        #theater-mode { display: none; max-width: 1300px; margin: 0 auto; animation: streamIn 0.5s ease; }
+        .video-stage { 
+            width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 40px; 
+            overflow: hidden; border: 1px solid var(--border-thick);
+            box-shadow: 0 50px 100px rgba(0,0,0,0.7);
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- STUDIO: UPLOAD INTERFACE --- */
+        #studio-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px);
+            z-index: 2000; display: none; align-items: center; justify-content: center;
+        }
+        .studio-panel {
+            width: 1100px; height: 85vh; background: var(--obsidian-surface); border-radius: 48px;
+            border: 1px solid var(--border-thick); display: grid; grid-template-columns: 1fr 400px;
+            overflow: hidden; box-shadow: 0 100px 200px rgba(0,0,0,0.8);
+        }
+        .studio-main { padding: 60px; overflow-y: auto; }
+        .studio-aside { background: var(--obsidian-elevated); padding: 40px; border-left: 1px solid var(--border-thin); }
+
+        /* --- SYSTEM COMPONENTS --- */
+        .btn-obsidian {
+            background: var(--accent-glow); color: #000; border: none; 
+            padding: 14px 28px; border-radius: 16px; font-weight: 800;
+            cursor: pointer; transition: 0.3s; font-size: 14px;
+        }
+        .btn-obsidian:hover { transform: scale(1.05); box-shadow: 0 0 30px var(--accent-alpha); }
+        .btn-obsidian:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 800; color: var(--text-low); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+        .form-input { 
+            width: 100%; background: #000; border: 1px solid var(--border-thin); 
+            color: #fff; padding: 18px; border-radius: 18px; font-size: 15px; transition: 0.3s;
+        }
+        .form-input:focus { border-color: var(--accent-glow); }
+
+        /* --- TOAST ENGINE --- */
+        #toast-master { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 10000; }
+        .toast-unit {
+            background: #fff; color: #000; padding: 16px 32px; border-radius: 50px;
+            font-weight: 800; font-size: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex; align-items: center; gap: 15px; animation: toastIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes toastIn { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
     </style>
 </head>
 <body>
 
-    <div id="app">
-        <aside id="sidebar">
-            <div class="nav-item active" onclick="sx.nav('home', this)">
-                <span class="icon">🏠</span><span class="nav-text">Ana Sayfa</span>
+    <div id="security-vault" style="position:fixed; inset:0; z-index:9999; background:var(--obsidian-base); display:flex; align-items:center; justify-content:center;">
+        <div style="text-align:center; width:400px;">
+            <div class="brand-icon" style="margin:0 auto 30px; width:80px; height:80px; font-size:40px;">S</div>
+            <h1 style="font-weight:800; font-size:32px; margin-bottom:10px;">Obsidian Access</h1>
+            <p style="color:var(--text-low); margin-bottom:40px;">Admin ID: 8392479231 | Root Terminal</p>
+            <input type="password" id="admin-key" class="form-input" placeholder="Erişim Anahtarını Girin" style="text-align:center; letter-spacing:5px;">
+            <button onclick="Kernel.unlock()" class="btn-obsidian" style="width:100%; margin-top:20px; height:60px;">KERNEL'I BAŞLAT</button>
+        </div>
+    </div>
+
+    <div id="kernel-root">
+        <aside id="side-nav">
+            <div class="brand-icon">S</div>
+            <div class="nav-links">
+                <div class="nav-link active" onclick="Kernel.route('home', this)">
+                    <span class="icon">🏠</span><span class="label">Merkez</span>
+                </div>
+                <div class="nav-link" onclick="Kernel.route('shorts', this)">
+                    <span class="icon">⚡</span><span class="label">Obsidian Shorts</span>
+                </div>
+                <div class="nav-link" onclick="Kernel.route('library', this)">
+                    <span class="icon">📂</span><span class="label">Arşiv</span>
+                </div>
+                <div style="margin:20px 0; height:1px; background:var(--border-thin);"></div>
+                <div class="nav-link" onclick="Kernel.route('trending', this)">
+                    <span class="icon">🔥</span><span class="label">Trendler</span>
+                </div>
+                <div class="nav-link" onclick="Kernel.route('liked', this)">
+                    <span class="icon">💎</span><span class="label">Beğenilenler</span>
+                </div>
             </div>
-            <div class="nav-item" onclick="sx.nav('shorts', this)">
-                <span class="icon">📱</span><span class="nav-text">Shorts</span>
-            </div>
-            <div class="nav-item" onclick="sx.nav('liked', this)">
-                <span class="icon">❤️</span><span class="nav-text">Beğenilenler</span>
-            </div>
-            <div class="nav-item" onclick="sx.openUp()">
-                <span class="icon">➕</span><span class="nav-text">Video Yükle</span>
-            </div>
-            <div style="margin-top:auto" class="nav-item" onclick="sx.toggleSidebar()">
-                <span class="icon">⇆</span><span class="nav-text">Genişlet/Daralt</span>
+            <div style="margin-top:auto; width:100%; padding:0 15px;">
+                <div class="nav-link" onclick="Kernel.toggleSidebar()">
+                    <span class="icon">💠</span><span class="label">Arayüzü Genişlet</span>
+                </div>
             </div>
         </aside>
 
-        <main id="scroller">
-            <header>
-                <div style="font-weight: 800; font-size: 22px;">Stream<span style="color:var(--red)">X</span> <small style="font-size:10px; opacity:0.5">Admin: 8392479231</small></div>
-                <div style="display:flex; gap:15px; align-items:center">
-                    <div id="storage-indicator" style="font-size:12px; color:var(--dim)">DB: Hazır</div>
-                    <div style="width:40px; height:40px; border-radius:15px; background:var(--glass); border:1px solid var(--brd)"></div>
-                </div>
-            </header>
-
-            <div id="view-home">
-                <div class="grid" id="main-grid"></div>
-                <div id="loading-anchor"><div class="loader-ring"></div></div>
+        <header id="command-bar">
+            <div class="search-pod">
+                <span>🔍</span>
+                <input type="text" placeholder="Global arşivde ara...">
             </div>
+            <div style="display:flex; align-items:center; gap:25px;">
+                <button class="btn-obsidian" onclick="Studio.open()">YENİ OLUŞTUR</button>
+                <div style="width:44px; height:44px; border-radius:14px; background:var(--obsidian-elevated); border:1px solid var(--border-thick); cursor:pointer;"></div>
+            </div>
+        </header>
 
-            <div id="view-watch" style="display:none">
-                <div style="max-width:1200px; margin:0 auto">
-                    <div style="width:100%; aspect-ratio:16/9; background:#000; border-radius:30px; overflow:hidden; border:1px solid var(--brd)">
-                        <video id="p-main" controls autoplay style="width:100%; height:100%"></video>
+        <main id="matrix-scroll">
+            <section id="view-home">
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:40px;">
+                    <div>
+                        <h1 style="font-size:42px; font-weight:800; letter-spacing:-2px;">Sistem Akışı</h1>
+                        <p style="color:var(--text-low); margin-top:8px; font-weight:600;">Dinamik veri blokları senkronize edildi.</p>
                     </div>
-                    <h1 id="p-title" style="margin-top:25px; font-size:32px;"></h1>
+                    <div style="display:flex; gap:10px;">
+                        <span style="padding:8px 16px; background:var(--obsidian-elevated); border-radius:10px; font-size:12px; font-weight:800;">TÜMÜ</span>
+                        <span style="padding:8px 16px; opacity:0.4; font-size:12px; font-weight:800;">MÜZİK</span>
+                        <span style="padding:8px 16px; opacity:0.4; font-size:12px; font-weight:800;">OYUN</span>
+                    </div>
                 </div>
-            </div>
+
+                <div id="video-matrix" class="matrix-grid">
+                    </div>
+            </section>
+
+            <section id="theater-mode">
+                <div class="video-stage">
+                    <video id="main-player" controls autoplay style="width:100%; height:100%;"></video>
+                </div>
+                <div style="margin-top:40px; display:grid; grid-template-columns: 1fr 380px; gap:40px;">
+                    <div class="theater-details">
+                        <h1 id="v-title" style="font-size:32px; font-weight:800; letter-spacing:-1px;">Yükleniyor...</h1>
+                        <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center; padding-bottom:30px; border-bottom:1px solid var(--border-thin);">
+                            <div style="display:flex; align-items:center; gap:15px;">
+                                <div style="width:50px; height:50px; border-radius:18px; background:var(--accent-glow);"></div>
+                                <div>
+                                    <h4 style="font-weight:800;">Obsidian Creator</h4>
+                                    <p style="font-size:12px; color:var(--text-low);">1.2M Abone</p>
+                                </div>
+                                <button class="btn-obsidian" style="background:#fff; margin-left:20px;">ABONE OL</button>
+                            </div>
+                            <div style="display:flex; gap:10px;">
+                                <button class="btn-obsidian" style="background:var(--obsidian-elevated); color:#fff;">👍 42K</button>
+                                <button class="btn-obsidian" style="background:var(--obsidian-elevated); color:#fff;">↪ PAYLAŞ</button>
+                            </div>
+                        </div>
+                        <div id="v-desc" style="margin-top:30px; padding:25px; background:var(--obsidian-elevated); border-radius:24px; color:var(--text-low); line-height:1.6;">
+                            Video açıklaması sistem tarafından yüklendi.
+                        </div>
+                    </div>
+                    <div class="theater-sidebar">
+                        <h3 style="margin-bottom:20px;">Sıradaki</h3>
+                        <div id="up-next-list" style="display:flex; flex-direction:column; gap:20px;"></div>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
-    <div id="up-modal">
-        <div class="up-panel">
-            <div class="up-main">
-                <h2 style="margin-bottom:30px;">İçerik Stüdyosu</h2>
-                
-                <div id="drop-zone" class="drop-zone" onclick="document.getElementById('f-in').click()">
-                    <span style="font-size:50px;">💾</span>
-                    <h3>Sınırsız IndexedDB Depolama</h3>
-                    <p style="color:var(--dim)">Büyük dosyaları buraya sürükleyin</p>
-                    <input type="file" id="f-in" hidden accept="video/*">
+    <div id="studio-overlay">
+        <div class="studio-panel">
+            <div class="studio-main">
+                <div style="display:flex; justify-content:space-between; margin-bottom:50px;">
+                    <h2 style="font-size:28px; font-weight:800;">Studio Obsidian</h2>
+                    <span onclick="Studio.close()" style="cursor:pointer; font-size:24px;">✕</span>
                 </div>
 
-                <div id="up-details" style="display:none; margin-top:30px;">
-                    <input type="text" id="up-title" class="sx-input" placeholder="Video Başlığı">
-                    <textarea id="up-desc" class="sx-input" style="height:150px; resize:none;" placeholder="Açıklama"></textarea>
-                    
-                    <div id="up-progress-box" style="display:none">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                            <span id="up-pct">İşleniyor... %0</span>
+                <div id="studio-drop" class="up-dropzone" style="height:300px; border:2px dashed #333; border-radius:32px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;" onclick="document.getElementById('studio-input').click()">
+                    <div style="font-size:64px; margin-bottom:20px;">📦</div>
+                    <h3>Sınırsız Veri Entegrasyonu</h3>
+                    <p style="color:var(--text-low); margin-top:10px;">MP4, MOV veya WebM dosyalarını işleyin</p>
+                    <input type="file" id="studio-input" hidden accept="video/*">
+                </div>
+
+                <div id="studio-form" style="display:none; margin-top:30px;">
+                    <div class="form-group">
+                        <label>Başlık</label>
+                        <input type="text" id="stu-title" class="form-input" placeholder="İçerik başlığını belirleyin">
+                    </div>
+                    <div class="form-group">
+                        <label>Açıklama</label>
+                        <textarea id="stu-desc" class="form-input" style="height:150px; resize:none;" placeholder="Video hakkında teknik detaylar..."></textarea>
+                    </div>
+                    <div id="stu-progress" style="display:none; margin-top:40px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:12px; font-weight:800;">
+                            <span id="stu-status">Obsidian Katmanları Yazılıyor...</span>
+                            <span id="stu-pct">0%</span>
                         </div>
-                        <div style="height:6px; background:#222; border-radius:3px; overflow:hidden;">
-                            <div id="up-bar" style="height:100%; width:0%; background:var(--accent); transition:0.1s"></div>
+                        <div style="height:8px; background:#000; border-radius:4px; overflow:hidden;">
+                            <div id="stu-bar" style="height:100%; width:0%; background:var(--accent-glow); transition:0.2s cubic-bezier(0.4, 0, 0.2, 1);"></div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="up-side">
-                <h3>Önizleme</h3>
-                <div id="up-preview" style="width:100%; aspect-ratio:16/9; background:#000; border-radius:15px; margin:20px 0; overflow:hidden; border:1px solid var(--brd)"></div>
-                <button id="pub-btn" class="btn-glow" style="display:none" onclick="sx.publish()">YAYINLA</button>
-                <button class="btn-glow" style="background:#222; color:#fff; margin-top:10px;" onclick="sx.closeUp()">İPTAL</button>
+            <div class="studio-aside">
+                <h3 style="margin-bottom:30px;">Kalıcı Önizleme</h3>
+                <div id="stu-prev-box" style="width:100%; aspect-ratio:16/9; background:#000; border-radius:24px; overflow:hidden; border:1px solid var(--border-thick);">
+                    <div style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-low); font-size:12px;">Henüz Dosya Seçilmedi</div>
+                </div>
+                <div style="margin-top:auto;">
+                    <button id="stu-pub-btn" class="btn-obsidian" style="width:100%; height:60px;" onclick="Studio.publish()" disabled>OBSIDIAN'A KAYDET</button>
+                    <button class="btn-obsidian" style="width:100%; background:transparent; border:1px solid var(--border-thin); color:#fff; margin-top:15px;" onclick="Studio.close()">İPTAL</button>
+                </div>
             </div>
         </div>
     </div>
 
+    <div id="toast-master"></div>
+
     <script>
         /**
-         * STREAMX ULTIMATE v8.0 - INDEXEDDB STORAGE ENGINE
-         * NO MORE STORAGE LIMITS.
+         * ⚛️ OBSIDIAN KERNEL v10.0
+         * Admin: 8392479231
          */
 
-        const sx = {
+        const Kernel = {
             db: null,
-            state: { page: 1, loading: false, upFile: null },
+            state: { view: 'home', isExpanded: false },
 
             async init() {
-                await this.initDB();
+                await this.initIndexedDB();
                 this.renderGrid();
-                this.setupInfiniteScroll();
-                this.setupFile();
+                this.setupCoreEvents();
             },
 
-            // --- INDEXEDDB ENGINE (LIMIT REMOVAL) ---
-            initDB() {
+            initIndexedDB() {
                 return new Promise((res) => {
-                    const req = indexedDB.open("StreamX_Unlimited", 1);
+                    const req = indexedDB.open("Obsidian_Core", 1);
                     req.onupgradeneeded = (e) => {
                         const db = e.target.result;
-                        if (!db.objectStoreNames.contains("videos")) {
-                            db.createObjectStore("videos", { keyPath: "id" });
+                        if(!db.objectStoreNames.contains("v_data")) {
+                            db.createObjectStore("v_data", { keyPath: "id" });
                         }
                     };
-                    req.onsuccess = (e) => {
-                        this.db = e.target.result;
-                        document.getElementById('storage-indicator').innerText = "DB: Sınırsız Mod Aktif";
-                        res();
-                    };
+                    req.onsuccess = (e) => { this.db = e.target.result; res(); };
                 });
             },
 
-            // --- UI ACTIONS ---
-            toggleSidebar() {
-                document.getElementById('app').classList.toggle('sidebar-open');
+            unlock() {
+                const key = document.getElementById('admin-key').value;
+                if(key === "8392479231") {
+                    document.getElementById('security-vault').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('security-vault').style.display = 'none';
+                        this.init();
+                    }, 500);
+                    this.toast("Erişim Onaylandı: Root");
+                } else {
+                    alert("Geçersiz Anahtar!");
+                }
             },
 
-            nav(view, el) {
+            toggleSidebar() {
+                this.state.isExpanded = !this.state.isExpanded;
+                document.getElementById('kernel-root').classList.toggle('side-expanded');
+            },
+
+            route(target, el) {
                 if(el) {
-                    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                    document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
                     el.classList.add('active');
                 }
-                document.getElementById('view-home').style.display = view === 'home' ? 'block' : 'none';
-                document.getElementById('view-watch').style.display = view === 'watch' ? 'block' : 'none';
-                if(view === 'home') this.renderGrid();
+                this.state.view = target;
+                document.getElementById('view-home').style.display = target === 'home' ? 'block' : 'none';
+                document.getElementById('theater-mode').style.display = target === 'watch' ? 'block' : 'none';
+                if(target === 'home') this.renderGrid();
             },
 
-            // --- FILE & STORAGE LOGIC ---
-            setupFile() {
-                const fi = document.getElementById('f-in');
-                fi.onchange = async (e) => {
+            async renderGrid() {
+                const mount = document.getElementById('video-matrix');
+                const tx = this.db.transaction("v_data", "readonly");
+                const store = tx.objectStore("v_data");
+                const videos = await new Promise(res => {
+                    const r = store.getAll();
+                    r.onsuccess = () => res(r.result);
+                });
+
+                mount.innerHTML = "";
+                if(videos.length === 0) {
+                    mount.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:100px; opacity:0.2;"><h1>Veri Merkezi Boş</h1></div>`;
+                    return;
+                }
+
+                videos.reverse().forEach(v => {
+                    const node = document.createElement('div');
+                    node.className = 'entity';
+                    node.onclick = () => this.launchTheater(v.id);
+                    node.innerHTML = `
+                        <div class="entity-visual">
+                            <img src="${v.thumb}">
+                            <div class="duration-tag">04:20</div>
+                        </div>
+                        <div style="display:flex; gap:16px; margin-top:18px;">
+                            <div style="width:40px; height:40px; border-radius:12px; background:var(--accent-glow); flex-shrink:0;"></div>
+                            <div>
+                                <h3 style="font-size:16px; font-weight:800; line-height:1.4;">${v.title}</h3>
+                                <p style="font-size:13px; color:var(--text-low); margin-top:5px;">Admin • ${v.views} izlenme</p>
+                            </div>
+                        </div>
+                    `;
+                    mount.appendChild(node);
+                });
+            },
+
+            async launchTheater(id) {
+                const tx = this.db.transaction("v_data", "readonly");
+                const v = await new Promise(res => {
+                    const r = tx.objectStore("v_data").get(id);
+                    r.onsuccess = () => res(r.result);
+                });
+
+                this.route('watch');
+                const player = document.getElementById('main-player');
+                player.src = URL.createObjectURL(v.blob);
+                document.getElementById('v-title').innerText = v.title;
+                document.getElementById('v-desc').innerText = v.desc || "Teknik veri tanımlanmadı.";
+            },
+
+            toast(msg) {
+                const m = document.getElementById('toast-master');
+                const t = document.createElement('div');
+                t.className = 'toast-unit';
+                t.innerHTML = `<span>💠</span> ${msg}`;
+                m.appendChild(t);
+                setTimeout(() => t.remove(), 4000);
+            },
+
+            setupCoreEvents() {
+                // Global hotkeys can be added here
+            }
+        };
+
+        const Studio = {
+            temp: { file: null, thumb: null },
+
+            open() { document.getElementById('studio-overlay').style.display = 'flex'; },
+            close() { document.getElementById('studio-overlay').style.display = 'none'; },
+
+            async setup() {
+                const inp = document.getElementById('studio-input');
+                inp.onchange = async (e) => {
                     const file = e.target.files[0];
                     if(!file) return;
 
-                    document.getElementById('drop-zone').style.display = 'none';
-                    document.getElementById('up-details').style.display = 'block';
-                    document.getElementById('pub-btn').style.display = 'block';
-                    document.getElementById('up-title').value = file.name.replace(/\.[^/.]+$/, "");
+                    this.temp.file = file;
+                    document.getElementById('studio-drop').style.display = 'none';
+                    document.getElementById('studio-form').style.display = 'block';
+                    document.getElementById('stu-title').value = file.name.split('.')[0];
+                    document.getElementById('stu-pub-btn').disabled = false;
 
-                    const tempUrl = URL.createObjectURL(file);
-                    const thumb = await this.genThumb(tempUrl);
-                    
-                    this.state.upFile = { 
-                        blob: file, 
-                        thumb, 
-                        id: Date.now() 
-                    };
-                    
-                    document.getElementById('up-preview').innerHTML = `<img src="${thumb}" style="width:100%; height:100%; object-fit:cover">`;
+                    const url = URL.createObjectURL(file);
+                    this.temp.thumb = await this.generateThumb(url);
+                    document.getElementById('stu-prev-box').innerHTML = `<img src="${this.temp.thumb}" style="width:100%; height:100%; object-fit:cover;">`;
                 };
+            },
+
+            generateThumb(u) {
+                return new Promise(res => {
+                    const v = document.createElement('video');
+                    v.src = u; v.currentTime = 1; v.muted = true;
+                    v.onseeked = () => {
+                        const c = document.createElement('canvas');
+                        c.width = 1280; c.height = 720;
+                        c.getContext('2d').drawImage(v, 0, 0, 1280, 720);
+                        res(c.toDataURL('image/jpeg', 0.8));
+                    };
+                    v.play();
+                });
             },
 
             async publish() {
-                const title = document.getElementById('up-title').value;
-                if(!title) return alert("Başlık gerekli!");
+                const title = document.getElementById('stu-title').value;
+                if(!title) return;
 
-                document.getElementById('up-progress-box').style.display = 'block';
-                document.getElementById('pub-btn').disabled = true;
+                document.getElementById('stu-progress').style.display = 'block';
+                document.getElementById('stu-pub-btn').disabled = true;
 
-                // Dosyayı IndexedDB'ye Blob olarak kaydet (Base64'ten çok daha verimli)
-                const videoData = {
-                    id: this.state.upFile.id,
+                const data = {
+                    id: Date.now().toString(),
                     title: title,
-                    desc: document.getElementById('up-desc').value,
-                    thumb: this.state.upFile.thumb,
-                    videoBlob: this.state.upFile.blob, // Direk binary blob saklanır
-                    views: 0,
-                    createdAt: new Date().toISOString()
+                    desc: document.getElementById('stu-desc').value,
+                    blob: this.temp.file,
+                    thumb: this.temp.thumb,
+                    views: 0
                 };
 
-                const tx = this.db.transaction("videos", "readwrite");
-                const store = tx.objectStore("videos");
-                
-                // Progress simulation
+                // Simulator
                 let p = 0;
-                const inv = setInterval(() => {
-                    p += 5;
-                    document.getElementById('up-bar').style.width = p + '%';
-                    document.getElementById('up-pct').innerText = `Veritabanına Yazılıyor... %${p}`;
-                    if(p >= 100) clearInterval(inv);
-                }, 50);
-
-                store.put(videoData);
-
-                tx.oncomplete = () => {
-                    this.closeUp();
-                    this.renderGrid();
-                    alert("Video disk alanına başarıyla işlendi!");
-                };
-            },
-
-            // --- RENDERING ENGINE ---
-            async renderGrid() {
-                const container = document.getElementById('main-grid');
-                container.innerHTML = '';
-                
-                const tx = this.db.transaction("videos", "readonly");
-                const store = tx.objectStore("videos");
-                const req = store.getAll();
-
-                req.onsuccess = () => {
-                    const videos = req.result.reverse();
-                    if(videos.length === 0) {
-                        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:100px; color:var(--dim)">Depolama boş. İlk videonu yükle!</div>`;
-                        return;
+                const i = setInterval(async () => {
+                    p += Math.floor(Math.random() * 20);
+                    if(p >= 100) {
+                        p = 100; clearInterval(i);
+                        const tx = Kernel.db.transaction("v_data", "readwrite");
+                        tx.objectStore("v_data").add(data);
+                        tx.oncomplete = () => {
+                            Kernel.toast("Obsidian Veritabanı Güncellendi!");
+                            setTimeout(() => location.reload(), 1000);
+                        };
                     }
-
-                    videos.forEach(v => {
-                        const card = document.createElement('div');
-                        card.className = 'v-card';
-                        card.onclick = () => this.watch(v.id);
-                        card.innerHTML = `
-                            <div class="v-thumb"><img src="${v.thumb}"></div>
-                            <div class="v-info">
-                                <div style="width:40px; height:40px; border-radius:12px; background:var(--glass); flex-shrink:0"></div>
-                                <div>
-                                    <div class="v-title">${v.title}</div>
-                                    <div class="v-meta">${v.views} izlenme • Yeni</div>
-                                </div>
-                            </div>
-                        `;
-                        container.appendChild(card);
-                    });
-                };
-            },
-
-            async watch(id) {
-                const tx = this.db.transaction("videos", "readonly");
-                const store = tx.objectStore("videos");
-                const req = store.get(id);
-
-                req.onsuccess = () => {
-                    const v = req.result;
-                    this.nav('watch');
-                    const videoUrl = URL.createObjectURL(v.videoBlob);
-                    const player = document.getElementById('p-main');
-                    player.src = videoUrl;
-                    document.getElementById('p-title').innerText = v.title;
-                };
-            },
-
-            // --- HELPERS ---
-            genThumb: (u) => new Promise((res) => {
-                const v = document.createElement('video');
-                v.src = u; v.currentTime = 1; v.muted = true;
-                v.onseeked = () => {
-                    const c = document.createElement('canvas');
-                    c.width = 1280; c.height = 720;
-                    c.getContext('2d').drawImage(v, 0, 0, 1280, 720);
-                    res(c.toDataURL('image/jpeg', 0.8));
-                };
-            }),
-
-            setupInfiniteScroll() {
-                const obs = new IntersectionObserver((e) => {
-                    if(e[0].isIntersecting) { /* Pagination logic here */ }
-                });
-                obs.observe(document.getElementById('loading-anchor'));
-            },
-
-            openUp() { document.getElementById('up-modal').style.display = 'flex'; },
-            closeUp() { document.getElementById('up-modal').style.display = 'none'; location.reload(); }
+                    document.getElementById('stu-bar').style.width = p + '%';
+                    document.getElementById('stu-pct').innerText = p + '%';
+                }, 150);
+            }
         };
 
-        sx.init();
+        Studio.setup();
     </script>
 </body>
 </html>
