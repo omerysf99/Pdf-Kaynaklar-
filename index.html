@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProTube Ultimate - Player & Sidebar Update</title>
+    <title>ProTube Ultimate - Real YouTube Interaction Layer</title>
     <style>
         :root {
             --yt-black: #0f0f0f;
@@ -12,165 +12,146 @@
             --yt-gray: #aaaaaa;
             --yt-dark-gray: #272727;
             --yt-border: rgba(255, 255, 255, 0.1);
-            --transition: all 0.2s cubic-bezier(0.05, 0, 0, 1);
+            --yt-blur-bg: rgba(15, 15, 15, 0.85);
+            /* Animasyon Eğrileri */
+            --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+            --ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Roboto", Arial, sans-serif; }
-        body { background-color: var(--yt-black); color: var(--yt-white); overflow: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Roboto", sans-serif; }
+        body { background-color: var(--yt-black); color: var(--yt-white); overflow: hidden; height: 100vh; }
 
-        /* --- ÜST HEADER --- */
-        header {
-            height: 56px;
-            padding: 0 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        /* --- GLOBAL TOAST SYSTEM --- */
+        #toast-container {
             position: fixed;
-            top: 0; width: 100%; z-index: 2000;
-            background: var(--yt-black);
-        }
-
-        .header-left { display: flex; align-items: center; gap: 16px; }
-        .menu-icon { padding: 8px; cursor: pointer; border-radius: 50%; }
-        .menu-icon:hover { background: var(--yt-dark-gray); }
-        .logo-box { display: flex; align-items: center; cursor: pointer; position: relative; }
-        .logo-box img { height: 20px; }
-        .logo-box span.tr-badge { font-size: 10px; color: var(--yt-gray); position: absolute; top: -2px; right: -18px; }
-
-        /* --- SOL MENÜ (GELİŞTİRİLMİŞ) --- */
-        .sidebar {
-            width: 240px;
-            height: calc(100vh - 56px);
-            position: fixed;
-            top: 56px; left: 0;
-            padding: 12px;
-            overflow-y: auto;
-            z-index: 1000;
-            background: var(--yt-black);
-            transition: var(--transition);
-        }
-
-        .nav-section { border-bottom: 1px solid var(--yt-border); padding-bottom: 12px; margin-bottom: 12px; }
-        .nav-section:last-child { border: none; }
-
-        .nav-item {
+            bottom: 32px;
+            right: 32px;
+            z-index: 10000;
             display: flex;
-            align-items: center;
-            gap: 24px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-size: 14px;
-            text-decoration: none;
-            color: white;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .nav-item:hover { background: var(--yt-dark-gray); }
-        .nav-item.active { background: var(--yt-dark-gray); font-weight: 500; }
-        .nav-item svg { width: 24px; height: 24px; fill: currentColor; }
-
-        /* --- ANA İÇERİK --- */
-        .content-wrapper {
-            margin-left: 240px;
-            margin-top: 56px;
-            height: calc(100vh - 56px);
-            overflow-y: auto;
-            padding: 24px;
-            transition: var(--transition);
-        }
-
-        /* VİDEO GRID */
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 16px; row-gap: 32px;
-        }
-
-        .v-card { cursor: pointer; }
-        .v-thumb { 
-            width: 100%; aspect-ratio: 16/9; background: #222; 
-            border-radius: 12px; overflow: hidden; position: relative; 
-        }
-        .v-thumb img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
-        .v-card:hover .v-thumb img { border-radius: 0; }
-        
-        .v-meta { display: flex; gap: 12px; margin-top: 12px; }
-        .v-avatar { width: 36px; height: 36px; border-radius: 50%; background: #444; flex-shrink: 0; }
-        .v-details h3 { font-size: 16px; line-height: 22px; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .v-details p { font-size: 14px; color: var(--yt-gray); }
-
-        /* --- İZLEME EKRANI (WATCH PAGE) --- */
-        #watch-view {
-            display: none;
-            position: fixed;
-            top: 56px; left: 0; width: 100%; height: calc(100vh - 56px);
-            background: var(--yt-black);
-            z-index: 1500;
-            overflow-y: auto;
-            padding: 24px 72px;
-        }
-
-        .watch-container {
-            display: flex;
-            gap: 24px;
-            max-width: 1700px;
-            margin: 0 auto;
-        }
-
-        .main-player-col { flex: 1; }
-        .side-recom-col { width: 400px; }
-
-        .video-wrapper {
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: #000;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        video { width: 100%; height: 100%; }
-
-        .video-title { font-size: 20px; font-weight: bold; margin: 12px 0; }
-        
-        .video-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--yt-border);
-        }
-
-        .channel-info { display: flex; align-items: center; gap: 12px; }
-        .sub-btn { background: white; color: black; padding: 10px 18px; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; }
-
-        .button-group { display: flex; gap: 8px; }
-        .action-btn {
-            background: var(--yt-dark-gray);
-            padding: 8px 16px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
+        .toast {
+            background: rgba(255, 255, 255, 0.95);
+            color: black;
+            padding: 12px 24px;
+            border-radius: 8px;
             font-size: 14px;
             font-weight: 500;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            transform: translateX(120%);
+            transition: transform 0.4s var(--ease-in-out);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .action-btn:hover { background: #3f3f3f; }
-        .action-btn.liked svg { fill: var(--yt-red); animation: bounce 0.4s ease; }
 
-        @keyframes bounce { 0%, 100% {transform: scale(1);} 50% {transform: scale(1.3);} }
+        .toast.active { transform: translateX(0); }
 
-        /* YORUMLAR */
-        .comments-section { margin-top: 24px; }
-        .comment-input-box { display: flex; gap: 16px; margin: 24px 0; }
-        .yt-input {
-            flex: 1; background: transparent; border: none;
+        /* --- HEADER & SIDEBAR --- */
+        header {
+            height: 56px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between;
+            position: fixed; top: 0; width: 100%; z-index: 2000; background: var(--yt-black);
+        }
+        .sidebar {
+            width: 240px; height: calc(100vh - 56px); position: fixed; top: 56px; left: 0;
+            padding: 12px; border-right: 1px solid var(--yt-border); z-index: 1000; background: var(--yt-black);
+        }
+
+        /* --- SHORTS ENGINE (SNAP SCROLL) --- */
+        #shorts-view {
+            margin-left: 240px; margin-top: 56px; height: calc(100vh - 56px);
+            overflow-y: scroll; scroll-snap-type: y mandatory; display: none;
+        }
+
+        .short-container {
+            width: 100%; height: 100%; scroll-snap-align: start;
+            display: flex; justify-content: center; align-items: center;
+            position: relative; background: #000;
+        }
+
+        .short-video-wrapper {
+            height: 92%; aspect-ratio: 9/16; background: #111;
+            border-radius: 16px; overflow: hidden; position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        video { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- SHORTS INTERACTION COLUMN --- */
+        .shorts-actions {
+            position: absolute; bottom: 20px; right: -70px;
+            display: flex; flex-direction: column; gap: 20px; align-items: center;
+        }
+
+        .action-item {
+            display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;
+        }
+
+        .action-circle {
+            width: 48px; height: 48px; background: var(--yt-dark-gray);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .action-circle:hover { background: #3f3f3f; }
+        .action-item span { font-size: 12px; font-weight: 500; }
+
+        /* --- BEĞENİ (LIKE) ANIMASYONU --- */
+        .like-icon-svg {
+            width: 24px; height: 24px; fill: white;
+            transition: fill 0.2s, transform 0.3s var(--ease-bounce);
+        }
+
+        .action-item.liked .like-icon-svg {
+            fill: var(--yt-red);
+            transform: scale(1.3);
+            animation: like-bounce 0.4s var(--ease-bounce);
+        }
+
+        @keyframes like-bounce {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); }
+            100% { transform: scale(1); }
+        }
+
+        /* --- YORUM PANELİ (SLIDE-UP OVERLAY) --- */
+        #comment-drawer {
+            position: fixed; bottom: 0; left: 240px; right: 0;
+            height: 70%; background: var(--yt-blur-bg);
+            backdrop-filter: blur(20px); border-top-left-radius: 16px; border-top-right-radius: 16px;
+            z-index: 3000; transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1);
+            border-top: 1px solid var(--yt-border);
+            display: flex; flex-direction: column;
+        }
+
+        #comment-drawer.open { transform: translateY(0); }
+
+        .drawer-header {
+            padding: 16px 24px; display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid var(--yt-border);
-            color: white; padding: 4px 0; outline: none;
         }
-        .yt-input:focus { border-bottom: 2px solid white; }
 
-        /* --- UTILS --- */
+        .drawer-body { flex: 1; overflow-y: auto; padding: 24px; }
+
+        .comment-input-area {
+            padding: 16px 24px; border-top: 1px solid var(--yt-border);
+            display: flex; gap: 16px; align-items: center;
+        }
+
+        .real-input {
+            flex: 1; background: rgba(255,255,255,0.1); border: none; border-radius: 20px;
+            padding: 12px 20px; color: white; outline: none; transition: 0.2s;
+        }
+        .real-input:focus { background: rgba(255,255,255,0.15); box-shadow: inset 0 0 0 1px var(--yt-gray); }
+
+        /* --- UI UTILS --- */
+        .nav-item { display: flex; align-items: center; gap: 24px; padding: 12px; border-radius: 10px; cursor: pointer; color: #fff; text-decoration: none; font-size: 14px; }
+        .nav-item:hover { background: var(--yt-dark-gray); }
+        .active-tab { background: var(--yt-dark-gray); font-weight: bold; }
         .hidden { display: none !important; }
 
     </style>
@@ -178,281 +159,206 @@
 <body>
 
     <header>
-        <div class="header-left">
-            <div class="menu-icon" onclick="toggleSidebar()">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M21 6H3V5h18v1zm0 5H3v1h18v-1zm0 6H3v1h18v-1z"></path></svg>
-            </div>
-            <div class="logo-box" onclick="goHome()">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" alt="YouTube">
-                <span class="tr-badge">TR</span>
-            </div>
+        <div style="display:flex; align-items:center; gap:16px;">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="white" style="cursor:pointer"><path d="M21 6H3V5h18v1zm0 5H3v1h18v-1zm0 6H3v1h18v-1z"></path></svg>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" height="20" style="cursor:pointer" onclick="location.reload()">
         </div>
-        <div class="header-center" style="flex: 0 1 600px; display: flex;">
-            <input type="text" placeholder="Ara" style="width: 100%; background: #121212; border: 1px solid #333; border-radius: 40px 0 0 40px; padding: 0 16px; color: white;">
-            <button style="background: var(--yt-dark-gray); border: 1px solid #333; border-left: none; border-radius: 0 40px 40px 0; padding: 0 20px; cursor: pointer;">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M20.87 20.17l-5.59-5.59C16.35 13.35 17 11.75 17 10c0-3.87-3.13-7-7-7s-7 3.13-7 7 3.13 7 7 7c1.75 0 3.35-.65 4.58-1.71l5.59 5.59.7-.71zM10 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"></path></svg>
-            </button>
+        <div style="flex:0 1 600px; display:flex;">
+            <input type="text" placeholder="Ara" style="width:100%; background:#121212; border:1px solid #333; border-radius:40px 0 0 40px; padding:0 20px; color:white;">
+            <button style="background:var(--yt-dark-gray); border:none; border-radius:0 40px 40px 0; padding:0 20px; color:white;">🔍</button>
         </div>
-        <div class="header-right" style="display:flex; gap:16px; align-items:center;">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="white" style="cursor:pointer" onclick="openUploadModal()"><path d="M14 13h-3v3H9v-3H6v-2h3V8h2v3h3v2zm3-7H3v12h14v-6.39l4 3.83V7.56l-4 3.83V6m1-1v14L13 14v5H2V5h11v5l5-5z"></path></svg>
-            <div style="width:32px; height:32px; border-radius:50%; background: #3ea6ff; display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer">A</div>
-        </div>
+        <div style="width:32px; height:32px; border-radius:50%; background:#3ea6ff; display:flex; align-items:center; justify-content:center; font-weight:bold;">A</div>
     </header>
 
-    <nav class="sidebar" id="sidebar">
-        <div class="nav-section">
-            <div class="nav-item active" onclick="goHome()">
-                <svg viewBox="0 0 24 24"><path d="M4 10V21h6v-6h4v6h6V10l-8-7z"></path></svg>
-                <span>Ana Sayfa</span>
-            </div>
-            <div class="nav-item">
-                <svg viewBox="0 0 24 24"><path d="M10 14.65v-5.3L14.5 12 10 14.65zM17.77 10.32l-1.2-.5L18 8.82a3.74 3.74 0 00-2.45-5.75 3.74 3.74 0 00-2.69.95l-9.3 5.37a3.74 3.74 0 00-.03 6.48l1.2.5L3.5 17.37a3.74 3.74 0 005.14 4.8 3.74 3.74 0 002.69-.95l9.3-5.37a3.74 3.74 0 00.03-6.48-.01.01 0 00-.89-.05z"></path></svg>
-                <span>Shorts</span>
-            </div>
-            <div class="nav-item">
-                <svg viewBox="0 0 24 24"><path d="M10 18v-6l5 3-5 3zm7-15H7v1h10V3zm3 3H4v1h16V6zm2 3H2v12h20V9zM3 10h18v10H3V10z"></path></svg>
-                <span>Abonelikler</span>
-            </div>
-        </div>
-        <div class="nav-section">
-            <div style="padding: 0 12px 8px; font-weight: bold; font-size: 16px;">Siz ></div>
-            <div class="nav-item">
-                <svg viewBox="0 0 24 24"><path d="M11 7l-5 5 5 5V7z"></path></svg>
-                <span>Kanalınız</span>
-            </div>
-            <div class="nav-item">
-                <svg viewBox="0 0 24 24"><path d="M11.97 12.87l-.02.01c-1.14.77-2.59 1.12-4.18 1.12-3.17 0-5.77-1.42-5.77-4s2.6-4 5.77-4c1.58 0 3.04.35 4.18 1.12l.02.01 5.04-5.04.71.71-5.04 5.04zm-4.2.13c2.65 0 4.77-1.12 4.77-3s-2.12-3-4.77-3-4.77 1.12-4.77 3 2.12 3 4.77 3z"></path></svg>
-                <span>Geçmiş</span>
-            </div>
-            <div class="nav-item">
-                <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"></path></svg>
-                <span>Videolarınız</span>
-            </div>
-        </div>
+    <nav class="sidebar">
+        <div class="nav-item" onclick="toggleView('home')">🏠 Ana Sayfa</div>
+        <div class="nav-item active-tab" onclick="toggleView('shorts')">🩳 Shorts</div>
+        <div class="nav-item">🎞️ Abonelikler</div>
+        <hr style="border:0; border-top:1px solid var(--yt-border); margin:12px 0;">
+        <div class="nav-item">👤 Kanalınız</div>
+        <div class="nav-item">🕒 Geçmiş</div>
     </nav>
 
-    <main class="content-wrapper" id="home-view">
-        <div class="video-grid" id="main-video-grid">
+    <main id="shorts-view" style="display: block;">
+        </main>
+
+    <div id="comment-drawer">
+        <div class="drawer-header">
+            <h3>Yorumlar <span id="drawer-count" style="font-weight:normal; color:var(--yt-gray); font-size:14px;">(0)</span></h3>
+            <button onclick="closeComments()" style="background:transparent; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+        </div>
+        <div class="drawer-body" id="comment-list">
             </div>
-    </main>
-
-    <div id="watch-view">
-        <div class="watch-container">
-            <div class="main-player-col">
-                <div class="video-wrapper">
-                    <video id="main-player" controls autoplay></video>
-                </div>
-                <h1 class="video-title" id="player-title">Video Başlığı</h1>
-                
-                <div class="video-actions">
-                    <div class="channel-info">
-                        <div class="v-avatar" style="width:40px; height:40px;"></div>
-                        <div>
-                            <div style="font-weight:bold;">Kanal Adı</div>
-                            <div style="font-size:12px; color:var(--yt-gray);">1.2M Abone</div>
-                        </div>
-                        <button class="sub-btn" style="margin-left:12px;">Abone Ol</button>
-                    </div>
-                    
-                    <div class="button-group">
-                        <div class="action-btn" id="like-btn" onclick="handleLike()">
-                            <svg viewBox="0 0 24 24" width="22"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"></path></svg>
-                            <span id="like-count">0</span>
-                        </div>
-                        <div class="action-btn">
-                            <svg viewBox="0 0 24 24" width="22" style="transform: rotate(180deg);"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"></path></svg>
-                        </div>
-                        <div class="action-btn">Paylaş</div>
-                        <div class="action-btn">...</div>
-                    </div>
-                </div>
-
-                <div class="comments-section">
-                    <h3 id="comment-count-text">0 Yorum</h3>
-                    <div class="comment-input-box">
-                        <div class="v-avatar"></div>
-                        <input type="text" class="yt-input" id="comment-input" placeholder="Yorum ekleyin...">
-                    </div>
-                    <div id="comments-list">
-                        </div>
-                </div>
-            </div>
-
-            <div class="side-recom-col" id="recommendations">
-                </div>
+        <div class="comment-input-area">
+            <div style="width:32px; height:32px; background:#444; border-radius:50%;"></div>
+            <input type="text" class="real-input" id="main-comment-input" placeholder="Yorum ekleyin...">
         </div>
     </div>
 
+    <div id="toast-container"></div>
+
     <script>
-        let db;
-        let activeVideo = null;
+        const SHORTS_DATA = [
+            { id: 1, url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', title: 'Ateşin Dansı', likes: 1240, comments: [] },
+            { id: 2, url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', title: 'Kaçış Planı', likes: 850, comments: [] },
+            { id: 3, url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', title: 'Keyifli Sürüş', likes: 2100, comments: [] }
+        ];
 
-        // DB BAĞLANTISI
-        const request = indexedDB.open("ProTubeStudio_DB", 1);
-        request.onsuccess = (e) => {
-            db = e.target.result;
-            renderHomeGrid();
-        };
+        let activeShortId = null;
 
-        // ANA SAYFAYI DOLDUR
-        const renderHomeGrid = () => {
-            const tx = db.transaction("content", "readonly");
-            const store = tx.objectStore("content");
-            const req = store.getAll();
+        // --- CORE FUNCTIONS ---
 
-            req.onsuccess = () => {
-                const videos = req.result;
-                const grid = document.getElementById('main-video-grid');
-                grid.innerHTML = "";
-
-                videos.forEach(v => {
-                    const tUrl = URL.createObjectURL(v.thumbBlob);
-                    grid.innerHTML += `
-                        <div class="v-card" onclick="openWatchPage('${v.id}')">
-                            <div class="v-thumb">
-                                <img src="${tUrl}">
-                            </div>
-                            <div class="v-meta">
-                                <div class="v-avatar" style="background:#${v.id.slice(-6)}"></div>
-                                <div class="v-details">
-                                    <h3>${v.title}</h3>
-                                    <p>Kanal Adı</p>
-                                    <p>${v.stats.views} görüntüleme • Yeni</p>
+        const initShorts = () => {
+            const container = document.getElementById('shorts-view');
+            container.innerHTML = SHORTS_DATA.map(short => `
+                <div class="short-container" id="short-${short.id}" data-id="${short.id}">
+                    <div class="short-video-wrapper">
+                        <video loop playsinline onclick="togglePlay(this)">
+                            <source src="${short.url}" type="video/mp4">
+                        </video>
+                        
+                        <div class="shorts-actions">
+                            <div class="action-item" onclick="handleLike(${short.id})">
+                                <div class="action-circle">
+                                    <svg class="like-icon-svg" viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"></path></svg>
                                 </div>
+                                <span id="like-count-${short.id}">${short.likes}</span>
+                            </div>
+                            
+                            <div class="action-item" onclick="openComments(${short.id})">
+                                <div class="action-circle">
+                                    <svg fill="white" width="24" height="24" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path></svg>
+                                </div>
+                                <span id="comm-count-${short.id}">${short.comments.length}</span>
+                            </div>
+
+                            <div class="action-item" onclick="handleShare()">
+                                <div class="action-circle">
+                                    <svg fill="white" width="24" height="24" viewBox="0 0 24 24"><path d="M11.73 6.16L12 3l8.5 9-8.5 9-.27-3.16L3 21l3-10L3 3l8.73 3.16z"></path></svg>
+                                </div>
+                                <span>Paylaş</span>
                             </div>
                         </div>
-                    `;
+
+                        <div style="position:absolute; bottom:24px; left:24px; z-index:10;">
+                            <p style="font-weight:bold; font-size:16px;">@KanalIsmi</p>
+                            <p style="font-size:14px; margin-top:8px;">${short.title} #shorts #video</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // İlk videoyu oynat
+            setupIntersectionObserver();
+        };
+
+        const setupIntersectionObserver = () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target.querySelector('video');
+                    if (entry.isIntersecting) {
+                        video.play();
+                        activeShortId = entry.target.dataset.id;
+                    } else {
+                        video.pause();
+                        video.currentTime = 0;
+                    }
                 });
-            };
+            }, { threshold: 0.8 });
+
+            document.querySelectorAll('.short-container').forEach(sc => observer.observe(sc));
         };
 
-        // İZLEME EKRANINI AÇ
-        const openWatchPage = (id) => {
-            const tx = db.transaction("content", "readwrite");
-            const store = tx.objectStore("content");
-            const req = store.get(id);
+        // --- INTERACTION LOGIC ---
 
-            req.onsuccess = () => {
-                const v = req.result;
-                activeVideo = v;
+        const handleLike = (id) => {
+            const item = document.querySelector(`#short-${id} .action-item`);
+            const countSpan = document.getElementById(`like-count-${id}`);
+            let count = parseInt(countSpan.innerText);
 
-                // UI Geçişi
-                document.getElementById('home-view').classList.add('hidden');
-                document.getElementById('watch-view').style.display = 'block';
-                
-                // Video ve Bilgileri Yükle
-                const player = document.getElementById('main-player');
-                player.src = URL.createObjectURL(v.videoBlob);
-                document.getElementById('player-title').innerText = v.title;
-                document.getElementById('like-count').innerText = v.stats.likes || 0;
-                
-                // Beğeni durumunu kontrol et
-                const likeBtn = document.getElementById('like-btn');
-                v.isLiked ? likeBtn.classList.add('liked') : likeBtn.classList.remove('liked');
-
-                renderComments();
-                renderRecommendations(id);
-            };
-        };
-
-        // BEĞENİ BUTONU MANTIĞI
-        const handleLike = () => {
-            if (!activeVideo) return;
-            const likeBtn = document.getElementById('like-btn');
-            
-            if (activeVideo.isLiked) {
-                activeVideo.stats.likes--;
-                activeVideo.isLiked = false;
-                likeBtn.classList.remove('liked');
+            if (item.classList.contains('liked')) {
+                item.classList.remove('liked');
+                countSpan.innerText = count - 1;
             } else {
-                activeVideo.stats.likes++;
-                activeVideo.isLiked = true;
-                likeBtn.classList.add('liked');
+                item.classList.add('liked');
+                countSpan.innerText = count + 1;
+                showToast("Beğenildi");
             }
-
-            document.getElementById('like-count').innerText = activeVideo.stats.likes;
-            
-            // DB Güncelle
-            const tx = db.transaction("content", "readwrite");
-            tx.objectStore("content").put(activeVideo);
         };
 
-        // YORUM EKLEME (ENTER)
-        document.getElementById('comment-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && e.target.value.trim() !== "") {
-                const newComment = {
-                    user: "Kullanıcı",
-                    text: e.target.value,
-                    date: "Şimdi"
-                };
-                
-                if (!activeVideo.comments) activeVideo.comments = [];
-                activeVideo.comments.unshift(newComment);
-                e.target.value = "";
-                
-                const tx = db.transaction("content", "readwrite");
-                tx.objectStore("content").put(activeVideo);
-                renderComments();
-            }
-        });
-
-        const renderComments = () => {
-            const list = document.getElementById('comments-list');
-            const countText = document.getElementById('comment-count-text');
-            const comments = activeVideo.comments || [];
+        const openComments = (id) => {
+            activeShortId = id;
+            const drawer = document.getElementById('comment-drawer');
+            const data = SHORTS_DATA.find(s => s.id === id);
             
-            countText.innerText = `${comments.length} Yorum`;
+            document.getElementById('drawer-count').innerText = `(${data.comments.length})`;
+            renderComments(data.comments);
+            
+            drawer.classList.add('open');
+            // Video ASLA durmaz kuralı burada: Player'a müdahale yok.
+        };
+
+        const closeComments = () => {
+            document.getElementById('comment-drawer').classList.remove('open');
+        };
+
+        const renderComments = (comments) => {
+            const list = document.getElementById('comment-list');
+            if (comments.length === 0) {
+                list.innerHTML = `<div style="text-align:center; color:var(--yt-gray); margin-top:50px;">Henüz yorum yok. İlk yorumu sen yap!</div>`;
+                return;
+            }
             list.innerHTML = comments.map(c => `
-                <div style="display:flex; gap:16px; margin-bottom:16px;">
-                    <div class="v-avatar" style="width:32px; height:32px; background:#ccc;"></div>
+                <div style="display:flex; gap:12px; margin-bottom:20px;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:#777;"></div>
                     <div>
-                        <div style="font-size:13px; font-weight:bold;">@${c.user} • ${c.date}</div>
-                        <div style="font-size:14px; margin-top:4px;">${c.text}</div>
+                        <p style="font-size:13px; font-weight:bold; color:var(--yt-gray);">@Kullanıcı • az önce</p>
+                        <p style="font-size:14px; margin-top:4px;">${c}</p>
                     </div>
                 </div>
             `).join('');
         };
 
-        // ANA SAYFAYA DÖNÜŞ
-        const goHome = () => {
-            document.getElementById('main-player').pause();
-            document.getElementById('watch-view').style.display = 'none';
-            document.getElementById('home-view').classList.remove('hidden');
-            activeVideo = null;
-            renderHomeGrid();
-        };
-
-        // SIDEBAR TOGGLE
-        const toggleSidebar = () => {
-            const sb = document.getElementById('sidebar');
-            const cw = document.getElementById('home-view');
-            if (sb.style.transform === "translateX(-240px)") {
-                sb.style.transform = "translateX(0)";
-                cw.style.marginLeft = "240px";
-            } else {
-                sb.style.transform = "translateX(-240px)";
-                cw.style.marginLeft = "0";
+        // Yorum Ekleme Girişi
+        document.getElementById('main-comment-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && e.target.value.trim() !== "") {
+                const text = e.target.value.trim();
+                const data = SHORTS_DATA.find(s => s.id == activeShortId);
+                data.comments.unshift(text);
+                
+                e.target.value = "";
+                renderComments(data.comments);
+                document.getElementById('drawer-count').innerText = `(${data.comments.length})`;
+                document.getElementById(`comm-count-${activeShortId}`).innerText = data.comments.length;
+                showToast("Yorum eklendi");
             }
+        });
+
+        const handleShare = () => {
+            showToast("Link kopyalandı");
         };
 
-        const renderRecommendations = (excludeId) => {
-            const tx = db.transaction("content", "readonly");
-            const req = tx.objectStore("content").getAll();
-            req.onsuccess = () => {
-                const list = document.getElementById('recommendations');
-                list.innerHTML = req.result.filter(v => v.id !== excludeId).map(v => `
-                    <div style="display:flex; gap:8px; margin-bottom:12px; cursor:pointer;" onclick="openWatchPage('${v.id}')">
-                        <div style="width:168px; aspect-ratio:16/9; border-radius:8px; overflow:hidden; background:#222; flex-shrink:0;">
-                            <img src="${URL.createObjectURL(v.thumbBlob)}" style="width:100%; height:100%; object-fit:cover;">
-                        </div>
-                        <div style="flex:1">
-                            <h4 style="font-size:14px; line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${v.title}</h4>
-                            <p style="font-size:12px; color:var(--yt-gray); margin-top:4px;">Kanal Adı</p>
-                        </div>
-                    </div>
-                `).join('');
-            };
+        const showToast = (msg) => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<span>✓</span> ${msg}`;
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('active'), 10);
+            setTimeout(() => {
+                toast.classList.remove('active');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
         };
+
+        const togglePlay = (video) => {
+            if (video.paused) video.play();
+            else video.pause();
+        };
+
+        // Init
+        window.onload = initShorts;
 
     </script>
 </body>
