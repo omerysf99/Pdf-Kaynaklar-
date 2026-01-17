@@ -10,375 +10,262 @@
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         
         :root { --yt-red: #FF0000; --bg-dark: #0f0f0f; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-dark); color: #f1f1f1; overflow: hidden; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-dark); color: #f1f1f1; overflow: hidden; margin: 0; }
 
-        /* --- Auth Blocker --- */
-        #authBlocker { z-index: 1000; display: flex; backdrop-filter: blur(25px); background: rgba(0,0,0,0.8); }
-        .auth-card { animation: authShow 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes authShow { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        /* --- AUTH BLOCKER (FULL SCREEN) --- */
+        #authBlocker {
+            position: fixed; inset: 0; z-index: 9999;
+            background: radial-gradient(circle at center, rgba(20,20,20,0.8) 0%, rgba(15,15,15,1) 100%);
+            backdrop-filter: blur(40px);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-        /* --- Shorts & Grid Layout --- */
-        .shorts-container { height: calc(100vh - 64px); scroll-snap-type: y mandatory; overflow-y: scroll; scrollbar-width: none; }
-        .short-slide { height: calc(100vh - 64px); scroll-snap-align: start; scroll-snap-stop: always; position: relative; display: flex; justify-content: center; background: #000; }
-        
-        /* --- UI Effects --- */
-        .glass { backdrop-filter: blur(20px); background: rgba(15, 15, 15, 0.85); }
-        .sidebar-item.active { background: rgba(255,255,255,0.1); border-left: 4px solid var(--yt-red); color: #fff; font-weight: 700; }
-        .like-bounce { animation: bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.4); } }
-        
-        .progress-fill { transition: width 0.1s linear; }
-        .hidden-auth { filter: blur(40px); pointer-events: none; }
+        .auth-card {
+            width: 100%; max-width: 420px;
+            background: #1a1a1a;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 32px; padding: 48px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: scale(1); opacity: 1;
+            transition: all 0.5s ease;
+        }
+
+        /* --- LOGIN SIMULATION POPUP --- */
+        #gmailPopup {
+            position: fixed; inset: 0; z-index: 10000;
+            background: rgba(0,0,0,0.85);
+            display: none; align-items: center; justify-content: center;
+        }
+
+        .gmail-box {
+            background: white; color: #202124;
+            width: 100%; max-width: 400px;
+            padding: 40px; border-radius: 8px;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+
+        /* --- UI BLUR & STATE --- */
+        #mainApp { transition: filter 0.8s ease; filter: blur(30px); pointer-events: none; }
+        body.authenticated #mainApp { filter: blur(0); pointer-events: auto; }
+        body.authenticated #authBlocker { opacity: 0; pointer-events: none; visibility: hidden; }
+
+        .google-btn {
+            background: white; color: #3c4043;
+            border: 1px solid #dadce0;
+            transition: all 0.2s;
+        }
+        .google-btn:hover { background: #f8f9fa; border-color: #d2e3fc; box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); }
+
+        /* --- ANIMATIONS --- */
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .progress-bar { height: 4px; background: #e8eaed; border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #1a73e8; width: 0%; transition: width 1.5s ease-in-out; }
     </style>
 </head>
 <body class="antialiased">
 
-    <div id="authBlocker" class="fixed inset-0 flex items-center justify-center p-6">
-        <div class="auth-card w-full max-w-md bg-[#181818] rounded-[40px] border border-white/10 p-10 shadow-2xl text-center">
-            <div class="bg-red-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-red-600/30">
-                <i data-lucide="play" class="fill-white text-white w-8 h-8"></i>
+    <div id="authBlocker">
+        <div class="auth-card text-center">
+            <div class="flex justify-center mb-8">
+                <div class="w-20 h-20 bg-red-600 rounded-[24px] flex items-center justify-center shadow-2xl shadow-red-600/30">
+                    <i data-lucide="play" class="w-10 h-10 fill-white text-white"></i>
+                </div>
             </div>
-            <h2 class="text-3xl font-black mb-2 italic">NexTube Pro</h2>
-            <p class="text-gray-500 text-sm mb-10">Devam etmek için hesabınıza giriş yapın</p>
+            <h1 class="text-3xl font-black mb-2 tracking-tighter">NexTube Pro</h1>
+            <p class="text-gray-500 text-sm mb-12 px-4">Video dünyasına erişmek için oturum açmanız gerekmektedir.</p>
             
             <div class="space-y-4">
-                <button onclick="auth.showGmailInput()" class="w-full py-4 bg-[#4285F4] hover:bg-[#357ae8] text-white rounded-2xl font-bold flex items-center justify-center gap-3 transition-all transform active:scale-95 shadow-xl shadow-blue-600/20">
-                    <svg class="w-5 h-5 fill-white" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
+                <button onclick="auth.openGmailFlow()" class="w-full flex items-center justify-center gap-4 bg-white text-black h-14 rounded-2xl font-bold text-sm hover:bg-zinc-200 transition-all active:scale-[0.98]">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
                     Gmail ile devam et
                 </button>
-                <button class="w-full py-4 bg-white/5 hover:bg-white/10 text-gray-300 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all border border-white/5">
-                    <i data-lucide="mail" class="w-5 h-5"></i> E-posta ile devam et
+                <button class="w-full h-14 border border-white/10 rounded-2xl text-sm font-bold text-gray-400 hover:bg-white/5 transition">
+                    Hesap oluştur
                 </button>
             </div>
-            <p class="mt-8 text-[10px] text-gray-600 uppercase tracking-widest font-bold">Admin ID: 8392479231 Security Verified</p>
+            
+            <p class="mt-12 text-[10px] text-gray-600 font-mono">ENCRYPTED NODE: 8392479231-A</p>
         </div>
     </div>
 
-    <div id="gmailModal" class="fixed inset-0 z-[1100] hidden items-center justify-center bg-black/60 backdrop-blur-md">
-        <div class="bg-[#121212] w-full max-w-sm rounded-[35px] border border-white/10 p-8 shadow-2xl">
-            <h3 class="text-xl font-bold mb-6 flex items-center gap-2"><i data-lucide="shield-check" class="text-blue-500"></i> Gmail Doğrulaması</h3>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-bold text-gray-500 ml-2 uppercase">Gmail Adresiniz</label>
-                    <input type="email" id="gmailInput" placeholder="örnek@gmail.com" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 mt-1 outline-none focus:border-blue-500 transition">
+    <div id="gmailPopup">
+        <div class="gmail-box">
+            <div class="flex justify-center mb-6">
+                <svg width="75" height="24" viewBox="0 0 75 24"><g fill="none" fill-rule="evenodd"><path d="M10.4 19.3c-4.4 0-8-3.5-8-8s3.6-8 8-8c2.4 0 4.2.9 5.6 2.3L14.3 7c-1-1-2.3-1.5-3.9-1.5-3.1 0-5.7 2.5-5.7 5.7s2.6 5.7 5.7 5.7c2 0 3.2-.8 3.9-1.5.6-.6 1-1.5 1.1-2.7h-5v-2.3h7.3c.1.4.1.8.1 1.3 0 2.2-.6 4.8-2.6 6.8-2 2-4.6 3-7.3 3" fill="#4285F4"/><path d="M26.2 18.8c-3.1 0-5.6-2.4-5.6-5.5s2.5-5.5 5.6-5.5 5.6 2.4 5.6 5.5-2.5 5.5-5.6 5.5m0-2.3c1.8 0 3.3-1.5 3.3-3.2s-1.5-3.2-3.3-3.2-3.3 1.5-3.3 3.2 1.5 3.2 3.3 3.2" fill="#EA4335"/><path d="M38.5 18.8c-3.1 0-5.6-2.4-5.6-5.5s2.5-5.5 5.6-5.5 5.6 2.4 5.6 5.5-2.5 5.5-5.6 5.5m0-2.3c1.8 0 3.3-1.5 3.3-3.2s-1.5-3.2-3.3-3.2-3.3 1.5-3.3 3.2 1.5 3.2 3.3 3.2" fill="#FBBC05"/><path d="M50.6 23.3c-3.1 0-5.5-2.4-5.5-5.5s2.4-5.5 5.5-5.5c1.4 0 2.5.6 3.1 1.2l-1.1 1.1c-.5-.4-1.2-.7-2-.7-1.8 0-3.3 1.5-3.3 3.2s1.4 3.2 3.3 3.2c1.9 0 2.7-1.4 2.8-2.1H50.6v-1.5H55c.1.4.1.8.1 1.3 0 2-.7 5.5-4.5 5.5" fill="#4285F4"/><path d="M57.6 1.1h2.3v17.7h-2.3V1.1z" fill="#34A853"/><path d="M68.7 18.8c-2.9 0-5.4-2.2-5.4-5.5s2.4-5.5 5.2-5.5c1.4 0 2.5.6 3.1 1.2l-1.1 1.1c-.4-.4-1.1-.8-2-.8-1.7 0-3 1.4-3 3.2s1.3 3.2 3 3.2c1.3 0 2-.6 2.6-1.2l1.1 1.1c-.8.8-1.9 1.5-3.8 1.5" fill="#EA4335"/></g></svg>
+            </div>
+            
+            <div id="gmailStep1" class="fade-in">
+                <h2 class="text-2xl font-normal text-center mb-2">Oturum açın</h2>
+                <p class="text-center mb-8 text-sm">NexTube Pro uygulamasına devam et</p>
+                <div class="mb-8">
+                    <input type="email" id="gmailInput" placeholder="E-posta veya telefon" class="w-full h-12 border border-gray-300 rounded px-4 outline-none focus:border-[#1a73e8] focus:border-2 transition-all">
+                    <p id="gmailError" class="text-red-600 text-[12px] mt-1 hidden font-medium flex items-center gap-1">
+                        <i data-lucide="alert-circle" class="w-3 h-3"></i> Geçerli bir Gmail adresi girin
+                    </p>
                 </div>
-                <div id="gmailError" class="text-red-500 text-xs hidden font-medium ml-2">Lütfen geçerli bir @gmail.com adresi girin.</div>
-                <button onclick="auth.validateAndLogin()" class="w-full py-4 bg-blue-600 rounded-xl font-bold hover:bg-blue-700 transition">Giriş Yap</button>
-                <button onclick="auth.hideGmailInput()" class="w-full py-2 text-gray-500 text-sm hover:text-white">İptal</button>
+                <div class="flex justify-between items-center">
+                    <button class="text-[#1a73e8] font-bold text-sm">Hesap oluşturun</button>
+                    <button onclick="auth.validateGmail()" class="bg-[#1a73e8] text-white px-6 py-2 rounded font-bold hover:bg-[#1557b0] transition">İleri</button>
+                </div>
+            </div>
+
+            <div id="gmailStep2" class="hidden fade-in text-center">
+                <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <i data-lucide="user" class="text-gray-600"></i>
+                </div>
+                <h2 id="displayEmail" class="text-sm font-medium mb-8"></h2>
+                <div class="progress-bar mb-10"><div class="progress-fill" id="gmailProgress"></div></div>
+                <p class="text-sm text-gray-600">Kimlik doğrulanıyor, lütfen bekleyin...</p>
             </div>
         </div>
     </div>
 
-    <div id="mainContent" class="hidden-auth">
+    <div id="mainApp">
         <header class="h-16 fixed top-0 w-full glass border-b border-white/5 flex items-center justify-between px-6 z-[100]">
             <div class="flex items-center gap-4">
-                <button onclick="ui.toggleSidebar()" class="lg:hidden p-2 hover:bg-white/10 rounded-full"><i data-lucide="menu"></i></button>
-                <div class="flex items-center gap-1 cursor-pointer" onclick="ui.nav('home')">
+                <div class="flex items-center gap-1 cursor-pointer">
                     <div class="bg-red-600 p-1.5 rounded-xl"><i data-lucide="play" class="fill-white text-white w-5 h-5"></i></div>
-                    <span class="text-xl font-black italic uppercase">NexTube</span>
+                    <span class="text-xl font-black italic uppercase tracking-tighter">NexTube</span>
                 </div>
             </div>
 
             <div class="hidden md:flex flex-1 max-w-xl mx-10">
                 <div class="relative w-full">
-                    <input type="text" id="searchInput" oninput="app.search()" placeholder="Ara..." class="w-full bg-white/5 border border-white/10 rounded-full py-2.5 px-6 outline-none focus:border-red-600/50 transition-all">
-                    <i data-lucide="search" class="absolute right-5 top-3 text-gray-500 w-4 h-4"></i>
+                    <input type="text" placeholder="Ara..." class="w-full bg-white/5 border border-white/10 rounded-full py-2.5 px-6 outline-none focus:border-red-600/50 transition-all">
                 </div>
             </div>
 
             <div class="flex items-center gap-4">
-                <button onclick="ui.openModal('upload')" class="bg-white text-black px-5 py-2 rounded-full font-bold text-xs hover:bg-zinc-200 transition flex items-center gap-2">
-                    <i data-lucide="plus" class="w-4 h-4"></i> <span class="hidden sm:inline">YÜKLE</span>
-                </button>
-                <div class="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
-                    <div id="userAvatar" class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-black text-xs">?</div>
-                    <button onclick="auth.logout()" class="p-1.5 hover:text-red-500 transition" title="Çıkış Yap"><i data-lucide="log-out" class="w-4 h-4"></i></button>
+                <button onclick="ui.openModal('upload')" class="bg-white text-black px-5 py-2 rounded-full font-bold text-xs hover:bg-zinc-200 transition">VİDEO YÜKLE</button>
+                <div class="flex items-center gap-3 bg-white/5 p-1 rounded-full border border-white/10 pr-4">
+                    <div id="userAvatar" class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-black text-xs">U</div>
+                    <span id="userEmailShort" class="text-[11px] font-bold text-gray-400 hidden lg:block"></span>
+                    <button onclick="auth.logout()" class="p-1.5 hover:text-red-500 transition"><i data-lucide="log-out" class="w-4 h-4"></i></button>
                 </div>
             </div>
         </header>
 
-        <div class="flex pt-16 h-screen">
-            <aside id="sidebar" class="fixed lg:relative inset-y-0 left-0 w-64 bg-[#0f0f0f] border-r border-white/5 z-[150] transition-transform -translate-x-full lg:translate-x-0 p-4">
-                <nav class="space-y-1">
-                    <button onclick="ui.nav('home')" id="nav-home" class="sidebar-item active w-full flex items-center gap-4 px-4 py-3 rounded-xl transition text-sm"><i data-lucide="home"></i> Ana Sayfa</button>
-                    <button onclick="ui.nav('shorts')" id="nav-shorts" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition text-sm"><i data-lucide="zap"></i> Shorts</button>
-                    <hr class="border-white/5 my-4">
-                    <button class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition text-sm text-gray-500"><i data-lucide="flame"></i> Trendler</button>
-                    <button class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl transition text-sm text-gray-500"><i data-lucide="history"></i> Geçmiş</button>
-                </nav>
-            </aside>
-
-            <main class="flex-1 relative overflow-hidden bg-[#050505]">
-                <section id="view-home" class="h-full overflow-y-auto p-6 lg:p-10">
-                    <div id="videoGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 pb-32"></div>
-                </section>
-                <section id="view-shorts" class="hidden h-full bg-black">
-                    <div id="shortsFlow" class="shorts-container"></div>
-                </section>
-                <section id="view-watch" class="hidden h-full overflow-y-auto p-4 lg:p-10">
-                    <div class="max-w-6xl mx-auto">
-                        <div class="aspect-video bg-black rounded-[32px] overflow-hidden shadow-2xl">
-                            <video id="mainPlayer" controls class="w-full h-full"></video>
-                        </div>
-                        <div class="mt-6">
-                            <h1 id="watchTitle" class="text-2xl font-black"></h1>
-                            <div class="flex items-center justify-between mt-4 pb-6 border-b border-white/10">
-                                <div class="flex items-center gap-3">
-                                    <div id="watchAvatar" class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">A</div>
-                                    <p class="font-bold text-sm" id="watchUserDisplay"></p>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <button onclick="app.likeToggle()" class="bg-white/5 px-6 py-2.5 rounded-full flex items-center gap-2 hover:bg-white/10 transition">
-                                        <i data-lucide="heart" id="watchLikeIcon"></i> <span id="watchLikeCount">0</span>
-                                    </button>
-                                    <button onclick="app.share()" class="bg-white/5 px-6 py-2.5 rounded-full flex items-center gap-2 hover:bg-white/10 transition">
-                                        <i data-lucide="share-2"></i> Paylaş
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </main>
-        </div>
-    </div>
-
-    <div id="modalUpload" class="fixed inset-0 z-[200] hidden items-center justify-center bg-black/95 p-6">
-        <div class="w-full max-w-xl bg-[#121212] rounded-[40px] border border-white/10 p-10 shadow-2xl overflow-y-auto max-h-[90vh]">
-            <div id="uploadHeader" class="flex justify-between items-center mb-8">
-                <h2 class="text-3xl font-black italic">Video Yayınla</h2>
-                <button onclick="ui.closeModal('upload')" id="closeModalBtn" class="p-2 hover:bg-white/5 rounded-full"><i data-lucide="x"></i></button>
-            </div>
-            <div id="uploadForm" class="space-y-6">
-                <div class="border-2 border-dashed border-white/10 rounded-[30px] p-12 text-center hover:border-red-600 transition cursor-pointer bg-white/[0.02]" onclick="document.getElementById('fileIn').click()">
-                    <i data-lucide="clapperboard" class="w-12 h-12 mx-auto mb-4 text-gray-500"></i>
-                    <p id="fileLabel" class="text-sm font-bold">Video dosyasını seçin</p>
-                    <input type="file" id="fileIn" class="hidden" accept="video/*" onchange="app.handleFileSelect(this)">
+        <main class="pt-24 px-8 pb-20">
+            <div id="videoGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 </div>
-                <input type="text" id="upTitle" placeholder="Video Başlığı" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-red-600">
-                <button onclick="app.startUpload()" class="w-full py-5 bg-red-600 rounded-[24px] font-black text-lg hover:bg-red-700 transition shadow-xl shadow-red-600/30">PAYLAŞ</button>
-            </div>
-            <div id="uploadProgress" class="hidden py-10 text-center space-y-6">
-                <div class="w-full bg-white/5 h-3 rounded-full overflow-hidden">
-                    <div id="progressBarFill" class="h-full bg-red-600 w-0 progress-fill"></div>
-                </div>
-                <h3 class="text-xl font-bold italic" id="progressText">0% Yükleniyor</h3>
-            </div>
-        </div>
-    </div>
-
-    <div id="toast" class="fixed bottom-10 right-10 glass border border-white/10 px-6 py-4 rounded-2xl shadow-2xl z-[500] hidden items-center gap-3">
-        <i data-lucide="info" class="text-blue-500 w-5 h-5"></i>
-        <span class="text-sm font-bold" id="toastMsg"></span>
+        </main>
     </div>
 
     <script>
-        /** * NexTube Auth & Core Engine 
+        /**
+         * NexTube Auth Engine
          * Admin ID: 8392479231
          */
 
         const auth = {
-            user: JSON.parse(localStorage.getItem('nextube_user')) || null,
+            currentUser: JSON.parse(localStorage.getItem('nextube_session')) || null,
 
-            checkSession() {
-                if (this.user) {
-                    this.completeLogin();
+            init() {
+                if (this.currentUser) {
+                    this.completeLogin(false);
                 }
+                lucide.createIcons();
             },
 
-            showGmailInput() { document.getElementById('gmailModal').classList.replace('hidden', 'flex'); },
-            hideGmailInput() { document.getElementById('gmailModal').classList.replace('flex', 'hidden'); },
+            openGmailFlow() {
+                document.getElementById('gmailPopup').style.display = 'flex';
+            },
 
-            validateAndLogin() {
-                const email = document.getElementById('gmailInput').value.trim().toLowerCase();
+            validateGmail() {
+                const input = document.getElementById('gmailInput');
                 const error = document.getElementById('gmailError');
-                
+                const email = input.value.trim().toLowerCase();
+
                 if (email.endsWith('@gmail.com') && email.length > 10) {
-                    this.user = { email: email, avatar: email[0].toUpperCase() };
-                    localStorage.setItem('nextube_user', JSON.stringify(this.user));
-                    this.hideGmailInput();
-                    this.completeLogin();
-                    ui.showToast("Giriş Başarılı! NexTube'a hoş geldiniz.");
+                    error.classList.add('hidden');
+                    this.showProcessing(email);
                 } else {
                     error.classList.remove('hidden');
+                    input.classList.add('border-red-600');
                 }
             },
 
-            completeLogin() {
-                document.getElementById('authBlocker').classList.add('hidden');
-                document.getElementById('mainContent').classList.remove('hidden-auth');
-                document.getElementById('userAvatar').innerText = this.user.avatar;
-                document.body.style.overflow = 'auto';
-                ui.renderAll();
+            showProcessing(email) {
+                document.getElementById('gmailStep1').classList.add('hidden');
+                document.getElementById('gmailStep2').classList.remove('hidden');
+                document.getElementById('displayEmail').innerText = email;
+                
+                // Simulate verification delay
+                setTimeout(() => document.getElementById('gmailProgress').style.width = '100%', 100);
+                
+                setTimeout(() => {
+                    this.currentUser = {
+                        email: email,
+                        id: 'NT-' + Math.floor(Math.random()*100000),
+                        avatar: email[0].toUpperCase()
+                    };
+                    localStorage.setItem('nextube_session', JSON.stringify(this.currentUser));
+                    this.completeLogin(true);
+                }, 2000);
+            },
+
+            completeLogin(withAnim) {
+                document.body.classList.add('authenticated');
+                document.getElementById('gmailPopup').style.display = 'none';
+                document.getElementById('userAvatar').innerText = this.currentUser.avatar;
+                document.getElementById('userEmailShort').innerText = this.currentUser.email.split('@')[0];
+                document.getElementById('userEmailShort').classList.remove('hidden');
+                
+                if(withAnim) ui.showToast("Giriş yapıldı: " + this.currentUser.email);
+                ui.renderGrid();
             },
 
             logout() {
-                localStorage.removeItem('nextube_user');
+                localStorage.removeItem('nextube_session');
                 location.reload();
             }
         };
 
-        const app = {
-            videos: JSON.parse(localStorage.getItem('nextube_db')) || [],
-            tempFile: null,
-            activeId: null,
+        const ui = {
+            renderGrid() {
+                const grid = document.getElementById('videoGrid');
+                // Örnek başlangıç verisi (Giriş yapmadan görünmez)
+                const mockVideos = [
+                    { title: "Yeni Nesil Teknoloji", user: "TeknoKanal", likes: 0 },
+                    { title: "Shorts Denemesi #1", user: "NexTube", likes: 0 },
+                    { title: "Geleceğin Web Dünyası", user: "DevTeam", likes: 0 },
+                    { title: "Minimal Yaşam", user: "LifeStyle", likes: 0 }
+                ];
 
-            handleFileSelect(input) {
-                if(input.files[0]) {
-                    this.tempFile = input.files[0];
-                    document.getElementById('fileLabel').innerText = this.tempFile.name;
-                }
+                grid.innerHTML = mockVideos.map(v => `
+                    <div class="group cursor-pointer">
+                        <div class="aspect-video bg-zinc-900 rounded-3xl mb-4 overflow-hidden relative border border-white/5">
+                            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition">
+                                <i data-lucide="play" class="fill-white text-white"></i>
+                            </div>
+                        </div>
+                        <h3 class="font-bold text-sm line-clamp-2">${v.title}</h3>
+                        <p class="text-xs text-gray-500 mt-1 uppercase font-black">${v.user}</p>
+                    </div>
+                `).join('');
+                lucide.createIcons();
             },
 
-            startUpload() {
-                const title = document.getElementById('upTitle').value;
-                if (!this.tempFile || !title) return;
-
-                document.getElementById('uploadForm').classList.add('hidden');
-                document.getElementById('uploadProgress').classList.remove('hidden');
-                document.getElementById('closeModalBtn').classList.add('hidden');
-
-                let p = 0;
-                const interval = setInterval(() => {
-                    p += 1;
-                    document.getElementById('progressBarFill').style.width = p + '%';
-                    document.getElementById('progressText').innerText = p + '% İşleniyor';
-                    if (p >= 100) {
-                        clearInterval(interval);
-                        this.finalize();
-                    }
-                }, 100);
-            },
-
-            finalize() {
-                const url = URL.createObjectURL(this.tempFile);
-                const v = document.createElement('video');
-                v.src = url;
-                v.onloadedmetadata = () => {
-                    const type = v.duration <= 60 ? 'short' : 'long';
-                    const newVid = {
-                        id: Date.now(),
-                        title: document.getElementById('upTitle').value,
-                        url: url,
-                        type: type,
-                        user: auth.user.email,
-                        likes: 0,
-                        isLiked: false,
-                        duration: v.duration
-                    };
-                    this.videos.unshift(newVid);
-                    localStorage.setItem('nextube_db', JSON.stringify(this.videos));
-                    ui.closeModal('upload');
-                    ui.renderAll();
-                    ui.showToast("Video başarıyla paylaşıldı!");
-                    this.tempFile = null;
-                };
-            },
-
-            likeToggle() {
-                const vid = this.videos.find(x => x.id === this.activeId);
-                vid.isLiked = !vid.isLiked;
-                vid.likes += vid.isLiked ? 1 : -1;
-                localStorage.setItem('nextube_db', JSON.stringify(this.videos));
-                ui.updateWatchUI();
-                ui.renderGrid();
+            showToast(msg) {
+                const toast = document.createElement('div');
+                toast.className = "fixed bottom-10 right-10 bg-white text-black px-6 py-4 rounded-2xl shadow-2xl z-[1000] font-bold text-sm fade-in border border-zinc-200 flex items-center gap-3";
+                toast.innerHTML = `<i data-lucide="check-circle" class="text-green-600"></i> ${msg}`;
+                document.body.appendChild(toast);
+                lucide.createIcons();
+                setTimeout(() => toast.remove(), 4000);
             }
         };
 
-        const ui = {
-            currentPage: 'home',
-            nav(page) {
-                this.currentPage = page;
-                ['view-home', 'view-shorts', 'view-watch'].forEach(v => document.getElementById(v).classList.add('hidden'));
-                document.getElementById('view-' + page).classList.remove('hidden');
-                document.querySelectorAll('.sidebar-item').forEach(v => v.classList.remove('active'));
-                const el = document.getElementById('nav-' + page);
-                if (el) el.classList.add('active');
-                if (page !== 'watch') document.getElementById('mainPlayer').pause();
-                if (page === 'shorts') this.initShorts();
-                this.renderAll();
-            },
-
-            renderGrid() {
-                const grid = document.getElementById('videoGrid');
-                const data = app.videos.filter(v => v.type === 'long');
-                grid.innerHTML = data.map(v => `
-                    <div class="cursor-pointer group" onclick="ui.watch(${v.id})">
-                        <div class="aspect-video bg-zinc-900 rounded-2xl overflow-hidden relative border border-white/5">
-                            <video src="${v.url}" class="w-full h-full object-cover"></video>
-                        </div>
-                        <div class="mt-4 flex gap-3">
-                            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xs uppercase">${v.user[0]}</div>
-                            <div>
-                                <h3 class="font-bold text-sm line-clamp-2">${v.title}</h3>
-                                <p class="text-xs text-gray-500 mt-1">${v.user} • ${v.likes} Beğeni</p>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-            },
-
-            renderShorts() {
-                const flow = document.getElementById('shortsFlow');
-                const data = app.videos.filter(v => v.type === 'short');
-                flow.innerHTML = data.map(s => `
-                    <div class="short-slide" data-id="${s.id}">
-                        <div class="relative h-[94%] mt-[1.5%] aspect-[9/16] rounded-[30px] overflow-hidden shadow-2xl">
-                            <video src="${s.url}" loop class="w-full h-full object-cover short-vid"></video>
-                            <div class="absolute right-4 bottom-20 flex flex-col gap-6">
-                                <button onclick="app.likeToggle()" class="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center">
-                                    <i data-lucide="heart" class="${s.isLiked ? 'fill-red-600 text-red-600 like-bounce' : ''}"></i>
-                                </button>
-                                <button class="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center"><i data-lucide="message-circle"></i></button>
-                            </div>
-                            <div class="absolute bottom-0 left-0 p-8 w-full bg-gradient-to-t from-black/80 to-transparent">
-                                <p class="font-bold text-sm">@${s.user.split('@')[0]}</p>
-                                <p class="text-xs mt-1">${s.title}</p>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-                lucide.createIcons();
-            },
-
-            initShorts() {
-                const obs = new IntersectionObserver(entries => {
-                    entries.forEach(e => {
-                        const v = e.target.querySelector('video');
-                        if (e.isIntersecting) { v.play(); app.activeId = parseInt(e.target.dataset.id); }
-                        else v.pause();
-                    });
-                }, { threshold: 0.8 });
-                document.querySelectorAll('.short-slide').forEach(s => obs.observe(s));
-            },
-
-            watch(id) {
-                const v = app.videos.find(x => x.id === id);
-                app.activeId = id;
-                this.nav('watch');
-                const p = document.getElementById('mainPlayer');
-                p.src = v.url; p.play();
-                document.getElementById('watchTitle').innerText = v.title;
-                document.getElementById('watchUserDisplay').innerText = v.user;
-                document.getElementById('watchAvatar').innerText = v.user[0].toUpperCase();
-                this.updateWatchUI();
-            },
-
-            updateWatchUI() {
-                const v = app.videos.find(x => x.id === app.activeId);
-                document.getElementById('watchLikeCount').innerText = v.likes;
-                document.getElementById('watchLikeIcon').className = v.isLiked ? 'fill-red-600 text-red-600 like-bounce' : '';
-                lucide.createIcons();
-            },
-
-            renderAll() { this.renderGrid(); this.renderShorts(); },
-            showToast(m) { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = m; t.classList.replace('hidden', 'flex'); setTimeout(() => t.classList.replace('flex', 'hidden'), 3000); },
-            openModal(id) { document.getElementById('modal' + id.charAt(0).toUpperCase() + id.slice(1)).classList.replace('hidden', 'flex'); },
-            closeModal(id) { document.getElementById('modal' + id.charAt(0).toUpperCase() + id.slice(1)).classList.replace('flex', 'hidden'); },
-            toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
-        };
-
-        window.onload = () => { auth.checkSession(); lucide.createIcons(); };
+        // Initialize
+        window.onload = () => auth.init();
     </script>
 </body>
 </html>
