@@ -3,185 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TRX Shake Miner</title>
+    <title>TRX Shake Velocity Miner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #0f172a; color: white; user-select: none; font-family: 'Inter', sans-serif; touch-action: manipulation; }
+        body { background-color: #020617; color: white; user-select: none; font-family: 'Inter', sans-serif; touch-action: none; }
         .tab-content { display: none; }
         .active-tab { display: block; }
-        .shake-animation { animation: shake 0.3s ease-in-out; }
+        .shake-fast { animation: shake 0.1s infinite; color: #ef4444; }
+        .shake-slow { animation: shake 0.3s infinite; color: #f87171; }
         @keyframes shake {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1) rotate(5deg); }
-            100% { transform: scale(1); }
+            0% { transform: translate(2px, 2px); }
+            50% { transform: translate(-2px, -2px); }
+            100% { transform: translate(2px, 2px); }
         }
-        .energy-bar { transition: width 0.3s ease; }
+        .velocity-indicator { transition: all 0.2s ease; }
     </style>
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
 
-    <header class="p-6 text-center border-b border-gray-800">
-        <h1 class="text-xl font-bold text-red-500 italic uppercase">TRX COIN MINER</h1>
+    <header class="p-6 text-center border-b border-gray-900 bg-gray-950">
+        <h1 class="text-xl font-black text-red-600 tracking-tighter">TRX VELOCITY MINER</h1>
     </header>
 
-    <main class="flex-1 overflow-y-auto p-4 pb-24">
+    <main class="flex-1 overflow-y-auto p-6 pb-24">
         
-        <div id="home" class="tab-content active-tab text-center mt-6">
-            <div class="mb-6">
-                <div class="flex items-center justify-center gap-2">
-                    <img src="https://cryptologos.cc/logos/tron-trx-logo.png" width="30" alt="TRX">
-                    <span class="text-5xl font-extrabold text-white" id="score">0.00</span>
+        <div id="home" class="tab-content active-tab text-center">
+            <div class="mt-4 mb-8">
+                <div class="flex items-center justify-center gap-3">
+                    <img src="https://cryptologos.cc/logos/tron-trx-logo.png" class="w-10 h-10" alt="TRX">
+                    <span class="text-6xl font-black tracking-tight" id="score">0.00</span>
                 </div>
-                <p class="text-gray-400 mt-2 font-mono">Toplam TRX Coins</p>
+                <p class="text-gray-500 mt-2 font-mono uppercase tracking-widest text-xs">Accumulated TRX</p>
             </div>
             
-            <div id="shake-area" onclick="initSensor()" class="w-56 h-56 bg-gradient-to-tr from-red-600 to-red-400 rounded-full mx-auto flex items-center justify-center shadow-[0_0_60px_rgba(220,38,38,0.4)] active:scale-95 transition-transform cursor-pointer relative">
-                <i class="fas fa-hammer text-7xl text-white"></i>
-                <div id="click-effect" class="absolute pointer-events-none opacity-0 text-red-300 font-bold">+0.01</div>
-            </div>
-            
-            <div class="mt-10 max-w-xs mx-auto text-left">
-                <div class="flex justify-between mb-2">
-                    <span class="text-sm font-bold"><i class="fas fa-bolt text-yellow-500 mr-1"></i> Enerji</span>
-                    <span class="text-sm" id="energy-text">100 / 100</span>
-                </div>
-                <div class="w-full bg-gray-800 rounded-full h-4 overflow-hidden border border-gray-700">
-                    <div id="energy-bar" class="bg-gradient-to-r from-yellow-500 to-orange-500 h-full energy-bar" style="width: 100%"></div>
-                </div>
+            <div id="miner-core" class="w-64 h-64 border-4 border-gray-800 rounded-3xl mx-auto flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden bg-gray-900/50">
+                <div id="power-light" class="absolute inset-0 opacity-10 bg-red-600"></div>
+                <i id="main-icon" class="fas fa-microchip text-7xl text-gray-700 z-10"></i>
+                <p id="velocity-label" class="mt-4 text-[10px] font-bold text-gray-500 uppercase z-10">Sistem Beklemede</p>
             </div>
 
-            <p id="status-msg" class="mt-6 text-gray-500 text-sm animate-pulse">Başlamak için logoya tıkla veya sertçe salla!</p>
+            <div class="mt-10 space-y-4">
+                <div class="max-w-xs mx-auto">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">Energy Core</span>
+                        <span class="text-[10px] font-bold" id="energy-text">100%</span>
+                    </div>
+                    <div class="w-full bg-gray-900 h-2 rounded-full border border-gray-800">
+                        <div id="energy-bar" class="bg-red-600 h-full transition-all duration-500" style="width: 100%"></div>
+                    </div>
+                </div>
+                
+                <button onclick="activateSensors()" id="init-btn" class="bg-white text-black text-xs font-black px-8 py-3 rounded-full hover:bg-red-500 hover:text-white transition-colors">
+                    SENSÖRLERİ AKTİVE ET
+                </button>
+                <p class="text-[10px] text-gray-600 italic uppercase">Cihazı ne kadar hızlı sallarsanız o kadar çok kazanırsınız.</p>
+            </div>
         </div>
 
         <div id="tasks" class="tab-content">
-            <h2 class="text-2xl font-bold mb-6 italic">Görev Listesi</h2>
-            <div class="space-y-4">
-                <div class="bg-gray-800 p-4 rounded-xl flex justify-between items-center border-l-4 border-red-500">
-                    <div>
-                        <p class="font-bold">Telegram Grubuna Katıl</p>
-                        <p class="text-sm text-red-400">+50 TRX</p>
-                    </div>
-                    <button class="bg-red-600 px-4 py-1 rounded-lg text-sm font-bold">KATIL</button>
-                </div>
-            </div>
+            <h2 class="text-2xl font-bold mb-6 italic">GÖREVLER</h2>
+            <div class="bg-gray-900 p-4 rounded-xl opacity-50 border border-gray-800 text-center">Yakında Aktif Olacak</div>
         </div>
 
         <div id="airdrop" class="tab-content">
-            <h2 class="text-2xl font-bold mb-4 italic text-red-500">Airdrop Bilgileri</h2>
+            <h2 class="text-2xl font-bold mb-4 italic text-red-600">AIRDROP</h2>
             <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800">
-                <p class="text-gray-300 mb-4 italic">Sadece en çok TRX kasan madenciler airdrop almaya hak kazanacaktır.</p>
-                <div class="space-y-4">
-                    <div class="p-3 bg-gray-800 rounded-lg">
-                        <p class="text-xs text-gray-500 uppercase">Tahmini Tarih</p>
-                        <p class="font-bold">Aralık 2026</p>
-                    </div>
-                    <div class="p-3 bg-gray-800 rounded-lg">
-                        <p class="text-xs text-gray-500 uppercase">Min. Çekim</p>
-                        <p class="font-bold">5,000 TRX</p>
-                    </div>
-                </div>
+                <p class="text-sm text-gray-400">Hız rekoru kıran madenciler ödüllendirilecektir.</p>
             </div>
         </div>
 
     </main>
 
-    <nav class="fixed bottom-0 w-full bg-gray-950 border-t border-gray-800 flex justify-around p-4">
-        <button onclick="showTab('home')" class="flex flex-col items-center text-red-500">
-            <i class="fas fa-vial text-xl"></i>
-            <span class="text-[10px] mt-1 font-bold">MADEN</span>
+    <nav class="fixed bottom-0 w-full bg-black/90 backdrop-blur-md border-t border-gray-900 flex justify-around p-4">
+        <button onclick="showTab('home')" class="flex flex-col items-center text-red-600">
+            <i class="fas fa-bolt-lightning text-xl"></i>
+            <span class="text-[9px] mt-1 font-bold">MINER</span>
         </button>
-        <button onclick="showTab('tasks')" class="flex flex-col items-center text-gray-500">
-            <i class="fas fa-list-check text-xl"></i>
-            <span class="text-[10px] mt-1 font-bold">GÖREVLER</span>
+        <button onclick="showTab('tasks')" class="flex flex-col items-center text-gray-600">
+            <i class="fas fa-layers-group text-xl"></i>
+            <span class="text-[9px] mt-1 font-bold">TASKS</span>
         </button>
-        <button onclick="showTab('airdrop')" class="flex flex-col items-center text-gray-500">
+        <button onclick="showTab('airdrop')" class="flex flex-col items-center text-gray-600">
             <i class="fas fa-parachute-box text-xl"></i>
-            <span class="text-[10px] mt-1 font-bold">AIRDROP</span>
+            <span class="text-[9px] mt-1 font-bold">DROP</span>
         </button>
     </nav>
 
     <script>
-        let score = localStorage.getItem('trx_score') ? parseFloat(localStorage.getItem('trx_score')) : 0.00;
+        let score = localStorage.getItem('trx_v_score') ? parseFloat(localStorage.getItem('trx_v_score')) : 0.00;
         let energy = 100;
-        let sensorInitialized = false;
+        let isActive = false;
         
         document.getElementById('score').innerText = score.toFixed(2);
 
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active-tab'));
             document.getElementById(tabId).classList.add('active-tab');
-            document.querySelectorAll('nav button').forEach(b => b.classList.replace('text-red-500', 'text-gray-500'));
-            event.currentTarget.classList.replace('text-gray-500', 'text-red-500');
+            document.querySelectorAll('nav button').forEach(b => b.classList.replace('text-red-600', 'text-gray-600'));
+            event.currentTarget.classList.replace('text-gray-600', 'text-red-600');
         }
 
-        // Enerji Yenilenmesi
+        // Enerji Sistemi
         setInterval(() => {
             if(energy < 100) {
-                energy += 1;
-                updateEnergyUI();
+                energy += 0.5;
+                updateUI();
             }
-        }, 3000);
+        }, 1000);
 
-        function updateEnergyUI() {
+        function updateUI() {
             document.getElementById('energy-bar').style.width = energy + "%";
-            document.getElementById('energy-text').innerText = energy + " / 100";
+            document.getElementById('energy-text').innerText = Math.floor(energy) + "%";
+            document.getElementById('score').innerText = score.toFixed(2);
         }
 
-        function earnCoins() {
-            if(energy > 0) {
-                score += 0.01;
-                energy -= 2;
-                document.getElementById('score').innerText = score.toFixed(2);
-                localStorage.setItem('trx_score', score);
-                updateEnergyUI();
-                
-                const area = document.getElementById('shake-area');
-                area.classList.add('shake-animation');
-                setTimeout(() => area.classList.remove('shake-animation'), 300);
+        function activateSensors() {
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                DeviceMotionEvent.requestPermission().then(state => {
+                    if (state === 'granted') startMining();
+                });
             } else {
-                document.getElementById('status-msg').innerText = "Enerji bitti! Dinlenmelisin.";
-                document.getElementById('status-msg').classList.add('text-red-500');
+                startMining();
             }
+            document.getElementById('init-btn').style.display = 'none';
         }
 
-        // Sensör Başlatma (İlk tıkla beraber)
-        function initSensor() {
-            earnCoins(); // Tıklama ile de kazanılır
-            
-            if (!sensorInitialized) {
-                if (typeof DeviceMotionEvent.requestPermission === 'function') {
-                    DeviceMotionEvent.requestPermission().then(state => {
-                        if (state === 'granted') {
-                            window.addEventListener('devicemotion', handleShake);
-                        }
-                    });
-                } else {
-                    window.addEventListener('devicemotion', handleShake);
-                }
-                sensorInitialized = true;
-                document.getElementById('status-msg').innerText = "Sistem Aktif! Sertçe Salla.";
-            }
+        function startMining() {
+            window.addEventListener('devicemotion', handleMotion);
+            isActive = true;
+            document.getElementById('velocity-label').innerText = "Madenci Aktif";
         }
 
         let lastX, lastY, lastZ;
-        let moveThreshold = 40; // Çok sallama gereksinimi (Yüksek değer = Zor sallama)
+        const THRESHOLD_LOW = 25;   // Normal sallama
+        const THRESHOLD_HIGH = 45;  // Sert sallama
+        const THRESHOLD_ULTRA = 65; // Çok sert sallama
 
-        function handleShake(event) {
+        function handleMotion(event) {
+            if (energy <= 0) {
+                setVisuals('idle');
+                return;
+            }
+
             let acc = event.accelerationIncludingGravity;
             if (!acc) return;
 
-            let deltaX = Math.abs(acc.x - lastX);
-            let deltaY = Math.abs(acc.y - lastY);
-            let deltaZ = Math.abs(acc.z - lastZ);
-
-            if (deltaX + deltaY + deltaZ > moveThreshold) {
-                earnCoins();
+            let delta = Math.abs(acc.x - lastX) + Math.abs(acc.y - lastY) + Math.abs(acc.z - lastZ);
+            
+            if (delta > THRESHOLD_ULTRA) {
+                mine(0.10, 5); // 0.10 TRX kazan, 5 enerji harca
+                setVisuals('fast');
+            } else if (delta > THRESHOLD_HIGH) {
+                mine(0.05, 2); // 0.05 TRX kazan, 2 enerji harca
+                setVisuals('medium');
+            } else if (delta > THRESHOLD_LOW) {
+                mine(0.01, 1); // 0.01 TRX kazan, 1 enerji harca
+                setVisuals('slow');
+            } else {
+                setVisuals('idle');
             }
 
-            lastX = acc.x;
-            lastY = acc.y;
-            lastZ = acc.z;
+            lastX = acc.x; lastY = acc.y; lastZ = acc.z;
+        }
+
+        function mine(amount, cost) {
+            if (energy >= cost) {
+                score += amount;
+                energy -= cost;
+                localStorage.setItem('trx_v_score', score);
+                updateUI();
+            }
+        }
+
+        function setVisuals(state) {
+            const icon = document.getElementById('main-icon');
+            const core = document.getElementById('miner-core');
+            const label = document.getElementById('velocity-label');
+
+            if (state === 'fast') {
+                icon.className = "fas fa-bolt text-7xl text-yellow-400 shake-fast";
+                core.style.borderColor = "#ef4444";
+                label.innerText = "ULTRA HIZ (+0.10)";
+            } else if (state === 'medium') {
+                icon.className = "fas fa-atom text-7xl text-red-500 shake-slow";
+                core.style.borderColor = "#f87171";
+                label.innerText = "YÜKSEK HIZ (+0.05)";
+            } else if (state === 'slow') {
+                icon.className = "fas fa-microchip text-7xl text-red-800";
+                core.style.borderColor = "#991b1b";
+                label.innerText = "DÜŞÜK HIZ (+0.01)";
+            } else {
+                icon.className = "fas fa-microchip text-7xl text-gray-700";
+                core.style.borderColor = "#1f2937";
+                label.innerText = energy <= 0 ? "ENERJİ TÜKENDİ" : "SALLA";
+            }
         }
     </script>
 </body>
