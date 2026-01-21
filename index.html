@@ -9,8 +9,8 @@
             --bg-dark: #0a141d;
             --card-bg: #15222d;
             --btn-blue: #219ebc;
-            --btn-green: #2a9d8f;
             --text-gray: #aab2b7;
+            --neon-green: #39ff14;
         }
 
         body {
@@ -30,9 +30,9 @@
             padding: 15px;
             border-radius: 10px;
             position: relative;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
 
-        /* Üst Panel */
         .top-row {
             display: flex;
             justify-content: space-between;
@@ -48,9 +48,9 @@
             align-items: center;
             gap: 10px;
             font-weight: bold;
+            border: 1px solid rgba(57, 255, 20, 0.2);
         }
 
-        /* Madenci Görsel Alanı */
         .miner-card {
             background: var(--card-bg);
             border-radius: 20px;
@@ -61,8 +61,9 @@
         }
 
         .miner-img {
-            width: 200px;
+            width: 180px;
             margin-bottom: 20px;
+            filter: drop-shadow(0 0 10px rgba(33, 158, 188, 0.3));
         }
 
         .timer-btn {
@@ -75,9 +76,11 @@
             font-size: 2rem;
             font-weight: bold;
             cursor: pointer;
+            transition: 0.3s;
         }
 
-        /* Power Lottery */
+        .timer-btn:active { transform: scale(0.98); }
+
         .lottery-card {
             background: #1a6d55;
             padding: 15px;
@@ -96,22 +99,20 @@
             border-radius: 8px;
         }
 
-        /* Hash Alanı */
         .hash-section {
             background: var(--card-bg);
             padding: 15px;
             border-radius: 15px;
-            margin-bottom: 15px;
         }
 
-        .hash-input {
+        .hash-display-box {
             background: #253441;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 1.5rem;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.8rem;
             margin-top: 10px;
-            color: #e0e0e0;
-            text-align: left;
+            color: var(--neon-green);
+            font-family: monospace;
         }
 
         .sell-btn {
@@ -124,24 +125,27 @@
             font-size: 1.2rem;
             font-weight: bold;
             margin-top: 15px;
+            cursor: pointer;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 10px;
         }
 
-        /* Navigasyon */
         .nav-bar {
             display: flex;
             justify-content: space-around;
-            padding-top: 10px;
+            padding-top: 15px;
             font-size: 0.7rem;
             color: var(--text-gray);
         }
 
-        .nav-item { text-align: center; opacity: 0.6; }
-        .nav-item.active { opacity: 1; color: #5dade2; }
-        .admin-id { position: absolute; bottom: -25px; width: 100%; text-align: center; font-size: 10px; color: #555; }
+        .admin-footer {
+            text-align: center;
+            font-size: 10px;
+            color: #444;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -149,8 +153,8 @@
 <div class="app-container">
     <div class="top-row">
         <div class="balance-box">
-            <span style="color:#4caf50; font-size:1.2rem;">$</span>
-            <span>0.0120 USD</span>
+            <span style="color:var(--neon-green);">$</span>
+            <span id="usdBalance">0.0000</span> <span style="font-size: 0.7rem; margin-left: 3px;">USD</span>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
             <span style="font-size:1.2rem;">🇹🇷</span>
@@ -159,67 +163,93 @@
     </div>
 
     <div class="miner-card">
-        <img src="https://i.imgur.com/8K9Z8S6.png" alt="Miner" class="miner-img">
-        <button class="timer-btn" id="mainBtn" onclick="startSystem()">MINING BAŞLAT</button>
+        <div style="font-size: 80px; margin-bottom: 15px;">📟</div>
+        <button class="timer-btn" id="mainBtn" onclick="toggleMining()">MINING BAŞLAT</button>
     </div>
 
     <div class="lottery-card">
         <div class="x100-box">X100</div>
         <div>
-            <div style="font-weight:bold;">POWER LOTTERY</div>
-            <div style="font-size:0.8rem;">X100'e kadar kazan</div>
+            <div style="font-weight:bold; font-size: 0.9rem;">POWER LOTTERY</div>
+            <div style="font-size:0.75rem; opacity: 0.8;">X100'e kadar kazan</div>
         </div>
     </div>
 
     <div class="hash-section">
-        <div style="color:var(--text-gray); font-size:0.9rem;">Madenlenen Hash</div>
-        <div class="hash-input" id="hashDisplay">0.00000</div>
+        <div style="color:var(--text-gray); font-size:0.85rem; letter-spacing: 1px;">MADENLENEN HASH</div>
+        <div class="hash-display-box" id="hashDisplay">0.00000</div>
         
-        <button class="sell-btn">
+        <button class="sell-btn" onclick="handleSell()">
             <span>🔄</span> HASH'LERİ SAT
         </button>
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item">💜<br>Yükselt</div>
-        <div class="nav-item">💰<br>Kazan</div>
-        <div class="nav-item active">⛏️<br>Madenci</div>
-        <div class="nav-item">📋<br>Görev</div>
-        <div class="nav-item">👛<br>Ödeme</div>
+        <div style="text-align:center;">⚡<br>Yükselt</div>
+        <div style="text-align:center;">💰<br>Kazan</div>
+        <div style="text-align:center; color:#5dade2;">⛏️<br>Madenci</div>
+        <div style="text-align:center;">📋<br>Görev</div>
+        <div style="text-align:center;">👛<br>Ödeme</div>
     </div>
 
-    <div class="admin-id">Admin ID: 8392479231 | @Stars_Miner_bot</div>
+    <div class="admin-footer">
+        AUTH: 8392479231 | @Stars_Miner_bot
+    </div>
 </div>
 
 <script>
-    let timeLeft = 24 * 60 * 60; // 24 Saat
+    let usdBalance = 0.00;
     let currentHash = 0.00000;
-    const hashPerSecond = 1 / 3540; // 59 dakikada 1 hash hesabı
+    let timeLeft = 24 * 60 * 60;
     let isRunning = false;
+    
+    // Kural: 59 dakikada (3540 saniye) 1 Hash. 
+    // Saniye başına artış: 1 / 3540
+    const hashPerSecond = 1 / 3540; 
+    const usdPerHash = 0.001; // 1 Hash = 0.001 USD
 
-    function startSystem() {
+    function toggleMining() {
         if(isRunning) return;
         isRunning = true;
-        document.getElementById('mainBtn').style.fontSize = "1.5rem";
-        updateTick();
+        document.getElementById('mainBtn').style.fontSize = "1.8rem";
+        tick();
     }
 
-    function updateTick() {
-        if (timeLeft <= 0) return;
+    function tick() {
+        if (timeLeft <= 0) {
+            isRunning = false;
+            document.getElementById('mainBtn').innerText = "TAMAMLANDI";
+            return;
+        }
 
         timeLeft--;
         
-        // Timer formatı (HH:MM:SS)
+        // Timer güncelleme
         let h = Math.floor(timeLeft / 3600).toString().padStart(2, '0');
         let m = Math.floor((timeLeft % 3600) / 60).toString().padStart(2, '0');
         let s = (timeLeft % 60).toString().padStart(2, '0');
         document.getElementById('mainBtn').innerText = `${h}:${m}:${s}`;
 
-        // Anlık Hash Artışı
+        // Anlık Hash artışı
         currentHash += hashPerSecond;
         document.getElementById('hashDisplay').innerText = currentHash.toFixed(5);
 
-        setTimeout(updateTick, 1000);
+        setTimeout(tick, 1000);
+    }
+
+    function handleSell() {
+        if (currentHash < 1.0) {
+            alert("Hata: Satış yapabilmek için en az 1.00000 Hash birikmiş olmalıdır!");
+        } else {
+            let earnedUsd = currentHash * usdPerHash;
+            usdBalance += earnedUsd;
+            
+            alert(`${currentHash.toFixed(5)} Hash başarıyla satıldı!\nKazanç: ${earnedUsd.toFixed(4)} USD`);
+            
+            currentHash = 0;
+            document.getElementById('hashDisplay').innerText = "0.00000";
+            document.getElementById('usdBalance').innerText = usdBalance.toFixed(4);
+        }
     }
 </script>
 
