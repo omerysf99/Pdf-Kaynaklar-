@@ -3,227 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blum Game Clone</title>
+    <title>Hamster Clone - Admin: 8392479231</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --blum-green: #cfff00;
+            --primary-orange: #f3ba2f;
             --bg-dark: #000000;
+            --card-gray: #1c1f24;
         }
 
         body {
-            margin: 0;
-            padding: 0;
             background-color: var(--bg-dark);
             color: white;
             font-family: 'Arial', sans-serif;
-            overflow: hidden; /* Kaydırmayı engelle */
-            height: 100vh;
+            margin: 0;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
         }
 
-        #game-ui {
-            position: absolute;
-            top: 20px;
-            left: 0;
-            right: 0;
+        /* Üst Panel - Kazanç Bilgileri */
+        .header {
+            width: 100%;
             display: flex;
             justify-content: space-around;
-            z-index: 10;
-            pointer-events: none;
+            padding: 20px 0;
+            background: linear-gradient(to bottom, #2a2e35, transparent);
         }
 
-        .stat-box {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px 20px;
-            border-radius: 15px;
-            backdrop-filter: blur(5px);
-            text-align: center;
-        }
+        .stat { text-align: center; }
+        .stat-label { font-size: 10px; color: #888; text-transform: uppercase; }
+        .stat-value { font-size: 16px; font-weight: bold; color: var(--primary-orange); }
 
-        #game-canvas {
-            display: block;
-            touch-action: none; /* Mobil dokunma gecikmesini önler */
-        }
-
-        .start-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8);
+        /* Ana Skor */
+        .score-container {
+            margin-top: 30px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .coin-icon { width: 40px; height: 40px; background: var(--primary-orange); border-radius: 50%; }
+        #score { font-size: 42px; font-weight: 900; }
+
+        /* Tıklama Alanı */
+        .hamster-circle {
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle, #3a3f47 0%, #1c1f24 100%);
+            border-radius: 50%;
+            display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 20;
+            margin-top: 40px;
+            position: relative;
+            box-shadow: 0 0 50px rgba(243, 186, 47, 0.1);
+            cursor: pointer;
+            transition: transform 0.05s active;
         }
 
-        .btn-start {
-            background: var(--blum-green);
-            color: black;
-            border: none;
-            padding: 15px 50px;
-            font-size: 20px;
-            font-weight: bold;
-            border-radius: 12px;
-            cursor: pointer;
+        .hamster-image {
+            width: 80%;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
         }
+
+        /* Yüzen Sayılar (+1 Efekti) */
+        .floating-number {
+            position: absolute;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 100;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-100px); }
+        }
+
+        /* Alt Panel - Enerji */
+        .footer {
+            margin-top: auto;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .energy-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .energy-bar-bg {
+            width: 100%;
+            height: 12px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #energy-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #f3ba2f, #ffeb3b);
+            transition: width 0.2s;
+        }
+
+        /* Tıklama Animasyonu */
+        .pressed { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
-<div id="game-ui">
-    <div class="stat-box">
-        <div style="font-size: 12px; color: #aaa;">SKOR</div>
-        <div id="score" style="font-size: 24px; font-weight: bold; color: var(--blum-green);">0</div>
+<div class="header">
+    <div class="stat">
+        <div class="stat-label">Tık Başına</div>
+        <div class="stat-value">+1</div>
     </div>
-    <div class="stat-box">
-        <div style="font-size: 12px; color: #aaa;">SÜRE</div>
-        <div id="timer" style="font-size: 24px; font-weight: bold;">30</div>
+    <div class="stat">
+        <div class="stat-label">Sıralama</div>
+        <div class="stat-value" style="color: white;">CEO</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">Saatlik Kar</div>
+        <div class="stat-value" style="color: #4caf50;">+0</div>
     </div>
 </div>
 
-<div class="start-overlay" id="overlay">
-    <h1 style="color: var(--blum-green); margin-bottom: 5px;">BLUM DROP</h1>
-    <p style="color: #888; margin-bottom: 25px;">Yeşilleri topla, bombalardan kaç!</p>
-    <button class="btn-start" onclick="startGame()">OYUNU BAŞLAT</button>
+<div class="score-container">
+    <div class="coin-icon"></div>
+    <div id="score">0</div>
 </div>
 
-<canvas id="game-canvas"></canvas>
+<div class="hamster-circle" id="tapArea">
+    <span style="font-size: 150px;">🐹</span>
+</div>
+
+<div class="footer">
+    <div class="energy-container">
+        <span>⚡ <span id="energy-text">1000</span> / 1000</span>
+    </div>
+    <div class="energy-bar-bg">
+        <div id="energy-fill"></div>
+    </div>
+</div>
 
 <script>
-    const canvas = document.getElementById('game-canvas');
-    const ctx = canvas.getContext('2d');
+    let score = parseInt(localStorage.getItem('hamster_score')) || 0;
+    let energy = parseInt(localStorage.getItem('hamster_energy')) || 1000;
+    const maxEnergy = 1000;
+    const tapArea = document.getElementById('tapArea');
     const scoreEl = document.getElementById('score');
-    const timerEl = document.getElementById('timer');
-    const overlay = document.getElementById('overlay');
+    const energyFill = document.getElementById('energy-fill');
+    const energyText = document.getElementById('energy-text');
 
-    let score = 0;
-    let timeLeft = 30;
-    let gameActive = false;
-    let items = [];
-    let animationId;
+    // Başlangıç değerleri
+    scoreEl.innerText = score.toLocaleString();
+    updateEnergyUI();
 
-    // Admin ID (Kayıtlı Bilginizden)
-    const adminID = "8392479231";
-
-    function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    class Item {
-        constructor() {
-            this.x = Math.random() * (canvas.width - 40) + 20;
-            this.y = -50;
-            this.size = 35;
-            this.speed = Math.random() * 2 + 3;
-            this.type = Math.random() > 0.15 ? 'point' : 'bomb'; // %15 ihtimalle bomba
-            this.color = this.type === 'point' ? '#cfff00' : '#ff4444';
+    // Tıklama Olayı
+    tapArea.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (energy > 0) {
+            handleTap(e.touches[0].clientX, e.touches[0].clientY);
         }
+    });
 
-        draw() {
-            ctx.beginPath();
-            if (this.type === 'point') {
-                // Çiçek/Kar tanesi benzeri şekil
-                ctx.fillStyle = this.color;
-                ctx.arc(this.x, this.y, this.size/2, 0, Math.PI * 2);
-            } else {
-                // Bomba (Kırmızı kare)
-                ctx.fillStyle = this.color;
-                ctx.fillRect(this.x - 15, this.y - 15, 30, 30);
-            }
-            ctx.fill();
-            ctx.closePath();
+    tapArea.addEventListener('mousedown', (e) => {
+        if (energy > 0) {
+            handleTap(e.clientX, e.clientY);
         }
+    });
 
-        update() {
-            this.y += this.speed;
-        }
-    }
-
-    function spawnItem() {
-        if (!gameActive) return;
-        items.push(new Item());
-        setTimeout(spawnItem, 400); // 0.4 saniyede bir yeni nesne
-    }
-
-    function update() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function handleTap(x, y) {
+        // Puan artışı
+        score += 1;
+        energy -= 1;
         
-        for (let i = items.length - 1; i >= 0; i--) {
-            items[i].update();
-            items[i].draw();
+        scoreEl.innerText = score.toLocaleString();
+        updateEnergyUI();
+        saveData();
 
-            // Ekrandan çıkanları sil
-            if (items[i].y > canvas.height + 50) {
-                items.splice(i, 1);
-            }
-        }
+        // Görsel efektler
+        createFloatingNumber(x, y);
+        tapArea.classList.add('pressed');
+        setTimeout(() => tapArea.classList.remove('pressed'), 50);
 
-        if (gameActive) {
-            animationId = requestAnimationFrame(update);
-        }
-    }
-
-    function handleInput(e) {
-        if (!gameActive) return;
-        
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-        for (let i = items.length - 1; i >= 0; i--) {
-            const dx = clientX - items[i].x;
-            const dy = clientY - items[i].y;
-            const distance = Math.sqrt(dx*dx + dy*dy);
-
-            if (distance < items[i].size) {
-                if (items[i].type === 'point') {
-                    score += 10;
-                    scoreEl.innerText = score;
-                } else {
-                    score = Math.max(0, score - 50); // Bombaya basınca ceza
-                    scoreEl.innerText = score;
-                }
-                items.splice(i, 1);
-                break;
-            }
+        // Telegram Titreşim (Haptic Feedback)
+        if (window.Telegram.WebApp.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
         }
     }
 
-    canvas.addEventListener('mousedown', handleInput);
-    canvas.addEventListener('touchstart', handleInput);
+    function createFloatingNumber(x, y) {
+        const num = document.createElement('div');
+        num.className = 'floating-number';
+        num.innerText = '+1';
+        num.style.left = `${x}px`;
+        num.style.top = `${y}px`;
+        document.body.appendChild(num);
 
-    function startGame() {
-        score = 0;
-        timeLeft = 30;
-        items = [];
-        gameActive = true;
-        scoreEl.innerText = score;
-        overlay.style.display = 'none';
-        
-        spawnItem();
-        update();
-
-        const timerInterval = setInterval(() => {
-            timeLeft--;
-            timerEl.innerText = timeLeft;
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                endGame();
-            }
-        }, 1000);
+        setTimeout(() => num.remove(), 800);
     }
 
-    function endGame() {
-        gameActive = false;
-        cancelAnimationFrame(animationId);
-        alert(`Oyun Bitti! Skorun: ${score}\nAdmin ID: ${adminID}`);
-        overlay.style.display = 'flex';
-        document.querySelector('.btn-start').innerText = "TEKRAR DENE";
+    function updateEnergyUI() {
+        const percentage = (energy / maxEnergy) * 100;
+        energyFill.style.width = `${percentage}%`;
+        energyText.innerText = energy;
     }
+
+    function saveData() {
+        localStorage.setItem('hamster_score', score);
+        localStorage.setItem('hamster_energy', energy);
+    }
+
+    // Enerji Yenileme (Saniyede 1 enerji)
+    setInterval(() => {
+        if (energy < maxEnergy) {
+            energy += 1;
+            updateEnergyUI();
+            saveData();
+        }
+    }, 1500);
+
 </script>
 
 </body>
