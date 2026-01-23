@@ -921,4 +921,236 @@
             // Video açma fonksiyonu
             function openVideoPlayer(title, description) {
                 videoTitle.textContent = title;
-                videoInfoTitle.text
+                videoInfoTitle.textContent = title;
+                videoInfoDescription.textContent = description;
+                
+                // Varsayılan video (gerçek uygulamada burada seçilen diziye göre video yüklenir)
+                videoPlayer.src = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+                
+                // Video oynatıcıyı göster
+                videoPlayerOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Sayfa kaydırmayı engelle
+                
+                // Videoyu oynat
+                setTimeout(() => {
+                    videoPlayer.play();
+                    updatePlayPauseButton();
+                }, 300);
+            }
+            
+            // Video kapatma fonksiyonu
+            function closeVideoPlayer() {
+                videoPlayerOverlay.classList.remove('active');
+                document.body.style.overflow = 'auto'; // Sayfa kaydırmayı geri aç
+                videoPlayer.pause();
+            }
+            
+            // Dizi kartlarındaki izle butonlarına tıklama
+            watchButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const title = this.getAttribute('data-title');
+                    const description = this.getAttribute('data-description');
+                    openVideoPlayer(title, description);
+                });
+            });
+            
+            // Hero bölümündeki izle butonu
+            heroWatchBtn.addEventListener('click', function() {
+                openVideoPlayer("Gizemli Ada: Kayıp Uygarlık", "Bir grup arkeolog, gizemli bir adada kayıp bir uygarlığın izlerini takip ederken, beklenmedik tehlikelerle karşılaşır. 1. Sezon 1. Bölüm.");
+            });
+            
+            // Video kapatma butonu
+            closeVideoBtn.addEventListener('click', closeVideoPlayer);
+            
+            // ESC tuşu ile video kapatma
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && videoPlayerOverlay.classList.contains('active')) {
+                    closeVideoPlayer();
+                }
+            });
+            
+            // Overlay'e tıklayarak video kapatma
+            videoPlayerOverlay.addEventListener('click', function(e) {
+                if (e.target === videoPlayerOverlay) {
+                    closeVideoPlayer();
+                }
+            });
+            
+            // Oynat/Duraklat butonu
+            playPauseBtn.addEventListener('click', function() {
+                if (videoPlayer.paused) {
+                    videoPlayer.play();
+                } else {
+                    videoPlayer.pause();
+                }
+                updatePlayPauseButton();
+            });
+            
+            // Video oynatma durumuna göre butonu güncelle
+            function updatePlayPauseButton() {
+                const icon = playPauseBtn.querySelector('i');
+                if (videoPlayer.paused) {
+                    icon.className = 'fas fa-play';
+                } else {
+                    icon.className = 'fas fa-pause';
+                }
+            }
+            
+            videoPlayer.addEventListener('play', updatePlayPauseButton);
+            videoPlayer.addEventListener('pause', updatePlayPauseButton);
+            
+            // 10 saniye geri sarma
+            rewindBtn.addEventListener('click', function() {
+                videoPlayer.currentTime -= 10;
+            });
+            
+            // 10 saniye ileri sarma
+            forwardBtn.addEventListener('click', function() {
+                videoPlayer.currentTime += 10;
+            });
+            
+            // Ses kontrolü
+            volumeBtn.addEventListener('click', function() {
+                if (videoPlayer.volume > 0) {
+                    videoPlayer.volume = 0;
+                    volumeLevel.style.width = '0%';
+                    volumeBtn.querySelector('i').className = 'fas fa-volume-mute';
+                } else {
+                    videoPlayer.volume = 0.8;
+                    volumeLevel.style.width = '80%';
+                    volumeBtn.querySelector('i').className = 'fas fa-volume-up';
+                }
+            });
+            
+            // Ses seviyesi kaydırıcısı
+            volumeSlider.addEventListener('click', function(e) {
+                const rect = volumeSlider.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                videoPlayer.volume = Math.max(0, Math.min(1, percent));
+                volumeLevel.style.width = (videoPlayer.volume * 100) + '%';
+                
+                // Ses ikonunu güncelle
+                const icon = volumeBtn.querySelector('i');
+                if (videoPlayer.volume === 0) {
+                    icon.className = 'fas fa-volume-mute';
+                } else if (videoPlayer.volume < 0.5) {
+                    icon.className = 'fas fa-volume-down';
+                } else {
+                    icon.className = 'fas fa-volume-up';
+                }
+            });
+            
+            // İlerleme çubuğu
+            progressBarContainer.addEventListener('click', function(e) {
+                const rect = progressBarContainer.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                videoPlayer.currentTime = percent * videoPlayer.duration;
+            });
+            
+            // Video ilerlemesini güncelle
+            videoPlayer.addEventListener('timeupdate', function() {
+                if (videoPlayer.duration) {
+                    const percent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+                    progressBar.style.width = percent + '%';
+                    
+                    // Zamanı göster
+                    const currentTime = formatTime(videoPlayer.currentTime);
+                    const duration = formatTime(videoPlayer.duration);
+                    timeDisplay.textContent = `${currentTime} / ${duration}`;
+                }
+            });
+            
+            // Zaman formatlama fonksiyonu
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+            
+            // Tam ekran butonu
+            fullscreenBtn.addEventListener('click', function() {
+                const container = document.querySelector('.video-player-container');
+                
+                if (!document.fullscreenElement) {
+                    if (container.requestFullscreen) {
+                        container.requestFullscreen();
+                    } else if (container.mozRequestFullScreen) { // Firefox
+                        container.mozRequestFullScreen();
+                    } else if (container.webkitRequestFullscreen) { // Chrome, Safari & Opera
+                        container.webkitRequestFullscreen();
+                    } else if (container.msRequestFullscreen) { // IE/Edge
+                        container.msRequestFullscreen();
+                    }
+                    
+                    fullscreenBtn.querySelector('i').className = 'fas fa-compress';
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.mozCancelFullScreen) { // Firefox
+                        document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) { // Chrome, Safari & Opera
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) { // IE/Edge
+                        document.msExitFullscreen();
+                    }
+                    
+                    fullscreenBtn.querySelector('i').className = 'fas fa-expand';
+                }
+            });
+            
+            // Tam ekran değişikliğini dinle
+            document.addEventListener('fullscreenchange', updateFullscreenButton);
+            document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+            document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+            document.addEventListener('msfullscreenchange', updateFullscreenButton);
+            
+            function updateFullscreenButton() {
+                const icon = fullscreenBtn.querySelector('i');
+                if (document.fullscreenElement) {
+                    icon.className = 'fas fa-compress';
+                } else {
+                    icon.className = 'fas fa-expand';
+                }
+            }
+            
+            // Arama çubuğu işlevi
+            const searchInput = document.querySelector('.search-bar input');
+            const searchButton = document.querySelector('.search-bar button');
+            
+            searchButton.addEventListener('click', function() {
+                if(searchInput.value.trim() !== '') {
+                    alert(`"${searchInput.value}" için arama yapılıyor...`);
+                }
+            });
+            
+            searchInput.addEventListener('keypress', function(e) {
+                if(e.key === 'Enter') {
+                    searchButton.click();
+                }
+            });
+            
+            // Dizi kartlarına tıklama işlevi
+            const diziCards = document.querySelectorAll('.dizi-card');
+            diziCards.forEach(card => {
+                card.addEventListener('click', function(e) {
+                    if(!e.target.classList.contains('watch-btn')) {
+                        const title = this.querySelector('h3').textContent;
+                        alert(`"${title}" detay sayfasına yönlendiriliyorsunuz...`);
+                    }
+                });
+            });
+            
+            // Navigasyon linklerine aktif sınıfı ekleme
+            const navLinks = document.querySelectorAll('.nav-links a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    navLinks.forEach(item => item.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
