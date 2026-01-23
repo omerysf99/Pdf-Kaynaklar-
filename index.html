@@ -2080,4 +2080,568 @@
                 { name: "Belgesel", icon: "fa-camera", count: 310 },
                 { name: "Animasyon", icon: "fa-film", count: 560 },
                 { name: "Korku", icon: "fa-ghost", count: 380 },
-                { name: "Polisiye", icon: "fa-search", count
+                { name: "Polisiye", icon: "fa-search", count: 470 },
+                { name: "Tarih", icon: "fa-landmark", count: 290 }
+            ],
+            featured: [
+                {
+                    id: 21,
+                    title: "Editörün Seçimi",
+                    description: "Bu ayın en çok konuşulan içerikleri. Kesinlikle kaçırmayın!",
+                    image: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                    count: 15
+                },
+                {
+                    id: 22,
+                    title: "Klasikler",
+                    description: "Zamanın testinden geçmiş, unutulmaz film ve diziler.",
+                    image: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                    count: 45
+                },
+                {
+                    id: 23,
+                    title: "Ödüllü Yapımlar",
+                    description: "Oscar, Emmy ve diğer ödülleri kazanmış başyapıtlar.",
+                    image: "https://images.unsplash.com/photo-1542204165-65bf26472b9b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                    count: 28
+                },
+                {
+                    id: 24,
+                    title: "Türk Yapımları",
+                    description: "Yerli yapım film ve dizilerden en iyileri.",
+                    image: "https://images.unsplash.com/photo-1585951237318-9ea5e175b891?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                    count: 36
+                }
+            ],
+            testimonials: [
+                {
+                    name: "Ahmet Yılmaz",
+                    role: "Premium Üye",
+                    content: "CineStream Pro sayesinde ailemle birlikte kaliteli zaman geçiriyoruz. İçerik zenginliği harika!",
+                    rating: 5,
+                    avatar: "AY"
+                },
+                {
+                    name: "Zeynep Kaya",
+                    role: "Film Tutkunu",
+                    content: "4K kalitesinde film izlemek gerçekten başka bir deneyim. Kesinlikle tavsiye ederim.",
+                    rating: 5,
+                    avatar: "ZK"
+                },
+                {
+                    name: "Mehmet Demir",
+                    role: "Dizi İzleyicisi",
+                    content: "Dublaj seçenekleri ve altyazı kalitesi mükemmel. Uluslararası içerikleri rahatça takip edebiliyorum.",
+                    rating: 4,
+                    avatar: "MD"
+                }
+            ]
+        };
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all components
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hidden');
+                initializePage();
+            }, 1500);
+            
+            // Generate content
+            generateContent('trendingSlider', contentData.trending);
+            generateContent('seriesSlider', contentData.series);
+            generateContent('moviesSlider', contentData.movies);
+            generateContent('newSlider', contentData.new);
+            generateCategories();
+            generateFeatured();
+            generateTestimonials();
+            
+            // Initialize animations
+            initAnimations();
+            
+            // Initialize event listeners
+            initEventListeners();
+            
+            // Start hero slider
+            startHeroSlider();
+        });
+
+        // ===== CONTENT GENERATION =====
+        function generateContent(containerId, items) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'content-card';
+                card.setAttribute('data-id', item.id);
+                
+                card.innerHTML = `
+                    <img src="${item.image}" alt="${item.title}" class="card-image">
+                    ${item.badge ? `<div class="card-badge">${item.badge}</div>` : ''}
+                    <div class="card-overlay"></div>
+                    <div class="card-content">
+                        <h3 class="card-title">${item.title}</h3>
+                        <div class="card-meta">
+                            <span>${item.year}</span>
+                            <span class="card-rating"><i class="fas fa-star"></i> ${item.rating}</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="card-btn play" onclick="playContent(${item.id})">
+                                <i class="fas fa-play"></i>
+                            </button>
+                            <button class="card-btn" onclick="addToFavorites(${item.id})">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                            <button class="card-btn" onclick="showDetails(${item.id})">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function generateCategories() {
+            const container = document.querySelector('.categories-grid');
+            container.innerHTML = '';
+            
+            contentData.categories.forEach(category => {
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.onclick = () => filterByCategory(category.name);
+                
+                card.innerHTML = `
+                    <div class="category-icon">
+                        <i class="fas ${category.icon}"></i>
+                    </div>
+                    <h4 class="category-title">${category.name}</h4>
+                    <div class="category-count">${category.count} içerik</div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function generateFeatured() {
+            const container = document.querySelector('.featured-grid');
+            container.innerHTML = '';
+            
+            contentData.featured.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'featured-card';
+                
+                card.innerHTML = `
+                    <img src="${item.image}" alt="${item.title}" class="featured-image">
+                    <div class="featured-content">
+                        <h3 class="featured-title">${item.title}</h3>
+                        <div class="featured-meta">
+                            <span><i class="fas fa-film"></i> ${item.count} içerik</span>
+                        </div>
+                        <p class="featured-description">${item.description}</p>
+                        <button class="btn btn-secondary" onclick="exploreFeatured(${item.id})">
+                            <i class="fas fa-eye"></i> Keşfet
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function generateTestimonials() {
+            const container = document.getElementById('testimonialsSlider');
+            container.innerHTML = '';
+            
+            contentData.testimonials.forEach(testimonial => {
+                const card = document.createElement('div');
+                card.className = 'testimonial-card';
+                
+                let stars = '';
+                for (let i = 0; i < 5; i++) {
+                    stars += i < testimonial.rating 
+                        ? '<i class="fas fa-star"></i>' 
+                        : '<i class="far fa-star"></i>';
+                }
+                
+                card.innerHTML = `
+                    <p class="testimonial-content">"${testimonial.content}"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">${testimonial.avatar}</div>
+                        <div class="author-info">
+                            <h4>${testimonial.name}</h4>
+                            <div class="author-role">${testimonial.role}</div>
+                            <div class="testimonial-rating">${stars}</div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // ===== ANIMATIONS =====
+        function initAnimations() {
+            // Animate numbers
+            const statNumbers = document.querySelectorAll('.stat-number');
+            statNumbers.forEach(stat => {
+                const target = parseInt(stat.getAttribute('data-count'));
+                const increment = target / 100;
+                let current = 0;
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    stat.textContent = Math.floor(current).toLocaleString();
+                }, 20);
+            });
+            
+            // Intersection Observer for animations
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animated');
+                    }
+                });
+            }, observerOptions);
+            
+            // Observe elements
+            document.querySelectorAll('.section').forEach(section => {
+                observer.observe(section);
+            });
+        }
+
+        // ===== SLIDER FUNCTIONS =====
+        function slideTrending(direction) {
+            const slider = document.getElementById('trendingSlider');
+            const scrollAmount = 240;
+            slider.scrollBy({
+                left: direction === 'next' ? scrollAmount : -scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+
+        function slideSeries(direction) {
+            const slider = document.getElementById('seriesSlider');
+            const scrollAmount = 240;
+            slider.scrollBy({
+                left: direction === 'next' ? scrollAmount : -scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+
+        function slideMovies(direction) {
+            const slider = document.getElementById('moviesSlider');
+            const scrollAmount = 240;
+            slider.scrollBy({
+                left: direction === 'next' ? scrollAmount : -scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+
+        function slideNew(direction) {
+            const slider = document.getElementById('newSlider');
+            const scrollAmount = 240;
+            slider.scrollBy({
+                left: direction === 'next' ? scrollAmount : -scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+
+        // ===== HERO SLIDER =====
+        let currentSlide = 0;
+        const heroSlides = document.querySelectorAll('.hero-slide');
+        const heroDots = document.querySelectorAll('.slider-dot');
+
+        function startHeroSlider() {
+            setInterval(() => {
+                currentSlide = (currentSlide + 1) % heroSlides.length;
+                updateHeroSlider();
+            }, 5000);
+            
+            // Add click events to dots
+            heroDots.forEach((dot, index) => {
+                dot.addEventListener('click', () => {
+                    currentSlide = index;
+                    updateHeroSlider();
+                });
+            });
+        }
+
+        function updateHeroSlider() {
+            heroSlides.forEach((slide, index) => {
+                slide.classList.toggle('active', index === currentSlide);
+            });
+            
+            heroDots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlide);
+            });
+        }
+
+        // ===== MODAL FUNCTIONS =====
+        function showDetails(contentId) {
+            const content = [...contentData.trending, ...contentData.series, ...contentData.movies, ...contentData.new]
+                .find(item => item.id === contentId);
+            
+            if (!content) return;
+            
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = `
+                <div class="modal-details">
+                    <div class="modal-header">
+                        <h2>${content.title}</h2>
+                        <div class="modal-meta">
+                            <span><i class="fas fa-calendar"></i> ${content.year}</span>
+                            <span><i class="fas fa-clock"></i> ${content.duration}</span>
+                            <span><i class="fas fa-star"></i> ${content.rating}/10</span>
+                            <span><i class="fas fa-tag"></i> ${content.type}</span>
+                        </div>
+                    </div>
+                    <div class="modal-body-content">
+                        <img src="${content.image}" alt="${content.title}" class="modal-image">
+                        <div class="modal-info">
+                            <h3>Özet</h3>
+                            <p>${content.description}</p>
+                            <div class="modal-actions">
+                                <button class="btn btn-primary" onclick="playContent(${content.id})">
+                                    <i class="fas fa-play"></i> İzle
+                                </button>
+                                <button class="btn btn-secondary" onclick="addToFavorites(${content.id})">
+                                    <i class="fas fa-heart"></i> Favorilere Ekle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('contentModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('contentModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // ===== CONTENT FUNCTIONS =====
+        function playContent(contentId = null) {
+            if (contentId) {
+                const content = [...contentData.trending, ...contentData.series, ...contentData.movies, ...contentData.new]
+                    .find(item => item.id === contentId);
+                alert(`"${content.title}" başlıyor! İyi seyirler!`);
+            } else {
+                alert("Ölüm Saatini Görebilen Adam başlıyor! İyi seyirler!");
+            }
+        }
+
+        function addToFavorites(contentId = null) {
+            if (contentId) {
+                const content = [...contentData.trending, ...contentData.series, ...contentData.movies, ...contentData.new]
+                    .find(item => item.id === contentId);
+                alert(`"${content.title}" favorilerinize eklendi!`);
+            } else {
+                alert("Ölüm Saatini Görebilen Adam favorilerinize eklendi!");
+            }
+        }
+
+        function filterByCategory(category) {
+            alert(`${category} kategorisi seçildi! İçerikler filtreleniyor...`);
+        }
+
+        function exploreFeatured(featuredId) {
+            const featured = contentData.featured.find(item => item.id === featuredId);
+            alert(`${featured.title} bölümü keşfediliyor...`);
+        }
+
+        // ===== EVENT LISTENERS =====
+        function initEventListeners() {
+            // Header scroll effect
+            window.addEventListener('scroll', function() {
+                const header = document.getElementById('header');
+                if (window.scrollY > 50) {
+                    header.classList.add('header-scrolled');
+                } else {
+                    header.classList.remove('header-scrolled');
+                }
+            });
+            
+            // User menu toggle
+            document.getElementById('userMenu').addEventListener('click', function(e) {
+                e.stopPropagation();
+                document.getElementById('dropdownMenu').classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                document.getElementById('dropdownMenu').classList.remove('show');
+            });
+            
+            // Mobile menu toggle
+            document.getElementById('mobileToggle').addEventListener('click', function() {
+                document.getElementById('navLinks').classList.toggle('active');
+            });
+            
+            // Smooth scroll for navigation links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                        
+                        // Close mobile menu if open
+                        document.getElementById('navLinks').classList.remove('active');
+                    }
+                });
+            });
+            
+            // Newsletter form
+            const newsletterForm = document.querySelector('.newsletter-form');
+            newsletterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const email = this.querySelector('.newsletter-input').value;
+                alert(`Bültenimize kaydoldunuz! ${email} adresine onay maili gönderildi.`);
+                this.reset();
+            });
+            
+            // Search functionality
+            const searchInput = document.querySelector('.search-input');
+            searchInput.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                if (searchTerm.length > 2) {
+                    // In a real app, this would make an API call
+                    console.log('Searching for:', searchTerm);
+                }
+            });
+            
+            // Pricing buttons
+            document.querySelectorAll('.pricing-card .btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const plan = this.closest('.pricing-card').querySelector('.pricing-title').textContent;
+                    alert(`${plan} planı seçildi! Ödeme sayfasına yönlendiriliyorsunuz...`);
+                });
+            });
+            
+            // Modal close on ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+            
+            // Modal close on background click
+            document.getElementById('contentModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+        }
+
+        // ===== PAGE INITIALIZATION =====
+        function initializePage() {
+            // Add floating animation to some elements
+            const floatingElements = document.querySelectorAll('.logo, .card-btn, .social-link');
+            floatingElements.forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.1}s`;
+                el.classList.add('floating');
+            });
+            
+            // Initialize tooltips
+            document.querySelectorAll('[title]').forEach(el => {
+                el.setAttribute('data-tooltip', el.getAttribute('title'));
+                el.removeAttribute('title');
+            });
+            
+            // Add active class to current section in navigation
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            window.addEventListener('scroll', function() {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    if (scrollY >= (sectionTop - 150)) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${current}`) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+            
+            // Initialize lazy loading for images
+            const lazyImages = document.querySelectorAll('img');
+            const imageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        imageObserver.unobserve(img);
+                    }
+                });
+            });
+            
+            lazyImages.forEach(img => imageObserver.observe(img));
+        }
+
+        // ===== UTILITY FUNCTIONS =====
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function throttle(func, limit) {
+            let inThrottle;
+            return function() {
+                const args = arguments;
+                const context = this;
+                if (!inThrottle) {
+                    func.apply(context, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
+        // ===== EXPORT FUNCTIONS FOR HTML ONCLICK =====
+        window.slideTrending = slideTrending;
+        window.slideSeries = slideSeries;
+        window.slideMovies = slideMovies;
+        window.slideNew = slideNew;
+        window.playContent = playContent;
+        window.addToFavorites = addToFavorites;
+        window.showDetails = showDetails;
+        window.closeModal = closeModal;
+        window.filterByCategory = filterByCategory;
+        window.exploreFeatured = exploreFeatured;
+    </script>
+</body>
+</html>
