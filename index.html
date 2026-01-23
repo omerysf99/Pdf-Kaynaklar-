@@ -1,1062 +1,132 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dizi Anime - Film Listesi</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        :root {
-            --primary-color: #0a0a0a;
-            --secondary-color: #1a1a1a;
-            --accent-color: #e50914;
-            --text-color: #ffffff;
-            --card-bg: rgba(30, 30, 30, 0.95);
-        }
-        
-        body {
-            background-color: var(--primary-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
-        
-        /* Dikey Shorts/Vertical Video Container */
-        .shorts-container {
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 0;
-            background-color: var(--primary-color);
-            min-height: 100vh;
-            position: relative;
-        }
-        
-        /* Header - Shorts Tarzı */
-        .shorts-header {
-            background-color: rgba(0, 0, 0, 0.9);
-            padding: 15px;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .logo-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .logo i {
-            color: var(--accent-color);
-            font-size: 1.8rem;
-        }
-        
-        .logo h1 {
-            font-size: 1.5rem;
-            background: linear-gradient(to right, var(--accent-color), #ff6b6b);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        
-        .user-actions {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .user-actions a {
-            color: white;
-            text-decoration: none;
-            font-size: 1.2rem;
-        }
-        
-        /* Navigation Tabs - Shorts Tarzı */
-        .nav-tabs {
-            display: flex;
-            overflow-x: auto;
-            gap: 15px;
-            padding-bottom: 5px;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE and Edge */
-        }
-        
-        .nav-tabs::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
-        }
-        
-        .nav-tab {
-            color: rgba(255, 255, 255, 0.7);
-            text-decoration: none;
-            font-weight: 500;
-            padding: 8px 0;
-            white-space: nowrap;
-            font-size: 0.9rem;
-            position: relative;
-            transition: color 0.3s ease;
-        }
-        
-        .nav-tab:hover, .nav-tab.active {
-            color: white;
-        }
-        
-        .nav-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background-color: var(--accent-color);
-            border-radius: 3px;
-        }
-        
-        /* Vizyon Film Banner */
-        .vision-film-banner {
-            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-            margin: 15px;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            position: relative;
-        }
-        
-        .vision-film-content {
-            padding: 20px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .vision-badge {
-            display: inline-block;
-            background-color: var(--accent-color);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-        
-        .vision-film-title {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-            line-height: 1.2;
-        }
-        
-        .vision-film-title span {
-            display: block;
-            font-size: 1.4rem;
-            color: #ffcc00;
-            margin-top: 5px;
-        }
-        
-        .vision-film-meta {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            color: #aaa;
-            font-size: 0.9rem;
-        }
-        
-        .vision-film-description {
-            color: #ccc;
-            line-height: 1.5;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-        }
-        
-        .vision-film-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .watch-btn {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 30px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .watch-btn:hover {
-            background-color: #ff3333;
-            transform: scale(1.05);
-        }
-        
-        .info-btn {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 30px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .info-btn:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-        
-        /* Film Listesi - Shorts Tarzı */
-        .film-list-section {
-            padding: 15px;
-        }
-        
-        .section-title {
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            padding-left: 10px;
-            border-left: 4px solid var(--accent-color);
-        }
-        
-        .film-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .film-category {
-            background-color: rgba(40, 40, 40, 0.7);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        
-        .category-header {
-            background-color: rgba(60, 60, 60, 0.9);
-            padding: 12px 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .dublaj-badge {
-            background-color: #FF9800;
-            color: white;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.7rem;
-            font-weight: bold;
-        }
-        
-        .category-title {
-            font-weight: bold;
-            font-size: 1rem;
-        }
-        
-        .film-items {
-            padding: 15px;
-        }
-        
-        .film-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-        
-        .film-item:last-child {
-            border-bottom: none;
-        }
-        
-        .film-item:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 5px;
-            padding: 10px;
-            margin: 0 -10px;
-        }
-        
-        .film-item-number {
-            background-color: rgba(255, 255, 255, 0.1);
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: #ccc;
-        }
-        
-        .film-item-info {
-            flex: 1;
-        }
-        
-        .film-item-title {
-            font-weight: 500;
-            font-size: 0.9rem;
-            margin-bottom: 3px;
-        }
-        
-        .film-item-meta {
-            color: #aaa;
-            font-size: 0.8rem;
-            display: flex;
-            gap: 10px;
-        }
-        
-        .film-item-rating {
-            color: #FFD700;
-            display: flex;
-            align-items: center;
-            gap: 3px;
-        }
-        
-        .play-icon {
-            color: var(--accent-color);
-            font-size: 1.2rem;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .film-item:hover .play-icon {
-            opacity: 1;
-        }
-        
-        /* Video Oynatıcı - Shorts Tarzı */
-        .video-player-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.95);
-            z-index: 2000;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-        
-        .video-player-overlay.active {
-            display: flex;
-            opacity: 1;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .video-player-container {
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .video-player-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
-            position: absolute;
-            top: 0;
-            width: 100%;
-            z-index: 10;
-        }
-        
-        .video-player-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            max-width: 70%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        .close-video-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            transition: background 0.3s ease;
-        }
-        
-        .close-video-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        .video-player {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background-color: #000;
-        }
-        
-        .video-player-controls {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-            padding: 20px 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .progress-bar-container {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            cursor: pointer;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            background-color: var(--accent-color);
-            border-radius: 2px;
-            width: 0%;
-            transition: width 0.1s linear;
-        }
-        
-        .controls-bottom {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .controls-left, .controls-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .control-btn {
-            background: transparent;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .play-pause-btn {
-            background-color: white;
-            color: black;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-        
-        .time-display {
-            font-size: 0.9rem;
-            color: #ccc;
-            font-weight: 500;
-        }
-        
-        /* Footer */
-        .shorts-footer {
-            padding: 20px 15px;
-            text-align: center;
-            color: #777;
-            font-size: 0.8rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            margin-top: 20px;
-        }
-        
-        /* Responsive Tasarım */
-        @media (min-width: 401px) {
-            .shorts-container {
-                box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-                min-height: 100vh;
-                max-height: 100vh;
-                overflow-y: auto;
-            }
-            
-            body {
-                padding: 20px 0;
-                background-color: #111;
-            }
-        }
-        
-        @media (max-width: 400px) {
-            .vision-film-title {
-                font-size: 1.5rem;
-            }
-            
-            .vision-film-title span {
-                font-size: 1.2rem;
-            }
-            
-            .vision-film-actions {
-                flex-direction: column;
-            }
-            
-            .watch-btn, .info-btn {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Dikey Shorts Container -->
-    <div class="shorts-container">
-        <!-- Header -->
-        <div class="shorts-header">
-            <div class="logo-header">
-                <div class="logo">
-                    <i class="fas fa-play-circle"></i>
-                    <h1>Dizi Anime</h1>
-                </div>
-                
-                <div class="user-actions">
-                    <a href="#"><i class="fas fa-search"></i></a>
-                    <a href="#"><i class="fas fa-user"></i></a>
-                </div>
-            </div>
-            
-            <!-- Navigation Tabs -->
-            <div class="nav-tabs">
-                <a href="#" class="nav-tab active">Popüler</a>
-                <a href="#" class="nav-tab">Yeni</a>
-                <a href="#" class="nav-tab">Çok Yakında</a>
-                <a href="#" class="nav-tab">Dublajlı</a>
-                <a href="#" class="nav-tab">En Beğenilenler</a>
-                <a href="#" class="nav-tab">Son İzlediklerim</a>
-            </div>
-        </div>
-        
-        <!-- Vizyon Film Banner -->
-        <div class="vision-film-banner">
-            <div class="vision-film-content">
-                <div class="vision-badge">VİZYONDA</div>
-                <h2 class="vision-film-title">
-                    ÖLÜM SAATİNİ<br>
-                    <span>GÖREBİLEN ADAM</span>
-                </h2>
-                
-                <div class="vision-film-meta">
-                    <span class="year">2023</span>
-                    <span class="rating"><i class="fas fa-star"></i> 8.2</span>
-                    <span class="duration">1s 48dk</span>
-                    <span class="genre">Gerilim, Dram</span>
-                </div>
-                
-                <p class="vision-film-description">
-                    Bir adam, insanların ölüm saatlerini görebilme yeteneğine sahiptir. Bu lanetli yetenek, hayatını bir kabusa çevirirken, bir gün en sevdiği kişinin yanında görünen ölüm saatiyle yüzleşmek zorunda kalır.
-                </p>
-                
-                <div class="vision-film-actions">
-                    <button class="watch-btn" id="playVisionFilmBtn">
-                        <i class="fas fa-play"></i> Hemen İzle
-                    </button>
-                    <button class="info-btn" id="filmInfoBtn">
-                        <i class="fas fa-info-circle"></i> Detaylar
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Film Listesi - Dublajlı Kategorisi -->
-        <div class="film-list-section">
-            <h3 class="section-title">Dublajlı Filmler</h3>
-            
-            <div class="film-list">
-                <!-- Kategori 1 -->
-                <div class="film-category">
-                    <div class="category-header">
-                        <span class="dublaj-badge">DUBLAJLI</span>
-                        <span class="category-title">Ölüm Saatini Görebilen Adam</span>
-                    </div>
-                    
-                    <div class="film-items">
-                        <div class="film-item" data-film-id="1" data-film-title="Ölüm Saatini Görebilen Adam">
-                            <div class="film-item-number">1</div>
-                            <div class="film-item-info">
-                                <div class="film-item-title">Ölüm Saatini Görebilen Adam</div>
-                                <div class="film-item-meta">
-                                    <span>Gerilim, Dram</span>
-                                    <span class="film-item-rating"><i class="fas fa-star"></i> 8.2</span>
-                                </div>
-                            </div>
-                            <div class="play-icon">
-                                <i class="fas fa-play-circle"></i>
-                            </div>
-                        </div>
-                        
-                        <div class="film-item" data-film-id="2" data-film-title="Bitkilerle Konuşan Kızın Gizemi">
-                            <div class="film-item-number">2</div>
-                            <div class="film-item-info">
-                                <div class="film-item-title">Bitkilerle Konuşan Kızın Gizemi</div>
-                                <div class="film-item-meta">
-                                    <span>Fantastik, Dram</span>
-                                    <span class="film-item-rating"><i class="fas fa-star"></i> 7.8</span>
-                                </div>
-                            </div>
-                            <div class="play-icon">
-                                <i class="fas fa-play-circle"></i>
-                            </div>
-                        </div>
-                        
-                        <div class="film-item" data-film-id="3" data-film-title="Zekayla Tahtı Alan Kız">
-                            <div class="film-item-number">3</div>
-                            <div class="film-item-info">
-                                <div class="film-item-title">Zekayla Tahtı Alan Kız (Dublajlı)</div>
-                                <div class="film-item-meta">
-                                    <span>Dram, Tarihi</span>
-                                    <span class="film-item-rating"><i class="fas fa-star"></i> 8.0</span>
-                                </div>
-                            </div>
-                            <div class="play-icon">
-                                <i class="fas fa-play-circle"></i>
-                            </div>
-                        </div>
-                        
-                        <div class="film-item" data-film-id="4" data-film-title="İntikam">
-                            <div class="film-item-number">4</div>
-                            <div class="film-item-info">
-                                <div class="film-item-title">İntikam</div>
-                                <div class="film-item-meta">
-                                    <span>Aksiyon, Gerilim</span>
-                                    <span class="film-item-rating"><i class="fas fa-star"></i> 7.5</span>
-                                </div>
-                            </div>
-                            <div class="play-icon">
-                                <i class="fas fa-play-circle"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Kategori 2 -->
-                <div class="film-category">
-                    <div class="category-header">
-                        <span class="dublaj-badge">DUBLAJLI</span>
-                        <span class="category-title">Hiç Ezilmeyen, Daima Üstat</span>
-                    </div>
-                    
-                    <div class="film-items">
-                        <div class="film-item" data-film-id="5" data-film-title="Hiç Ezilmeyen, Daima Üstat">
-                            <div class="film-item-number">1</div>
-                            <div class="film-item-info">
-                                <div class="film-item-title">Hiç Ezilmeyen, Daima Üstat (Dublajlı)</div>
-                                <div class="film-item-meta">
-                                    <span>Aksiyon, Dram</span>
-                                    <span class="film-item-rating"><i class="fas fa-star"></i> 8.5</span>
-                                </div>
-                            </div>
-                            <div class="play-icon">
-                                <i class="fas fa-play-circle"></i>
-                            </div>
-                        </div>
-                        
-                        <div class="film-item" data-film-id="6" data-film-title="Dövüşçünün Yükselişi">
-                            <div class="film-item-number">2</div>
-                            <div class="film-item-info">
-                                <div class="film-item-title">Dövüşçünün Yükselişi (Dublajlı)</div>
-                                <div class="film-item-meta">
-                                    <span>Aksiyon, Spor</span>
-                                    <span class="film-item-rating"><i class="fas fa-star"></i> 8.1</span>
-                                </div>
-                            </div>
-                            <div class="play-icon">
-                                <i class="fas fa-play-circle"></i>
-                            </div>
-                        </div>
-                        
-                        <div class="film-item" data-film-id="7" data-film-title="Rol Değişimi">
-                            <div class="film-item-number">3</div>
-                            <div class="film-item-info">
-                                <div class="film-item-title">Rol Değişimi</div>
-                                <div class="film-item-meta">
-                                    <span>Komedi, Romantik</span>
-                                    <span class="film-item-rating"><i class="fas fa-star"></i> 7.2</span>
-                                </div>
-                            </div>
-                            <div class="play-icon">
-                                <i class="fas fa-play-circle"></i>
-                            </div>
-                        </div>
-                        
-                        <div class="film-item" data-film-id="8" data-film-title="Köylü Kız ve Mafya Aşkı">
-                            <div class="film-item-number">4</div>
-                            <div class="film-item-info">
-                                <div class="film-item-title">Köylü Kız ve Mafya Aşkı</div>
-                                <div class="film-item-meta">
-                                    <span>Romantik, Dram</span>
-                                    <span class="film-item-rating"><i class="fas fa-star"></i> 7.9</span>
-                                </div>
-                            </div>
-                            <div class="play-icon">
-                                <i class="fas fa-play-circle"></i>
-                            </div>
-                        </div>
-                        
-                        <div class="film-item" data-film-id="9" data-film-title="Düşmadan Aşka">
-                            <div class="film-item-number">5</div>
-                            <div class="film-item-info">
-                                <div class="film-item-title">Düşmadan Aşka</div>
-                                <div class="film-item-meta">
-                                    <span>Romantik, Dram</span>
-                                    <span class="film-item-rating"><i class="fas fa-star"></i> 7.4</span>
-                                </div>
-                            </div>
-                            <div class="play-icon">
-                                <i class="fas fa-play-circle"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Kategori 3 -->
-                <div class="film-category">
-                    <div class="category-header">
-                        <span class="dublaj-badge">DUBLAJLI</span>
-                        <span class="category-title">En Beğenilen Dublajlı Filmler</span>
-                    </div>
-                    
-                    <div class="film-items">
-                        <div class="film-item" data-film-id="10" data-film-title="Zamanın Ötesinde">
-                            <div class="film-item-number">1</div>
-                            <div class="film-item-info">
-                                <div class="film-item-title">Zamanın Ötesinde</div>
-                                <div class="film-item-meta">
-                                    <span>Bilim Kurgu, Macera</span>
-                                    <span class="film-item-rating"><i class="fas fa-star"></i> 8.9</span>
-                                </div>
-                            </div>
-                            <div class="play-icon">
-                                <i class="fas fa-play-circle"></i>
-                            </div>
-                        </div>
-                        
-                        <div class="film-item" data-film-id="11" data-film-title="Kayıp Miras">
-                            <div class="film-item-number">2</div>
-                            <div class="film-item-info">
-                                <div class="film-item-title">Kayıp Miras</div>
-                                <div class="film-item-meta">
-                                    <span>Macera, Tarihi</span>
-                                    <span class="film-item-rating"><i class="fas fa-star"></i> 8.2</span>
-                                </div>
-                            </div>
-                            <div class="play-icon">
-                                <i class="fas fa-play-circle"></i>
-                            </div>
-                        </div>
-                        
-                        <div class="film-item" data-film-id="12" data-film-title="Kod Adı: Kırmızı">
-                            <div class="film-item-number">3</div>
-                            <div class="film-item-info">
-                                <div class="film-item-title">Kod Adı: Kırmızı</div>
-                                <div class="film-item-meta">
-                                    <span>Aksiyon, Gerilim</span>
-                                    <span class="film-item-rating"><i class="fas fa-star"></i> 8.5</span>
-                                </div>
-                            </div>
-                            <div class="play-icon">
-                                <i class="fas fa-play-circle"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Footer -->
-        <div class="shorts-footer">
-            <p>© 2023 Dizi Anime. Tüm hakları saklıdır.</p>
-            <p style="margin-top: 5px; font-size: 0.7rem; color: #555;">film1.mp4 - Ölüm Saatini Görebilen Adam</p>
-        </div>
-    </div>
-    
-    <!-- Video Oynatıcı - Shorts Tarzı -->
-    <div class="video-player-overlay" id="videoPlayerOverlay">
-        <div class="video-player-container">
-            <div class="video-player-header">
-                <div class="video-player-title" id="videoTitle">Ölüm Saatini Görebilen Adam</div>
-                <button class="close-video-btn" id="closeVideoBtn">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <video class="video-player" id="videoPlayer" controls>
-                <!-- film1.mp4 dosyası için kaynak -->
-                <source src="film1.mp4" type="video/mp4">
-                <!-- Fallback video -->
-                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
-                Tarayıcınız video etiketini desteklemiyor.
-            </video>
-            
-            <div class="video-player-controls">
-                <div class="progress-bar-container" id="progressBarContainer">
-                    <div class="progress-bar" id="progressBar"></div>
-                </div>
-                
-                <div class="controls-bottom">
-                    <div class="controls-left">
-                        <button class="control-btn play-pause-btn" id="playPauseBtn">
-                            <i class="fas fa-pause"></i>
-                        </button>
-                        <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
-                    </div>
-                    
-                    <div class="controls-right">
-                        <button class="control-btn" id="volumeBtn">
-                            <i class="fas fa-volume-up"></i>
-                        </button>
-                        <button class="control-btn" id="fullscreenBtn">
-                            <i class="fas fa-expand"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="content">
+  <h1>Dizi & Film Koleksiyonu</h1>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Elementler
-            const videoPlayerOverlay = document.getElementById('videoPlayerOverlay');
-            const videoPlayer = document.getElementById('videoPlayer');
-            const closeVideoBtn = document.getElementById('closeVideoBtn');
-            const playPauseBtn = document.getElementById('playPauseBtn');
-            const volumeBtn = document.getElementById('volumeBtn');
-            const progressBarContainer = document.getElementById('progressBarContainer');
-            const progressBar = document.getElementById('progressBar');
-            const timeDisplay = document.getElementById('timeDisplay');
-            const fullscreenBtn = document.getElementById('fullscreenBtn');
-            const videoTitle = document.getElementById('videoTitle');
-            
-            // Butonlar
-            const playVisionFilmBtn = document.getElementById('playVisionFilmBtn');
-            const filmInfoBtn = document.getElementById('filmInfoBtn');
-            const filmItems = document.querySelectorAll('.film-item');
-            const navTabs = document.querySelectorAll('.nav-tab');
-            
-            // Film verileri
-            const filmData = {
-                'olum-saati-film': {
-                    id: 'olum-saati-film',
-                    title: 'Ölüm Saatini Görebilen Adam',
-                    description: 'Bir adam, insanların ölüm saatlerini görebilme yeteneğine sahiptir. Bu lanetli yetenek, hayatını bir kabusa çevirirken, bir gün en sevdiği kişinin yanında görünen ölüm saatiyle yüzleşmek zorunda kalır.',
-                    videoSrc: 'film1.mp4'
-                }
-            };
-            
-            // Video açma fonksiyonu
-            function openVideoPlayer(filmTitle) {
-                videoTitle.textContent = filmTitle;
-                
-                // film1.mp4 dosyasını yükle (tüm filmler için aynı film kullanılıyor)
-                videoPlayer.src = 'film1.mp4';
-                
-                // Video oynatıcıyı göster
-                videoPlayerOverlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-                
-                // Videoyu oynat
-                setTimeout(() => {
-                    videoPlayer.play();
-                    updatePlayPauseButton();
-                }, 300);
-            }
-            
-            // Vizyon filmi izle butonu
-            playVisionFilmBtn.addEventListener('click', function() {
-                openVideoPlayer('Ölüm Saatini Görebilen Adam');
-            });
-            
-            // Film detay butonu
-            filmInfoBtn.addEventListener('click', function() {
-                alert('Ölüm Saatini Görebilen Adam\n\nYıl: 2023\nTür: Gerilim, Dram\nSüre: 1 saat 48 dakika\nPuan: 8.2/10\n\nBir adam, insanların ölüm saatlerini görebilme yeteneğine sahiptir. Bu lanetli yetenek, hayatını bir kabusa çevirirken, bir gün en sevdiği kişinin yanında görünen ölüm saatiyle yüzleşmek zorunda kalır.');
-            });
-            
-            // Film listesindeki öğelere tıklama
-            filmItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    const filmTitle = this.getAttribute('data-film-title');
-                    openVideoPlayer(filmTitle);
-                });
-            });
-            
-            // Navigasyon tablarına tıklama
-            navTabs.forEach(tab => {
-                tab.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    navTabs.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Tab değiştiğinde mesaj göster
-                    const tabText = this.textContent;
-                    if (tabText !== 'Popüler') {
-                        alert(`${tabText} sekmesine tıkladınız! (Demo için sadece Popüler sekmesi aktif)`);
-                    }
-                });
-            });
-            
-            // Video kapatma fonksiyonu
-            function closeVideoPlayer() {
-                videoPlayerOverlay.classList.remove('active');
-                document.body.style.overflow = 'auto';
-                videoPlayer.pause();
-            }
-            
-            // Video kapatma butonu
-            closeVideoBtn.addEventListener('click', closeVideoPlayer);
-            
-            // ESC tuşu ile video kapatma
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && videoPlayerOverlay.classList.contains('active')) {
-                    closeVideoPlayer();
-                }
-            });
-            
-            // Oynat/Duraklat butonu
-            playPauseBtn.addEventListener('click', function() {
-                if (videoPlayer.paused) {
-                    videoPlayer.play();
-                } else {
-                    videoPlayer.pause();
-                }
-                updatePlayPauseButton();
-            });
-            
-            // Video oynatma durumuna göre butonu güncelle
-            function updatePlayPauseButton() {
-                const icon = playPauseBtn.querySelector('i');
-                if (videoPlayer.paused) {
-                    icon.className = 'fas fa-play';
-                } else {
-                    icon.className = 'fas fa-pause';
-                }
-            }
-            
-            videoPlayer.addEventListener('play', updatePlayPauseButton);
-            videoPlayer.addEventListener('pause', updatePlayPauseButton);
-            
-            // Ses kontrolü
-            let isMuted = false;
-            volumeBtn.addEventListener('click', function() {
-                if (isMuted) {
-                    videoPlayer.volume = 0.8;
-                    volumeBtn.querySelector('i').className = 'fas fa-volume-up';
-                    isMuted = false;
-                } else {
-                    videoPlayer.volume = 0;
-                    volumeBtn.querySelector('i').className = 'fas fa-volume-mute';
-                    isMuted = true;
-                }
-            });
-            
-            // İlerleme çubuğu
-            progressBarContainer.addEventListener('click', function(e) {
-                const rect = progressBarContainer.getBoundingClientRect();
-                const percent = (e.clientX - rect.left) / rect.width;
-                videoPlayer.currentTime = percent * videoPlayer.duration;
-            });
-            
-            // Video ilerlemesini güncelle
-            videoPlayer.addEventListener('timeupdate', function() {
-                if (videoPlayer.duration) {
-                    const percent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
-                    progressBar.style.width = percent + '%';
-                    
-                    // Zamanı göster
-                    const currentTime = formatTime(videoPlayer.currentTime);
-                    const duration = formatTime(videoPlayer.duration);
-                    timeDisplay.textContent = `${currentTime} / ${duration}`;
-                }
-            });
-            
-            // Zaman formatlama fonksiyonu
-            function formatTime(seconds) {
-                const mins = Math.floor(seconds / 60);
-                const secs = Math.floor(seconds % 60);
-                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-            }
-            
-            // Tam ekran butonu
-            fullscreenBtn.addEventListener('click', function() {
-                if (!document.fullscreenElement) {
-                    if (videoPlayer.requestFullscreen) {
-                        videoPlayer.requestFullscreen();
-                    } else if (videoPlayer.mozRequestFullScreen) {
-                        videoPlayer.mozRequestFullScreen();
-                    } else if (videoPlayer.webkitRequestFullscreen) {
-                        videoPlayer.webkitRequestFullscreen();
-                    } else if (videoPlayer.msRequestFullscreen) {
-                        videoPlayer.msRequestFullscreen();
-                    }
-                    
-                    fullscreenBtn.querySelector('i').className = 'fas fa-compress';
-                } else {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                    } else if (document.mozCancelFullScreen) {
-                        document.mozCancelFullScreen();
-                    } else if (document.webkitExitFullscreen) {
-                        document.webkitExitFullscreen();
-                    } else if (document.msExitFullscreen) {
-                        document.msExitFullscreen();
-                    }
-                    
-                    fullscreenBtn.querySelector('i').className = 'fas fa-expand';
-                }
-            });
-            
-            // Tam ekran değişikliğini dinle
-            document.addEventListener('fullscreenchange', updateFullscreenButton);
-            
-            function updateFullscreenButton() {
-                const icon = fullscreenBtn.querySelector('i');
-                if (document.fullscreenElement) {
-                    icon.className = 'fas fa-compress';
-                } else {
-                    icon.className = 'fas fa-expand';
-                }
-            }
-            
-            // Sayfa yüklendiğinde ses seviyesini ayarla
-            videoPlayer.volume = 0.8;
-        });
-    </script>
-</body>
-</html>
+  <div class="section">
+    <h2>📺 Diziler</h2>
+    <div class="item">
+      <img src="dizi1.jpg" alt="Ölüm Saatini Görebilen Adam">
+      <div class="info">
+        <h3>Ölüm Saatini Görebilen Adam</h3>
+        <p>Tür: Dram, Gerilim, Doğaüstü</p>
+        <p>Durum: Devam Ediyor</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🎬 Filmler</h2>
+    <div class="item">
+      <img src="film1.jpg" alt="Film 1">
+      <div class="info">
+        <h3>Film Başlığı 1</h3>
+        <p>Tür: Aksiyon, Macera</p>
+        <p>Yıl: 2023</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #f1f5f9;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .content {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 2.8rem;
+    background: linear-gradient(90deg, #38bdf8, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .section {
+    margin-bottom: 50px;
+  }
+
+  .section h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    border-left: 5px solid #38bdf8;
+    padding-left: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .item {
+    background: rgba(30, 41, 59, 0.7);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .item:hover {
+    transform: translateY(-5px);
+    border-color: #38bdf8;
+    box-shadow: 0 12px 25px rgba(56, 189, 248, 0.15);
+  }
+
+  .item img {
+    width: 180px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 3px solid #475569;
+  }
+
+  .info h3 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    color: #e2e8f0;
+  }
+
+  .info p {
+    color: #94a3b8;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+  }
+
+  @media (max-width: 768px) {
+    .item {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .item img {
+      width: 150px;
+      height: 200px;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+    }
+
+    .section h2 {
+      font-size: 1.6rem;
+    }
+  }
+</style>
