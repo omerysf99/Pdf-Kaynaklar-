@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Subway Tap Game</title>
+    <title>Subway Earn</title>
     <style>
         body, html {
             margin: 0;
@@ -12,19 +12,19 @@
             height: 100%;
             overflow: hidden;
             background-color: #000;
+            font-family: 'Arial', sans-serif;
+            user-select: none;
         }
 
         .screen {
             position: absolute;
             width: 100vw;
             height: 100vh;
-            display: none; /* Başlangıçta tüm ekranları gizle */
+            display: none;
         }
 
-        /* İlk ekranı görünür yap */
-        #menu-screen {
-            display: flex;
-        }
+        #menu-screen { display: flex; }
+        .active { display: flex !important; }
 
         img {
             width: 100%;
@@ -33,7 +33,7 @@
             display: block;
         }
 
-        /* Play Butonu (subway.jpg üzerindeki alan) */
+        /* Play Butonu Alanı */
         .play-trigger {
             position: absolute;
             bottom: 5%;
@@ -46,53 +46,94 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Tap Alanı (subway1.jpg üzerindeki tüm ekran) */
-        .tap-trigger {
+        /* Puan Paneli */
+        #score-container {
+            position: absolute;
+            top: 10%;
+            width: 100%;
+            text-align: center;
+            color: #FFD700;
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Uçan Puan Animasyonu */
+        .floating-score {
+            position: absolute;
+            color: #FFF;
+            font-weight: bold;
+            font-size: 24px;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 20;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
+
+        .tap-area {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             cursor: pointer;
-            background: rgba(255, 255, 255, 0);
-            border: none;
             -webkit-tap-highlight-color: transparent;
-        }
-
-        .active {
-            display: flex !important;
         }
     </style>
 </head>
 <body>
 
     <div id="menu-screen" class="screen">
-        <img src="subway.jpg" alt="Subway Menu">
+        <img src="subway.jpg">
         <button class="play-trigger" onclick="startGame()"></button>
     </div>
 
     <div id="game-screen" class="screen">
-        <img src="subway1.jpg" alt="Subway Tap">
-        <button class="tap-trigger" onclick="handleTap()"></button>
+        <div id="score-container">0</div>
+        <img src="subway1.jpg">
+        <div class="tap-area" onclick="handleTap(event)"></div>
     </div>
 
     <script>
+        let score = 0;
+        const adminId = "8392479231";
+
         function startGame() {
-            // Menü ekranını gizle, Oyun ekranını aç
-            document.getElementById('menu-screen').classList.remove('active');
             document.getElementById('menu-screen').style.display = 'none';
-            
             document.getElementById('game-screen').classList.add('active');
-            console.log("Oyun başladı, Tap to Earn aktif!");
         }
 
-        function handleTap() {
-            // Ekrana her dokunulduğunda çalışacak fonksiyon
-            console.log("Tıklandı! Admin ID: 8392479231");
-            
-            // Buraya tıklama efekti veya puan artışı ekleyebilirsin
+        function handleTap(e) {
+            score += 10; // Her tıkta 10 puan
+            document.getElementById('score-container').innerText = score;
+
+            // Görsel Efekt Oluştur (+10 yazısı)
+            createFloatingText(e.clientX, e.clientY);
+
+            // Admin Log (İsteğe bağlı)
+            if(score % 100 === 0) {
+                console.log(`Admin ${adminId}: ${score} puana ulaşıldı!`);
+            }
+        }
+
+        function createFloatingText(x, y) {
+            const float = document.createElement('div');
+            float.className = 'floating-score';
+            float.innerText = '+10';
+            float.style.left = x + 'px';
+            float.style.top = y + 'px';
+            document.body.appendChild(float);
+
+            setTimeout(() => {
+                float.remove();
+            }, 800);
         }
     </script>
-
 </body>
 </html>
