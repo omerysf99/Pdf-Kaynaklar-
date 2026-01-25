@@ -5,273 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Subway Kombat Pro</title>
     <style>
-        :root {
-            --gold: #f8d301;
-            --blue: #0072bc;
-            --bg-dark: #121212;
-        }
+        :root { --gold: #f8d301; --blue: #0072bc; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: sans-serif; color: white; user-select: none; }
         
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: var(--bg-dark);
-            font-family: 'Arial Rounded MT Bold', sans-serif;
-            color: white;
-            user-select: none;
-        }
-
-        .screen {
-            position: absolute;
-            width: 100vw;
-            height: 100vh;
-            display: none;
-            flex-direction: column;
-        }
-
+        /* Ekran Düzeni */
+        .screen { position: absolute; width: 100vw; height: 100vh; display: none; flex-direction: column; }
         .active { display: flex !important; }
+        .bg-img { position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: -1; }
 
-        .bg-img {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: -1;
-            opacity: 0.4;
-        }
+        /* Giriş Butonu (Play) */
+        .play-trigger { position: absolute; bottom: 5%; right: 8%; width: 42%; height: 12%; background: transparent; border: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
-        /* Üst Panel */
-        .header {
-            padding: 15px;
-            background: rgba(0,0,0,0.7);
-            border-bottom: 2px solid var(--gold);
-            display: flex;
-            justify-content: space-between;
-        }
-
-        /* Hamster Style Skor */
-        .score-display {
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        .coin-total {
-            font-size: 40px;
-            color: var(--gold);
-            text-shadow: 0 0 15px rgba(248,211,1,0.5);
-        }
-
+        /* Hamster Style Arayüz */
+        .header { padding: 15px; background: rgba(0,0,0,0.7); display: flex; justify-content: space-between; border-bottom: 2px solid var(--gold); }
+        .score-box { text-align: center; padding: 20px 0; }
+        .coin-val { font-size: 45px; color: var(--gold); font-weight: bold; }
+        
         /* Tıklama Alanı */
-        .tap-zone {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
+        .click-area { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
+        .circle-coin { width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, #ffd700, #b8860b); border: 8px solid var(--gold); display: flex; justify-content: center; align-items: center; box-shadow: 0 0 30px rgba(248,211,1,0.4); transition: transform 0.05s; }
+        .circle-coin:active { transform: scale(0.95); }
 
-        .main-button {
-            width: 260px;
-            height: 260px;
-            background: radial-gradient(circle, #ffd700, #b8860b);
-            border: 8px solid var(--gold);
-            border-radius: 50%;
-            box-shadow: 0 0 40px rgba(248, 211, 1, 0.3);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: transform 0.05s;
-        }
-
-        .main-button:active { transform: scale(0.92); }
-
-        /* Enerji Barı */
-        .energy-container {
-            width: 80%;
-            margin-top: 20px;
-        }
-
-        .energy-bar-bg {
-            height: 12px;
-            background: #333;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .energy-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #f8d301, #ff9f00);
-            width: 100%;
-            transition: width 0.3s;
-        }
-
-        /* Geliştirme (Upgrade) Kartları */
-        .upgrade-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            padding: 15px;
-            background: rgba(0,0,0,0.8);
-        }
-
-        .upgrade-card {
-            background: #222;
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid #444;
-            text-align: center;
-        }
-
-        .upgrade-card.affordable { border-color: var(--gold); }
-
-        /* Animasyonlar */
-        .float-val {
-            position: absolute;
-            font-size: 28px;
-            font-weight: bold;
-            color: white;
-            pointer-events: none;
-            animation: floatUp 0.6s ease-out forwards;
-        }
-
-        @keyframes floatUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-130px); opacity: 0; }
-        }
+        /* Uçan Puan Animasyonu */
+        .plus-one { position: absolute; color: white; font-size: 30px; font-weight: bold; pointer-events: none; animation: fly 0.6s ease-out forwards; }
+        @keyframes fly { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-120px); opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="entry" class="screen active">
-        <img src="subway.jpg" class="bg-img" style="opacity: 1;">
-        <button style="position:absolute; bottom:5%; right:8%; width:42%; height:12%; background:transparent; border:none;" onclick="launch()"></button>
+    <div id="screen1" class="screen active">
+        <img src="subway.jpg" class="bg-img" alt="Giriş Ekranı">
+        <button class="play-trigger" onclick="goNext()"></button>
     </div>
 
-    <div id="game" class="screen">
-        <img src="subway1.jpg" class="bg-img">
+    <div id="screen2" class="screen">
+        <img src="subway1.jpg" class="bg-img" style="opacity: 0.4;">
         
         <div class="header">
             <div>
-                <div style="font-size: 10px; color: #aaa;">ADMIN</div>
-                <div style="font-size: 14px; color: var(--gold);">ID: 8392479231</div>
+                <div style="font-size: 10px; opacity: 0.6;">ADMİN</div>
+                <div style="color: var(--gold);">ID: 8392479231</div>
             </div>
             <div style="text-align: right;">
-                <div style="font-size: 10px; color: #aaa;">SAATLİK KAZANÇ</div>
-                <div style="color: #4cd137;" id="profit-display">+0</div>
+                <div style="font-size: 10px; opacity: 0.6;">KAZANÇ</div>
+                <div style="color: #4cd137;">+2.5K</div>
             </div>
         </div>
 
-        <div class="score-display">
-            <div style="font-size: 14px; opacity: 0.8;">CÜZDAN</div>
-            <div class="coin-total" id="balance">0</div>
+        <div class="score-box">
+            <div id="balance" class="coin-val">0</div>
+            <div style="font-size: 12px; opacity: 0.8;">TOPLAM COIN</div>
         </div>
 
-        <div class="tap-zone">
-            <div class="main-button" id="coin-btn">
+        <div class="click-area" onclick="doTap(event)">
+            <div class="circle-coin">
                 <span style="font-size: 80px;">🪙</span>
             </div>
-            
-            <div class="energy-container">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:12px;">
-                    <span>⚡ Enerji</span>
-                    <span id="energy-text">1000/1000</span>
-                </div>
-                <div class="energy-bar-bg">
-                    <div id="energy-fill" class="energy-fill"></div>
-                </div>
-            </div>
         </div>
 
-        <div class="upgrade-grid">
-            <div class="upgrade-card" onclick="buyUpgrade('multitap')">
-                <div style="font-size: 10px;">Çoklu Tık</div>
-                <div id="multitap-cost" style="color:var(--gold)">100</div>
-            </div>
-            <div class="upgrade-card" onclick="buyUpgrade('profit')">
-                <div style="font-size: 10px;">Madenci</div>
-                <div id="profit-cost" style="color:var(--gold)">500</div>
-            </div>
+        <div style="height: 60px; background: rgba(0,0,0,0.8); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #333;">
+            <span style="color: var(--gold); font-size: 12px;">ANA SAYFA</span>
+            <span style="font-size: 12px; opacity: 0.5;">GÖREVLER</span>
+            <span style="font-size: 12px; opacity: 0.5;">CÜZDAN</span>
         </div>
     </div>
 
     <script>
-        let state = {
-            balance: 0,
-            energy: 1000,
-            maxEnergy: 1000,
-            perClick: 1,
-            profitPerHour: 0,
-            upgradeCost: 100
-        };
+        let count = 0;
 
-        function launch() {
-            document.getElementById('entry').classList.remove('active');
-            document.getElementById('game').classList.add('active');
-            startPassiveIncome();
+        function goNext() {
+            document.getElementById('screen1').classList.remove('active');
+            document.getElementById('screen2').classList.add('active');
         }
 
-        // Tıklama Mekaniği
-        document.getElementById('coin-btn').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if(state.energy >= state.perClick) {
-                handleTap(e.touches[0].clientX, e.touches[0].clientY);
-            }
-        });
+        function doTap(e) {
+            count++;
+            document.getElementById('balance').innerText = count;
 
-        function handleTap(x, y) {
-            state.balance += state.perClick;
-            state.energy -= state.perClick;
-            updateUI();
-            createAnim(x, y);
-        }
-
-        function updateUI() {
-            document.getElementById('balance').innerText = Math.floor(state.balance).toLocaleString();
-            document.getElementById('energy-text').innerText = `${state.energy}/${state.maxEnergy}`;
-            document.getElementById('energy-fill').style.width = (state.energy / state.maxEnergy * 100) + '%';
-            document.getElementById('profit-display').innerText = '+' + state.profitPerHour;
-        }
-
-        function createAnim(x, y) {
-            const el = document.createElement('div');
-            el.className = 'float-val';
-            el.innerText = '+' + state.perClick;
-            el.style.left = x + 'px';
-            el.style.top = y + 'px';
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 600);
-        }
-
-        // Pasif Gelir Sistemi
-        function startPassiveIncome() {
-            setInterval(() => {
-                if(state.profitPerHour > 0) {
-                    state.balance += (state.profitPerHour / 3600);
-                    updateUI();
-                }
-                if(state.energy < state.maxEnergy) {
-                    state.energy = Math.min(state.maxEnergy, state.energy + 1);
-                    updateUI();
-                }
-            }, 1000);
-        }
-
-        function buyUpgrade(type) {
-            if(type === 'multitap' && state.balance >= 100) {
-                state.balance -= 100;
-                state.perClick += 1;
-                alert("Tıklama gücü arttı!");
-            }
-            if(type === 'profit' && state.balance >= 500) {
-                state.balance -= 500;
-                state.profitPerHour += 100;
-                alert("Pasif kazanç başladı!");
-            }
-            updateUI();
+            // Animasyon oluştur
+            const p = document.createElement('div');
+            p.className = 'plus-one';
+            p.innerText = '+1';
+            p.style.left = e.clientX + 'px';
+            p.style.top = e.clientY + 'px';
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 600);
         }
     </script>
 </body>
