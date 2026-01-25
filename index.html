@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Subway Earn</title>
+    <title>Subway Admin Dashboard</title>
     <style>
         body, html {
             margin: 0;
@@ -11,8 +11,8 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #000;
-            font-family: 'Arial', sans-serif;
+            background-color: #121212;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             user-select: none;
         }
 
@@ -21,118 +21,161 @@
             width: 100vw;
             height: 100vh;
             display: none;
+            flex-direction: column;
         }
 
         #menu-screen { display: flex; }
         .active { display: flex !important; }
 
-        img {
+        .bg-img {
+            position: absolute;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: block;
+            z-index: -1;
         }
 
-        /* Play Butonu Alanı */
+        /* Giriş Ekranı Play Butonu */
         .play-trigger {
             position: absolute;
-            bottom: 5%;
-            right: 8%;
-            width: 42%;
-            height: 12%;
+            bottom: 6%;
+            right: 10%;
+            width: 40%;
+            height: 10%;
             cursor: pointer;
-            background: rgba(255, 255, 255, 0);
+            background: transparent;
             border: none;
+            outline: none;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Puan Paneli */
-        #score-container {
-            position: absolute;
-            top: 10%;
-            width: 100%;
-            text-align: center;
-            color: #FFD700;
-            font-size: 48px;
-            font-weight: bold;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
-            pointer-events: none;
-            z-index: 10;
+        /* Gelişmiş Ana Sayfa Arayüzü */
+        .dashboard-header {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            color: white;
+            border-bottom: 2px solid #f8d301;
         }
 
-        /* Uçan Puan Animasyonu */
-        .floating-score {
+        .admin-info {
+            font-size: 14px;
+            color: #ccc;
+            margin-bottom: 5px;
+        }
+
+        .balance-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .balance-amount {
+            font-size: 32px;
+            font-weight: 800;
+            color: #f8d301;
+        }
+
+        .tap-zone {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+
+        /* Dokunma Efekti */
+        .coin-popup {
             position: absolute;
-            color: #FFF;
+            color: #f8d301;
             font-weight: bold;
-            font-size: 24px;
+            font-size: 28px;
             pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
-            z-index: 20;
+            animation: floatUp 0.6s ease-out forwards;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
 
         @keyframes floatUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-100px); opacity: 0; }
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-120px) scale(1.5); opacity: 0; }
         }
 
-        .tap-area {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
+        .nav-bar {
+            height: 70px;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #333;
+        }
+
+        .nav-item {
+            color: white;
+            font-size: 12px;
+            text-align: center;
+            opacity: 0.7;
+        }
+
+        .nav-item.active-nav {
+            color: #f8d301;
+            opacity: 1;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
     <div id="menu-screen" class="screen">
-        <img src="subway.jpg">
-        <button class="play-trigger" onclick="startGame()"></button>
+        <img src="subway.jpg" class="bg-img">
+        <button class="play-trigger" onclick="goToDashboard()"></button>
     </div>
 
     <div id="game-screen" class="screen">
-        <div id="score-container">0</div>
-        <img src="subway1.jpg">
-        <div class="tap-area" onclick="handleTap(event)"></div>
+        <img src="subway1.jpg" class="bg-img" style="opacity: 0.4;">
+        
+        <div class="dashboard-header">
+            <div class="admin-info">Admin ID: 8392479231</div>
+            <div class="balance-container">
+                <span>Toplam Kazanç:</span>
+                <span class="balance-amount" id="coin-count">0</span>
+            </div>
+        </div>
+
+        <div class="tap-zone" onclick="handleTap(event)">
+            <p style="color: white; background: rgba(0,0,0,0.4); padding: 10px 20px; border-radius: 20px;">Kazanmak İçin Dokun!</p>
+        </div>
+
+        <div class="nav-bar">
+            <div class="nav-item active-nav">ANA SAYFA</div>
+            <div class="nav-item">GÖREVLER</div>
+            <div class="nav-item">CÜZDAN</div>
+            <div class="nav-item">PROFİL</div>
+        </div>
     </div>
 
     <script>
-        let score = 0;
-        const adminId = "8392479231";
+        let coins = 0;
 
-        function startGame() {
+        function goToDashboard() {
             document.getElementById('menu-screen').style.display = 'none';
             document.getElementById('game-screen').classList.add('active');
         }
 
         function handleTap(e) {
-            score += 10; // Her tıkta 10 puan
-            document.getElementById('score-container').innerText = score;
+            coins += 1;
+            document.getElementById('coin-count').innerText = coins;
 
-            // Görsel Efekt Oluştur (+10 yazısı)
-            createFloatingText(e.clientX, e.clientY);
+            // Efekt Oluştur
+            const popup = document.createElement('div');
+            popup.className = 'coin-popup';
+            popup.innerText = '+1';
+            popup.style.left = e.clientX + 'px';
+            popup.style.top = e.clientY + 'px';
+            document.body.appendChild(popup);
 
-            // Admin Log (İsteğe bağlı)
-            if(score % 100 === 0) {
-                console.log(`Admin ${adminId}: ${score} puana ulaşıldı!`);
-            }
-        }
-
-        function createFloatingText(x, y) {
-            const float = document.createElement('div');
-            float.className = 'floating-score';
-            float.innerText = '+10';
-            float.style.left = x + 'px';
-            float.style.top = y + 'px';
-            document.body.appendChild(float);
-
-            setTimeout(() => {
-                float.remove();
-            }, 800);
+            // Temizle
+            setTimeout(() => popup.remove(), 600);
         }
     </script>
 </body>
