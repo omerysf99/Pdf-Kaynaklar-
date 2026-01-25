@@ -3,315 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Subway Kombat Pro</title>
+    <title>Subway Kombat Admin</title>
     <style>
-        :root {
-            --gold: #f5bd02;
-            --bg-dark: #1c1f24;
-            --panel-bg: rgba(40, 44, 52, 0.9);
-            --text-gray: #8b8e93;
+        :root { --gold: #f5bd02; --blue: #28a9e1; }
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background-color: #1c1f24; color: white; 
+            font-family: sans-serif; overflow: hidden; user-select: none;
         }
 
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background-color: #000;
-            font-family: 'Inter', -apple-system, sans-serif;
-            color: white; user-select: none;
-        }
-
-        .screen {
-            position: absolute; width: 100vw; height: 100vh;
-            display: none; flex-direction: column;
-        }
-
-        .active { display: flex !important; }
-
-        /* Arkaplan Resimleri */
-        .bg-img {
+        /* Arkaplan Resim Katmanı */
+        .bg-layer {
             position: absolute; width: 100%; height: 100%;
             object-fit: cover; z-index: -1;
+            background: #1c1f24; /* Resim yüklenmezse siyah kalmaz, gri panel gözükür */
         }
 
-        /* Üst Bilgi Panelleri */
-        .top-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-            padding: 10px;
-            margin-top: 30px;
-            z-index: 10;
+        .screen { position: absolute; width: 100%; height: 100%; display: none; flex-direction: column; }
+        .active { display: flex !important; }
+
+        /* Üst Statlar */
+        .header-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 15px; margin-top: 20px; }
+        .stat-card { background: rgba(0,0,0,0.6); padding: 10px; border-radius: 10px; text-align: center; border: 1px solid #444; }
+        
+        /* Coin ve Karakter */
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .coin-display { font-size: 40px; font-weight: bold; margin-bottom: 20px; color: var(--gold); }
+        
+        .character-btn {
+            width: 250px; height: 250px; border-radius: 50%;
+            border: 8px solid var(--blue);
+            background: radial-gradient(circle, var(--gold), #b8860b);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 80px; cursor: pointer; transition: transform 0.05s;
+            box-shadow: 0 0 30px rgba(40, 169, 225, 0.4);
         }
+        .character-btn:active { transform: scale(0.95); }
 
-        .stat-card {
-            background: var(--panel-bg);
-            border-radius: 12px;
-            padding: 10px 5px;
-            text-align: center;
-            border: 1px solid #3a3f47;
-        }
+        /* Alt Navigasyon */
+        .nav-bar { height: 80px; background: #000; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #333; }
+        .nav-item { font-size: 10px; opacity: 0.6; text-align: center; }
 
-        .stat-card.active-stat { border-bottom: 3px solid var(--gold); }
-        .stat-label { font-size: 10px; color: #a1a1a1; margin-bottom: 4px; }
-        .stat-value { font-size: 13px; font-weight: bold; }
-        .stat-value.gold { color: var(--gold); }
-
-        /* Ana Bakiye Bölümü */
-        .balance-area {
-            text-align: center;
-            margin-top: 40px;
-            z-index: 10;
-        }
-
-        .coin-wrap {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            font-size: 48px;
-            font-weight: 800;
-        }
-
-        .coin-icon { width: 45px; height: 45px; }
-
-        /* Seviye Çubuğu (Epic) */
-        .level-container {
-            width: 90%;
-            margin: 20px auto;
-            z-index: 10;
-        }
-
-        .level-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            margin-bottom: 6px;
-        }
-
-        .progress-bg {
-            height: 8px;
-            background: #333;
-            border-radius: 10px;
-            border: 1px solid #444;
-        }
-
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #444, #888);
-            border-radius: 10px;
-            transition: width 0.3s;
-        }
-
-        /* Karakter ve Dokunma Alanı */
-        .clicker-area {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 5;
-            position: relative;
-        }
-
-        .character-circle {
-            width: 280px;
-            height: 280px;
-            border-radius: 50%;
-            border: 12px solid #28a9e1; /* Görseldeki mavi halka */
-            background: radial-gradient(circle, #f5bd02 0%, #e1aa00 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 40px rgba(40, 169, 225, 0.3);
-            cursor: pointer;
-            transition: transform 0.05s;
-        }
-
-        .character-circle:active { transform: scale(0.96); }
-
-        .character-img {
-            width: 80%;
-            height: 80%;
-            object-fit: contain;
-        }
-
-        /* Alt Enerji ve Boost */
-        .energy-footer {
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 10;
-            font-weight: bold;
-        }
-
-        /* Alt Menü (Görseldeki İkonlar) */
-        .bottom-nav {
-            background: #1c1f24;
-            height: 85px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid #333;
-            z-index: 10;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            color: var(--text-gray);
-            font-size: 11px;
-            cursor: pointer;
-        }
-
-        .nav-item.active-nav { color: white; }
-        .nav-icon { font-size: 22px; }
-
-        /* Animasyon */
-        .tap-pop {
-            position: absolute; color: white; font-size: 32px;
-            font-weight: 900; pointer-events: none;
-            animation: floatUp 0.7s ease-out forwards;
-            z-index: 100;
-        }
-
-        @keyframes floatUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-150px); opacity: 0; }
-        }
+        .tap-pop { position: absolute; color: white; font-size: 30px; font-weight: bold; animation: float 0.6s forwards; pointer-events: none; }
+        @keyframes float { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="login-screen" class="screen active">
-        <img src="subway.jpg" class="bg-img">
-        <button onclick="startGame()" style="position:absolute; bottom:5%; right:8%; width:42%; height:12%; background:transparent; border:none; cursor:pointer;"></button>
+    <div id="scr-entry" class="screen active">
+        <img src="image_ea9a33.jpg" class="bg-layer">
+        <button onclick="startApp()" style="position:absolute; bottom:5%; right:8%; width:42%; height:12%; background:rgba(255,255,0,0.1); border:2px solid gold; border-radius:10px; color:gold; font-weight:bold;">PLAY ▶</button>
     </div>
 
-    <div id="game-screen" class="screen">
-        <img src="subway1.jpg" class="bg-img" style="opacity: 0.2; filter: blur(3px);">
+    <div id="scr-main" class="screen">
+        <div style="padding: 10px; font-size: 12px; color: var(--gold);">Admin ID: 8392479231</div>
         
-        <div style="padding: 10px; font-size: 11px; color: var(--gold); z-index: 10;">
-            Admin ID: 8392479231
+        <div class="header-grid">
+            <div class="stat-card"><div style="font-size:10px; opacity:0.6;">Earn per tap</div><div style="color:var(--gold);">+1</div></div>
+            <div class="stat-card"><div style="font-size:10px; opacity:0.6;">Level up</div><div>10K</div></div>
+            <div class="stat-card"><div style="font-size:10px; opacity:0.6;">Profit/hr</div><div style="color:#00ff00;">0</div></div>
         </div>
 
-        <div class="top-stats">
-            <div class="stat-card active-stat">
-                <div class="stat-label">Earn per tap</div>
-                <div class="stat-value gold">+1</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Coins to level up</div>
-                <div class="stat-value">10,000</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Sattit per hour</div>
-                <div class="stat-value" style="color:#00d2ff">+0</div>
-            </div>
+        <div class="main-content">
+            <div class="coin-display">💰 <span id="balance">0</span></div>
+            <div class="character-btn" onclick="tap(event)">🤵</div>
+            <div style="margin-top:20px; font-weight:bold;">Epic > 0/10</div>
         </div>
 
-        <div class="balance-area">
-            <div class="coin-wrap">
-                <span style="color: #f5bd02;">💰</span>
-                <span id="balance">0</span>
-            </div>
-        </div>
-
-        <div class="level-container">
-            <div class="level-header">
-                <span>Epic ></span>
-                <span>0/10</span>
-            </div>
-            <div class="progress-bg">
-                <div id="progress" class="progress-fill"></div>
-            </div>
-        </div>
-
-        <div class="clicker-area">
-            <div class="character-circle" onclick="handleTap(event)">
-                <span style="font-size: 140px;">🤵</span>
-            </div>
-        </div>
-
-        <div class="energy-footer">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="color: #f5bd02; font-size: 20px;">⚡</span>
-                <span id="energy-text">1000/1000</span>
-            </div>
-            <div style="font-size: 18px;">Boost</div>
-        </div>
-
-        <div class="bottom-nav">
-            <div class="nav-item">
-                <span class="nav-icon">🛒</span>
-                <span>Shop</span>
-            </div>
-            <div class="nav-item">
-                <span class="nav-icon">⛏️</span>
-                <span>Mine</span>
-            </div>
-            <div class="nav-item">
-                <span class="nav-icon">👥</span>
-                <span>Friends</span>
-            </div>
-            <div class="nav-item">
-                <span class="nav-icon">🪙</span>
-                <span>Earn</span>
-            </div>
-            <div class="nav-item active-nav">
-                <span class="nav-icon">✅</span>
-                <span>Gövlles</span>
-            </div>
+        <div class="nav-bar">
+            <div class="nav-item">Shop</div>
+            <div class="nav-item">Mine</div>
+            <div class="nav-item">Friends</div>
+            <div class="nav-item" style="color:var(--gold); opacity:1;">Gövlles</div>
         </div>
     </div>
 
     <script>
-        let coins = 0;
-        let energy = 1000;
-        const maxEnergy = 1000;
-
-        function startGame() {
-            document.getElementById('login-screen').classList.remove('active');
-            document.getElementById('game-screen').classList.add('active');
+        let score = 0;
+        function startApp() {
+            document.getElementById('scr-entry').classList.remove('active');
+            document.getElementById('scr-main').classList.add('active');
         }
 
-        function handleTap(e) {
-            if (energy <= 0) return;
-
-            coins += 1;
-            energy -= 1;
+        function tap(e) {
+            score++;
+            document.getElementById('balance').innerText = score;
             
-            updateUI();
-            createPop(e.clientX, e.clientY);
-
-            // Progress bar güncelleme (simülasyon)
-            let progress = (coins % 100);
-            document.getElementById('progress').style.width = progress + '%';
+            const pop = document.createElement('div');
+            pop.className = 'tap-pop';
+            pop.innerText = '+1';
+            pop.style.left = e.clientX + 'px';
+            pop.style.top = e.clientY + 'px';
+            document.body.appendChild(pop);
+            setTimeout(() => pop.remove(), 600);
         }
-
-        function updateUI() {
-            document.getElementById('balance').innerText = coins.toLocaleString();
-            document.getElementById('energy-text').innerText = `${energy}/${maxEnergy}`;
-        }
-
-        function createPop(x, y) {
-            const p = document.createElement('div');
-            p.className = 'tap-pop';
-            p.innerText = '+1';
-            p.style.left = (x - 15) + 'px';
-            p.style.top = (y - 50) + 'px';
-            document.body.appendChild(p);
-            setTimeout(() => p.remove(), 700);
-        }
-
-        // Enerji yenileme
-        setInterval(() => {
-            if (energy < maxEnergy) {
-                energy += 1;
-                updateUI();
-            }
-        }, 1500);
     </script>
 </body>
 </html>
