@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Subway Kombat</title>
+    <title>Subway Kombat Pro</title>
     <style>
         :root {
-            --subway-yellow: #f8d301;
-            --subway-blue: #0072bc;
+            --gold: #f8d301;
+            --blue: #0072bc;
+            --bg-dark: #121212;
         }
         
         body, html {
@@ -16,8 +17,9 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #000;
-            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+            background-color: var(--bg-dark);
+            font-family: 'Arial Rounded MT Bold', sans-serif;
+            color: white;
             user-select: none;
         }
 
@@ -29,7 +31,6 @@
             flex-direction: column;
         }
 
-        #entry-screen { display: flex; }
         .active { display: flex !important; }
 
         .bg-img {
@@ -38,179 +39,239 @@
             height: 100%;
             object-fit: cover;
             z-index: -1;
+            opacity: 0.4;
         }
 
-        /* GİRİŞ EKRANI BUTONU */
-        .play-btn {
-            position: absolute;
-            bottom: 5%;
-            right: 8%;
-            width: 42%;
-            height: 12%;
-            cursor: pointer;
-            background: transparent;
-            border: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* HAMSTER TARZI OYUN EKRANI */
+        /* Üst Panel */
         .header {
-            padding: 20px;
+            padding: 15px;
+            background: rgba(0,0,0,0.7);
+            border-bottom: 2px solid var(--gold);
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            background: rgba(0,0,0,0.5);
-            color: white;
-            z-index: 10;
         }
 
-        .user-id { font-size: 12px; color: var(--subway-yellow); }
-
-        .stats-container {
-            display: flex;
-            justify-content: space-around;
-            padding: 15px;
-            z-index: 10;
-        }
-
-        .stat-box {
-            background: rgba(255,255,255,0.1);
-            padding: 10px;
-            border-radius: 12px;
+        /* Hamster Style Skor */
+        .score-display {
             text-align: center;
-            color: white;
-            min-width: 80px;
-            border: 1px solid rgba(255,255,255,0.2);
+            padding: 20px 0;
         }
 
-        /* COIN DOKUNMA ALANI */
-        .clicker-container {
+        .coin-total {
+            font-size: 40px;
+            color: var(--gold);
+            text-shadow: 0 0 15px rgba(248,211,1,0.5);
+        }
+
+        /* Tıklama Alanı */
+        .tap-zone {
             flex-grow: 1;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 5;
+            position: relative;
         }
 
-        .main-coin {
-            width: 250px;
-            height: 250px;
-            border-radius: 50%;
+        .main-button {
+            width: 260px;
+            height: 260px;
             background: radial-gradient(circle, #ffd700, #b8860b);
-            border: 10px solid var(--subway-yellow);
+            border: 8px solid var(--gold);
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(248, 211, 1, 0.3);
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0 50px rgba(248, 211, 1, 0.4);
-            transition: transform 0.05s;
             cursor: pointer;
+            transition: transform 0.05s;
         }
 
-        .main-coin:active {
-            transform: scale(0.95);
+        .main-button:active { transform: scale(0.92); }
+
+        /* Enerji Barı */
+        .energy-container {
+            width: 80%;
+            margin-top: 20px;
         }
 
-        .coin-icon {
-            font-size: 100px;
-            filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.5));
+        .energy-bar-bg {
+            height: 12px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
         }
 
-        /* UÇAN PUANLAR */
-        .floating-plus {
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f8d301, #ff9f00);
+            width: 100%;
+            transition: width 0.3s;
+        }
+
+        /* Geliştirme (Upgrade) Kartları */
+        .upgrade-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(0,0,0,0.8);
+        }
+
+        .upgrade-card {
+            background: #222;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #444;
+            text-align: center;
+        }
+
+        .upgrade-card.affordable { border-color: var(--gold); }
+
+        /* Animasyonlar */
+        .float-val {
             position: absolute;
-            color: white;
-            font-size: 32px;
+            font-size: 28px;
             font-weight: bold;
+            color: white;
             pointer-events: none;
-            animation: floatAnim 0.7s ease-out forwards;
+            animation: floatUp 0.6s ease-out forwards;
         }
 
-        @keyframes floatAnim {
+        @keyframes floatUp {
             0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-150px); opacity: 0; }
+            100% { transform: translateY(-130px); opacity: 0; }
         }
-
-        .footer-nav {
-            height: 80px;
-            background: rgba(0,0,0,0.9);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 10;
-            border-top: 2px solid var(--subway-yellow);
-        }
-
-        .nav-btn { color: white; font-size: 11px; text-align: center; opacity: 0.6; }
-        .nav-btn.active-tab { opacity: 1; color: var(--subway-yellow); }
     </style>
 </head>
 <body>
 
-    <div id="entry-screen" class="screen">
-        <img src="subway.jpg" class="bg-img">
-        <button class="play-btn" onclick="startApp()"></button>
+    <div id="entry" class="screen active">
+        <img src="subway.jpg" class="bg-img" style="opacity: 1;">
+        <button style="position:absolute; bottom:5%; right:8%; width:42%; height:12%; background:transparent; border:none;" onclick="launch()"></button>
     </div>
 
-    <div id="main-app" class="screen">
-        <img src="subway1.jpg" class="bg-img" style="opacity: 0.3; filter: blur(5px);">
+    <div id="game" class="screen">
+        <img src="subway1.jpg" class="bg-img">
         
         <div class="header">
             <div>
-                <div style="font-weight: bold;">Subway Admin</div>
-                <div class="user-id">ID: 8392479231</div>
+                <div style="font-size: 10px; color: #aaa;">ADMIN</div>
+                <div style="font-size: 14px; color: var(--gold);">ID: 8392479231</div>
             </div>
             <div style="text-align: right;">
-                <div style="font-size: 10px;">SAATLİK KAZANÇ</div>
-                <div style="color: #4cd137;">+1.5K</div>
+                <div style="font-size: 10px; color: #aaa;">SAATLİK KAZANÇ</div>
+                <div style="color: #4cd137;" id="profit-display">+0</div>
             </div>
         </div>
 
-        <div class="stats-container">
-            <div class="stat-box">
-                <div style="font-size: 10px; opacity: 0.7;">ENİS</div>
-                <div id="coin-balance" style="font-size: 20px; font-weight: bold; color: var(--subway-yellow);">0</div>
+        <div class="score-display">
+            <div style="font-size: 14px; opacity: 0.8;">CÜZDAN</div>
+            <div class="coin-total" id="balance">0</div>
+        </div>
+
+        <div class="tap-zone">
+            <div class="main-button" id="coin-btn">
+                <span style="font-size: 80px;">🪙</span>
             </div>
-            <div class="stat-box">
-                <div style="font-size: 10px; opacity: 0.7;">ENERJİ</div>
-                <div style="font-size: 20px; font-weight: bold;">1000/1000</div>
+            
+            <div class="energy-container">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:12px;">
+                    <span>⚡ Enerji</span>
+                    <span id="energy-text">1000/1000</span>
+                </div>
+                <div class="energy-bar-bg">
+                    <div id="energy-fill" class="energy-fill"></div>
+                </div>
             </div>
         </div>
 
-        <div class="clicker-container">
-            <div class="main-coin" onclick="handleCoinClick(event)">
-                <span class="coin-icon">💰</span>
+        <div class="upgrade-grid">
+            <div class="upgrade-card" onclick="buyUpgrade('multitap')">
+                <div style="font-size: 10px;">Çoklu Tık</div>
+                <div id="multitap-cost" style="color:var(--gold)">100</div>
             </div>
-        </div>
-
-        <div class="footer-nav">
-            <div class="nav-btn active-tab">Borsa</div>
-            <div class="nav-btn">Madenci</div>
-            <div class="nav-btn">Arkadaşlar</div>
-            <div class="nav-btn">Airdrop</div>
+            <div class="upgrade-card" onclick="buyUpgrade('profit')">
+                <div style="font-size: 10px;">Madenci</div>
+                <div id="profit-cost" style="color:var(--gold)">500</div>
+            </div>
         </div>
     </div>
 
     <script>
-        let balance = 0;
+        let state = {
+            balance: 0,
+            energy: 1000,
+            maxEnergy: 1000,
+            perClick: 1,
+            profitPerHour: 0,
+            upgradeCost: 100
+        };
 
-        function startApp() {
-            document.getElementById('entry-screen').style.display = 'none';
-            document.getElementById('main-app').classList.add('active');
+        function launch() {
+            document.getElementById('entry').classList.remove('active');
+            document.getElementById('game').classList.add('active');
+            startPassiveIncome();
         }
 
-        function handleCoinClick(e) {
-            balance += 1;
-            document.getElementById('coin-balance').innerText = balance;
+        // Tıklama Mekaniği
+        document.getElementById('coin-btn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if(state.energy >= state.perClick) {
+                handleTap(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        });
 
-            // Hamster Kombat Stili Uçan Metin
-            const plus = document.createElement('div');
-            plus.className = 'floating-plus';
-            plus.innerText = '+1';
-            plus.style.left = e.clientX + 'px';
-            plus.style.top = e.clientY + 'px';
-            document.body.appendChild(plus);
+        function handleTap(x, y) {
+            state.balance += state.perClick;
+            state.energy -= state.perClick;
+            updateUI();
+            createAnim(x, y);
+        }
 
-            setTimeout(() => plus.remove(), 700);
+        function updateUI() {
+            document.getElementById('balance').innerText = Math.floor(state.balance).toLocaleString();
+            document.getElementById('energy-text').innerText = `${state.energy}/${state.maxEnergy}`;
+            document.getElementById('energy-fill').style.width = (state.energy / state.maxEnergy * 100) + '%';
+            document.getElementById('profit-display').innerText = '+' + state.profitPerHour;
+        }
+
+        function createAnim(x, y) {
+            const el = document.createElement('div');
+            el.className = 'float-val';
+            el.innerText = '+' + state.perClick;
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 600);
+        }
+
+        // Pasif Gelir Sistemi
+        function startPassiveIncome() {
+            setInterval(() => {
+                if(state.profitPerHour > 0) {
+                    state.balance += (state.profitPerHour / 3600);
+                    updateUI();
+                }
+                if(state.energy < state.maxEnergy) {
+                    state.energy = Math.min(state.maxEnergy, state.energy + 1);
+                    updateUI();
+                }
+            }, 1000);
+        }
+
+        function buyUpgrade(type) {
+            if(type === 'multitap' && state.balance >= 100) {
+                state.balance -= 100;
+                state.perClick += 1;
+                alert("Tıklama gücü arttı!");
+            }
+            if(type === 'profit' && state.balance >= 500) {
+                state.balance -= 500;
+                state.profitPerHour += 100;
+                alert("Pasif kazanç başladı!");
+            }
+            updateUI();
         }
     </script>
 </body>
